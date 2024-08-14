@@ -1,0 +1,115 @@
+.navbar__link-separator {
+  border-right: 1px solid hsla(0, 0%, 100%, 0.4);
+  height: 0.8125rem;
+  margin-top: 4px;
+}
+.nav-link {
+  border: 0px;
+}
+
+.nav-link-hoverable:hover {
+  @apply text-slate-300;
+  @apply transition-all;
+}
+.nav-link::after {
+  border-right: 1px solid hsla(0, 0%, 100%, 0.22);
+  content: "";
+  position: relative;
+  left: 5px;
+  right: 5px;
+}
+.category-carousel .slick-slide {
+  display: flex;
+  justify-content: center;
+}
+/* Hiển thị 10 slide trên màn hình lớn */
+@media (min-width: 1024px) {
+  .category-carousel .slick-slide {
+    width: 10%; /* 10 slide trên mỗi hàng */
+  }
+}
+
+/* Hiển thị 5 slide trên màn hình vừa */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .category-carousel .slick-slide {
+    width: 20%; /* 5 slide trên mỗi hàng */
+  }
+}
+
+/* Hiển thị 4 slide trên màn hình nhỏ */
+@media (max-width: 767px) {
+  .category-carousel .slick-slide {
+    width: 25%; /* 4 slide trên mỗi hàng */
+  }
+}
+.category-carousel .slick-prev {
+  @apply text-[rgba(0,0,0,.54)] rounded-xl bg-white  border size-6 absolute -left-3 opacity-100;
+  transform: translateX(calc(-50%+0px));
+  box-shadow: 0 1px 12px 0 rgba(0, 0, 0, 0.12);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1);
+}
+.category-carousel .slick-next {
+  @apply text-[rgba(0,0,0,.54)] rounded-xl bg-white border size-6 absolute -right-3 opacity-100;
+  transform: translateX(calc(50%+0px));
+  box-shadow: 0 1px 12px 0 rgba(0, 0, 0, 0.12);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1);
+}
+.category-carousel .slick-prev::after {
+  @apply absolute size-2 top-2 left-2 transition-all duration-100 ease-in-out;
+}
+.category-carousel .slick-next::after {
+  @apply absolute size-2 top-2 left-[6px] transition-all duration-100 ease-in-out;
+}
+.category-carousel .slick-prev:hover {
+  @apply text-[rgba(0,0,0,.54)] rounded-full bg-white  border size-[50px]  absolute -left-[26px] z-50 opacity-100;
+  box-shadow: 0 1px 12px 0 rgba(0, 0, 0, 0.12);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1);
+}
+.category-carousel .slick-next:hover {
+  @apply text-[rgba(0,0,0,.54)] rounded-full bg-white border size-[50px]  absolute -right-[26px] z-50 opacity-100;
+  box-shadow: 0 1px 12px 0 rgba(0, 0, 0, 0.12);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1);
+}
+.category-carousel .slick-prev:hover::after {
+  @apply top-4 left-5 size-4;
+  border-inline-width: 4px 0;
+  border-block-width: 4px 0;
+}
+.category-carousel .slick-next:hover::after {
+  @apply top-4 left-3 size-4;
+  border-inline-width: 4px 0;
+  border-block-width: 4px 0;
+}
+.transform-origin-bottom-right {
+  transform-origin: bottom right;
+}
+.arial-button {
+  @apply hidden absolute bg-black shadow-md box-border text-white text-sm min-w-[30px] px-2 py-1 right-0 text-left -top-7 whitespace-nowrap rounded;
+}
+.btn-chatwindow {
+  @apply w-5 flex justify-center items-center ml-4 relative;
+}
+
+.btn-chatwindow.btn-chat-minimize:hover > .arial-button.arial-expand {
+  display: block;
+}
+.btn-chatwindow.btn-chat-close:hover > .arial-button.arial-close {
+  display: block;
+}
+.left-chatbox {
+  @apply w-56 flex overflow-hidden box-border flex-col;
+}
+.right-chatbox {
+  @apply border-l-[1px] border-solid border-[#e4e6e8] flex-grow flex-shrink-0 h-full opacity-100 relative translate-x-0 w-[416px] z-[999];
+  transition: width 0.25s cubic-bezier(0.4, 0.8, 0.74, 1), border 0.1s ease,
+    opacity 0.1s ease 0.15s;
+}
+/* .chat-box .right-chatbox {
+  @apply border-0 opacity-0 w-0;
+
+  transition: width 0.25s cubic-bezier(0.4, 0.8, 0.74, 1), border 0.1s ease,
+    opacity 0.05s ease;
+} */
+.chat-box {
+  @apply bg-white shadow-md  relative translate-x-0 transition-all duration-[250] ease-in-out rounded box-border;
+}
