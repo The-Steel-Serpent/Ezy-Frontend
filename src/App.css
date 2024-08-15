@@ -131,3 +131,8 @@
 .ant-dropdown {
   z-index: 100000;
 }
+
+.bg-inmg {
+  background-image: url("./assets/background-img1.png");
+  background-size: contain;
+}
