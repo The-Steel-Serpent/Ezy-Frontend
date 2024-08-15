@@ -5,7 +5,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout, setUser } from "../redux/userSlice";
-import { Carousel, ColorPicker } from "antd";
+import { Carousel, ColorPicker, Dropdown, Space } from "antd";
 import { ColorFormat } from "antd/es/color-picker/interface";
 import event1 from "../assets/event1.png";
 import event2 from "../assets/event2.png";
@@ -17,7 +17,7 @@ import event7 from "../assets/event7.png";
 import event8 from "../assets/event8.png";
 import event9 from "../assets/event9.png";
 import categoryImg1 from "../assets/category1.png";
-import { RightOutlined, LeftOutlined } from "@ant-design/icons";
+import { RightOutlined, LeftOutlined, DownOutlined } from "@ant-design/icons";
 const events = [
   { img: event1, name: "Vourcher Giảm Đến 1 Triệu" },
   { img: event2, name: "Miễn Phí Ship - Có Shopee" },
