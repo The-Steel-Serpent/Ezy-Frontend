@@ -136,3 +136,39 @@
   background-image: url("./assets/background-img1.png");
   background-size: contain;
 }
+
+.conversation-cell {
+  @apply h-[62px]  w-full flex p-3 overflow-hidden items-center justify-start box-border transition-colors duration-100;
+}
+.conversation-cell.active {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.conversation-cell:hover {
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+.conversation-cell:hover .conversation-dropdown-options {
+  @apply block;
+}
+.conversation-dropdown-options {
+  @apply hidden relative;
+}
+.chatting-text {
+  @apply flex items-center justify-center overflow-hidden h-4;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px; /* Width of the vertical scrollbar */
+  background: #f1f1f1;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #888; /* Color of the scrollbar thumb */
+  border-radius: 10px; /* Rounded corners for the scrollbar thumb */
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* Darker color when hovering over the scrollbar thumb */
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Background of the scrollbar track */
+}
