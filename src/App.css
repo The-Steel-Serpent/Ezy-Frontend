@@ -109,3 +109,8 @@
   @apply bg-white shadow-md  relative translate-x-0 transition-all ease-in-out rounded box-border;
   transition-duration: 250ms;
 }
+
+.bg-inmg{
+  background-image: url('./assets/background-img1.png');
+  background-size: contain;
+}
