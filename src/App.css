@@ -104,12 +104,8 @@
   transition: width 0.25s cubic-bezier(0.4, 0.8, 0.74, 1), border 0.1s ease,
     opacity 0.1s ease 0.15s;
 }
-/* .chat-box .right-chatbox {
-  @apply border-0 opacity-0 w-0;
 
-  transition: width 0.25s cubic-bezier(0.4, 0.8, 0.74, 1), border 0.1s ease,
-    opacity 0.05s ease;
-} */
 .chat-box {
-  @apply bg-white shadow-md  relative translate-x-0 transition-all duration-[250] ease-in-out rounded box-border;
+  @apply bg-white shadow-md  relative translate-x-0 transition-all ease-in-out rounded box-border;
+  transition-duration: 250ms;
 }

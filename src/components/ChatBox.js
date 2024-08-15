@@ -2,7 +2,7 @@ import React, { useCallback, useState, memo } from "react";
 
 const ChatBox = () => {
   const [openChatBox, setOpenChatBox] = useState(false);
-  const [expandChatBox, setExpandChatBox] = useState(false);
+  const [expandChatBox, setExpandChatBox] = useState(true);
   const handleOpenChatBox = useCallback(() => {
     setOpenChatBox((preve) => {
       return !preve;
@@ -40,9 +40,11 @@ const ChatBox = () => {
       <div
         className={`${
           openChatBox
-            ? `w-[642px] h-[502px] border border-solid`
-            : `w-0 h-0 border-0`
-        } chat-box `}
+            ? expandChatBox
+              ? "w-[642px] h-[502px] border border-solid"
+              : "w-[226px] h-[502px] border border-solid"
+            : "w-0 h-0 border-0"
+        } chat-box`}
       >
         <div className="flex items-center shadow-sm h-10 justify-between w-full rounded-t-[4px] box-border">
           <div className="flex items-center justify-start px-3 fill-primary">
@@ -109,7 +111,9 @@ const ChatBox = () => {
               </div>
             </div>
           </div>
-          <div className={`right-chatbox`}></div>
+          <div
+            className={`${expandChatBox ? "" : "hidden"} right-chatbox`}
+          ></div>
         </div>
       </div>
     </div>
