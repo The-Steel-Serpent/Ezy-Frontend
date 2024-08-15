@@ -110,6 +110,7 @@
   transition-duration: 250ms;
 }
 
+
 .search-chatbox.ant-input-affix-wrapper-focused {
   border-color: #e5e5e5 !important;
   box-shadow: none !important;
@@ -131,3 +132,9 @@
 .ant-dropdown {
   z-index: 100000;
 }
+
+.bg-inmg{
+  background-image: url('./assets/background-img1.png');
+  background-size: contain;
+}
+
