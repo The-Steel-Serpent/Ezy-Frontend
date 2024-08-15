@@ -6,7 +6,8 @@ import BuyerLogin from "../pages/buyer/BuyerLogin";
 import BuyerRegister from "../pages/buyer/BuyerRegister";
 import SellerLogin from "../pages/seller/SellerLogin";
 import SellerRegister from "../pages/seller/SellerRegister";
-
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -55,6 +56,16 @@ const router = createBrowserRouter([
             <SellerRegister />
           </AuthLayout>
         ),
+      },
+      //Admin
+      //login
+      {
+        path: "admin/login",
+        element: (
+          <AuthLayout>
+            <AdminLogin />
+          </AuthLayout>
+        )
       },
     ],
   },
