@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { Input, Dropdown, Space } from "antd";
+import { Input, Dropdown, Space, Menu, Divider, Switch } from "antd";
 import React, { useCallback, useState, memo } from "react";
 import {
   DownOutlined,
@@ -10,6 +10,13 @@ import { BiTrash } from "react-icons/bi";
 import { BsPinAngle } from "react-icons/bs";
 import { MdOutlineMarkChatUnread } from "react-icons/md";
 import { MdOutlineNotificationsOff } from "react-icons/md";
+import { FaAngleRight } from "react-icons/fa6";
+import { BiSend } from "react-icons/bi";
+import { MdOutlineEmojiEmotions } from "react-icons/md";
+import { RiImage2Line } from "react-icons/ri";
+import { RiVideoLine } from "react-icons/ri";
+import { LuShoppingBag } from "react-icons/lu";
+import { MdEventNote } from "react-icons/md";
 
 const items = [
   {
@@ -141,11 +148,58 @@ const conversations = [
     date: "Ngày hôm qua",
   },
 ];
+const conversationDropdownItems = (props) => (
+  <Menu className="hover-dropdown" style={{ padding: "16px", width: "215px" }}>
+    <Menu.Item style={{ padding: "0px" }}>
+      <div className="flex justify-start items-center gap-3 cursor-default">
+        <img className="size-8 rounded-full" src={props.img} />
+        <span className="text-base">{props.name}</span>
+      </div>
+    </Menu.Item>
+    <Menu.Item style={{ padding: "0px" }}>
+      <Divider className="mt-2 mb-0" />
+    </Menu.Item>
+    <Menu.Item style={{ padding: "8px 0px" }}>
+      <div className="w-full flex justify-between">
+        <span className="text-xs text-[#333]">Tắt thông báo</span>
+        <Switch size="small" defaultChecked={false} />
+      </div>
+    </Menu.Item>
+    <Menu.Item style={{ padding: "8px 0px" }}>
+      <div className="w-full flex justify-between">
+        <span className="text-xs text-[#333]">Chặn người dùng</span>
+        <Switch size="small" defaultChecked={false} />
+      </div>
+    </Menu.Item>
+    <Menu.Item style={{ padding: "8px 0px" }}>
+      <div className="w-full flex justify-between items-center">
+        <span className="text-xs text-[#333]">Tố cáo người dùng</span>
+        <FaAngleRight className="text-[#999]" />
+      </div>
+    </Menu.Item>
+    <Menu.Item style={{ padding: "0px" }}>
+      <Divider className="mt-2 mb-0" />
+    </Menu.Item>
+    <Menu.Item style={{ padding: "8px 0px" }}>
+      <div className="w-full flex justify-between items-center">
+        <span className="text-xs text-[#333]">Xem thông tin cá nhân</span>
+        <FaAngleRight className="text-[#999]" />
+      </div>
+    </Menu.Item>
+  </Menu>
+);
+
 const ChatBox = () => {
+  const [message, setMessage] = useState({
+    text: "",
+    imgUrl: "",
+    videoUrl: "",
+  });
   const [openChatBox, setOpenChatBox] = useState(false);
   const [expandChatBox, setExpandChatBox] = useState(true);
   const [selectedDropdownSortByLabel, setSelectedDropdownSortByLabel] =
     useState("Tất cả");
+  const [openDropdownStickers, setOpenDropdownStickers] = useState(false);
   const handleOpenChatBox = useCallback(() => {
     setOpenChatBox((preve) => {
       return !preve;
@@ -163,6 +217,28 @@ const ChatBox = () => {
     },
     [items]
   );
+  const onOpenDropdownStickersChange = useCallback(() => {
+    setOpenDropdownStickers((preve) => {
+      return !preve;
+    });
+  }, []);
+  const handleOnChange = (e) => {
+    const { name, value } = e.target;
+    setMessage((preve) => {
+      return {
+        ...preve,
+        text: value,
+      };
+    });
+  };
+  const handleUploadImage = () => {};
+  const handleUploadVideo = () => {};
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (message.text != "" || message.imgUrl != "" || message.videoUrl) {
+    }
+  };
+  console.log(message.text);
   return (
     <>
       <div className="fixed right-2 bottom-0 z-[99999] font-[400]">
@@ -261,7 +337,7 @@ const ChatBox = () => {
             {/**Left-Chatbox */}
             <div className="left-chatbox">
               {/**Searchbar */}
-              <div className="w-full h-12 flex items-center box-border px-3 py-2">
+              <div className="w-full flex items-center box-border px-3 py-2">
                 <Input
                   className="search-chatbox"
                   prefix={<SearchOutlined className="text-slate-500" />}
@@ -314,15 +390,15 @@ const ChatBox = () => {
                             </span>
                           </div>
 
-                          <div className="conversation-dropdown-options">
+                          <div className="conversation-cell-dropdown-options">
                             <Dropdown
                               menu={{ items: conversationOptions }}
                               trigger={["click"]}
-                              className="h-6 w-6 flex justify-center items-center "
+                              className="h-6 w-6 flex justify-center items-center p-4"
                             >
                               <a onClick={(e) => e.preventDefault()}>
                                 <Space className="text-base inline-block text-[#666]">
-                                  <DownOutlined />
+                                  <DownOutlined className="text-sm" />
                                 </Space>
                               </a>
                             </Dropdown>
@@ -336,7 +412,8 @@ const ChatBox = () => {
             </div>
             {/**Right-Chatbox */}
             <div className={`${expandChatBox ? "" : "hidden"} right-chatbox `}>
-              <div className="w-full h-full bg-[#f3f3f3] flex justify-center items-center flex-col">
+              {/**Primary Bg Content */}
+              <div className="w-full h-full bg-[#f3f3f3] flex justify-center items-center flex-col hidden">
                 <i
                   class="h-[120px] w-[200px] inline-block"
                   style={{ lineHeight: 0 }}
@@ -412,6 +489,124 @@ const ChatBox = () => {
                   Chào mừng bạn đến với Shopee Chat
                 </div>
                 <div>Bắt đầu trả lời người mua!</div>
+              </div>
+              {/**Conversation*/}
+              <div className="conversation">
+                <div className="flex justify-start items-center h-full pl-3">
+                  <Dropdown
+                    overlay={conversationDropdownItems({
+                      name: "razervietnam",
+                      img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
+                    })}
+                    trigger={["click"]}
+                  >
+                    <a onClick={(e) => e.preventDefault()}>
+                      <Space className="text-sm text-[#333] whitespace-nowrap text-ellipsis overflow-hidden max-w-[248px] ">
+                        razervietnam
+                        <DownOutlined className="text-[12px]" />
+                      </Space>
+                    </a>
+                  </Dropdown>
+                </div>
+                <div className="h-[330px] bg-[#f3f3f3] overflow-y-scroll custom-scrollbar"></div>
+                <div className="h-[88px] bg-white">
+                  <form
+                    className="flex-1 overflow-auto p-2"
+                    onSubmit={handleSendMessage}
+                  >
+                    <div className="flex flex-col w-full h-full">
+                      <textarea
+                        className="w-full flex-grow text-[#333] text-sm resize-none border-none outline-none box-border overflow-y-auto"
+                        style={{ wordBreak: "break-word" }}
+                        placeholder="Nhập nội dung tin nhắn"
+                        onChange={handleOnChange}
+                      />
+                    </div>
+                    <div className="absolute right-2 bottom-[10px]">
+                      <button
+                        className={`${
+                          message.text || message.imgUrl || message.videoUrl
+                            ? "text-[#ee4d2d]"
+                            : "text-[#ccc] pointer-events-none cursor-not-allowed"
+                        } size-[18px]  transition-colors duration-200 ease-in`}
+                        type="submit"
+                        onSubmit={handleSendMessage}
+                      >
+                        <BiSend size={18} />
+                      </button>
+                    </div>
+                  </form>
+                  <div className="w-full h-[30px]">
+                    <div className="flex h-full flex-row box-border flex-nowrap justify-between bg-white pb-[6px] pl-2">
+                      <div className="flex flex-nowrap justify-start">
+                        <div
+                          className="flex justify-center items-center size-18 mr-2  cursor-pointer"
+                          title="Stickers"
+                        >
+                          <Dropdown
+                            menu={{ items }}
+                            placement="top"
+                            open={openDropdownStickers}
+                            onOpenChange={onOpenDropdownStickersChange}
+                            trigger={["click"]}
+                            className={`${
+                              openDropdownStickers
+                                ? "text-[#ee4d2d]"
+                                : "text-[#8ea4d1]"
+                            } transition-colors duration-200 `}
+                          >
+                            <MdOutlineEmojiEmotions size={18} />
+                          </Dropdown>
+                        </div>
+                        <div
+                          className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] "
+                          title="Hình ảnh"
+                        >
+                          <label>
+                            <input
+                              type="file"
+                              className="hidden"
+                              id="uploadImage"
+                              name="uploadImage"
+                              onChange={handleUploadImage}
+                            />
+                            <RiImage2Line
+                              className="cursor-pointer"
+                              size={18}
+                            />
+                          </label>
+                        </div>
+                        <div
+                          className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] "
+                          title="Video"
+                        >
+                          <label>
+                            <input
+                              type="file"
+                              className="hidden"
+                              id="uploadVideo"
+                              name="uploadVideo"
+                              onChange={handleUploadVideo}
+                            />
+                            <RiVideoLine className="cursor-pointer" size={18} />
+                          </label>
+                        </div>
+                        <div
+                          className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] cursor-pointer"
+                          title="Sản phẩm"
+                        >
+                          <LuShoppingBag size={18} />
+                        </div>
+                        <div
+                          className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] cursor-pointer"
+                          title="Đơn hàng"
+                        >
+                          <MdEventNote size={18} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
