@@ -1,6 +1,15 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { Input, Dropdown, Space, Menu, Divider, Switch } from "antd";
-import React, { useCallback, useState, memo } from "react";
+import {
+  Input,
+  Dropdown,
+  Space,
+  Menu,
+  Divider,
+  Switch,
+  Image,
+  Skeleton,
+} from "antd";
+import React, { useCallback, useState, memo, useEffect, useRef } from "react";
 import {
   DownOutlined,
   PushpinOutlined,
@@ -19,6 +28,10 @@ import { LuShoppingBag } from "react-icons/lu";
 import { MdEventNote } from "react-icons/md";
 import { useSelector } from "react-redux";
 import IconNotLogin from "../assets/icon-not-login.png";
+import { FaPlus } from "react-icons/fa6";
+import { IoClose, IoCloseCircle } from "react-icons/io5";
+import ImageChatbox from "./ImageChatbox";
+
 const items = [
   {
     label: "Tất cả",
@@ -192,6 +205,8 @@ const conversationDropdownItems = (props) => (
 
 const ChatBox = () => {
   const user = useSelector((state) => state.user);
+
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({
     text: "",
     imgUrl: "",
@@ -202,6 +217,8 @@ const ChatBox = () => {
   const [selectedDropdownSortByLabel, setSelectedDropdownSortByLabel] =
     useState("Tất cả");
   const [openDropdownStickers, setOpenDropdownStickers] = useState(false);
+  const [files, setFiles] = useState([]);
+
   const handleOpenChatBox = useCallback(() => {
     setOpenChatBox((preve) => {
       return !preve;
@@ -224,23 +241,48 @@ const ChatBox = () => {
       return !preve;
     });
   }, []);
-  const handleOnChange = (e) => {
-    const { name, value } = e.target;
-    setMessage((preve) => {
-      return {
-        ...preve,
-        text: value,
+  const handleOnChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setMessage((preve) => {
+        return {
+          ...preve,
+          text: value,
+        };
+      });
+    },
+    [message]
+  );
+  const handleUploadFiles = useCallback(
+    (e) => {
+      const file = Array.from(e.target.files);
+
+      setFiles((prevFile) => [...prevFile, ...file]);
+    },
+    [files]
+  );
+
+  useEffect(() => {
+    if (files.length > 0) {
+      const timer = setTimeout(() => setLoading(false), 3000);
+
+      return () => {
+        clearTimeout(timer); // Xóa timer khi unmount
       };
-    });
-  };
-  const handleUploadImage = () => {};
-  const handleUploadVideo = () => {};
-  const handleSendMessage = (e) => {
+    }
+  }, [files]);
+
+  const handleSendMessage = useCallback((e) => {
     e.preventDefault();
     if (message.text != "" || message.imgUrl != "" || message.videoUrl) {
     }
-  };
-  console.log(message.text);
+  }, []);
+  const handleRemoveFile = useCallback((key) => {
+    setFiles((prevFileList) =>
+      prevFileList.filter((_, index) => index !== key)
+    );
+  }, []);
+
   return (
     <>
       <div className="fixed right-2 bottom-0 z-[99999] font-[400]">
@@ -364,7 +406,6 @@ const ChatBox = () => {
             )}
             {user?._id && (
               <>
-                {" "}
                 {/**Left-Chatbox */}
                 <div className="left-chatbox">
                   {/**Searchbar */}
@@ -396,7 +437,6 @@ const ChatBox = () => {
                       return (
                         <div key={key} className="conversation-cell">
                           <img
-                            alt
                             className="border-0 size-8 rounded-[50%]"
                             src={conversation.img}
                           />
@@ -541,103 +581,167 @@ const ChatBox = () => {
                         </a>
                       </Dropdown>
                     </div>
-                    <div className="h-[330px] bg-[#f3f3f3] overflow-y-scroll custom-scrollbar"></div>
-                    <div className="h-[88px] bg-white">
-                      <form
-                        className="flex-1 overflow-auto p-2"
-                        onSubmit={handleSendMessage}
-                      >
-                        <div className="flex flex-col w-full h-full">
-                          <textarea
-                            className="w-full flex-grow text-[#333] text-sm resize-none border-none outline-none box-border overflow-y-auto"
-                            style={{ wordBreak: "break-word" }}
-                            placeholder="Nhập nội dung tin nhắn"
-                            onChange={handleOnChange}
-                          />
-                        </div>
-                        <div className="absolute right-2 bottom-[10px]">
-                          <button
+                    <div className="flex flex-col  w-full">
+                      <div className="bg-[#f3f3f3]  min-w-[6px] flex-1 border-t-[1px] border-solid border-[eee]">
+                        <div className="flex size-full flex-col">
+                          <div
                             className={`${
-                              message.text || message.imgUrl || message.videoUrl
-                                ? "text-[#ee4d2d]"
-                                : "text-[#ccc] pointer-events-none cursor-not-allowed"
-                            } size-[18px]  transition-colors duration-200 ease-in`}
-                            type="submit"
-                            onSubmit={handleSendMessage}
-                          >
-                            <BiSend size={18} />
-                          </button>
-                        </div>
-                      </form>
-                      <div className="w-full h-[30px]">
-                        <div className="flex h-full flex-row box-border flex-nowrap justify-between bg-white pb-[6px] pl-2">
-                          <div className="flex flex-nowrap justify-start">
-                            <div
-                              className="flex justify-center items-center size-18 mr-2  cursor-pointer"
-                              title="Stickers"
-                            >
-                              <Dropdown
-                                menu={{ items }}
-                                placement="top"
-                                open={openDropdownStickers}
-                                onOpenChange={onOpenDropdownStickersChange}
-                                trigger={["click"]}
-                                className={`${
-                                  openDropdownStickers
-                                    ? "text-[#ee4d2d]"
-                                    : "text-[#8ea4d1]"
-                                } transition-colors duration-200 `}
+                              files.length === 0 ? "h-[330px]" : "h-[266px]"
+                            }`}
+                          ></div>
+                          {files.length > 0 && (
+                            <section className="relative w-full h-16 flex bg-white border-t-[1px] border-solid border-[#e4e6e8] box-border ">
+                              <div className="ml-[9px] flex flex-auto py-[9px] overflow-y-hidden box-border h-16 custom-scrollbar-x">
+                                <div className="inline-flex items-center gap-[10px]">
+                                  <ImageChatbox
+                                    loading={loading}
+                                    setLoading={setLoading}
+                                    files={files}
+                                    handleRemoveFile={handleRemoveFile}
+                                  />
+                                  <label
+                                    className="size-[46px] border border-solid rounded border-[#eff2f4] flex justify-center items-center cursor-pointer"
+                                    title="Thêm hình ảnh/ video"
+                                  >
+                                    <input
+                                      accept="video/*,.flv,.3gp,.rm,.rmvb,.asf,.mp4,.webm,image/png,image/jpeg,image/jpg"
+                                      multiple
+                                      type="file"
+                                      className="hidden"
+                                      onChange={handleUploadFiles}
+                                    />
+                                    <FaPlus
+                                      className="text-[#a09e9e]"
+                                      size={12}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+                              <div
+                                className="w-6 h-16 flex flex-col items-center flex-shrink-0 flex-grow-0 text-[#a09e9e] pt-1"
+                                style={{ flexBasis: "auto" }}
                               >
-                                <MdOutlineEmojiEmotions size={18} />
-                              </Dropdown>
-                            </div>
-                            <div
-                              className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] "
-                              title="Hình ảnh"
-                            >
-                              <label>
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  id="uploadImage"
-                                  name="uploadImage"
-                                  onChange={handleUploadImage}
+                                <IoClose
+                                  size={17}
+                                  onClick={() => {
+                                    setFiles([]);
+                                  }}
                                 />
-                                <RiImage2Line
-                                  className="cursor-pointer"
-                                  size={18}
-                                />
-                              </label>
-                            </div>
-                            <div
-                              className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] "
-                              title="Video"
-                            >
-                              <label>
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  id="uploadVideo"
-                                  name="uploadVideo"
-                                  onChange={handleUploadVideo}
-                                />
-                                <RiVideoLine
-                                  className="cursor-pointer"
-                                  size={18}
-                                />
-                              </label>
-                            </div>
-                            <div
-                              className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] cursor-pointer"
-                              title="Sản phẩm"
-                            >
-                              <LuShoppingBag size={18} />
-                            </div>
-                            <div
-                              className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] cursor-pointer"
-                              title="Đơn hàng"
-                            >
-                              <MdEventNote size={18} />
+                              </div>
+                            </section>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="min-h-[88px] border-t-[1px] border-sold border-[#e4e6e8] w-full z-[11]">
+                        <div className="size-full box-border relative">
+                          <div className="h-[88px] bg-white relative">
+                            <div className="h-full flex flex-col justify-end">
+                              <form
+                                className="flex-1 overflow-y-auto p-2"
+                                onSubmit={handleSendMessage}
+                              >
+                                <div className="flex flex-col w-full h-full">
+                                  <textarea
+                                    className="w-full flex-grow text-[#333] text-sm resize-none border-none outline-none box-border overflow-y-auto"
+                                    style={{ wordBreak: "break-word" }}
+                                    placeholder="Nhập nội dung tin nhắn"
+                                    onChange={handleOnChange}
+                                  />
+                                </div>
+                                <div className="absolute right-2 bottom-[10px]">
+                                  <button
+                                    className={`${
+                                      message.text ||
+                                      message.imgUrl ||
+                                      message.videoUrl
+                                        ? "text-[#ee4d2d]"
+                                        : "text-[#ccc] pointer-events-none cursor-not-allowed"
+                                    } size-[18px]  transition-colors duration-200 ease-in`}
+                                    type="submit"
+                                    onSubmit={handleSendMessage}
+                                  >
+                                    <BiSend size={18} />
+                                  </button>
+                                </div>
+                              </form>
+                              <div className="w-full h-[30px]">
+                                <div className="flex h-full flex-row box-border flex-nowrap justify-between bg-white pb-[6px] pl-2">
+                                  <div className="flex flex-nowrap justify-start">
+                                    <div
+                                      className="flex justify-center items-center size-18 mr-2  cursor-pointer"
+                                      title="Stickers"
+                                    >
+                                      <Dropdown
+                                        menu={{ items }}
+                                        placement="top"
+                                        open={openDropdownStickers}
+                                        onOpenChange={
+                                          onOpenDropdownStickersChange
+                                        }
+                                        trigger={["click"]}
+                                        className={`${
+                                          openDropdownStickers
+                                            ? "text-[#ee4d2d]"
+                                            : "text-[#8ea4d1]"
+                                        } transition-colors duration-200 `}
+                                      >
+                                        <MdOutlineEmojiEmotions size={18} />
+                                      </Dropdown>
+                                    </div>
+                                    <div
+                                      className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] "
+                                      title="Hình ảnh"
+                                    >
+                                      <label>
+                                        <input
+                                          type="file"
+                                          className="hidden"
+                                          id="uploadImage"
+                                          name="uploadImage"
+                                          onChange={handleUploadFiles}
+                                          multiple
+                                        />
+                                        <RiImage2Line
+                                          className="cursor-pointer"
+                                          size={18}
+                                        />
+                                      </label>
+                                    </div>
+                                    <div
+                                      className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] "
+                                      title="Video"
+                                    >
+                                      <label>
+                                        <input
+                                          type="file"
+                                          className="hidden"
+                                          id="uploadVideo"
+                                          name="uploadVideo"
+                                          onChange={handleUploadFiles}
+                                          multiple
+                                        />
+                                        <RiVideoLine
+                                          className="cursor-pointer"
+                                          size={18}
+                                        />
+                                      </label>
+                                    </div>
+                                    <div
+                                      className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] cursor-pointer"
+                                      title="Sản phẩm"
+                                    >
+                                      <LuShoppingBag size={18} />
+                                    </div>
+                                    <div
+                                      className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] cursor-pointer"
+                                      title="Đơn hàng"
+                                    >
+                                      <MdEventNote size={18} />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
