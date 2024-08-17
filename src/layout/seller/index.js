@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import logo from '../../assets/orange-logo.png'
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { GoBook } from "react-icons/go";
@@ -7,6 +7,7 @@ import { FaUserCircle } from "react-icons/fa";
 import { FaChevronDown } from "react-icons/fa";
 import { Layout } from 'antd';
 import { Divider, Menu, Button, theme } from 'antd';
+import "../../styles/seller.css"
 
 import {
     AppstoreOutlined,
@@ -91,17 +92,37 @@ const items = [
 ];
 const SellerAuthLayout = ({ children }) => {
     const [current, setCurrent] = useState('1');
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
     const navigate = useNavigate();
     const handleNavigation = (e) => {
         console.log('click ', e.key);
         setCurrent(e.key);
-        if(e.key)
+        if (e.key)
             navigate(e.key)
     };
     const [collapsed, setCollapsed] = useState(false);
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
+    useEffect(() => {
+        // Hàm cập nhật chiều rộng của cửa sổ
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+
+        // Thêm sự kiện lắng nghe khi cửa sổ thay đổi kích thước
+        window.addEventListener('resize', handleResize);
+
+        // Cleanup sự kiện khi component unmount
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+    useEffect(() => {
+        setCollapsed(false)
+        console.log(windowWidth)
+    }, [windowWidth])
     return (
         <>
             <Layout>
@@ -149,7 +170,7 @@ const SellerAuthLayout = ({ children }) => {
                             theme="light"
                             items={items}
                             onClick={handleNavigation}
-                            className='text-slate-500 lg:w-48'
+                            className='custom-menu text-slate-500 font-[400] lg:w-48'
 
                         />
                     </Sider>
@@ -172,7 +193,7 @@ const SellerAuthLayout = ({ children }) => {
                                 }}
                             />
                         </Header>
-                        <Content className='min-h-72 ml-8 mt-3'>
+                        <Content className='min-h-72 mx-8 mt-3'>
                             {children}
                         </Content>
                     </Layout>

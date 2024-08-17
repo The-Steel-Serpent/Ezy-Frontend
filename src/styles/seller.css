@@ -1,0 +1,38 @@
+.ant-menu-submenu-title :hover {
+    @apply text-primary;
+}
+
+
+.ant-menu-item-only-child :hover {
+    color: chocolate;
+}
+
+.ant-menu-item-selected {
+    color: chocolate !important;
+    background-color: transparent !important;
+    font-size: 15px;
+}
+
+.custom-select-radius-left .ant-select-selector {
+    border-radius: unset !important;
+    border-top-left-radius: 5px !important;
+    border-bottom-left-radius: 5px !important;
+}
+
+.ant-input {
+    border-radius: unset !important;
+    border-top-right-radius: 5px !important;
+    border-bottom-right-radius: 5px !important;
+}
+
+.ant-input-outlined:hover {
+    border-color: black !important;
+}
+
+.ant-input-outlined {
+    border-color: rgb(214, 212, 212) !important;
+}
+.custom-none-border .ant-select-selector{
+    border: unset !important;
+}
+

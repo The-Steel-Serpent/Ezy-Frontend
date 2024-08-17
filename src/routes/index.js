@@ -10,8 +10,8 @@ import AdminLogin from "../pages/admin/AdminLogin";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import SellerAuthLayout from "../layout/seller";
 import SellerHome from "../pages/seller/SellerHome";
-import AllOrder from "../layout/seller/OrderManagement/AllOrders";
-import OrderCancelled from "../layout/seller/OrderManagement/OrderCancelled";
+import AllOrder from "../pages/seller/AllOrders";
+import OrderCancelled from "../pages/seller/OrderCancelled";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -73,7 +73,7 @@ const router = createBrowserRouter([
       {
         path: "seller/order/all",
         element: (
-           <SellerAuthLayout>
+          <SellerAuthLayout>
             <AllOrder />
           </SellerAuthLayout>
         )
@@ -82,7 +82,7 @@ const router = createBrowserRouter([
         path: "seller/order/ordercancelled",
         element: (
           <SellerAuthLayout>
-            <OrderCancelled  />
+            <OrderCancelled />
           </SellerAuthLayout>
         )
       },
