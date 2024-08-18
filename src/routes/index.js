@@ -12,6 +12,7 @@ import SellerAuthLayout from "../layout/seller";
 import SellerHome from "../pages/seller/SellerHome";
 import AllOrder from "../pages/seller/AllOrders";
 import OrderCancelled from "../pages/seller/OrderCancelled";
+import AdminAuthLayout from "../layout/admin";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -87,13 +88,21 @@ const router = createBrowserRouter([
         )
       },
       //Admin
-      //login
+      //login && dashboard
       {
         path: "admin/login",
         element: (
           <AuthLayout>
             <AdminLogin />
           </AuthLayout>
+        )
+      },
+      {
+        path: "admin/dashboard",
+        element: (
+            <AdminAuthLayout>
+              <AdminDashboard />
+            </AdminAuthLayout>
         )
       },
     ],
