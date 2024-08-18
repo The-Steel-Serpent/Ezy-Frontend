@@ -8,7 +8,7 @@ const handleChange = (value) => {
 const AllOrders = () => {
   return (
     <div className='bg-white rouned'>
-      <OrderStatus status={'sub1'}/>
+      <OrderStatus status={'/seller/order/all'}/>
       <OrderFilter />
     </div>
   )

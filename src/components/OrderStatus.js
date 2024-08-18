@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Divider, Menu, Button, theme } from 'antd';
 import "../styles/seller.css"
+import { useNavigate } from 'react-router-dom';
 const items = [
     {
-        key: 'sub1',
+        key: '/seller/order/all',
         label: 'Tất cả',
 
     },
@@ -24,7 +25,7 @@ const items = [
         label: 'Đã giao'
     },
     {
-        key: 'sub6',
+        key: '/seller/order/ordercancelled',
         label: 'Đơn hủy'
     },
     {
@@ -36,7 +37,17 @@ const items = [
         label: 'Giao không thành công'
     }
 ];
-const OrderStatus = ({status}) => {
+const OrderStatus = ({ status }) => {
+    const navigate = useNavigate();
+
+    const handleNavigate = (e) => {
+        if (e.key) {
+            navigate(e.key)
+        }
+    }
+    useEffect(() => {
+        console.log('status',status);
+    }, [])
     return (
         <div>
             <div className='pt-4 pl-4 flex justify-between'>
@@ -53,7 +64,7 @@ const OrderStatus = ({status}) => {
                 theme="light"
                 items={items}
                 className="custom-menu font-[500]"
-
+                onClick={handleNavigate}
             />
         </div>
     )

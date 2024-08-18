@@ -13,6 +13,8 @@ import SellerHome from "../pages/seller/SellerHome";
 import AllOrder from "../pages/seller/AllOrders";
 import OrderCancelled from "../pages/seller/OrderCancelled";
 import AdminAuthLayout from "../layout/admin";
+import AllProduct from "../pages/seller/AllProduct";
+import AddProduct from "../pages/seller/AddProduct";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -86,6 +88,23 @@ const router = createBrowserRouter([
             <OrderCancelled />
           </SellerAuthLayout>
         ),
+      },
+      //seller/order
+      {
+        path: "seller/product/all",
+        element: (
+          <SellerAuthLayout>
+            <AllProduct />
+          </SellerAuthLayout>
+        )
+      },
+      {
+        path: "seller/product/add-product",
+        element: (
+          <SellerAuthLayout>
+            <AddProduct />
+          </SellerAuthLayout>
+        )
       },
       //Admin
       //login && dashboard
