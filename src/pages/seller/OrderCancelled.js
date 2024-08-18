@@ -4,7 +4,7 @@ import OrderStatus from '../../components/OrderStatus'
 const OrderCancelled = () => {
   return (
     <div className='bg-white rouned'>
-      <OrderStatus status={'sub6'} />
+      <OrderStatus status={'/seller/order/ordercancelled'} />
 
     </div>
   )

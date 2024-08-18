@@ -7,12 +7,14 @@ import { FaUserCircle } from "react-icons/fa";
 import { FaChevronDown } from "react-icons/fa";
 import { Layout } from 'antd';
 import { Divider, Menu, Button, theme } from 'antd';
+import { TfiWallet } from "react-icons/tfi";
+import { BsShopWindow } from "react-icons/bs";
+
 import "../../styles/seller.css"
 
 import {
     AppstoreOutlined,
     MailOutlined,
-    SettingOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
 } from '@ant-design/icons';
@@ -24,7 +26,7 @@ const { Header, Content, Sider } = Layout;
 const items = [
     {
         key: 'sub1',
-        label: 'Quản lý đơn hàng',
+        label: 'Quản Lý Đơn Hàng',
         icon: <MailOutlined />,
         children: [
             {
@@ -39,53 +41,54 @@ const items = [
     },
     {
         key: 'sub2',
-        label: 'Quản lý sản phẩm',
+        label: 'Quản Lý Sản Phẩm',
         icon: <AppstoreOutlined />,
         children: [
             {
-                key: '5',
-                label: 'Option 5',
+                key: '/seller/product/all',
+                label: 'Tất cả sản phẩm',
             },
             {
-                key: '6',
-                label: 'Option 6',
-            },
-            {
-                key: 'sub3',
-                label: 'Submenu',
-                children: [
-                    {
-                        key: '7',
-                        label: 'Option 7',
-                    },
-                    {
-                        key: '8',
-                        label: 'Option 8',
-                    },
-                ],
+                key: '/seller/product/add-product',
+                label: 'Thêm sản phẩm',
             },
         ],
     },
     {
         key: 'sub3',
-        label: 'Navigation Three',
-        icon: <SettingOutlined />,
+        label: 'Tài Chính',
+        icon: <TfiWallet />,
         children: [
             {
                 key: '9',
-                label: 'Option 9',
+                label: 'Doanh thu',
             },
             {
                 key: '10',
-                label: 'Option 10',
+                label: 'Số dư TK Shopee',
             },
             {
                 key: '11',
-                label: 'Option 11',
+                label: 'Tài khoản ngân hàng',
+            },
+        ],
+    },
+    {
+        key: 'sub4',
+        label: 'Quản Lý Shop',
+        icon: <BsShopWindow />,
+        children: [
+            {
+                key: '9',
+                label: 'Doanh thu',
             },
             {
-                key: '12',
-                label: 'Option 12',
+                key: '10',
+                label: 'Số dư TK Shopee',
+            },
+            {
+                key: '11',
+                label: 'Tài khoản ngân hàng',
             },
         ],
     },
@@ -95,8 +98,8 @@ const SellerAuthLayout = ({ children }) => {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
     const navigate = useNavigate();
-    const handleNavigation = (e) => {
-        console.log('click ', e.key);
+    const handleNavigate = (e) => {
+        // console.log('click ', e.key);
         setCurrent(e.key);
         if (e.key)
             navigate(e.key)
@@ -106,22 +109,20 @@ const SellerAuthLayout = ({ children }) => {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
     useEffect(() => {
-        // Hàm cập nhật chiều rộng của cửa sổ
+        // update window width
         const handleResize = () => {
             setWindowWidth(window.innerWidth);
         };
-
-        // Thêm sự kiện lắng nghe khi cửa sổ thay đổi kích thước
+        // listen event when window width change
         window.addEventListener('resize', handleResize);
-
-        // Cleanup sự kiện khi component unmount
+        // Cleanup when component unmount
         return () => {
             window.removeEventListener('resize', handleResize);
         };
     }, []);
     useEffect(() => {
         setCollapsed(false)
-        console.log(windowWidth)
+        // console.log(windowWidth)
     }, [windowWidth])
     return (
         <>
@@ -165,13 +166,12 @@ const SellerAuthLayout = ({ children }) => {
                     <Sider trigger={null} collapsible collapsed={collapsed} className='bg-white w-fit h-fit shadow-xl'>
                         <div className="demo-logo-vertical" />
                         <Menu
-                            defaultOpenKeys={['sub1', 'sub2', 'sub3']}
+                            defaultOpenKeys={['sub1', 'sub2', 'sub3', 'sub4']}
                             mode="inline"
                             theme="light"
                             items={items}
-                            onClick={handleNavigation}
+                            onClick={handleNavigate}
                             className='custom-menu text-slate-500 font-[400] lg:w-48'
-
                         />
                     </Sider>
                     <Layout className='h-full'>
