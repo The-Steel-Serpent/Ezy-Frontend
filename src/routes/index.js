@@ -52,7 +52,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <SellerHome />
           </SellerAuthLayout>
-        )
+        ),
       },
       {
         path: "seller/login",
@@ -60,7 +60,7 @@ const router = createBrowserRouter([
           <AuthLayout>
             <SellerLogin />
           </AuthLayout>
-        )
+        ),
       },
       {
         path: "seller/register",
@@ -68,7 +68,7 @@ const router = createBrowserRouter([
           <AuthLayout>
             <SellerRegister />
           </AuthLayout>
-        )
+        ),
       },
       //seller/order
       {
@@ -77,7 +77,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <AllOrder />
           </SellerAuthLayout>
-        )
+        ),
       },
       {
         path: "seller/order/ordercancelled",
@@ -85,7 +85,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <OrderCancelled />
           </SellerAuthLayout>
-        )
+        ),
       },
       //Admin
       //login && dashboard
@@ -95,15 +95,15 @@ const router = createBrowserRouter([
           <AuthLayout>
             <AdminLogin />
           </AuthLayout>
-        )
+        ),
       },
       {
         path: "admin/dashboard",
         element: (
-            <AdminAuthLayout>
-              <AdminDashboard />
-            </AdminAuthLayout>
-        )
+          <AdminAuthLayout>
+            <AdminDashboard />
+          </AdminAuthLayout>
+        ),
       },
     ],
   },

@@ -187,7 +187,7 @@
   background: #f1f1f1; /* Background of the scrollbar track */
 }
 .conversation {
-  @apply w-full h-10 border-b-[1px];
+  @apply w-full h-10 border-b-[1px] hidden;
 }
 .conversation-dropdown-options {
   padding: 16px !important;

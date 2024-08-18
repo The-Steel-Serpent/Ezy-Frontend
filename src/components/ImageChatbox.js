@@ -5,7 +5,10 @@ import { IoCloseCircle } from "react-icons/io5";
 const ImageChatbox = ({ loading, setLoading, files, handleRemoveFile }) => {
   useEffect(() => {
     if (files.length > 0) {
+      const timer = setTimeout(() => setLoading(false), 3000);
+
       return () => {
+        clearTimeout(timer); // Xóa timer khi unmount
         files.forEach((file) => URL.revokeObjectURL(URL.createObjectURL(file)));
       };
     }
