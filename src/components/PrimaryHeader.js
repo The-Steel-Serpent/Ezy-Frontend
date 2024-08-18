@@ -86,7 +86,7 @@ const PrimaryHeader = () => {
               )}
               {user._id && (
                 <AvatarWithPopover
-                  name={user.name}
+                  name={user.username}
                   img={user.profile_pic}
                   size={23}
                 />
