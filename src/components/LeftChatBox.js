@@ -1,6 +1,6 @@
 import { DownOutlined, SearchOutlined } from "@ant-design/icons";
 import { Dropdown, Input, Space, Spin } from "antd";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { BiTrash } from "react-icons/bi";
 import { BsPinAngle } from "react-icons/bs";
 import {
@@ -10,7 +10,7 @@ import {
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import axios from "axios";
-
+import { format } from "date-fns";
 const items = [
   {
     label: "Tất cả",
@@ -141,10 +141,12 @@ const conversations = [
     date: "Ngày hôm qua",
   },
 ];
-const LeftChatBox = ({ onUserSelected }) => {
+const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
   //Redux state
   const user = useSelector((state) => state.user);
-  const socketConnection = useSelector((state) => state?.socketConnection);
+  const socketConnection = useSelector(
+    (state) => state?.user?.socketConnection
+  );
 
   //States
   const [loading, setLoading] = useState(false);
@@ -161,7 +163,21 @@ const LeftChatBox = ({ onUserSelected }) => {
     },
     [items]
   );
+  const formatLastDay = useCallback((lastDay) => {
+    const today = new Date();
+    const updatedDay = new Date(lastDay);
+    if (today > updatedDay) {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      if (updatedDay > yesterday) {
+        return "Ngày hôm qua";
+      }
+    }
+    const day = updatedDay.getDate();
+    const month = updatedDay.getMonth() + 1;
 
+    return `${day}/${month}`;
+  }, []);
   //Effects
   useEffect(() => {
     const handleSearchUser = async () => {
@@ -183,9 +199,10 @@ const LeftChatBox = ({ onUserSelected }) => {
   useEffect(() => {
     if (socketConnection) {
       socketConnection.emit("sidebar", user?._id);
+
       socketConnection.on("conversation", (data) => {
+        // console.log("conversation", data);
         const conversationUserData = data.map((conversationUser, index) => {
-          //Sender/Receiver is me
           if (
             conversationUser?.sender?._id === conversationUser?.receiver?._id
           ) {
@@ -193,24 +210,22 @@ const LeftChatBox = ({ onUserSelected }) => {
               ...conversationUser,
               userDetails: conversationUser?.sender,
             };
-          } else if (
-            conversationUser?.receiver?._id !== conversationUser?.sender?._id
-          ) {
+          } else if (conversationUser?.receiver?._id !== user?._id) {
             return {
               ...conversationUser,
-              userDetails: conversationUser?.receiver,
+              userDetails: conversationUser.receiver,
             };
           } else {
             return {
               ...conversationUser,
-              userDetails: conversationUser?.sender,
+              userDetails: conversationUser.sender,
             };
           }
         });
         setAllUser(conversationUserData);
       });
     }
-  }, [user, socketConnection]);
+  }, [socketConnection, user]);
 
   return (
     <div className="left-chatbox">
@@ -283,7 +298,11 @@ const LeftChatBox = ({ onUserSelected }) => {
             return (
               <div
                 key={conversation?.userDetails?._id}
-                className="conversation-cell"
+                className={`${
+                  conversation?.userDetails?._id === selectedUserRef
+                    ? "active"
+                    : ""
+                } conversation-cell`}
                 onClick={() => {
                   onUserSelected(conversation?.userDetails?._id);
                 }}
@@ -303,7 +322,7 @@ const LeftChatBox = ({ onUserSelected }) => {
                       </div>
                     </div>
                     <div className="text-[#666] text-xs whitespace-nowrap">
-                      18/8
+                      {formatLastDay(conversation?.lastMsg?.updatedAt)}
                     </div>
                   </div>
                   <div className="chatting-text">

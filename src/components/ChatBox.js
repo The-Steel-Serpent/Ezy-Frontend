@@ -37,6 +37,7 @@ const ChatBox = () => {
   const [openChatBox, setOpenChatBox] = useState(false);
   const [expandChatBox, setExpandChatBox] = useState(true);
   const [selectedUserID, setSelectedUserID] = useState();
+  const selectedUserRef = useRef();
   //Handler
   const handleOpenChatBox = useCallback(() => {
     setOpenChatBox((preve) => {
@@ -49,7 +50,6 @@ const ChatBox = () => {
     });
   }, []);
   const handleUserSelected = useCallback((userID) => {
-    console.log(userID);
     setSelectedUserID(userID);
   }, []);
   //Effects
@@ -194,7 +194,10 @@ const ChatBox = () => {
             {user?._id && (
               <>
                 {/**Left-Chatbox */}
-                <LeftChatBox onUserSelected={handleUserSelected} />
+                <LeftChatBox
+                  onUserSelected={handleUserSelected}
+                  selectedUserRef={selectedUserID}
+                />
                 {/**Right-Chatbox */}
                 <RightChatBox
                   expandChatBox={expandChatBox}
