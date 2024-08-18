@@ -214,3 +214,6 @@
 .image-list-item:hover .btn-remove-image {
   @apply text-[19px] cursor-pointer;
 }
+.ant-spin .ant-spin-dot-holder {
+  @apply text-primary;
+}

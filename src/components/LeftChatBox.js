@@ -1,5 +1,5 @@
 import { DownOutlined, SearchOutlined } from "@ant-design/icons";
-import { Dropdown, Input, Space } from "antd";
+import { Dropdown, Input, Space, Spin } from "antd";
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { BiTrash } from "react-icons/bi";
 import { BsPinAngle } from "react-icons/bs";
@@ -8,6 +8,9 @@ import {
   MdOutlineNotificationsOff,
 } from "react-icons/md";
 import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import axios from "axios";
+
 const items = [
   {
     label: "Tất cả",
@@ -138,13 +141,16 @@ const conversations = [
     date: "Ngày hôm qua",
   },
 ];
-const LeftChatBox = () => {
+const LeftChatBox = ({ onUserSelected }) => {
   //Redux state
   const user = useSelector((state) => state.user);
   const socketConnection = useSelector((state) => state?.socketConnection);
 
   //States
+  const [loading, setLoading] = useState(false);
   const [allUser, setAllUser] = useState([]);
+  const [search, setSearch] = useState("");
+  const [searchUser, setSearchUser] = useState([]);
   const [selectedDropdownSortByLabel, setSelectedDropdownSortByLabel] =
     useState("Tất cả");
   //Handlers
@@ -157,6 +163,23 @@ const LeftChatBox = () => {
   );
 
   //Effects
+  useEffect(() => {
+    const handleSearchUser = async () => {
+      try {
+        const URL = `${process.env.REACT_APP_BACKEND_URL}/api/search-user`;
+        setLoading(true);
+        const res = await axios.post(URL, {
+          search: search,
+          currentUser: user?.username,
+        });
+        setLoading(false);
+        setSearchUser(res.data.data);
+      } catch (error) {
+        toast.error(error?.response?.data?.message);
+      }
+    };
+    handleSearchUser();
+  }, [search]);
   useEffect(() => {
     if (socketConnection) {
       socketConnection.emit("sidebar", user?._id);
@@ -197,6 +220,10 @@ const LeftChatBox = () => {
           className="search-chatbox"
           prefix={<SearchOutlined className="text-slate-500" />}
           placeholder="Tìm kiếm"
+          onChange={(e) => {
+            setSearch(e.target.value);
+          }}
+          value={search}
         />
         <Dropdown
           menu={{
@@ -216,52 +243,94 @@ const LeftChatBox = () => {
       </div>
       {/**ChatUser */}
       <div className="w-auto h-[2716px] max-w-56 max-h-[2716px] overflow-y-scroll custom-scrollbar relative">
-        {allUser.map((conversation, key) => {
-          return (
-            <div key={key} className="conversation-cell">
-              <img
-                className="border-0 size-8 rounded-[50%]"
-                src={conversation?.userDetails?.profile_pic}
-              />
-              <div className="flex-1 overflow-hidden flex ml-2 flex-col justify-center">
-                <div className="flex items-center justify-between overflow-hidden">
-                  <div className="flex mr-2 overflow-hidden">
-                    <div
-                      title="razervietnam"
-                      className="flex-1 text-[#333] text-base overflow-hidden whitespace-nowrap text-ellipsis  font-[500]"
-                    >
-                      {conversation?.userDetails?.name}
+        {search &&
+          (loading ? (
+            <div className="size-full flex justify-center items-center">
+              <Spin className="text-primary" />
+            </div>
+          ) : (
+            searchUser.map((user, key) => {
+              return (
+                <div
+                  key={user?._id}
+                  className="conversation-cell"
+                  onClick={() => {
+                    onUserSelected(user?._id);
+                  }}
+                >
+                  <img
+                    className="border-0 size-8 rounded-[50%]"
+                    src={user.profile_pic}
+                  />
+                  <div className="flex-1 overflow-hidden flex ml-2 flex-col justify-center">
+                    <div className="flex items-center justify-between overflow-hidden">
+                      <div className="flex mr-2 overflow-hidden">
+                        <div
+                          title={user.username}
+                          className="flex-1 text-[#333] text-base overflow-hidden whitespace-nowrap text-ellipsis  font-[500]"
+                        >
+                          {user.username}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-[#666] text-xs whitespace-nowrap">
-                    18/8
-                  </div>
                 </div>
-                <div className="chatting-text">
-                  <div className="text-[#666] text-sm mr-2 overflow-hidden whitespace-nowrap text-ellipsis">
-                    <span title="Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2">
-                      {conversation?.lastMsg?.text}
-                    </span>
+              );
+            })
+          ))}
+        {!search &&
+          allUser.map((conversation, key) => {
+            return (
+              <div
+                key={conversation?.userDetails?._id}
+                className="conversation-cell"
+                onClick={() => {
+                  onUserSelected(conversation?.userDetails?._id);
+                }}
+              >
+                <img
+                  className="border-0 size-8 rounded-[50%]"
+                  src={conversation?.userDetails?.profile_pic}
+                />
+                <div className="flex-1 overflow-hidden flex ml-2 flex-col justify-center">
+                  <div className="flex items-center justify-between overflow-hidden">
+                    <div className="flex mr-2 overflow-hidden">
+                      <div
+                        title={conversation?.userDetails?.username}
+                        className="flex-1 text-[#333] text-base overflow-hidden whitespace-nowrap text-ellipsis  font-[500]"
+                      >
+                        {conversation?.userDetails?.username}
+                      </div>
+                    </div>
+                    <div className="text-[#666] text-xs whitespace-nowrap">
+                      18/8
+                    </div>
                   </div>
+                  <div className="chatting-text">
+                    <div className="text-[#666] text-sm mr-2 overflow-hidden whitespace-nowrap text-ellipsis">
+                      <span title="Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2">
+                        {conversation?.lastMsg?.text}
+                      </span>
+                    </div>
 
-                  <div className="conversation-cell-dropdown-options">
-                    <Dropdown
-                      menu={{ items: conversationOptions }}
-                      trigger={["click"]}
-                      className="h-6 w-6 flex justify-center items-center p-4"
-                    >
-                      <a onClick={(e) => e.preventDefault()}>
-                        <Space className="text-base inline-block text-[#666]">
-                          <DownOutlined className="text-sm" />
-                        </Space>
-                      </a>
-                    </Dropdown>
+                    <div className="conversation-cell-dropdown-options">
+                      <Dropdown
+                        menu={{ items: conversationOptions }}
+                        trigger={["click"]}
+                        className="h-6 w-6 flex justify-center items-center p-4"
+                      >
+                        <a onClick={(e) => e.preventDefault()}>
+                          <Space className="text-base inline-block text-[#666]">
+                            <DownOutlined className="text-sm" />
+                          </Space>
+                        </a>
+                      </Dropdown>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
     </div>
   );

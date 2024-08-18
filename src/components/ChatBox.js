@@ -36,7 +36,7 @@ const ChatBox = () => {
 
   const [openChatBox, setOpenChatBox] = useState(false);
   const [expandChatBox, setExpandChatBox] = useState(true);
-
+  const [selectedUserID, setSelectedUserID] = useState();
   //Handler
   const handleOpenChatBox = useCallback(() => {
     setOpenChatBox((preve) => {
@@ -48,7 +48,10 @@ const ChatBox = () => {
       return !preve;
     });
   }, []);
-
+  const handleUserSelected = useCallback((userID) => {
+    console.log(userID);
+    setSelectedUserID(userID);
+  }, []);
   //Effects
   useEffect(() => {
     const socketConnection = io(process.env.REACT_APP_BACKEND_URL, {
@@ -191,9 +194,12 @@ const ChatBox = () => {
             {user?._id && (
               <>
                 {/**Left-Chatbox */}
-                <LeftChatBox />
+                <LeftChatBox onUserSelected={handleUserSelected} />
                 {/**Right-Chatbox */}
-                <RightChatBox expandChatBox={expandChatBox} />
+                <RightChatBox
+                  expandChatBox={expandChatBox}
+                  selectedUserID={selectedUserID}
+                />
               </>
             )}
           </div>
