@@ -166,13 +166,29 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
   const formatLastDay = useCallback((lastDay) => {
     const today = new Date();
     const updatedDay = new Date(lastDay);
+    const weekdays = [
+      "Chủ nhật",
+      "Thứ Hai",
+      "Thứ Ba",
+      "Thứ Tư",
+      "Thứ Năm",
+      "Thứ Sáu",
+      "Thứ Bảy",
+    ];
+    if (today.toDateString() === updatedDay.toDateString()) {
+      return "Ngày hôm nay";
+    }
     if (today > updatedDay) {
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
       if (updatedDay === yesterday) {
         return "Ngày hôm qua";
       }
+      if (updatedDay.toDateString() !== yesterday.toDateString()) {
+        return weekdays[updatedDay.getDay()];
+      }
     }
+
     const day = updatedDay.getDate();
     const month = updatedDay.getMonth() + 1;
 

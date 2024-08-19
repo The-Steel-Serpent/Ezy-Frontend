@@ -1,6 +1,6 @@
 import { DownOutlined } from "@ant-design/icons";
-import { Divider, Dropdown, Menu, Space, Switch } from "antd";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import { Divider, Dropdown, Menu, Space, Spin, Switch } from "antd";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { BiSend } from "react-icons/bi";
 import { FaAngleRight, FaPlus } from "react-icons/fa6";
 import { LuShoppingBag } from "react-icons/lu";
@@ -88,7 +88,7 @@ const RightChatBox = (props) => {
     imageUrl: "",
     videoUrl: "",
   });
-
+  const currMessage = useRef(null);
   //Handlers
   const onOpenDropdownStickersChange = useCallback(() => {
     setOpenDropdownStickers((preve) => {
@@ -144,6 +144,17 @@ const RightChatBox = (props) => {
     },
     [message]
   );
+  const handleFormatTime = useCallback((time) => {
+    const date = new Date(time);
+
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+
+    hours = hours.toString().padStart(2, "0");
+    minutes = minutes.toString().padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+  }, []);
   const handleRemoveFile = useCallback((key) => {
     setFiles((prevFileList) =>
       prevFileList.filter((_, index) => index !== key)
@@ -153,6 +164,7 @@ const RightChatBox = (props) => {
   //Effects
   useEffect(() => {
     if (socketConnection) {
+      setLoading(true);
       socketConnection.emit("message-section", props.selectedUserID);
       socketConnection.emit("seen", props.selectedUserID);
       socketConnection.on("message-user", (data) => {
@@ -161,9 +173,14 @@ const RightChatBox = (props) => {
       socketConnection.on("message", (data) => {
         setAllMessage(data);
       });
+      setLoading(false);
     }
   }, [user, props.selectedUserID, socketConnection]);
 
+  useEffect(() => {
+    if (currMessage.current)
+      currMessage.current.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [allMessage]);
   return (
     <div className={`${props.expandChatBox ? "" : "hidden"} right-chatbox `}>
       {/**Primary Bg Content */}
@@ -263,55 +280,82 @@ const RightChatBox = (props) => {
               </a>
             </Dropdown>
           </div>
-          <div className="flex flex-col  w-full">
-            <div className="bg-[#f3f3f3]  min-w-[6px] flex-1 border-t-[1px] border-solid border-[eee]">
+          <div className="flex flex-col w-full relative">
+            <div className="bg-[#f3f3f3] min-w-[6px] flex-1 border-t-[1px] border-solid border-[eee]">
               <div className="flex size-full flex-col">
                 <div
                   className={`${
                     files.length === 0 ? "h-[330px]" : "h-[266px]"
                   }`}
-                ></div>
-                {files.length > 0 && (
-                  <section className="relative w-full h-16 flex bg-white border-t-[1px] border-solid border-[#e4e6e8] box-border ">
-                    <div className="ml-[9px] flex flex-auto py-[9px] overflow-y-hidden box-border h-16 custom-scrollbar-x">
-                      <div className="inline-flex items-center gap-[10px]">
-                        <ImageChatbox
-                          loading={loading}
-                          setLoading={setLoading}
-                          files={files}
-                          handleRemoveFile={handleRemoveFile}
-                        />
-                        <label
-                          className="size-[46px] border border-solid rounded border-[#eff2f4] flex justify-center items-center cursor-pointer"
-                          title="Thêm hình ảnh/ video"
-                        >
-                          <input
-                            accept="video/*,.flv,.3gp,.rm,.rmvb,.asf,.mp4,.webm,image/png,image/jpeg,image/jpg"
-                            multiple
-                            type="file"
-                            className="hidden"
-                            onChange={handleUploadFiles}
-                          />
-                          <FaPlus className="text-[#a09e9e]" size={12} />
-                        </label>
+                >
+                  <div className="w-full h-full overflow-y-scroll custom-scrollbar">
+                    {loading ? (
+                      <div className="w-full h-full flex justify-center items-center ">
+                        <Spin className="text-primary" />
                       </div>
-                    </div>
-                    <div
-                      className="w-6 h-16 flex flex-col items-center flex-shrink-0 flex-grow-0 text-[#a09e9e] pt-1"
-                      style={{ flexBasis: "auto" }}
-                    >
-                      <IoClose
-                        size={17}
-                        onClick={() => {
-                          setFiles([]);
-                        }}
-                      />
-                    </div>
-                  </section>
-                )}
+                    ) : (
+                      allMessage?.map((message) => {
+                        return (
+                          <div
+                            className={`message-container ${
+                              user?._id === message.msgByUserID
+                                ? "sender"
+                                : "receiver"
+                            }`}
+                            ref={currMessage}
+                          >
+                            <div className="message">
+                              <span>{message?.text}</span>
+                              <span className="text-[#666] text-xs text-end static">
+                                {handleFormatTime(message?.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-
+            {files.length > 0 && (
+              <section className="static w-full h-16 flex bg-white border-t-[1px] border-solid border-[#e4e6e8] box-border ">
+                <div className="ml-[9px] flex flex-auto py-[9px] overflow-y-hidden box-border h-16 custom-scrollbar-x">
+                  <div className="inline-flex items-center gap-[10px]">
+                    <ImageChatbox
+                      loading={loading}
+                      setLoading={setLoading}
+                      files={files}
+                      handleRemoveFile={handleRemoveFile}
+                    />
+                    <label
+                      className="size-[46px] border border-solid rounded border-[#eff2f4] flex justify-center items-center cursor-pointer"
+                      title="Thêm hình ảnh/ video"
+                    >
+                      <input
+                        accept="video/*,.flv,.3gp,.rm,.rmvb,.asf,.mp4,.webm,image/png,image/jpeg,image/jpg"
+                        multiple
+                        type="file"
+                        className="hidden"
+                        onChange={handleUploadFiles}
+                      />
+                      <FaPlus className="text-[#a09e9e]" size={12} />
+                    </label>
+                  </div>
+                </div>
+                <div
+                  className="w-6 h-16 flex flex-col items-center flex-shrink-0 flex-grow-0 text-[#a09e9e] pt-1"
+                  style={{ flexBasis: "auto" }}
+                >
+                  <IoClose
+                    size={17}
+                    onClick={() => {
+                      setFiles([]);
+                    }}
+                  />
+                </div>
+              </section>
+            )}
             <div className="min-h-[88px] border-t-[1px] border-sold border-[#e4e6e8] w-full z-[11]">
               <div className="size-full box-border relative">
                 <div className="h-[88px] bg-white relative">

@@ -217,3 +217,19 @@
 .ant-spin .ant-spin-dot-holder {
   @apply text-primary;
 }
+
+.message-container {
+  @apply w-full px-4 text-sm my-1 flex;
+}
+.message-container.sender {
+  @apply justify-end;
+}
+.message-container.receiver {
+  @apply justify-start;
+}
+.message-container.sender .message {
+  @apply bg-[#d7f7ef];
+}
+.message {
+  @apply relative bg-white w-fit rounded-lg px-[10px] pb-[10px] pt-2 max-w-[312px] flex flex-col;
+}
