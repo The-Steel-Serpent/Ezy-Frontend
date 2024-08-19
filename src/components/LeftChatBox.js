@@ -198,6 +198,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
   }, [search]);
   useEffect(() => {
     if (socketConnection) {
+      setLoading(true);
       socketConnection.emit("sidebar", user?._id);
 
       socketConnection.on("conversation", (data) => {
@@ -223,6 +224,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
           }
         });
         setAllUser(conversationUserData);
+        setLoading(false);
       });
     }
   }, [socketConnection, user]);
@@ -294,62 +296,68 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
             })
           ))}
         {!search &&
-          allUser.map((conversation, key) => {
-            return (
-              <div
-                key={conversation?.userDetails?._id}
-                className={`${
-                  conversation?.userDetails?._id === selectedUserRef
-                    ? "active"
-                    : ""
-                } conversation-cell`}
-                onClick={() => {
-                  onUserSelected(conversation?.userDetails?._id);
-                }}
-              >
-                <img
-                  className="border-0 size-8 rounded-[50%]"
-                  src={conversation?.userDetails?.profile_pic}
-                />
-                <div className="flex-1 overflow-hidden flex ml-2 flex-col justify-center">
-                  <div className="flex items-center justify-between overflow-hidden">
-                    <div className="flex mr-2 overflow-hidden">
-                      <div
-                        title={conversation?.userDetails?.username}
-                        className="flex-1 text-[#333] text-base overflow-hidden whitespace-nowrap text-ellipsis  font-[500]"
-                      >
-                        {conversation?.userDetails?.username}
+          (loading ? (
+            <div className="size-full flex justify-center items-center">
+              <Spin className="text-primary" />
+            </div>
+          ) : (
+            allUser.map((conversation, key) => {
+              return (
+                <div
+                  key={conversation?.userDetails?._id}
+                  className={`${
+                    conversation?.userDetails?._id === selectedUserRef
+                      ? "active"
+                      : ""
+                  } conversation-cell`}
+                  onClick={() => {
+                    onUserSelected(conversation?.userDetails?._id);
+                  }}
+                >
+                  <img
+                    className="border-0 size-8 rounded-[50%]"
+                    src={conversation?.userDetails?.profile_pic}
+                  />
+                  <div className="flex-1 overflow-hidden flex ml-2 flex-col justify-center">
+                    <div className="flex items-center justify-between overflow-hidden">
+                      <div className="flex mr-2 overflow-hidden">
+                        <div
+                          title={conversation?.userDetails?.username}
+                          className="flex-1 text-[#333] text-base overflow-hidden whitespace-nowrap text-ellipsis  font-[500]"
+                        >
+                          {conversation?.userDetails?.username}
+                        </div>
+                      </div>
+                      <div className="text-[#666] text-xs whitespace-nowrap">
+                        {formatLastDay(conversation?.lastMsg?.updatedAt)}
                       </div>
                     </div>
-                    <div className="text-[#666] text-xs whitespace-nowrap">
-                      {formatLastDay(conversation?.lastMsg?.createdAt)}
-                    </div>
-                  </div>
-                  <div className="chatting-text">
-                    <div className="text-[#666] text-sm mr-2 overflow-hidden whitespace-nowrap text-ellipsis">
-                      <span title="Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2">
-                        {conversation?.lastMsg?.text}
-                      </span>
-                    </div>
+                    <div className="chatting-text">
+                      <div className="text-[#666] text-sm mr-2 overflow-hidden whitespace-nowrap text-ellipsis">
+                        <span title="Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2">
+                          {conversation?.lastMsg?.text}
+                        </span>
+                      </div>
 
-                    <div className="conversation-cell-dropdown-options">
-                      <Dropdown
-                        menu={{ items: conversationOptions }}
-                        trigger={["click"]}
-                        className="h-6 w-6 flex justify-center items-center p-4"
-                      >
-                        <a onClick={(e) => e.preventDefault()}>
-                          <Space className="text-base inline-block text-[#666]">
-                            <DownOutlined className="text-sm" />
-                          </Space>
-                        </a>
-                      </Dropdown>
+                      <div className="conversation-cell-dropdown-options">
+                        <Dropdown
+                          menu={{ items: conversationOptions }}
+                          trigger={["click"]}
+                          className="h-6 w-6 flex justify-center items-center p-4"
+                        >
+                          <a onClick={(e) => e.preventDefault()}>
+                            <Space className="text-base inline-block text-[#666]">
+                              <DownOutlined className="text-sm" />
+                            </Space>
+                          </a>
+                        </Dropdown>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ))}
       </div>
     </div>
   );
