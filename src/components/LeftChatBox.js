@@ -169,7 +169,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
     if (today > updatedDay) {
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
-      if (updatedDay > yesterday) {
+      if (updatedDay === yesterday) {
         return "Ngày hôm qua";
       }
     }
@@ -322,7 +322,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
                       </div>
                     </div>
                     <div className="text-[#666] text-xs whitespace-nowrap">
-                      {formatLastDay(conversation?.lastMsg?.updatedAt)}
+                      {formatLastDay(conversation?.lastMsg?.createdAt)}
                     </div>
                   </div>
                   <div className="chatting-text">

@@ -326,6 +326,7 @@ const RightChatBox = (props) => {
                           style={{ wordBreak: "break-word" }}
                           placeholder="Nhập nội dung tin nhắn"
                           onChange={handleOnChange}
+                          value={message.text}
                         />
                       </div>
                       <div className="absolute right-2 bottom-[10px]">
@@ -376,7 +377,6 @@ const RightChatBox = (props) => {
                                 name="uploadImage"
                                 onChange={handleUploadFiles}
                                 multiple
-                                value={message.text}
                               />
                               <RiImage2Line
                                 className="cursor-pointer"
