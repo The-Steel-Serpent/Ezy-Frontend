@@ -13,8 +13,11 @@ import SellerHome from "../pages/seller/SellerHome";
 import AllOrder from "../pages/seller/AllOrders";
 import OrderCancelled from "../pages/seller/OrderCancelled";
 import AdminAuthLayout from "../layout/admin";
-import AllProduct from "../pages/seller/AllProduct";
-import AddProduct from "../pages/seller/AddProduct";
+import AllProduct from '../pages/seller/product_management/AllProduct'
+import AddProduct from '../pages/seller/product_management/AddProduct'
+import WorkingProducts from "../pages/seller/product_management/WorkingProducts";
+import InfringingProduct from "../pages/seller/product_management/InfringingProduct";
+import PendingProducts from "../pages/seller/product_management/PendingProducts";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -91,7 +94,7 @@ const router = createBrowserRouter([
       },
       //seller/order
       {
-        path: "seller/product/all",
+        path: "seller/product-management/all",
         element: (
           <SellerAuthLayout>
             <AllProduct />
@@ -99,7 +102,31 @@ const router = createBrowserRouter([
         )
       },
       {
-        path: "seller/product/add-product",
+        path: "seller/product-management/working-products",
+        element: (
+          <SellerAuthLayout>
+            <WorkingProducts />
+          </SellerAuthLayout>
+        )
+      },
+      {
+        path: "seller/product-management/infringing-products",
+        element: (
+          <SellerAuthLayout>
+            <InfringingProduct />
+          </SellerAuthLayout>
+        )
+      },
+      {
+        path: "seller/product-management/pending-products",
+        element: (
+          <SellerAuthLayout>
+            <PendingProducts />
+          </SellerAuthLayout>
+        )
+      },
+      {
+        path: "seller/product-management/add-product",
         element: (
           <SellerAuthLayout>
             <AddProduct />
