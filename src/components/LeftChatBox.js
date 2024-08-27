@@ -354,19 +354,28 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
                           {conversation?.lastMsg?.text}
                         </span>
                       </div>
+                      <div className="flex justify-between">
+                        {Boolean(conversation?.unseenMsg) && (
+                          <div className="flex items-center">
+                            <div className="size-4 ml-1 p-0 items-center bg-primary rounded-lg text-white flex text-[12px] justify-center">
+                              {conversation?.unseenMsg}
+                            </div>
+                          </div>
+                        )}
 
-                      <div className="conversation-cell-dropdown-options">
-                        <Dropdown
-                          menu={{ items: conversationOptions }}
-                          trigger={["click"]}
-                          className="h-6 w-6 flex justify-center items-center p-4"
-                        >
-                          <a onClick={(e) => e.preventDefault()}>
-                            <Space className="text-base inline-block text-[#666]">
-                              <DownOutlined className="text-sm" />
-                            </Space>
-                          </a>
-                        </Dropdown>
+                        <div className="conversation-cell-dropdown-options">
+                          <Dropdown
+                            menu={{ items: conversationOptions }}
+                            trigger={["click"]}
+                            className="h-6 w-6 flex justify-center items-center"
+                          >
+                            <a onClick={(e) => e.preventDefault()}>
+                              <Space className="text-base inline-block text-[#666]">
+                                <DownOutlined className="text-sm" />
+                              </Space>
+                            </a>
+                          </Dropdown>
+                        </div>
                       </div>
                     </div>
                   </div>

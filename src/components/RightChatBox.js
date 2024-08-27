@@ -171,11 +171,28 @@ const RightChatBox = (props) => {
         setDataUser(data);
       });
       socketConnection.on("message", (data) => {
-        setAllMessage(data);
+        console.log(data);
+        console.log(user._id);
+        console.log(props.selectedUserID);
+        if (
+          (data[data?.length - 1]?.msgByUserID === user._id &&
+            data[data?.length - 1]?.reiceiverID === props.selectedUserID) ||
+          (data[data?.length - 1]?.msgByUserID === props.selectedUserID &&
+            data[data?.length - 1]?.reiceiverID === user._id)
+        ) {
+          // console.log("MsgByUserID", data[data?.length - 1]?.msgByUserID);
+          // console.log("UserID", user._id);
+          setAllMessage(data);
+        }
       });
+
       setLoading(false);
     }
-  }, [user, props.selectedUserID, socketConnection]);
+    return () => {
+      socketConnection.off("message-section");
+      socketConnection.off("message");
+    };
+  }, [user, props?.selectedUserID, socketConnection]);
 
   useEffect(() => {
     if (currMessage.current)

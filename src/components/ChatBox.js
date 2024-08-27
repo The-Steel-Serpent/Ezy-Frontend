@@ -36,7 +36,7 @@ const ChatBox = () => {
 
   const [openChatBox, setOpenChatBox] = useState(false);
   const [expandChatBox, setExpandChatBox] = useState(true);
-  const [selectedUserID, setSelectedUserID] = useState();
+  const [selectedUserID, setSelectedUserID] = useState(null);
   const selectedUserRef = useRef();
   //Handler
   const handleOpenChatBox = useCallback(() => {
@@ -49,9 +49,12 @@ const ChatBox = () => {
       return !preve;
     });
   }, []);
-  const handleUserSelected = useCallback((userID) => {
-    setSelectedUserID(userID);
-  }, []);
+  const handleUserSelected = useCallback(
+    (userID) => {
+      setSelectedUserID(userID);
+    },
+    [selectedUserID]
+  );
   //Effects
   useEffect(() => {
     const socketConnection = io(process.env.REACT_APP_BACKEND_URL, {
