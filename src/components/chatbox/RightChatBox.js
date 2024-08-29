@@ -88,7 +88,11 @@ const RightChatBox = (props) => {
     imageUrl: "",
     videoUrl: "",
   });
+
+  //**Ref */
   const currMessage = useRef(null);
+  const inputRef = useRef(null);
+  const chatboxRef = useRef(null);
   //Handlers
   const onOpenDropdownStickersChange = useCallback(() => {
     setOpenDropdownStickers((preve) => {
@@ -163,26 +167,70 @@ const RightChatBox = (props) => {
 
   //Effects
   useEffect(() => {
-    if (socketConnection) {
-      setLoading(true);
-      socketConnection.emit("message-section", props.selectedUserID);
-      socketConnection.emit("seen", props.selectedUserID);
-      socketConnection.on("message-user", (data) => {
-        setDataUser(data);
-      });
-      socketConnection.on("message", (data) => {
+    if (!socketConnection && !props.selectedUserID) return;
+
+    setLoading(true);
+    socketConnection.emit("message-section", props.selectedUserID);
+    socketConnection.emit("seen", props.selectedUserID);
+
+    //Handlers
+    const handlerMessageUser = (data) => {
+      setDataUser(data);
+    };
+    const handlerMessage = (data) => {
+      if (
+        (data[data?.length - 1]?.msgByUserID === user._id &&
+          data[data?.length - 1]?.reiceiverID === props.selectedUserID) ||
+        (data[data?.length - 1]?.msgByUserID === props.selectedUserID &&
+          data[data?.length - 1]?.reiceiverID === user._id)
+      ) {
         setAllMessage(data);
-      });
-      setLoading(false);
+      }
+    };
+    const markAsSeen = () => {
+      socketConnection.emit("seen", props.selectedUserID);
+    };
+    //Add event listeners to chat input and chatbox window
+    const chatInput = inputRef.current;
+    const chatBox = chatboxRef.current;
+    if (chatInput) {
+      chatInput.addEventListener("focus", markAsSeen);
+      chatInput.addEventListener("input", markAsSeen);
     }
-  }, [user, props.selectedUserID, socketConnection]);
+    if (chatBox) {
+      chatBox.addEventListener("click", markAsSeen);
+    }
+    //Catch Socket Event
+    socketConnection.on("message-user", handlerMessageUser);
+    socketConnection.on("message", handlerMessage);
+
+    setLoading(false);
+
+    return () => {
+      if (chatInput) {
+        chatInput.removeEventListener("focus", markAsSeen);
+        chatInput.removeEventListener("input", markAsSeen);
+      }
+      if (chatBox) {
+        chatBox.removeEventListener("click", markAsSeen);
+      }
+      socketConnection.off("message-user", handlerMessageUser);
+      socketConnection.off("message", handlerMessage);
+    };
+  }, [user, props?.selectedUserID, socketConnection]);
 
   useEffect(() => {
     if (currMessage.current)
       currMessage.current.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [allMessage]);
+
+  //********************* */
+
   return (
-    <div className={`${props.expandChatBox ? "" : "hidden"} right-chatbox `}>
+    <div
+      className={`${props.expandChatBox ? "" : "hidden"} right-chatbox `}
+      ref={chatboxRef}
+    >
       {/**Primary Bg Content */}
       {!dataUser._id && (
         <div className="w-full h-full bg-[#f3f3f3] flex justify-center items-center flex-col">
@@ -381,6 +429,7 @@ const RightChatBox = (props) => {
                               : "text-[#ccc] pointer-events-none cursor-not-allowed"
                           } size-[18px]  transition-colors duration-200 ease-in`}
                           type="submit"
+                          ref={inputRef}
                           onSubmit={handleSendMessage}
                         >
                           <BiSend size={18} />

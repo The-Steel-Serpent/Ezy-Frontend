@@ -12,7 +12,7 @@ import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
-import ChatBox from "./ChatBox";
+import ChatBox from "./chatbox/ChatBox";
 
 const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);

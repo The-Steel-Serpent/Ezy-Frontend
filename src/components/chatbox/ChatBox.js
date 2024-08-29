@@ -21,22 +21,23 @@ import { RiVideoLine } from "react-icons/ri";
 import { LuShoppingBag } from "react-icons/lu";
 import { MdEventNote } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import IconNotLogin from "../assets/icon-not-login.png";
+import IconNotLogin from "../../assets/icon-not-login.png";
 import { FaPlus } from "react-icons/fa6";
 import { IoClose, IoCloseCircle } from "react-icons/io5";
 import ImageChatbox from "./ImageChatbox";
-import { setOnlineUser, setSocketConnection } from "../redux/userSlice";
+import { setOnlineUser, setSocketConnection } from "../../redux/userSlice";
 import LeftChatBox from "./LeftChatBox";
 import RightChatBox from "./RightChatBox";
 
 const ChatBox = () => {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const socketC = useSelector((state) => state?.user?.socketConnection);
   //States
-
+  const [unseenMessagesCount, setUnseenMessagesCount] = useState(0);
   const [openChatBox, setOpenChatBox] = useState(false);
   const [expandChatBox, setExpandChatBox] = useState(true);
-  const [selectedUserID, setSelectedUserID] = useState();
+  const [selectedUserID, setSelectedUserID] = useState(null);
   const selectedUserRef = useRef();
   //Handler
   const handleOpenChatBox = useCallback(() => {
@@ -49,27 +50,38 @@ const ChatBox = () => {
       return !preve;
     });
   }, []);
-  const handleUserSelected = useCallback((userID) => {
-    setSelectedUserID(userID);
-  }, []);
+  const handleUserSelected = useCallback(
+    (userID) => {
+      setSelectedUserID(userID);
+    },
+    [selectedUserID]
+  );
   //Effects
   useEffect(() => {
+    if (!user) return;
     const socketConnection = io(process.env.REACT_APP_BACKEND_URL, {
       auth: {
         token: localStorage.getItem("token"),
       },
     });
-
     socketConnection.on("onlineUser", (data) => {
       console.log(data);
       dispatch(setOnlineUser(data));
     });
+
     dispatch(setSocketConnection(socketConnection));
     return () => {
       socketConnection.disconnect();
     };
   }, []);
-
+  useEffect(() => {
+    if (!socketC) return;
+    console.log("Da ket noi socket");
+    socketC.emit("count-unseen-messages", user._id);
+    socketC.on("total-unseen-message", (data) => {
+      setUnseenMessagesCount(data);
+    });
+  }, [socketC, user?._id]);
   return (
     <>
       <div className="fixed right-2 bottom-0 z-[99999] font-[400]">
@@ -81,8 +93,8 @@ const ChatBox = () => {
           onClick={handleOpenChatBox}
         >
           {user?._id && (
-            <div className="bg-primary border border-solid border-white rounded-[9px] text-white text-xs h-[18px] overflow-hidden px-[5px] absolute -right-1 -top-[9px]">
-              39
+            <div className="total-unseen-messages bg-primary border border-solid border-white rounded-[9px] text-white text-xs h-[18px] overflow-hidden px-[5px] absolute -right-1 -top-[9px]">
+              {unseenMessagesCount}
             </div>
           )}
 
@@ -118,7 +130,7 @@ const ChatBox = () => {
               </i>
               {user?._id && (
                 <div className="text-primary text-[12px] pl-2 pb-1 font-semibold">
-                  (39)
+                  ({unseenMessagesCount})
                 </div>
               )}
             </div>
