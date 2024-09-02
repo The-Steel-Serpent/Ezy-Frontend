@@ -1,33 +1,19 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import {
-  Input,
-  Dropdown,
-  Space,
-  Menu,
-  Divider,
-  Switch,
-  Image,
-  Skeleton,
-} from "antd";
-import React, { useCallback, useState, memo, useEffect, useRef } from "react";
+import React, {
+  useCallback,
+  useState,
+  memo,
+  useEffect,
+  useRef,
+  lazy,
+} from "react";
+import withSuspense from "../../hooks/HOC/withSuspense";
 import { io } from "socket.io-client";
-import { DownOutlined } from "@ant-design/icons";
-
-import { FaAngleRight } from "react-icons/fa6";
-import { BiSend } from "react-icons/bi";
-import { MdOutlineEmojiEmotions } from "react-icons/md";
-import { RiImage2Line } from "react-icons/ri";
-import { RiVideoLine } from "react-icons/ri";
-import { LuShoppingBag } from "react-icons/lu";
-import { MdEventNote } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import IconNotLogin from "../../assets/icon-not-login.png";
-import { FaPlus } from "react-icons/fa6";
-import { IoClose, IoCloseCircle } from "react-icons/io5";
-import ImageChatbox from "./ImageChatbox";
 import { setOnlineUser, setSocketConnection } from "../../redux/userSlice";
-import LeftChatBox from "./LeftChatBox";
-import RightChatBox from "./RightChatBox";
+const LeftChatBox = withSuspense(lazy(() => import("./LeftChatBox")));
+const RightChatBox = withSuspense(lazy(() => import("./RightChatBox")));
 
 const ChatBox = () => {
   const user = useSelector((state) => state.user);
