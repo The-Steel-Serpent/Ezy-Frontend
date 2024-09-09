@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
+import App from "../App";
 import AuthLayout from "../layout";
 import { lazy } from "react";
 import WorkingProducts from "../pages/seller/product_management/WorkingProducts";
