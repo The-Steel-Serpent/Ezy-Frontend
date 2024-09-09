@@ -1,14 +1,22 @@
 import { DownOutlined } from "@ant-design/icons";
 import { Divider, Dropdown, Menu, Space, Spin, Switch } from "antd";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  lazy,
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import withSuspense from "../../hooks/HOC/withSuspense";
 import { BiSend } from "react-icons/bi";
 import { FaAngleRight, FaPlus } from "react-icons/fa6";
 import { LuShoppingBag } from "react-icons/lu";
 import { MdEventNote, MdOutlineEmojiEmotions } from "react-icons/md";
 import { RiImage2Line, RiVideoLine } from "react-icons/ri";
-import ImageChatbox from "./ImageChatbox";
 import { IoClose } from "react-icons/io5";
 import { useSelector } from "react-redux";
+const ImageChatbox = withSuspense(lazy(() => import("./ImageChatbox")));
 
 const items = [
   {

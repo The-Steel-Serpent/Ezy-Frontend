@@ -1,6 +1,15 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable jsx-a11y/alt-text */
-import { React, memo, useEffect, useState, useCallback, useMemo } from "react";
+import {
+  React,
+  memo,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  lazy,
+} from "react";
+import withSuspense from "../hooks/HOC/withSuspense";
 import { IoLogoFacebook } from "react-icons/io5";
 import { AiFillInstagram } from "react-icons/ai";
 import { IoMdNotificationsOutline } from "react-icons/io";
@@ -12,7 +21,7 @@ import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
-import ChatBox from "./chatbox/ChatBox";
+const ChatBox = withSuspense(lazy(() => import("./chatbox/ChatBox")));
 
 const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);
