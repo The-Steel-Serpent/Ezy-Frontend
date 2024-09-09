@@ -5,7 +5,6 @@ const OrderCancelled = () => {
   return (
     <div className='bg-white rouned'>
       <OrderStatus status={'/seller/order/ordercancelled'} />
-
     </div>
   )
 }

@@ -30,7 +30,7 @@ const OrderFilter = () => {
 
   return (
     <div className='w-full'>
-      <Space wrap className='p-5'>
+      <div className='flex items-center gap-3 p-5 w-full'>
         <div className='flex'>
           <Select
             defaultValue="Mã đơn hàng"
@@ -53,7 +53,7 @@ const OrderFilter = () => {
 
         <button className='text-primary border rounded border-primary px-4 py-2 font-[500] hover:bg-orange-50'>Áp dụng</button>
         <button className='border rounded px-4 py-2 font-[500] hover:bg-slate-100'>Đặt lại</button>
-      </Space>
+      </div>
       <div className='pl-5'>
         <span className='min-w-96 font-semibold text-lg'>0 Đơn hàng</span>
       </div>

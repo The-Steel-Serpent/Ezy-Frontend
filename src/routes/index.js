@@ -1,7 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
+import App from "../App";
 import AuthLayout from "../layout";
 import { lazy } from "react";
-import App from "../App";
+import WorkingProducts from "../pages/seller/product_management/WorkingProducts";
+import InfringingProduct from "../pages/seller/product_management/InfringingProduct";
+import PendingProducts from "../pages/seller/product_management/PendingProducts";
 import withSuspense from "../hooks/HOC/withSuspense";
 
 const Home = withSuspense(lazy(() => import("../pages/Home")));
@@ -31,10 +34,10 @@ const OrderCancelled = withSuspense(
   lazy(() => import("../pages/seller/OrderCancelled"))
 );
 const AllProduct = withSuspense(
-  lazy(() => import("../pages/seller/AllProduct"))
+  lazy(() => import("../pages/seller/product_management/AllProduct"))
 );
 const AddProduct = withSuspense(
-  lazy(() => import("../pages/seller/AddProduct"))
+  lazy(() => import("../pages/seller/product_management/AddProduct"))
 );
 const SellerAuthLayout = withSuspense(lazy(() => import("../layout/seller")));
 const AdminAuthLayout = withSuspense(lazy(() => import("../layout/admin")));
@@ -114,7 +117,7 @@ const router = createBrowserRouter([
       },
       //seller/order
       {
-        path: "seller/product/all",
+        path: "seller/product-management/all",
         element: (
           <SellerAuthLayout>
             <AllProduct />
@@ -122,7 +125,31 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "seller/product/add-product",
+        path: "seller/product-management/working-products",
+        element: (
+          <SellerAuthLayout>
+            <WorkingProducts />
+          </SellerAuthLayout>
+        )
+      },
+      {
+        path: "seller/product-management/infringing-products",
+        element: (
+          <SellerAuthLayout>
+            <InfringingProduct />
+          </SellerAuthLayout>
+        )
+      },
+      {
+        path: "seller/product-management/pending-products",
+        element: (
+          <SellerAuthLayout>
+            <PendingProducts />
+          </SellerAuthLayout>
+        )
+      },
+      {
+        path: "seller/product-management/add-product",
         element: (
           <SellerAuthLayout>
             <AddProduct />
