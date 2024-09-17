@@ -45,11 +45,11 @@ const items = [
         icon: <AppstoreOutlined />,
         children: [
             {
-                key: '/seller/product/all',
+                key: '/seller/product-management/all',
                 label: 'Tất cả sản phẩm',
             },
             {
-                key: '/seller/product/add-product',
+                key: '/seller/product-management/add-product',
                 label: 'Thêm sản phẩm',
             },
         ],
@@ -127,7 +127,7 @@ const SellerAuthLayout = ({ children }) => {
     return (
         <>
             <Layout>
-                <header className='bg-white w-full flex justify-between items-center'>
+                <header className='bg-white w-full flex justify-between items-center custom-header'>
                     <div className='flex px-4 py-2 items-center gap-2'>
                         <img
                             src={logo}

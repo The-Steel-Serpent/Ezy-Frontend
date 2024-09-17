@@ -1,3 +1,7 @@
+.custom-header {
+    box-shadow: 0 4px 2px -2px gray;
+}
+
 .ant-menu-submenu-title :hover {
     @apply text-primary;
 }
@@ -11,6 +15,15 @@
     color: chocolate !important;
     background-color: transparent !important;
     font-size: 15px;
+}
+
+.custom-menu-order-status .ant-menu-item::after {
+    border-bottom: none !important;
+    /* Loại bỏ đường kẻ màu xanh mặc định */
+}
+
+.custom-menu-order-status .ant-menu-item-selected {
+    border-bottom: 3px solid #ee4d2d;
 }
 
 .custom-select-radius-left .ant-select-selector {
@@ -32,7 +45,48 @@
 .ant-input-outlined {
     border-color: rgb(214, 212, 212) !important;
 }
-.custom-none-border .ant-select-selector{
+
+.custom-none-border .ant-select-selector {
     border: unset !important;
+}
+
+.ant-space {
+    column-gap: 0;
+    padding: 6px 16px 6px 16px;
+    background-color: white;
+    border-radius: 3px;
+}
+
+.ant-space-item {
+    margin: 4px;
+    position: relative;
+}
+
+.ant-space:hover {
+    color: black !important;
+}
+
+.ant-dropdown-menu {
+    /* margin-top: 0px !important; */
+}
+
+.custom-menu.ant-menu-overflow {
+    background-color: transparent !important;
+    font-size: 16px;
+
+}
+
+.custom-menu-seller-product .ant-menu-item {
+    font-size: 15px;
+}
+
+.custom-menu-seller-product .ant-menu-item::after {
+    border-bottom: none !important;
+    /* Loại bỏ đường kẻ màu xanh mặc định */
+}
+
+.custom-menu-seller-product .ant-menu-item-selected {
+    border-bottom: 3px solid #ee4d2d;
+    font-size: 15px;
 }
 

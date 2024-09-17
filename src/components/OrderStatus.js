@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Divider, Menu, Button, theme } from 'antd';
+import {  Menu } from 'antd';
 import "../styles/seller.css"
 import { useNavigate } from 'react-router-dom';
 const items = [
@@ -63,7 +63,7 @@ const OrderStatus = ({ status }) => {
                 mode="horizontal"
                 theme="light"
                 items={items}
-                className="custom-menu font-[500]"
+                className="custom-menu-order-status font-[500]"
                 onClick={handleNavigate}
             />
         </div>
