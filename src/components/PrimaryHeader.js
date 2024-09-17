@@ -16,11 +16,12 @@ import { IoMdNotificationsOutline } from "react-icons/io";
 import { AiOutlineQuestionCircle } from "react-icons/ai";
 import { FaAngleDown } from "react-icons/fa6";
 import { TfiWorld } from "react-icons/tfi";
-import WhitePhoto from "../assets/white-logo.png";
+import WhitePhoto from "../assets/image (1) (2).png";
 import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
+// import FullLogo from "./FullLogo";
 const ChatBox = withSuspense(lazy(() => import("./chatbox/ChatBox")));
 
 const PrimaryHeader = () => {
@@ -108,7 +109,8 @@ const PrimaryHeader = () => {
             href="/"
             className="lg:col-span-2 col-span-full flex justify-center items-center lg:block mb-5"
           >
-            <img src={WhitePhoto} className="w-[150px] h-[50px] ml-[6px]" />
+            <img src={WhitePhoto} className="pr-[30px]" />
+            {/* <FullLogo className="fill-white" /> */}
           </a>
           <div className="col-span-8 ml-2 lg:ml-0">
             <form className="bg-white rounded flex p-[2px] lg:flex-row flex-row-reverse">

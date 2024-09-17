@@ -14,7 +14,6 @@ import IconNotLogin from "../../assets/icon-not-login.png";
 import { setOnlineUser, setSocketConnection } from "../../redux/userSlice";
 const LeftChatBox = withSuspense(lazy(() => import("./LeftChatBox")));
 const RightChatBox = withSuspense(lazy(() => import("./RightChatBox")));
-
 const ChatBox = () => {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();

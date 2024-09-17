@@ -1,9 +1,10 @@
 import { Skeleton } from "antd";
 import React, { Suspense } from "react";
+import LoadingPage from "../../components/LoadingPage";
 
 const withSuspense = (Component) => {
   return (props) => (
-    <Suspense fallback={<Skeleton style={{ width: "100%", height: "100%" }} />}>
+    <Suspense fallback={<LoadingPage />}>
       <Component {...props} />
     </Suspense>
   );

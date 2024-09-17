@@ -233,3 +233,29 @@
 .message {
   @apply relative bg-white w-fit rounded-lg px-[10px] pb-[10px] pt-2 max-w-[312px] flex flex-col;
 }
+
+.ant-card-body {
+  @apply p-2 !important;
+}
+.ant-card-bordered .ant-card-cover {
+  @apply mt-0 me-0 ms-0 !important;
+}
+.ant-card-hoverable:hover {
+  @apply border-["#66cce6"] !important;
+}
+:where(.css-dev-only-do-not-override-14i19y2).ant-btn-default {
+  background: transparent;
+  @apply border-primary text-primary;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
+}
+:where(.css-dev-only-do-not-override-14i19y2).ant-btn-default:not(
+    :disabled
+  ):not(.ant-btn-disabled):hover {
+  color: #ffffff;
+  @apply border-primary;
+  @apply bg-primary;
+}
+
+.LoadingPage.ant-spin .ant-spin-dot-holder {
+  @apply text-white;
+}

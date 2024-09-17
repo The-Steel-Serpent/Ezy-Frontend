@@ -4,10 +4,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#ee4d2d",
+        // primary: "#ee4d2d",
+        primary: "#66cce6",
       },
       backgroundImage: {
-        "custom-gradient": "linear-gradient(-180deg, #f53d2d, #f63)",
+        "custom-gradient": "linear-gradient(-180deg, #66cce6, #298ab4)",
       },
     },
   },

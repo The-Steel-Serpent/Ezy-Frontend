@@ -3,6 +3,10 @@ import AuthLayout from "../layout";
 import { lazy } from "react";
 import App from "../App";
 import withSuspense from "../hooks/HOC/withSuspense";
+import LoadingPage from "../components/LoadingPage";
+const DetailsProduct = withSuspense(
+  lazy(() => import("../pages/buyer/DetailsProduct"))
+);
 
 const Home = withSuspense(lazy(() => import("../pages/Home")));
 const BuyerLogin = withSuspense(
@@ -69,6 +73,16 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
+      {
+        path: "/product-details/:id",
+        element: (
+          <AuthLayout>
+            <DetailsProduct />
+            {/* <LoadingPage /> */}
+          </AuthLayout>
+        ),
+      },
+
       //Seller
       //login && register
       {
