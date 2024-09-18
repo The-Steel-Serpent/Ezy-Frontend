@@ -29,9 +29,9 @@ const AdminDashboard = withSuspense(
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
-const AllOrder = withSuspense(lazy(() => import("../pages/seller/AllOrders")));
+const AllOrder = withSuspense(lazy(() => import("../pages/seller/orders/AllOrders")));
 const OrderCancelled = withSuspense(
-  lazy(() => import("../pages/seller/OrderCancelled"))
+  lazy(() => import("../pages/seller/orders/OrderCancelled"))
 );
 const AllProduct = withSuspense(
   lazy(() => import("../pages/seller/product_management/AllProduct"))
