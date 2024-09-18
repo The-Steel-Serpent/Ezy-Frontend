@@ -6,14 +6,15 @@ import React, {
   useEffect,
   useRef,
   lazy,
+  Suspense,
 } from "react";
 import withSuspense from "../../hooks/HOC/withSuspense";
 import { io } from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import IconNotLogin from "../../assets/icon-not-login.png";
 import { setOnlineUser, setSocketConnection } from "../../redux/userSlice";
-const LeftChatBox = withSuspense(lazy(() => import("./LeftChatBox")));
-const RightChatBox = withSuspense(lazy(() => import("./RightChatBox")));
+const LeftChatBox = lazy(() => import("./LeftChatBox"));
+const RightChatBox = lazy(() => import("./RightChatBox"));
 const ChatBox = () => {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -191,15 +192,23 @@ const ChatBox = () => {
             {user?._id && (
               <>
                 {/**Left-Chatbox */}
-                <LeftChatBox
-                  onUserSelected={handleUserSelected}
-                  selectedUserRef={selectedUserID}
-                />
+
+                <Suspense>
+                  <LeftChatBox
+                    className="animate-pulse"
+                    onUserSelected={handleUserSelected}
+                    selectedUserRef={selectedUserID}
+                  />
+                </Suspense>
+
                 {/**Right-Chatbox */}
-                <RightChatBox
-                  expandChatBox={expandChatBox}
-                  selectedUserID={selectedUserID}
-                />
+                <Suspense>
+                  <RightChatBox
+                    className="animate-pulse"
+                    expandChatBox={expandChatBox}
+                    selectedUserID={selectedUserID}
+                  />
+                </Suspense>
               </>
             )}
           </div>

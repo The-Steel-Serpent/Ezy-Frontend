@@ -104,7 +104,7 @@ const PrimaryHeader = () => {
             </li>
           </ul>
         </div>
-        <div className="grid grid-cols-12 m-auto max-w-[1200px] pt-4">
+        <div className="grid grid-cols-12 m-auto max-w-[1200px] pt-4 items-center">
           <a
             href="/"
             className="lg:col-span-2 col-span-full flex justify-center items-center lg:block mb-5"
@@ -112,7 +112,7 @@ const PrimaryHeader = () => {
             <img src={WhitePhoto} className="pr-[30px]" />
             {/* <FullLogo className="fill-white" /> */}
           </a>
-          <div className="col-span-8 ml-2 lg:ml-0">
+          <div className="col-span-8 ml-2 lg:ml-0 items-center">
             <form className="bg-white rounded flex p-[2px] lg:flex-row flex-row-reverse">
               <input
                 type="text"
@@ -125,7 +125,7 @@ const PrimaryHeader = () => {
                 </span>
               </button>
             </form>
-            <ul className="text-xs text-white hidden justify-between items-center mt-2 gap-1 lg:flex">
+            {/* <ul className="text-xs text-white hidden justify-between items-center mt-2 gap-1 lg:flex">
               {searchItem.map((value, key) => {
                 return (
                   <li key={key}>
@@ -133,7 +133,7 @@ const PrimaryHeader = () => {
                   </li>
                 );
               })}
-            </ul>
+            </ul> */}
           </div>
           <div className="col-span-2 text-white flex justify-center items-center">
             <a href="#">

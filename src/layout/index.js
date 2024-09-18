@@ -15,8 +15,7 @@ const AuthLayout = ({ children }) => {
   }, [useType]);
   return (
     <>
-      {useType === "buyer" && <SecondaryHeader />}
-      {useType === "" && <PrimaryHeader />}
+      {useType === "buyer" ? <SecondaryHeader /> : <PrimaryHeader />}
       {children}
     </>
   );

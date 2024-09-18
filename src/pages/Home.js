@@ -5,16 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout, setUser } from "../redux/userSlice";
-import {
-  Button,
-  Card,
-  Carousel,
-  ColorPicker,
-  ConfigProvider,
-  Dropdown,
-  Space,
-} from "antd";
-import { ColorFormat } from "antd/es/color-picker/interface";
+import { Carousel } from "antd";
 import event1 from "../assets/event1.png";
 import event2 from "../assets/event2.png";
 import event3 from "../assets/event3.png";
@@ -25,7 +16,7 @@ import event7 from "../assets/event7.png";
 import event8 from "../assets/event8.png";
 import event9 from "../assets/event9.png";
 import categoryImg1 from "../assets/category1.png";
-import ProductCard from "../components/product/ProductCard";
+import ProductSuggestions from "../components/product/ProductSuggestions";
 const events = [
   { img: event1, name: "Vourcher Giảm Đến 1 Triệu" },
   { img: event2, name: "Miễn Phí Ship - Có Shopee" },
@@ -38,330 +29,6 @@ const events = [
   { img: event9, name: "Nạp Thẻ, Dịch Vụ & Vé Máy Bay" },
 ];
 
-const Products = [
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-  {
-    thumbnail:
-      "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lv2uc3o7qrcp85_tn.webp",
-    name: "Quần nam Retro wash ống rộng heheheehehehe",
-    price: 169.0,
-    sold: 6000,
-  },
-];
 const categories = [
   { img: categoryImg1, name: "Thời Trang Nam" },
   { img: categoryImg1, name: "Thời Trang Nam" },
@@ -518,7 +185,7 @@ const Home = () => {
         </p>
         <Carousel
           arrows
-          className="category-carousel lg:max-w-[1200px] relative lg:overflow-visible overflow-hidden"
+          className="animation-pulse category-carousel lg:max-w-[1200px] relative lg:overflow-visible overflow-hidden"
           slidesPerRow={10}
           rows={2}
           responsive={responsiveCateCarousel}
@@ -546,18 +213,7 @@ const Home = () => {
         </div>
       </div>
       {/***Product Carousel */}
-      <div className="max-w-[1200px] m-auto ">
-        <div className="grid grid-cols-12 place-items-center">
-          {Products.slice(0, 24).map((value, key) => {
-            return <ProductCard value={value} key={key} />;
-          })}
-        </div>
-        <div className="flex justify-center items-center w-full ">
-          <Button size="large" className="lg:max-w-[390px] w-full my-4">
-            Xem Thêm
-          </Button>
-        </div>
-      </div>
+      <ProductSuggestions />
     </>
   );
 };
