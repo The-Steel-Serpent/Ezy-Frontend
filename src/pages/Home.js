@@ -1,12 +1,11 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable jsx-a11y/alt-text */
 import axios from "axios";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout, setUser } from "../redux/userSlice";
-import { Carousel, ColorPicker, Dropdown, Space } from "antd";
-import { ColorFormat } from "antd/es/color-picker/interface";
+import { Carousel } from "antd";
 import event1 from "../assets/event1.png";
 import event2 from "../assets/event2.png";
 import event3 from "../assets/event3.png";
@@ -17,7 +16,7 @@ import event7 from "../assets/event7.png";
 import event8 from "../assets/event8.png";
 import event9 from "../assets/event9.png";
 import categoryImg1 from "../assets/category1.png";
-import { RightOutlined, LeftOutlined, DownOutlined } from "@ant-design/icons";
+import ProductSuggestions from "../components/product/ProductSuggestions";
 const events = [
   { img: event1, name: "Vourcher Giảm Đến 1 Triệu" },
   { img: event2, name: "Miễn Phí Ship - Có Shopee" },
@@ -29,6 +28,7 @@ const events = [
   { img: event8, name: "Quốc Tế Siêu Trợ Giá" },
   { img: event9, name: "Nạp Thẻ, Dịch Vụ & Vé Máy Bay" },
 ];
+
 const categories = [
   { img: categoryImg1, name: "Thời Trang Nam" },
   { img: categoryImg1, name: "Thời Trang Nam" },
@@ -83,6 +83,7 @@ const responsiveCateCarousel = [
     },
   },
 ];
+
 const Home = () => {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -103,6 +104,9 @@ const Home = () => {
     };
     fetchUserDetails();
   }, []);
+
+  const [currentPage, setCurrentPage] = useState(1);
+
   return (
     <>
       <div className="w-full bg-white h-fit border-b-[1px]">
@@ -181,7 +185,7 @@ const Home = () => {
         </p>
         <Carousel
           arrows
-          className="category-carousel lg:max-w-[1200px] relative lg:overflow-visible overflow-hidden"
+          className="animation-pulse category-carousel lg:max-w-[1200px] relative lg:overflow-visible overflow-hidden"
           slidesPerRow={10}
           rows={2}
           responsive={responsiveCateCarousel}
@@ -200,6 +204,16 @@ const Home = () => {
           })}
         </Carousel>
       </div>
+      <div className="max-w-[1200px] bg-white m-auto h-fit mt-5">
+        <div className="flex flex-col mb-1">
+          <div className="py-6 px-5 text-primary border-b-[1px] font-medium mb-0 flex justify-center sticky">
+            GỢI Ý HÔM NAY
+          </div>
+          <div className="bg-primary h-1"></div>
+        </div>
+      </div>
+      {/***Product Carousel */}
+      <ProductSuggestions />
     </>
   );
 };

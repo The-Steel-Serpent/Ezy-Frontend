@@ -16,11 +16,12 @@ import { IoMdNotificationsOutline } from "react-icons/io";
 import { AiOutlineQuestionCircle } from "react-icons/ai";
 import { FaAngleDown } from "react-icons/fa6";
 import { TfiWorld } from "react-icons/tfi";
-import WhitePhoto from "../assets/white-logo.png";
+import WhitePhoto from "../assets/image (1) (2).png";
 import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
+// import FullLogo from "./FullLogo";
 const ChatBox = withSuspense(lazy(() => import("./chatbox/ChatBox")));
 
 const PrimaryHeader = () => {
@@ -103,14 +104,15 @@ const PrimaryHeader = () => {
             </li>
           </ul>
         </div>
-        <div className="grid grid-cols-12 m-auto max-w-[1200px] pt-4">
+        <div className="grid grid-cols-12 m-auto max-w-[1200px] pt-4 items-center">
           <a
             href="/"
             className="lg:col-span-2 col-span-full flex justify-center items-center lg:block mb-5"
           >
-            <img src={WhitePhoto} className="w-[150px] h-[50px] ml-[6px]" />
+            <img src={WhitePhoto} className="pr-[30px]" />
+            {/* <FullLogo className="fill-white" /> */}
           </a>
-          <div className="col-span-8 ml-2 lg:ml-0">
+          <div className="col-span-8 ml-2 lg:ml-0 items-center">
             <form className="bg-white rounded flex p-[2px] lg:flex-row flex-row-reverse">
               <input
                 type="text"
@@ -123,7 +125,7 @@ const PrimaryHeader = () => {
                 </span>
               </button>
             </form>
-            <ul className="text-xs text-white hidden justify-between items-center mt-2 gap-1 lg:flex">
+            {/* <ul className="text-xs text-white hidden justify-between items-center mt-2 gap-1 lg:flex">
               {searchItem.map((value, key) => {
                 return (
                   <li key={key}>
@@ -131,7 +133,7 @@ const PrimaryHeader = () => {
                   </li>
                 );
               })}
-            </ul>
+            </ul> */}
           </div>
           <div className="col-span-2 text-white flex justify-center items-center">
             <a href="#">

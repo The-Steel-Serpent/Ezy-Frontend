@@ -6,6 +6,10 @@ import WorkingProducts from "../pages/seller/product_management/WorkingProducts"
 import InfringingProduct from "../pages/seller/product_management/InfringingProduct";
 import PendingProducts from "../pages/seller/product_management/PendingProducts";
 import withSuspense from "../hooks/HOC/withSuspense";
+import LoadingPage from "../components/LoadingPage";
+const DetailsProduct = withSuspense(
+  lazy(() => import("../pages/buyer/DetailsProduct"))
+);
 
 const Home = withSuspense(lazy(() => import("../pages/Home")));
 const BuyerLogin = withSuspense(
@@ -72,6 +76,16 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
+      {
+        path: "/product-details/:id",
+        element: (
+          <AuthLayout>
+            <DetailsProduct />
+            {/* <LoadingPage /> */}
+          </AuthLayout>
+        ),
+      },
+
       //Seller
       //login && register
       {
