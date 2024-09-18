@@ -1,6 +1,6 @@
 import React from 'react'
-import ProductSellerHeader from '../../../components/ProductSellerHeader'
-import FilterProduct from '../../../components/FilterProduct'
+import ProductSellerHeader from '../../../components/seller/ProductSellerHeader'
+import FilterProduct from '../../../components/seller/FilterProduct'
 
 const AllProduct = () => {
   return (

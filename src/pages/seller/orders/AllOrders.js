@@ -1,7 +1,7 @@
 import React from 'react'
 import { Select, Space } from 'antd';
-import OrderStatus from '../../../components/OrderStatus';
-import OrderFilter from '../../../components/OrderFilter';
+import OrderStatus from '../../../components/seller/OrderStatus';
+import OrderFilter from '../../../components/seller/OrderFilter';
 const handleChange = (value) => {
   console.log(`selected ${value}`);
 };
