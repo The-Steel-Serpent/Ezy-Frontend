@@ -43,31 +43,31 @@ const ChatBox = () => {
     [selectedUserID]
   );
   //Effects
-  useEffect(() => {
-    if (!user) return;
-    const socketConnection = io(process.env.REACT_APP_BACKEND_URL, {
-      auth: {
-        token: localStorage.getItem("token"),
-      },
-    });
-    socketConnection.on("onlineUser", (data) => {
-      console.log(data);
-      dispatch(setOnlineUser(data));
-    });
+  // useEffect(() => {
+  //   if (!user) return;
+  //   const socketConnection = io(process.env.REACT_APP_BACKEND_URL, {
+  //     auth: {
+  //       token: localStorage.getItem("token"),
+  //     },
+  //   });
+  //   socketConnection.on("onlineUser", (data) => {
+  //     console.log(data);
+  //     dispatch(setOnlineUser(data));
+  //   });
 
-    dispatch(setSocketConnection(socketConnection));
-    return () => {
-      socketConnection.disconnect();
-    };
-  }, []);
-  useEffect(() => {
-    if (!socketC) return;
-    console.log("Da ket noi socket");
-    socketC.emit("count-unseen-messages", user._id);
-    socketC.on("total-unseen-message", (data) => {
-      setUnseenMessagesCount(data);
-    });
-  }, [socketC, user?._id]);
+  //   dispatch(setSocketConnection(socketConnection));
+  //   return () => {
+  //     socketConnection.disconnect();
+  //   };
+  // }, []);
+  // useEffect(() => {
+  //   if (!socketC) return;
+  //   console.log("Da ket noi socket");
+  //   socketC.emit("count-unseen-messages", user._id);
+  //   socketC.on("total-unseen-message", (data) => {
+  //     setUnseenMessagesCount(data);
+  //   });
+  // }, [socketC, user?._id]);
   return (
     <>
       <div className="fixed right-2 bottom-0 z-[99999] font-[400]">

@@ -195,23 +195,23 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
     return `${day}/${month}`;
   }, []);
   //Effects
-  useEffect(() => {
-    const handleSearchUser = async () => {
-      try {
-        const URL = `${process.env.REACT_APP_BACKEND_URL}/api/search-user`;
-        setLoading(true);
-        const res = await axios.post(URL, {
-          search: search,
-          currentUser: user?.username,
-        });
-        setLoading(false);
-        setSearchUser(res.data.data);
-      } catch (error) {
-        toast.error(error?.response?.data?.message);
-      }
-    };
-    handleSearchUser();
-  }, [search]);
+  // useEffect(() => {
+  //   const handleSearchUser = async () => {
+  //     try {
+  //       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/search-user`;
+  //       setLoading(true);
+  //       const res = await axios.post(URL, {
+  //         search: search,
+  //         currentUser: user?.username,
+  //       });
+  //       setLoading(false);
+  //       setSearchUser(res.data.data);
+  //     } catch (error) {
+  //       toast.error(error?.response?.data?.message);
+  //     }
+  //   };
+  //   handleSearchUser();
+  // }, [search]);
   useEffect(() => {
     if (socketConnection) {
       setLoading(true);

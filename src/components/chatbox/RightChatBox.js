@@ -174,63 +174,63 @@ const RightChatBox = (props) => {
   }, []);
 
   //Effects
-  useEffect(() => {
-    if (!socketConnection && !props.selectedUserID) return;
+  // useEffect(() => {
+  //   if (!socketConnection && !props.selectedUserID) return;
 
-    setLoading(true);
-    socketConnection.emit("message-section", props.selectedUserID);
-    socketConnection.emit("seen", props.selectedUserID);
+  //   setLoading(true);
+  //   socketConnection.emit("message-section", props.selectedUserID);
+  //   socketConnection.emit("seen", props.selectedUserID);
 
-    //Handlers
-    const handlerMessageUser = (data) => {
-      setDataUser(data);
-    };
-    const handlerMessage = (data) => {
-      if (
-        (data[data?.length - 1]?.msgByUserID === user._id &&
-          data[data?.length - 1]?.reiceiverID === props.selectedUserID) ||
-        (data[data?.length - 1]?.msgByUserID === props.selectedUserID &&
-          data[data?.length - 1]?.reiceiverID === user._id)
-      ) {
-        setAllMessage(data);
-      }
-    };
-    const markAsSeen = () => {
-      socketConnection.emit("seen", props.selectedUserID);
-    };
-    //Add event listeners to chat input and chatbox window
-    const chatInput = inputRef.current;
-    const chatBox = chatboxRef.current;
-    if (chatInput) {
-      chatInput.addEventListener("focus", markAsSeen);
-      chatInput.addEventListener("input", markAsSeen);
-    }
-    if (chatBox) {
-      chatBox.addEventListener("click", markAsSeen);
-    }
-    //Catch Socket Event
-    socketConnection.on("message-user", handlerMessageUser);
-    socketConnection.on("message", handlerMessage);
+  //   //Handlers
+  //   const handlerMessageUser = (data) => {
+  //     setDataUser(data);
+  //   };
+  //   const handlerMessage = (data) => {
+  //     if (
+  //       (data[data?.length - 1]?.msgByUserID === user._id &&
+  //         data[data?.length - 1]?.reiceiverID === props.selectedUserID) ||
+  //       (data[data?.length - 1]?.msgByUserID === props.selectedUserID &&
+  //         data[data?.length - 1]?.reiceiverID === user._id)
+  //     ) {
+  //       setAllMessage(data);
+  //     }
+  //   };
+  //   const markAsSeen = () => {
+  //     socketConnection.emit("seen", props.selectedUserID);
+  //   };
+  //   //Add event listeners to chat input and chatbox window
+  //   const chatInput = inputRef.current;
+  //   const chatBox = chatboxRef.current;
+  //   if (chatInput) {
+  //     chatInput.addEventListener("focus", markAsSeen);
+  //     chatInput.addEventListener("input", markAsSeen);
+  //   }
+  //   if (chatBox) {
+  //     chatBox.addEventListener("click", markAsSeen);
+  //   }
+  //   //Catch Socket Event
+  //   socketConnection.on("message-user", handlerMessageUser);
+  //   socketConnection.on("message", handlerMessage);
 
-    setLoading(false);
+  //   setLoading(false);
 
-    return () => {
-      if (chatInput) {
-        chatInput.removeEventListener("focus", markAsSeen);
-        chatInput.removeEventListener("input", markAsSeen);
-      }
-      if (chatBox) {
-        chatBox.removeEventListener("click", markAsSeen);
-      }
-      socketConnection.off("message-user", handlerMessageUser);
-      socketConnection.off("message", handlerMessage);
-    };
-  }, [user, props?.selectedUserID, socketConnection]);
+  //   return () => {
+  //     if (chatInput) {
+  //       chatInput.removeEventListener("focus", markAsSeen);
+  //       chatInput.removeEventListener("input", markAsSeen);
+  //     }
+  //     if (chatBox) {
+  //       chatBox.removeEventListener("click", markAsSeen);
+  //     }
+  //     socketConnection.off("message-user", handlerMessageUser);
+  //     socketConnection.off("message", handlerMessage);
+  //   };
+  // }, [user, props?.selectedUserID, socketConnection]);
 
-  useEffect(() => {
-    if (currMessage.current)
-      currMessage.current.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [allMessage]);
+  // useEffect(() => {
+  //   if (currMessage.current)
+  //     currMessage.current.scrollIntoView({ behavior: "smooth", block: "end" });
+  // }, [allMessage]);
 
   //********************* */
 

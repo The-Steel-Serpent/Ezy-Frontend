@@ -85,28 +85,42 @@ const responsiveCateCarousel = [
 ];
 
 const Home = () => {
+  const [categories, setCategories] = useState([]);
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  // useEffect(() => {
+  //   const fetchUserDetails = async () => {
+  //     try {
+  //       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/user-details`;
+  //       const res = await axios({
+  //         method: "GET",
+  //         url: URL,
+  //         withCredentials: true,
+  //       });
+  //       dispatch(setUser(res.data.data));
+  //     } catch (error) {
+  //       console.log("Error", error);
+  //     }
+  //   };
+  //   fetchUserDetails();
+  // }, []);
   useEffect(() => {
-    const fetchUserDetails = async () => {
+    const fetchCategories = async () => {
       try {
-        const URL = `${process.env.REACT_APP_BACKEND_URL}/api/user-details`;
+        const URL = `${process.env.REACT_APP_BACKEND_URL}/api/categories`;
         const res = await axios({
           method: "GET",
           url: URL,
           withCredentials: true,
         });
-        dispatch(setUser(res.data.data));
+        setCategories(res.data.categories);
       } catch (error) {
-        console.log("Error", error);
+        console.log("Khoong the lay du lieu", error);
       }
     };
-    fetchUserDetails();
+    fetchCategories();
   }, []);
-
-  const [currentPage, setCurrentPage] = useState(1);
-
   return (
     <>
       <div className="w-full bg-white h-fit border-b-[1px]">
@@ -194,10 +208,16 @@ const Home = () => {
         >
           {categories.map((value, key) => {
             return (
-              <a className="max-w-[120px] mx-auto hover:shadow-lg" key={key}>
-                <div className="flex flex-col justify-center items-center border-b-[1px] border-r-[1px]">
-                  <img src={value.img} className="max-w-[84px]" />
-                  <p>{value.name}</p>
+              <a
+                className="max-w-[120px] mx-auto hover:shadow-lg"
+                key={value?.category_id}
+                href={`/categories/${value?.category_id}`}
+              >
+                <div className="flex flex-col justify-center items-center border-b-[1px] border-r-[1px] p-2">
+                  <img src={value?.thumbnail} className="max-w-[83px]" />
+                  <p className="line-clamp-2 text-ellipsis  h-10 mb-[10px] text-sm">
+                    {value?.category_name}
+                  </p>
                 </div>
               </a>
             );
