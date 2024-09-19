@@ -33,10 +33,8 @@ const AdminDashboard = withSuspense(
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
-const AllOrder = withSuspense(lazy(() => import("../pages/seller/AllOrders")));
-const OrderCancelled = withSuspense(
-  lazy(() => import("../pages/seller/OrderCancelled"))
-);
+const AllOrder = lazy(() => import("../pages/seller/orders/AllOrders"));
+const OrderCancelled = lazy(() => import("../pages/seller/orders/OrderCancelled"));
 const AllProduct = withSuspense(
   lazy(() => import("../pages/seller/product_management/AllProduct"))
 );
