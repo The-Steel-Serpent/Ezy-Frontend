@@ -1,5 +1,5 @@
 import React from 'react'
-import ProductSellerHeader from '../../../components/seller/ProductSellerHeader'
+import ProductSellerHeader from '../../../components/seller/products/ProductSellerHeader'
 
 const WorkingProducts = () => {
     return (

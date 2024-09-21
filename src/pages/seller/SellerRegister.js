@@ -73,7 +73,7 @@ const SellerRegister = () => {
         </div>
       </div>
       <div className="pt-16">
-        <form className="w-[400px] shadow-xl px-6 py-6 mb-10 bg-white" onSubmit={handleSignUp}>
+        <form className="lg:w-[400px] shadow-xl px-6 py-6 mb-10 bg-white" onSubmit={handleSignUp}>
           <h1 className="font-[450] text-xl mb-5">Đăng ký</h1>
           <input
             type="text"
@@ -111,9 +111,6 @@ const SellerRegister = () => {
           <button className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
             TIẾP THEO
           </button>
-          <div className="w-full py-3 flex justify-between">
-            <a className="text-[15px] text-[#05a]" href="#">Đăng kí bằng SMS</a>
-          </div>
           <Divider>
             <span className="text-slate-400 text-xs">HOẶC</span>
           </Divider>

@@ -4,12 +4,14 @@ import {
     GoogleAuthProvider, 
     signInWithEmailAndPassword, 
     signInWithPopup,
-    sendEmailVerification,
-    RecaptchaVerifier
+    sendEmailVerification
  } from "firebase/auth";
 
 
 import { authFirebase } from './firebase';
+
+const auth = getAuth();
+auth.useDeviceLanguage();
 
 export const signUpWithEmailPassword = async (email, password) => {
     try {
@@ -84,16 +86,4 @@ export const signInWithGoogle = async () => {
         throw error
     }
 }
-
-export const signInWithNumberPhone = async (phoneNumber, appVerifier) => {
-    const auth = getAuth();
-    try {
-        const confirmationResult = await signInWithNumberPhone(auth,phoneNumber, appVerifier);
-        return confirmationResult;
-    } catch (error) {
-        console.error("Error:",error);
-        throw error;
-    }
-}
-
 

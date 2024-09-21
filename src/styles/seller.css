@@ -8,11 +8,11 @@
 
 
 .ant-menu-item-only-child :hover {
-    color: chocolate;
+    color: #66cce6;
 }
 
 .ant-menu-item-selected {
-    color: chocolate !important;
+    color: #66cce6 !important;
     background-color: transparent !important;
     font-size: 15px;
 }
@@ -23,7 +23,7 @@
 }
 
 .custom-menu-order-status .ant-menu-item-selected {
-    border-bottom: 3px solid #ee4d2d;
+    border-bottom: 3px solid #66cce6;
 }
 
 .custom-select-radius-left .ant-select-selector {
@@ -86,7 +86,7 @@
 }
 
 .custom-menu-seller-product .ant-menu-item-selected {
-    border-bottom: 3px solid #ee4d2d;
+    border-bottom: 3px solid #66cce6;
     font-size: 15px;
 }
 
