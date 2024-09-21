@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import {  Menu } from 'antd';
-import "../../styles/seller.css"
+import "../../../styles/seller.css"
 import { useNavigate } from 'react-router-dom';
 const items = [
     {

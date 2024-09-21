@@ -62,7 +62,7 @@ const SellerLogin = () => {
       <div>
         <form 
         onSubmit={handleSignInEmailPassword}
-        className="w-96 shadow-lg px-6 py-10 mb-10">
+        className="lg:w-96 shadow-lg px-6 py-10 mb-10">
           <h1 className="font-[450] text-xl mb-10">Đăng nhập</h1>
           <input
             type="text"
@@ -101,9 +101,8 @@ const SellerLogin = () => {
             className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
             Đăng nhập
           </button>
-          <div className="w-full py-3 flex justify-between">
+          <div className="w-full py-3 flex">
             <a className="text-[15px] text-[#05a]" href="#">Quên mật khẩu</a>
-            <a className="text-[15px] text-[#05a]" href="#">Đăng nhập bằng SMS</a>
           </div>
           <Divider>
             <span className="text-slate-400 text-xs">HOẶC</span>
@@ -118,7 +117,7 @@ const SellerLogin = () => {
             </button>
           </div>
           <div className="text-sm mt-10 w-full flex justify-center">
-            <span className="text-slate-400">Bạn mới biết đến Shopee?</span>
+            <span className="text-slate-400">Bạn mới biết đến Ezy?</span>
             <a href="/seller/register" className="text-primary px-1">Đăng ký</a>
           </div>
         </form>

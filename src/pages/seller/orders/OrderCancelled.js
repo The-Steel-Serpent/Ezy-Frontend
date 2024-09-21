@@ -1,5 +1,5 @@
 import React from 'react'
-import OrderStatus from '../../../components/seller/OrderStatus'
+import OrderStatus from '../../../components/seller/orders/OrderStatus'
 
 const OrderCancelled = () => {
   return (

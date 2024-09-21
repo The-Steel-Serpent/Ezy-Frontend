@@ -7,6 +7,7 @@ import InfringingProduct from "../pages/seller/product_management/InfringingProd
 import PendingProducts from "../pages/seller/product_management/PendingProducts";
 import withSuspense from "../hooks/HOC/withSuspense";
 import LoadingPage from "../components/LoadingPage";
+import AuthenticationLayout from "../layout/AuthenticationLayout";
 const DetailsProduct = withSuspense(
   lazy(() => import("../pages/buyer/DetailsProduct"))
 );
@@ -97,17 +98,17 @@ const router = createBrowserRouter([
       {
         path: "seller/login",
         element: (
-          <AuthLayout>
+          <AuthenticationLayout>
             <SellerLogin />
-          </AuthLayout>
+          </AuthenticationLayout>
         ),
       },
       {
         path: "seller/register",
         element: (
-          <AuthLayout>
+          <AuthenticationLayout>
             <SellerRegister />
-          </AuthLayout>
+          </AuthenticationLayout>
         ),
       },
       //seller/order
