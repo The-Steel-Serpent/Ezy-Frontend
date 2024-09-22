@@ -6,7 +6,7 @@ const AllProduct = () => {
   return (
     <div>
       <ProductSellerHeader status={'/seller/product-management/all'} />
-      <div className='bg-white rounded p-5'>
+      <div className='bg-white rounded p-5 mt-5'>
         <FilterProduct />
 
       </div>

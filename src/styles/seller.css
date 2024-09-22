@@ -1,5 +1,9 @@
-.custom-header {
-    box-shadow: 0 4px 2px -2px gray;
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 .ant-menu-submenu-title :hover {
@@ -90,3 +94,25 @@
     font-size: 15px;
 }
 
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+.sticky-menu {
+    position: sticky;
+    top: 60px;
+    z-index: 1000;
+    background-color: white;
+    width: 100%;
+}
+
+.layout-full-height {
+    height: 100% !important;
+}
+
+.custom-upload .ant-upload-list-item {
+    border-color: rgb(186, 177, 177) !important;
+}

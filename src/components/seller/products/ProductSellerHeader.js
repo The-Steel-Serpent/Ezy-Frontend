@@ -19,7 +19,7 @@ const items = [
   },
   {
     key: '/seller/product-management/pending-products',
-    label: 'Chờ duyệt bởi Shopee (0)'
+    label: 'Chờ duyệt bởi Ezy (0)'
   }
 ];
 

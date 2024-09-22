@@ -127,7 +127,7 @@ const SellerAuthLayout = ({ children }) => {
     return (
         <>
             <Layout>
-                <header className='bg-white w-full flex justify-between items-center custom-header'>
+                <header className='bg-white w-full h-[60px] flex justify-between items-center custom-header sticky-header'>
                     <div className='flex px-4 py-2 items-center gap-2'>
                         <img
                             src={logo}
@@ -163,7 +163,7 @@ const SellerAuthLayout = ({ children }) => {
                     </div>
                 </header>
                 <Layout className='h-full'>
-                    <Sider trigger={null} collapsible collapsed={collapsed} className='bg-white w-fit h-fit shadow-xl'>
+                    <Sider trigger={null} collapsible collapsed={collapsed} className='bg-white w-fit h-full shadow-xl sticky-sider'>
                         <div className="demo-logo-vertical" />
                         <Menu
                             defaultOpenKeys={['sub1', 'sub2', 'sub3', 'sub4']}
@@ -171,10 +171,10 @@ const SellerAuthLayout = ({ children }) => {
                             theme="light"
                             items={items}
                             onClick={handleNavigate}
-                            className='custom-menu text-slate-500 font-[400] lg:w-48'
+                            className='custom-menu text-slate-500 font-[400] lg:w-48 '
                         />
                     </Sider>
-                    <Layout className='h-full'>
+                    <Layout className='layout-full-height'>
                         <Header
                             style={{
                                 padding: 0,
