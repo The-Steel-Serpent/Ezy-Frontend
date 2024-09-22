@@ -1,7 +1,8 @@
 import { Button } from "antd";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ProductCard from "../product/ProductCard";
 import { Link } from "react-router-dom";
+import axios from "axios";
 const Products = [
   {
     thumbnail:
@@ -327,10 +328,24 @@ const Products = [
   },
 ];
 const ProductSuggestions = () => {
+  const [suggestProducts, setSuggestProducts] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products-limit`
+        );
+        setSuggestProducts(res.data.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchData();
+  }, []);
   return (
     <div className="max-w-[1200px] m-auto ">
       <div className="grid grid-cols-12 place-items-center">
-        {Products.slice(0, 24).map((value, key) => {
+        {suggestProducts.map((value, key) => {
           return <ProductCard value={value} key={key} />;
         })}
       </div>

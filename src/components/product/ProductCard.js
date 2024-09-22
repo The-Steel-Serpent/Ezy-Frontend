@@ -16,7 +16,7 @@ const ProductCard = ({ value, key }) => {
     <>
       <Link
         className="animation-pulse relative w-32 lg:w-48 col-span-4 lg:col-span-2 mt-3"
-        to={"/product-details/" + { key }}
+        to={"/product-details/" + { value }.value?.product_id}
       >
         <Card
           key={key}
@@ -24,15 +24,18 @@ const ProductCard = ({ value, key }) => {
           hoverable
           cover={<img src={value.thumbnail} />}
         >
-          <Meta style={{ fontSize: 14 }} title={value.name} />
+          <Meta style={{ fontSize: 14 }} title={value?.product_name} />
           <div className="flex lg:flex-row flex-col w-100 justify-between items-start lg:items-center mt-4">
-            <div className="text-primary font-bold">đ{value.price}.000</div>
+            <div className="text-primary font-bold">
+              <sup>₫</sup>
+              {value?.base_price?.toLocaleString("vi-VN")}
+            </div>
             <div className="text-[10px] pt-1">
-              Đã bán {formatNumber(value.sold)}
+              Đã bán {formatNumber(value?.sold)}
             </div>
           </div>
           <div className="absolute top-0 right-0 text-xs bg-primary text-white pr-1 pl-1">
-            -34%
+            {value?.sale_percents > 0 && "-" + value?.sale_percents + "%"}
           </div>
         </Card>
       </Link>
