@@ -5,7 +5,7 @@ import { BsPencil } from "react-icons/bs";
 
 const FilterProduct = () => {
   return (
-    <div className='flex items-center gap-3 p-5 w-full'>
+    <div className='flex items-center gap-3 w-full'>
       <Input
         placeholder="Tìm tên sản phẩm, SKU sản phẩm, Mã sản phẩm"
         prefix={<CiSearch />}
