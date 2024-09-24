@@ -32,7 +32,7 @@ const DetailProduct = () => {
     const shippingInfoRef = useRef(null);
     const otherInfoRef = useRef(null);
 
-    const handleClick = (e) => {
+    const handleFocusMenu = (e) => {
         switch (e.key) {
             case '1':
                 basicInfoRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -62,7 +62,7 @@ const DetailProduct = () => {
                 items={items}
                 defaultSelectedKeys={['1']}
                 className="custom-menu-seller-product bg-transparent sticky-menu"
-                onClick={handleClick}
+                onClick={handleFocusMenu}
             />
             <div ref={basicInfoRef} className="section bg-white mt-3 border rounded p-5">
                 <BasicInformation />
