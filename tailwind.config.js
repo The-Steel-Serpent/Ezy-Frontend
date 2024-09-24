@@ -7,6 +7,7 @@ module.exports = {
       colors: {
         // primary: "#ee4d2d",
         primary: "#66cce6",
+        secondary: "#f3fcff",
       },
       backgroundImage: {
         "custom-gradient": "linear-gradient(-180deg, #66cce6, #298ab4)",
