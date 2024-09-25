@@ -1,14 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import AuthLayout from "../layout";
-import { lazy } from "react";
 import WorkingProducts from "../pages/seller/product_management/WorkingProducts";
 import InfringingProduct from "../pages/seller/product_management/InfringingProduct";
 import PendingProducts from "../pages/seller/product_management/PendingProducts";
-import LoadingPage from "../components/LoadingPage";
 import AuthenticationLayout from "../layout/AuthenticationLayout";
 import DetailsProduct from "../pages/buyer/DetailsProduct";
-import DetailProduct from "../components/seller/products/DetailProduct";
 import Home from "../pages/Home";
 import BuyerLogin from "../pages/buyer/BuyerLogin";
 import BuyerRegister from "../pages/buyer/BuyerRegister";

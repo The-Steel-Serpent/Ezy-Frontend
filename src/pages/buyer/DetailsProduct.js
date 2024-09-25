@@ -8,11 +8,11 @@ import {
   Pagination,
   Skeleton,
   Space,
+  Spin,
   Typography,
 } from "antd";
+import "react-multi-carousel/lib/styles.css";
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
-
-import ReactImageGallery from "react-image-gallery";
 import ReactStars from "react-rating-star-with-type";
 import formatNumber from "../../helpers/formatNumber";
 import { useParams } from "react-router-dom";
@@ -20,11 +20,20 @@ import axios from "axios";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { TiShoppingCart } from "react-icons/ti";
 import { TbTruckReturn } from "react-icons/tb";
-import ShopInformationSection from "../../components/shop/ShopInformationSection";
+import { MdArrowForwardIos } from "react-icons/md";
+
 import formatAddress from "../../helpers/formatAddress";
 import { DownOutlined } from "@ant-design/icons";
-import { de } from "date-fns/locale";
+import ProductCard from "../../components/product/ProductCard";
 const ReviewCard = lazy(() => import("../../components/product/ReviewCard"));
+const ReactImageGallery = lazy(() => import("react-image-gallery"));
+const ShopInformationSection = lazy(() =>
+  import("../../components/shop/ShopInformationSection")
+);
+const CarouselProduct = lazy(() => import("react-multi-carousel"));
+const ProductSuggestions = lazy(() =>
+  import("../../components/product/ProductSuggestions")
+);
 const DetailsProduct = () => {
   const { id } = useParams();
   const [sizes, setSizes] = useState([]);
@@ -40,7 +49,7 @@ const DetailsProduct = () => {
   // const [currentThumbnail, setCurrentThumbnail] = useState("");
   const [detailsProduct, setDetailsProduct] = useState({});
   const [reviews, setReviews] = useState([]);
-
+  const [shopProducts, setShopProducts] = useState([]);
   //Side Effect
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -105,6 +114,18 @@ const DetailsProduct = () => {
     fetchProductVarient();
   }, [detailsProduct.product_id, selectedClassify]);
 
+  useEffect(() => {
+    const fetchShopProducts = async () => {
+      try {
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/shop-products?shop_id=${detailsProduct?.Shop?.shop_id}&product_id=${id}`;
+        const res = await axios.get(url);
+        setShopProducts(res.data.products);
+      } catch (error) {
+        console.log("Lỗi khi lấy dữ liệu sản phẩm của shop: ", error);
+      }
+    };
+    fetchShopProducts();
+  }, [detailsProduct?.Shop?.shop_id]);
   //Handle
 
   const handleSizeClick = useCallback(
@@ -195,11 +216,13 @@ const DetailsProduct = () => {
         {/***Sản phẩm */}
         <div className=" bg-white grid grid-flow-col lg:grid-cols-12 rounded">
           <section className="col-span-5 p-[15px]">
-            <ReactImageGallery
-              lazyLoad={true}
-              items={imgs}
-              showThumbnails={true}
-            />
+            <Suspense fallback={<Skeleton.Image className="size-[470px]" />}>
+              <ReactImageGallery
+                lazyLoad={true}
+                items={imgs}
+                showThumbnails={true}
+              />
+            </Suspense>
           </section>
           <section className="col-span-7 pl-5 pt-5 pr-9">
             {/***Tên sản phẩm */}
@@ -303,6 +326,7 @@ const DetailsProduct = () => {
                                }  items-center  border-[1px] border-solid  rounded box-border inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
                           >
                             <img
+                              loading="lazy"
                               src={classify?.thumbnail}
                               className="w-6 h-6"
                             />
@@ -419,7 +443,9 @@ const DetailsProduct = () => {
 
         {/***Shop Information*/}
         <section className="bg-white rounded mt-[15px] pt-[25px]">
-          <ShopInformationSection value={detailsProduct?.Shop} />
+          <Suspense fallback={<Skeleton avatar paragraph={{ rows: 1 }} />}>
+            <ShopInformationSection value={detailsProduct?.Shop} />
+          </Suspense>
         </section>
 
         {/***Product Description Container */}
@@ -620,6 +646,88 @@ const DetailsProduct = () => {
             )}
           </div>
         </section>
+        {/***Other Product of Shop */}
+        {shopProducts?.length > 0 && (
+          <>
+            <div className="mt-6">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-normal">
+                  CÁC SẢN PHẨM KHÁC CỦA SHOP
+                </span>
+                <a href="#" className="text-primary flex items-center gap-1">
+                  Xem Tất Cả <MdArrowForwardIos size={16} />
+                </a>
+              </div>
+
+              <Suspense fallback={<Spin size="large" />}>
+                <CarouselProduct
+                  additionalTransfrom={0}
+                  arrows
+                  centerMode={false}
+                  className="animation-pulse mt-5 w-full"
+                  containerClass="container"
+                  dotListClass=""
+                  draggable
+                  focusOnSelect={false}
+                  infinite={false}
+                  itemClass="lg:w-[195px] mr-[6px]"
+                  keyBoardControl
+                  minimumTouchDrag={1000}
+                  pauseOnHover
+                  renderArrowsWhenDisabled={false}
+                  renderButtonGroupOutside={false}
+                  renderDotsOutside={false}
+                  responsive={{
+                    desktop: {
+                      breakpoint: {
+                        max: 3000,
+                        min: 1024,
+                      },
+                      items: 6,
+                      partialVisibilityGutter: 50,
+                    },
+                    mobile: {
+                      breakpoint: {
+                        max: 464,
+                        min: 0,
+                      },
+                      items: 1,
+                      partialVisibilityGutter: 30,
+                    },
+                    tablet: {
+                      breakpoint: {
+                        max: 1024,
+                        min: 464,
+                      },
+                      items: 2,
+                      partialVisibilityGutter: 30,
+                    },
+                  }}
+                  rewind={false}
+                  rewindWithAnimation={false}
+                  rtl={false}
+                  shouldResetAutoplay
+                  showDots={false}
+                  sliderClass=""
+                  slidesToSlide={2}
+                  swipeable
+                >
+                  {shopProducts.map((product, key) => (
+                    <ProductCard value={product} key={key} />
+                  ))}
+                </CarouselProduct>
+              </Suspense>
+            </div>
+          </>
+        )}
+
+        {/***Product Suggestions */}
+        <div className="mt-10">
+          <span className="text-lg font-normal">CÓ THỂ BẠN CŨNG THÍCH</span>
+          <Suspense fallback={<Spin size="large" />}>
+            <ProductSuggestions />
+          </Suspense>
+        </div>
       </div>
     </>
   );

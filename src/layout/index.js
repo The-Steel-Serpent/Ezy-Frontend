@@ -1,11 +1,6 @@
 import React, { lazy, useEffect } from "react";
-import withSuspense from "../hooks/HOC/withSuspense";
-const PrimaryHeader = withSuspense(
-  lazy(() => import("../components/PrimaryHeader"))
-);
-const SecondaryHeader = withSuspense(
-  lazy(() => import("../components/SecondaryHeader"))
-);
+import PrimaryHeader from "../components/PrimaryHeader";
+import SecondaryHeader from "../components/SecondaryHeader";
 
 const AuthLayout = ({ children }) => {
   const pathname = window.location.pathname;

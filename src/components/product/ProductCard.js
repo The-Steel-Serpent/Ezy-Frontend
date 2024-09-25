@@ -1,7 +1,6 @@
 import { Card } from "antd";
 import Meta from "antd/es/card/Meta";
 import React from "react";
-import { Link } from "react-router-dom";
 function formatNumber(num) {
   if (num >= 1000000) {
     return (num / 1000000).toFixed(1) + "M"; // Hàng triệu
@@ -14,9 +13,9 @@ function formatNumber(num) {
 const ProductCard = ({ value, key }) => {
   return (
     <>
-      <Link
+      <a
+        href={"/product-details/" + { value }.value?.product_id}
         className="animation-pulse relative w-32 lg:w-48 col-span-4 lg:col-span-2 mt-3"
-        to={"/product-details/" + { value }.value?.product_id}
       >
         <Card
           key={key}
@@ -38,7 +37,7 @@ const ProductCard = ({ value, key }) => {
             {value?.sale_percents > 0 && "-" + value?.sale_percents + "%"}
           </div>
         </Card>
-      </Link>
+      </a>
     </>
   );
 };

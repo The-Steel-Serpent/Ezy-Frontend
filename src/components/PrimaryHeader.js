@@ -8,6 +8,7 @@ import {
   useCallback,
   useMemo,
   lazy,
+  Suspense,
 } from "react";
 import withSuspense from "../hooks/HOC/withSuspense";
 import { IoLogoFacebook } from "react-icons/io5";
@@ -21,8 +22,9 @@ import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
+import { Skeleton } from "antd";
 // import FullLogo from "./FullLogo";
-const ChatBox = withSuspense(lazy(() => import("./chatbox/ChatBox")));
+const ChatBox = lazy(() => import("./chatbox/ChatBox"));
 
 const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);
@@ -150,7 +152,9 @@ const PrimaryHeader = () => {
           </div>
         </div>
       </header>
-      <ChatBox />
+      <Suspense fallback={<Skeleton.Node style={{ width: 160 }} />}>
+        <ChatBox />
+      </Suspense>
     </>
   );
 };

@@ -29,46 +29,6 @@ const events = [
   { img: event9, name: "Nạp Thẻ, Dịch Vụ & Vé Máy Bay" },
 ];
 
-const categories = [
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-  { img: categoryImg1, name: "Thời Trang Nam" },
-];
 const responsiveCateCarousel = [
   {
     breakpoint: 767,
@@ -134,12 +94,14 @@ const Home = () => {
             >
               <div>
                 <img
+                  loading="lazy"
                   src="https://cf.shopee.vn/file/vn-11134258-7r98o-lyqajnu6gm8xba_xxhdpi"
                   className="rounded"
                 />
               </div>
               <div>
                 <img
+                  loading="lazy"
                   src="https://cf.shopee.vn/file/sg-11134258-7rdwl-lyq71o5nyjef45_xxhdpi"
                   className="rounded"
                 />
@@ -152,6 +114,7 @@ const Home = () => {
               </div>
               <div>
                 <img
+                  loading="lazy"
                   src="https://cf.shopee.vn/file/sg-11134258-7rdwh-lyqcftzv4yeg38_xxhdpi"
                   className="rounded"
                 />
@@ -160,12 +123,14 @@ const Home = () => {
             <div className="lg:flex flex-col gap-1 hidden">
               <a href="#">
                 <img
+                  loading="lazy"
                   src="https://cf.shopee.vn/file/sg-11134258-7rdxa-lyq96pc5o1ew00_xhdpi"
                   className="rounded"
                 />
               </a>
               <a href="#">
                 <img
+                  loading="lazy"
                   src="https://cf.shopee.vn/file/sg-11134258-7rdwa-lyq90a6612nrc3_xhdpi"
                   className="rounded"
                 />
@@ -181,6 +146,7 @@ const Home = () => {
                   className="flex justify-center items-center flex-col hover:transform hover:-translate-y-[1px] transition-transform lg:mx-0 mx-5"
                 >
                   <img
+                    loading="lazy"
                     src={value.img}
                     className="bg-contain bg-no-repeat size-[45px]"
                   />
@@ -214,7 +180,11 @@ const Home = () => {
                 href={`/categories/${value?.category_id}`}
               >
                 <div className="flex flex-col justify-center items-center border-b-[1px] border-r-[1px] p-2">
-                  <img src={value?.thumbnail} className="max-w-[83px]" />
+                  <img
+                    loading="lazy"
+                    src={value?.thumbnail}
+                    className="max-w-[83px]"
+                  />
                   <p className="line-clamp-2 text-ellipsis  h-10 mb-[10px] text-sm">
                     {value?.category_name}
                   </p>
