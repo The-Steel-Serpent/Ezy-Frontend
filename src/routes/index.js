@@ -5,10 +5,10 @@ import WorkingProducts from "../pages/seller/product_management/WorkingProducts"
 import InfringingProduct from "../pages/seller/product_management/InfringingProduct";
 import PendingProducts from "../pages/seller/product_management/PendingProducts";
 import AuthenticationLayout from "../layout/AuthenticationLayout";
-import DetailsProduct from "../pages/buyer/DetailsProduct";
+import DetailsProduct from "../pages/buyer/product-pages/DetailsProduct";
 import Home from "../pages/Home";
-import BuyerLogin from "../pages/buyer/BuyerLogin";
-import BuyerRegister from "../pages/buyer/BuyerRegister";
+import BuyerLogin from "../pages/buyer/user-pages/BuyerLogin";
+import BuyerRegister from "../pages/buyer/user-pages/BuyerRegister";
 import SellerLogin from "../pages/seller/SellerLogin";
 import SellerRegister from "../pages/seller/SellerRegister";
 import AdminLogin from "../pages/admin/AdminLogin";
