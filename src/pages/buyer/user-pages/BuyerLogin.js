@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import FlashSale from "../../assets/flash-sale.png";
+import FlashSale from "../../../assets/flash-sale.png";
 import { Divider } from "antd";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setToken, setUser } from "../../redux/userSlice";
+import { setToken, setUser } from "../../../redux/userSlice";
 const BuyerLogin = () => {
   const [data, setData] = useState(null);
   const [hidePassword, setHidePassword] = useState(false);

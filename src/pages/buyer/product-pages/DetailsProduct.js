@@ -14,7 +14,7 @@ import {
 import "react-multi-carousel/lib/styles.css";
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import ReactStars from "react-rating-star-with-type";
-import formatNumber from "../../helpers/formatNumber";
+import formatNumber from "../../../helpers/formatNumber";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { IoCheckmarkDone } from "react-icons/io5";
@@ -22,17 +22,17 @@ import { TiShoppingCart } from "react-icons/ti";
 import { TbTruckReturn } from "react-icons/tb";
 import { MdArrowForwardIos } from "react-icons/md";
 
-import formatAddress from "../../helpers/formatAddress";
+import formatAddress from "../../../helpers/formatAddress";
 import { DownOutlined } from "@ant-design/icons";
-import ProductCard from "../../components/product/ProductCard";
-const ReviewCard = lazy(() => import("../../components/product/ReviewCard"));
+import ProductCard from "../../../components/product/ProductCard";
+const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
 const ReactImageGallery = lazy(() => import("react-image-gallery"));
 const ShopInformationSection = lazy(() =>
-  import("../../components/shop/ShopInformationSection")
+  import("../../../components/shop/ShopInformationSection")
 );
 const CarouselProduct = lazy(() => import("react-multi-carousel"));
 const ProductSuggestions = lazy(() =>
-  import("../../components/product/ProductSuggestions")
+  import("../../../components/product/ProductSuggestions")
 );
 const DetailsProduct = () => {
   const { id } = useParams();
