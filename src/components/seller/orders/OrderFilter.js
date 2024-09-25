@@ -38,7 +38,7 @@ const OrderFilter = () => {
             onChange={handleChange}
             options={items}
           />
-          <Input placeholder={placeholder} className='min-w-52' />
+          <Input placeholder={placeholder} className='min-w-52 custom-input' />
         </div>
 
         <div className='flex border rounded hover:border-slate-500'>

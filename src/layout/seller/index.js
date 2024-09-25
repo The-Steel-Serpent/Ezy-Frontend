@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import logo from '../../assets/orange-logo.png'
+import logo from '../../assets/image (1) (2).png'
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { GoBook } from "react-icons/go";
 import { VscBell } from "react-icons/vsc";
@@ -127,38 +127,42 @@ const SellerAuthLayout = ({ children }) => {
     return (
         <>
             <Layout>
-                <header className='bg-white w-full h-[60px] flex justify-between items-center custom-header sticky-header'>
+                <header className='bg-primary w-full h-[60px] flex justify-between items-center custom-header sticky-header'>
                     <div className='flex px-4 py-2 items-center gap-2'>
                         <img
                             src={logo}
                             alt='logo'
                             width={100}
                         />
-                        <div className='text-lg mt-2'>
-                            <a href='/seller'>Kênh người bán</a>
+                        <div className='text-lg mt-2 text-white'>
+                            <a href='/seller' className='hover:text-slate-200'>Kênh người bán</a>
                         </div>
                     </div>
                     <div className='flex mx-10 items-center h-full'>
-                        <div className='text-slate-600 hover:bg-slate-300 py-4 px-3 hidden lg:block'>
+                        <div className='text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block'>
                             <HiOutlineSquares2X2
+                                color='white'
                                 size={25}
                             />
                         </div>
-                        <div className='text-slate-600 hover:bg-slate-300 py-4 px-3 hidden lg:block'>
+                        <div className='text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block'>
                             <GoBook
+                            color='white'
                                 size={25}
                             />
                         </div>
-                        <div className='text-slate-600 hover:bg-slate-300 py-4 px-3 hidden lg:block'>
+                        <div className='text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block'>
                             <VscBell
+                                color='white'
                                 size={25}
                             />
                         </div>
                         <Divider type="vertical" variant="dotted" style={{ height: 30 }} />
-                        <div className='flex h-full items-center text-slate-600 gap-3 hover:bg-slate-300 py-4 px-3'>
-                            <FaUserCircle size={25} />
-                            <div className='text-[15px]'>boquangdieu2003</div>
-                            <FaChevronDown size={12} />
+                        <div className='flex h-full items-center text-slate-600 gap-3 hover:bg-[#8ad3e5] py-4 px-3'>
+
+                            <FaUserCircle size={25} color='white' />
+                            <div className='text-[15px] text-white'>boquangdieu2003</div>
+                            <FaChevronDown size={12} color='white'/>
                         </div>
                     </div>
                 </header>
