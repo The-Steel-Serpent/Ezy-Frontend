@@ -7,28 +7,22 @@ import InfringingProduct from "../pages/seller/product_management/InfringingProd
 import PendingProducts from "../pages/seller/product_management/PendingProducts";
 import LoadingPage from "../components/LoadingPage";
 import AuthenticationLayout from "../layout/AuthenticationLayout";
-const DetailsProduct = lazy(() => import("../pages/buyer/DetailsProduct"));
-
-const Home = lazy(() => import("../pages/Home"));
-const BuyerLogin = lazy(() => import("../pages/buyer/BuyerLogin"));
-const BuyerRegister = lazy(() => import("../pages/buyer/BuyerRegister"));
-const SellerLogin = lazy(() => import("../pages/seller/SellerLogin"));
-const SellerRegister = lazy(() => import("../pages/seller/SellerRegister"));
-const AdminLogin = lazy(() => import("../pages/admin/AdminLogin"));
-const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
-const SellerHome = lazy(() => import("../pages/seller/SellerHome"));
-const AllOrder = lazy(() => import("../pages/seller/orders/AllOrders"));
-const OrderCancelled = lazy(() =>
-  import("../pages/seller/orders/OrderCancelled")
-);
-const AllProduct = lazy(() =>
-  import("../pages/seller/product_management/AllProduct")
-);
-const AddProduct = lazy(() =>
-  import("../pages/seller/product_management/AddProduct")
-);
-const SellerAuthLayout = lazy(() => import("../layout/seller"));
-const AdminAuthLayout = lazy(() => import("../layout/admin"));
+import DetailsProduct from "../pages/buyer/DetailsProduct";
+import DetailProduct from "../components/seller/products/DetailProduct";
+import Home from "../pages/Home";
+import BuyerLogin from "../pages/buyer/BuyerLogin";
+import BuyerRegister from "../pages/buyer/BuyerRegister";
+import SellerLogin from "../pages/seller/SellerLogin";
+import SellerRegister from "../pages/seller/SellerRegister";
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import SellerHome from "../pages/seller/SellerHome";
+import AllOrders from "../pages/seller/orders/AllOrders";
+import OrderCancelled from "../pages/seller/orders/OrderCancelled";
+import AllProduct from "../pages/seller/product_management/AllProduct";
+import AddProduct from "../pages/seller/product_management/AddProduct";
+import SellerAuthLayout from "../layout/seller";
+import AdminAuthLayout from "../layout/admin";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -101,7 +95,7 @@ const router = createBrowserRouter([
         path: "seller/order/all",
         element: (
           <SellerAuthLayout>
-            <AllOrder />
+            <AllOrders />
           </SellerAuthLayout>
         ),
       },
