@@ -268,3 +268,15 @@
   border-inline-start: 1px solid rgb(5 5 5) !important;
   top: 1px;
 }
+:where(.css-dev-only-do-not-override-14i19y2).ant-pagination
+  .ant-pagination-item-active {
+  font-weight: 600;
+  background-color: #ffffff;
+
+  @apply border-primary;
+}
+:where(.css-dev-only-do-not-override-14i19y2).ant-pagination
+  .ant-pagination-item-active
+  a {
+  @apply text-primary;
+}

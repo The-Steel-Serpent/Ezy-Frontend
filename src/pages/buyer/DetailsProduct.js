@@ -5,10 +5,13 @@ import {
   Divider,
   Dropdown,
   InputNumber,
+  Pagination,
+  Skeleton,
   Space,
   Typography,
 } from "antd";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
+
 import ReactImageGallery from "react-image-gallery";
 import ReactStars from "react-rating-star-with-type";
 import formatNumber from "../../helpers/formatNumber";
@@ -20,13 +23,18 @@ import { TbTruckReturn } from "react-icons/tb";
 import ShopInformationSection from "../../components/shop/ShopInformationSection";
 import formatAddress from "../../helpers/formatAddress";
 import { DownOutlined } from "@ant-design/icons";
-import ReviewCard from "../../components/product/ReviewCard";
+import { de } from "date-fns/locale";
+const ReviewCard = lazy(() => import("../../components/product/ReviewCard"));
 const DetailsProduct = () => {
   const { id } = useParams();
   const [sizes, setSizes] = useState([]);
   const [currentVarient, setCurrentVarient] = useState({});
   const [selectedClassify, setSelectedClassify] = useState("");
-  const [ratingFilter, setRatingFilter] = useState(0);
+  const [ratingFilter, setRatingFilter] = useState(6);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
+  const [avgRating, setAvgRating] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
   // const [currentThumbnail, setCurrentThumbnail] = useState("");
@@ -35,33 +43,44 @@ const DetailsProduct = () => {
 
   //Side Effect
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/product-details/${id}`
         );
-        // if (
-        //   res.data.product.ProductVarients &&
-        //   res.data.product.ProductVarients.length > 0
-        // ) {
-        //   setCurrentVarient(res.data.product.ProductVarients[0]);
-        // }
-        // console.log(res.data.product);
         setDetailsProduct(res.data.product);
-        if (res.data.product.ProductClassifies.length > 0) {
+        if (res?.data?.product?.ProductClassifies?.length > 0) {
           const firstClassify = res.data.product?.ProductClassifies?.find(
             (classify) => classify.total_stock > 0
           );
           setSelectedClassify(firstClassify?.product_classify_id);
         }
-
-        setReviews(res.data.reviews);
+        setAvgRating(res.data.avgRating);
+        setTotalReviews(res.data.totalReviews);
       } catch (error) {
         console.log("Lỗi khi lấy dữ liệu sản phẩm: ", error);
       }
     };
     fetchProductDetails();
-  }, []);
+  }, [id]);
+
+  useEffect(() => {
+    const fetchProductReviews = async () => {
+      try {
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/product-reviews/${id}?page=${page}&rating=${ratingFilter}`;
+        const res = await axios.get(url);
+        setReviews(res?.data?.reviews);
+        setTotalPage(res?.data?.totalPage);
+      } catch (error) {
+        console.log("Lỗi khi lấy dữ liệu Review: ", error);
+      }
+    };
+    fetchProductReviews();
+  }, [page, ratingFilter]);
 
   useEffect(() => {
     const fetchProductVarient = async () => {
@@ -69,11 +88,14 @@ const DetailsProduct = () => {
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${id}&product_classify_id=${selectedClassify}`
         );
-        console.log(res.data.data[0]);
-
-        setSizes(res.data.data);
-        const firstInStock = res.data.data.find((varient) => varient.stock > 0);
-        setCurrentVarient(firstInStock);
+        if (res.data && Array.isArray(res.data.data)) {
+          // console.log(res.data.data[0]);
+          setSizes(res.data.data);
+          const firstInStock = res.data.data.find(
+            (varient) => varient.stock > 0
+          );
+          setCurrentVarient(firstInStock);
+        }
         // setSelectedSize(res.data.data[0]?.product_size_id);
         // setSelectedClassify(res.data.data[0]?.product_classify_id);
       } catch (error) {
@@ -118,8 +140,6 @@ const DetailsProduct = () => {
       original: img?.url,
       thumbnail: img?.url,
     })) || [];
-  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-  const avgRating = totalRating / reviews.length || 0;
 
   const price =
     currentVarient != null ? currentVarient?.price : detailsProduct?.base_price;
@@ -202,7 +222,7 @@ const DetailsProduct = () => {
                 <Divider type="vertical" className="divider-slate" />
                 <div className="flex gap-1 ">
                   <span className="text-base border-b-2 border-black">
-                    {formatNumber(reviews.length)}
+                    {formatNumber(totalReviews)}
                   </span>
                   <span className="text-base text-slate-400"> đánh giá</span>
                 </div>
@@ -492,21 +512,27 @@ const DetailsProduct = () => {
             </div>
           </div>
           {/***Product Description */}
-          {detailsProduct?.description && (
-            <>
-              <div className="w-full flex flex-col">
-                <div className="p-[14px] text-lg font-normal text-black bg-neutral-100">
-                  MÔ TẢ SẢN PHẨM
-                </div>
+          <div className="w-full flex flex-col">
+            <div className="p-[14px] text-lg font-normal text-black bg-neutral-100">
+              MÔ TẢ SẢN PHẨM
+            </div>
+            {detailsProduct?.description ? (
+              <>
                 <div
                   dangerouslySetInnerHTML={{
                     __html: detailsProduct?.description,
                   }}
                   className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4"
                 ></div>
-              </div>
-            </>
-          )}
+              </>
+            ) : (
+              <>
+                <div className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4">
+                  Không có mô tả sản phẩm
+                </div>
+              </>
+            )}
+          </div>
         </section>
 
         {/***Review Container */}
@@ -536,7 +562,7 @@ const DetailsProduct = () => {
                 className="border-primary border-[1px] border-solid rounded"
                 menu={{
                   items: [
-                    { key: "0", value: "0", label: "Tất cả" },
+                    { key: "6", value: "6", label: "Tất cả" },
                     { key: "5", value: "5", label: "5 sao" },
                     { key: "4", value: "4", label: "4 sao" },
                     { key: "3", value: "3", label: "3 sao" },
@@ -555,17 +581,43 @@ const DetailsProduct = () => {
               >
                 <Typography.Link className="text-primary ">
                   <Space>
-                    {ratingFilter === 0 ? "Tất cả" : `${ratingFilter} sao`}
+                    {ratingFilter === 6 ? "Tất cả" : `${ratingFilter} sao`}
                     <DownOutlined />
                   </Space>
                 </Typography.Link>
               </Dropdown>
             </div>
           </div>
-          <div className="mt-4 flex flex-col gap-5">
-            {reviews?.map((review, key) => (
-              <ReviewCard value={review} key={key} />
-            ))}
+          <div className="mt-4 flex flex-col gap-5 p-5">
+            {reviews?.length > 0 ? (
+              <>
+                {reviews?.map((review, key) => (
+                  <Suspense
+                    fallback={
+                      <Skeleton
+                        avatar
+                        paragraph={{
+                          rows: 3,
+                        }}
+                      />
+                    }
+                  >
+                    <ReviewCard value={review} key={key} />
+                  </Suspense>
+                ))}
+                <Pagination
+                  align="center"
+                  defaultCurrent={page}
+                  total={totalPage}
+                />
+              </>
+            ) : (
+              <>
+                <div className="w-full text-center mt-5">
+                  Không có dữ liệu đánh giá nào cho sản phẩm này
+                </div>
+              </>
+            )}
           </div>
         </section>
       </div>

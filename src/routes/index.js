@@ -5,45 +5,24 @@ import { lazy } from "react";
 import WorkingProducts from "../pages/seller/product_management/WorkingProducts";
 import InfringingProduct from "../pages/seller/product_management/InfringingProduct";
 import PendingProducts from "../pages/seller/product_management/PendingProducts";
-import withSuspense from "../hooks/HOC/withSuspense";
 import LoadingPage from "../components/LoadingPage";
 import AuthenticationLayout from "../layout/AuthenticationLayout";
-const DetailsProduct = withSuspense(
-  lazy(() => import("../pages/buyer/DetailsProduct"))
-);
-
-const Home = withSuspense(lazy(() => import("../pages/Home")));
-const BuyerLogin = withSuspense(
-  lazy(() => import("../pages/buyer/BuyerLogin"))
-);
-const BuyerRegister = withSuspense(
-  lazy(() => import("../pages/buyer/BuyerRegister"))
-);
-const SellerLogin = withSuspense(
-  lazy(() => import("../pages/seller/SellerLogin"))
-);
-const SellerRegister = withSuspense(
-  lazy(() => import("../pages/seller/SellerRegister"))
-);
-const AdminLogin = withSuspense(
-  lazy(() => import("../pages/admin/AdminLogin"))
-);
-const AdminDashboard = withSuspense(
-  lazy(() => import("../pages/admin/AdminDashboard"))
-);
-const SellerHome = withSuspense(
-  lazy(() => import("../pages/seller/SellerHome"))
-);
-const AllOrder = lazy(() => import("../pages/seller/orders/AllOrders"));
-const OrderCancelled = lazy(() => import("../pages/seller/orders/OrderCancelled"));
-const AllProduct = withSuspense(
-  lazy(() => import("../pages/seller/product_management/AllProduct"))
-);
-const AddProduct = withSuspense(
-  lazy(() => import("../pages/seller/product_management/AddProduct"))
-);
-const SellerAuthLayout = withSuspense(lazy(() => import("../layout/seller")));
-const AdminAuthLayout = withSuspense(lazy(() => import("../layout/admin")));
+import DetailsProduct from "../pages/buyer/DetailsProduct";
+import DetailProduct from "../components/seller/products/DetailProduct";
+import Home from "../pages/Home";
+import BuyerLogin from "../pages/buyer/BuyerLogin";
+import BuyerRegister from "../pages/buyer/BuyerRegister";
+import SellerLogin from "../pages/seller/SellerLogin";
+import SellerRegister from "../pages/seller/SellerRegister";
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import SellerHome from "../pages/seller/SellerHome";
+import AllOrders from "../pages/seller/orders/AllOrders";
+import OrderCancelled from "../pages/seller/orders/OrderCancelled";
+import AllProduct from "../pages/seller/product_management/AllProduct";
+import AddProduct from "../pages/seller/product_management/AddProduct";
+import SellerAuthLayout from "../layout/seller";
+import AdminAuthLayout from "../layout/admin";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -116,7 +95,7 @@ const router = createBrowserRouter([
         path: "seller/order/all",
         element: (
           <SellerAuthLayout>
-            <AllOrder />
+            <AllOrders />
           </SellerAuthLayout>
         ),
       },
@@ -143,7 +122,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <WorkingProducts />
           </SellerAuthLayout>
-        )
+        ),
       },
       {
         path: "seller/product-management/infringing-products",
@@ -151,7 +130,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <InfringingProduct />
           </SellerAuthLayout>
-        )
+        ),
       },
       {
         path: "seller/product-management/pending-products",
@@ -159,7 +138,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <PendingProducts />
           </SellerAuthLayout>
-        )
+        ),
       },
       {
         path: "seller/product-management/add-product",
