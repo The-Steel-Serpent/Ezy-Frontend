@@ -5,45 +5,30 @@ import { lazy } from "react";
 import WorkingProducts from "../pages/seller/product_management/WorkingProducts";
 import InfringingProduct from "../pages/seller/product_management/InfringingProduct";
 import PendingProducts from "../pages/seller/product_management/PendingProducts";
-import withSuspense from "../hooks/HOC/withSuspense";
 import LoadingPage from "../components/LoadingPage";
 import AuthenticationLayout from "../layout/AuthenticationLayout";
-const DetailsProduct = withSuspense(
-  lazy(() => import("../pages/buyer/DetailsProduct"))
-);
+const DetailsProduct = lazy(() => import("../pages/buyer/DetailsProduct"));
 
-const Home = withSuspense(lazy(() => import("../pages/Home")));
-const BuyerLogin = withSuspense(
-  lazy(() => import("../pages/buyer/BuyerLogin"))
-);
-const BuyerRegister = withSuspense(
-  lazy(() => import("../pages/buyer/BuyerRegister"))
-);
-const SellerLogin = withSuspense(
-  lazy(() => import("../pages/seller/SellerLogin"))
-);
-const SellerRegister = withSuspense(
-  lazy(() => import("../pages/seller/SellerRegister"))
-);
-const AdminLogin = withSuspense(
-  lazy(() => import("../pages/admin/AdminLogin"))
-);
-const AdminDashboard = withSuspense(
-  lazy(() => import("../pages/admin/AdminDashboard"))
-);
-const SellerHome = withSuspense(
-  lazy(() => import("../pages/seller/SellerHome"))
-);
+const Home = lazy(() => import("../pages/Home"));
+const BuyerLogin = lazy(() => import("../pages/buyer/BuyerLogin"));
+const BuyerRegister = lazy(() => import("../pages/buyer/BuyerRegister"));
+const SellerLogin = lazy(() => import("../pages/seller/SellerLogin"));
+const SellerRegister = lazy(() => import("../pages/seller/SellerRegister"));
+const AdminLogin = lazy(() => import("../pages/admin/AdminLogin"));
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
+const SellerHome = lazy(() => import("../pages/seller/SellerHome"));
 const AllOrder = lazy(() => import("../pages/seller/orders/AllOrders"));
-const OrderCancelled = lazy(() => import("../pages/seller/orders/OrderCancelled"));
-const AllProduct = withSuspense(
-  lazy(() => import("../pages/seller/product_management/AllProduct"))
+const OrderCancelled = lazy(() =>
+  import("../pages/seller/orders/OrderCancelled")
 );
-const AddProduct = withSuspense(
-  lazy(() => import("../pages/seller/product_management/AddProduct"))
+const AllProduct = lazy(() =>
+  import("../pages/seller/product_management/AllProduct")
 );
-const SellerAuthLayout = withSuspense(lazy(() => import("../layout/seller")));
-const AdminAuthLayout = withSuspense(lazy(() => import("../layout/admin")));
+const AddProduct = lazy(() =>
+  import("../pages/seller/product_management/AddProduct")
+);
+const SellerAuthLayout = lazy(() => import("../layout/seller"));
+const AdminAuthLayout = lazy(() => import("../layout/admin"));
 const router = createBrowserRouter([
   {
     path: "/",
@@ -143,7 +128,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <WorkingProducts />
           </SellerAuthLayout>
-        )
+        ),
       },
       {
         path: "seller/product-management/infringing-products",
@@ -151,7 +136,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <InfringingProduct />
           </SellerAuthLayout>
-        )
+        ),
       },
       {
         path: "seller/product-management/pending-products",
@@ -159,7 +144,7 @@ const router = createBrowserRouter([
           <SellerAuthLayout>
             <PendingProducts />
           </SellerAuthLayout>
-        )
+        ),
       },
       {
         path: "seller/product-management/add-product",
