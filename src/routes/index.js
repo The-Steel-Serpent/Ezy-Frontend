@@ -6,8 +6,11 @@ import AuthenticationLayout from "../layout/AuthenticationLayout";
 import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
-const AuthLayout = withSuspenseNonFallback(lazy(() => import("../layout")));
 
+const AuthLayout = withSuspenseNonFallback(lazy(() => import("../layout")));
+const Categories = withSuspense(
+  lazy(() => import("../pages/buyer/product-pages/Categories"))
+);
 const WorkingProducts = withSuspense(
   lazy(() => import("../pages/seller/product_management/WorkingProducts"))
 );
@@ -90,6 +93,7 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
+      // Product & Category
       {
         path: "/product-details/:id",
         element: (
@@ -104,6 +108,14 @@ const router = createBrowserRouter([
         element: (
           <AuthLayout>
             <SuggestProduct />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "/categories/:cat_id",
+        element: (
+          <AuthLayout>
+            <Categories />
           </AuthLayout>
         ),
       },
