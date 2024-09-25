@@ -152,7 +152,7 @@ const PrimaryHeader = () => {
           </div>
         </div>
       </header>
-      <Suspense fallback={<Skeleton.Node style={{ width: 160 }} />}>
+      <Suspense>
         <ChatBox />
       </Suspense>
     </>

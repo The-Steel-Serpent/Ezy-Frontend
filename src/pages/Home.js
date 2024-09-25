@@ -1,11 +1,11 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable jsx-a11y/alt-text */
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout, setUser } from "../redux/userSlice";
-import { Carousel } from "antd";
+import { Carousel, Spin } from "antd";
 import event1 from "../assets/event1.png";
 import event2 from "../assets/event2.png";
 import event3 from "../assets/event3.png";
@@ -16,7 +16,9 @@ import event7 from "../assets/event7.png";
 import event8 from "../assets/event8.png";
 import event9 from "../assets/event9.png";
 import categoryImg1 from "../assets/category1.png";
-import ProductSuggestions from "../components/product/ProductSuggestions";
+const ProductSuggestions = lazy(() =>
+  import("../components/product/ProductSuggestions")
+);
 const events = [
   { img: event1, name: "Vourcher Giảm Đến 1 Triệu" },
   { img: event2, name: "Miễn Phí Ship - Có Shopee" },
@@ -203,7 +205,15 @@ const Home = () => {
         </div>
       </div>
       {/***Product Carousel */}
-      <ProductSuggestions />
+      <Suspense
+        fallback={
+          <div className="w-full flex justify-center items-center">
+            <Spin size="large" />
+          </div>
+        }
+      >
+        <ProductSuggestions />
+      </Suspense>
     </>
   );
 };

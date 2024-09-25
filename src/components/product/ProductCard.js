@@ -10,12 +10,14 @@ function formatNumber(num) {
     return num.toString(); // Dưới 1000 không cần format
   }
 }
-const ProductCard = ({ value, key }) => {
+const ProductCard = ({ value, key, itemsPerRow = 6 }) => {
   return (
     <>
       <a
         href={"/product-details/" + { value }.value?.product_id}
-        className="animation-pulse relative w-32 lg:w-48 col-span-4 lg:col-span-2 mt-3"
+        className={`animation-pulse relative w-32 lg:w-48 ${
+          itemsPerRow === 6 ? "lg:col-span-2" : "lg:col-span-2"
+        } col-span-4  mt-3`}
       >
         <Card
           key={key}
