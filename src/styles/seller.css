@@ -36,7 +36,7 @@ body,
     border-bottom-left-radius: 5px !important;
 }
 
-.ant-input {
+.custom-input.ant-input {
     border-radius: unset !important;
     border-top-right-radius: 5px !important;
     border-bottom-right-radius: 5px !important;
@@ -46,7 +46,7 @@ body,
     border-color: black !important;
 }
 
-.ant-input-outlined {
+.custom-input.ant-input-outlined {
     border-color: rgb(214, 212, 212) !important;
 }
 
@@ -145,4 +145,8 @@ body,
     /* Make the scrollbar thin */
     scrollbar-color: #888 #f1f1f1;
     /* Color of the scrollbar thumb and track */
+}
+
+.border-rd {
+    border-radius: 8px;
 }

@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { Form, Input, Upload, Button, Modal, Table } from 'antd';
+import { Form, Input, Upload, Button, Modal, Table, Row, Col, Select } from 'antd';
 import { RiImageAddFill } from "react-icons/ri";
 import { RightOutlined } from '@ant-design/icons';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import axios from 'axios';
+import '../../../styles/Quill.css'
+
+const { Option } = Select;
 
 export const BasicInformation = () => {
     const [fileListProduct, setFileListProduct] = useState([]);
@@ -19,6 +24,11 @@ export const BasicInformation = () => {
     const [selectedMainCategory, setSelectedMainCategory] = useState('');
     const [isRowClicked, setIsRowClicked] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [description, setDescription] = useState('');
+    const [origin, setOrigin] = useState('');
+    const [countries, setCountries] = useState([]);
+    const [brand, setBrand] = useState('');
+
 
     const showCatModal = () => {
         setIsCatModalVisible(true);
@@ -110,6 +120,10 @@ export const BasicInformation = () => {
     };
 
 
+    const handleDescription = (value) => {
+        setDescription(value);
+    }
+
 
     // get categories 
     useEffect(() => {
@@ -131,6 +145,17 @@ export const BasicInformation = () => {
                 console.log("Error:", error);
             }
         }
+        axios.get('https://restcountries.com/v3.1/all')
+            .then(response => {
+                const countryList = response.data.map(country => ({
+                    name: country.name.common,
+                    code: country.cca2
+                }));
+                setCountries(countryList);
+            })
+            .catch(error => {
+                console.error('Error origin:', error);
+            });
         fetchCategories();
     }, []);
 
@@ -158,7 +183,7 @@ export const BasicInformation = () => {
     return (
         <div>
             <h3 className='text-lg'>Thông tin cơ bản</h3>
-            <Form layout='vertical' className='ml-5 gap-10'>
+            <Form layout='vertical' className='ml-5 gap-12'>
                 <Form.Item
                     label="Hình ảnh sản phẩm"
                     required>
@@ -213,7 +238,6 @@ export const BasicInformation = () => {
                         readOnly
                         onClick={showCatModal}
                         placeholder="Chọn ngành hàng"
-                        className='border rounded-md'
                     />
                 </Form.Item>
 
@@ -237,11 +261,70 @@ export const BasicInformation = () => {
                         { min: 50, message: 'Mô tả sản phẩm của bạn quá ngắn. Vui lòng nhập ít nhất 50 kí tự' }
                     ]}
                 >
-                    <Input.TextArea showCount rows={9} maxLength={3000} />
+                    <ReactQuill
+                        value={description}
+                        onChange={handleDescription}
+                        modules={{
+                            toolbar: [
+                                [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
+                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                ['bold', 'italic', 'underline'],
+                                [{ 'align': [] }],
+                                ['link', 'image']
+                            ],
+                        }}
+                        formats={[
+                            'header', 'font',
+                            'list', 'bullet',
+                            'bold', 'italic', 'underline',
+                            'align',
+                            'link', 'image'
+                        ]}
+                    />
+
+                    {/* brand and origin */}
+                    <div className='mt-3'>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="brand"
+                                    rules={[{ required: true, message: 'Không được để ô trống' }]}
+                                    label="Thương hiệu">
+                                    <Input
+                                        className='border rounded-md'
+                                        value={brand}
+                                        onChange={(e) => setBrand(e.target.value)} />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="origin"
+                                    rules={[{ required: true, message: 'Không được để ô trống' }]}
+                                    label="Xuất xứ">
+                                    <Select
+                                        showSearch
+                                        className='border rounded-md'
+                                        value={origin}
+                                        onChange={(value) => setOrigin(value)}
+                                        placeholder="Chọn xuất xứ"
+                                        optionFilterProp="children"
+                                        filterOption={(input, option) =>
+                                            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                        }
+                                    >
+                                        {countries.map(country => (
+                                            <Option key={country.code} value={country.name}>
+                                                {country.name}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </div>
                 </Form.Item>
-
-
             </Form>
+
             {/* Modal */}
             <Modal
                 visible={previewVisible}
