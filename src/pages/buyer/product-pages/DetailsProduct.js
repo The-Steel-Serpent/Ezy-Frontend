@@ -21,21 +21,26 @@ import { IoCheckmarkDone } from "react-icons/io5";
 import { TiShoppingCart } from "react-icons/ti";
 import { TbTruckReturn } from "react-icons/tb";
 import { MdArrowForwardIos } from "react-icons/md";
-
 import formatAddress from "../../../helpers/formatAddress";
 import { DownOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
+import ProductNotFounded from "../../../components/product/ProductNotFounded";
+import withChildSuspense from "../../../hooks/HOC/withChildSuspense";
+
 const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
 const ReactImageGallery = lazy(() => import("react-image-gallery"));
 const ShopInformationSection = lazy(() =>
   import("../../../components/shop/ShopInformationSection")
 );
-const CarouselProduct = lazy(() => import("react-multi-carousel"));
-const ProductSuggestions = lazy(() =>
-  import("../../../components/product/ProductSuggestions")
+const CarouselProduct = withChildSuspense(
+  lazy(() => import("react-multi-carousel"))
+);
+const ProductSuggestions = withChildSuspense(
+  lazy(() => import("../../../components/product/ProductSuggestions"))
 );
 const DetailsProduct = () => {
   const { id } = useParams();
+  const [success, setSuccess] = useState(true);
   const [sizes, setSizes] = useState([]);
   const [currentVarient, setCurrentVarient] = useState({});
   const [selectedClassify, setSelectedClassify] = useState("");
@@ -72,6 +77,7 @@ const DetailsProduct = () => {
         setTotalReviews(res.data.totalReviews);
       } catch (error) {
         console.log("Lỗi khi lấy dữ liệu sản phẩm: ", error);
+        setSuccess(false);
       }
     };
     fetchProductDetails();
@@ -88,7 +94,9 @@ const DetailsProduct = () => {
         console.log("Lỗi khi lấy dữ liệu Review: ", error);
       }
     };
-    fetchProductReviews();
+    if (detailsProduct != {}) {
+      fetchProductReviews();
+    }
   }, [page, ratingFilter]);
 
   useEffect(() => {
@@ -111,7 +119,9 @@ const DetailsProduct = () => {
         console.log("Lỗi khi lấy dữ liệu Varient: ", error);
       }
     };
-    fetchProductVarient();
+    if (detailsProduct != {}) {
+      fetchProductVarient();
+    }
   }, [detailsProduct.product_id, selectedClassify]);
 
   useEffect(() => {
@@ -124,7 +134,9 @@ const DetailsProduct = () => {
         console.log("Lỗi khi lấy dữ liệu sản phẩm của shop: ", error);
       }
     };
-    fetchShopProducts();
+    if (detailsProduct) {
+      fetchShopProducts();
+    }
   }, [detailsProduct?.Shop?.shop_id]);
   //Handle
 
@@ -182,484 +194,489 @@ const DetailsProduct = () => {
   // }, [currentThumbnail]);
   return (
     <>
-      <div className="max-w-[1200px] mx-auto">
-        <div className=" flex justify-center lg:justify-start my-4">
-          <Breadcrumb
-            items={[
-              {
-                title: (
-                  <a className="text-blue-500 hover:opacity-85" href="/">
-                    Ezy
-                  </a>
-                ),
-              },
-              {
-                title: (
-                  <a className="text-blue-500 hover:opacity-85" href="/">
-                    {detailsProduct?.SubCategory?.Category?.category_name}
-                  </a>
-                ),
-              },
-              {
-                title: (
-                  <a className="text-blue-500 hover:opacity-85" href="/">
-                    {detailsProduct?.SubCategory?.sub_category_name}
-                  </a>
-                ),
-              },
-              {
-                title: <span>{detailsProduct.product_name}</span>,
-              },
-            ]}
-          />
-        </div>
-        {/***Sản phẩm */}
-        <div className=" bg-white grid grid-flow-col lg:grid-cols-12 rounded">
-          <section className="col-span-5 p-[15px]">
-            <Suspense fallback={<Skeleton.Image className="size-[470px]" />}>
-              <ReactImageGallery
-                lazyLoad={true}
-                items={imgs}
-                showThumbnails={true}
-              />
+      {success ? (
+        <div className="max-w-[1200px] mx-auto">
+          <div className=" flex justify-center lg:justify-start my-4">
+            <Breadcrumb
+              items={[
+                {
+                  title: (
+                    <a className="text-blue-500 hover:opacity-85" href="/">
+                      Ezy
+                    </a>
+                  ),
+                },
+                {
+                  title: (
+                    <a className="text-blue-500 hover:opacity-85" href="/">
+                      {detailsProduct?.SubCategory?.Category?.category_name}
+                    </a>
+                  ),
+                },
+                {
+                  title: (
+                    <a className="text-blue-500 hover:opacity-85" href="/">
+                      {detailsProduct?.SubCategory?.sub_category_name}
+                    </a>
+                  ),
+                },
+                {
+                  title: <span>{detailsProduct.product_name}</span>,
+                },
+              ]}
+            />
+          </div>
+          {/***Sản phẩm */}
+          <div className=" bg-white grid grid-flow-col lg:grid-cols-12 rounded">
+            {/***Ảnh sản phẩm */}
+            <section className="col-span-5 p-[15px]">
+              <Suspense fallback={<Skeleton.Image className="size-[470px]" />}>
+                <ReactImageGallery
+                  lazyLoad={true}
+                  items={imgs}
+                  showThumbnails={true}
+                />
+              </Suspense>
+            </section>
+            {/***Lựa chọn sản phẩm */}
+            <section className="col-span-7 pl-5 pt-5 pr-9">
+              {/***Tên sản phẩm */}
+              <span className="text-xl font-semibold">
+                {detailsProduct?.product_name}
+              </span>
+              {/***Đánh giá sản phẩm*/}
+              <div className="w-full mt-[10px]">
+                <div className="flex gap-1 items-center">
+                  <span className="text-base text-primary border-b-2 border-primary">
+                    {avgRating}
+                  </span>
+                  <ReactStars
+                    value={avgRating}
+                    activeColor="#66cce6"
+                    inactiveColor="#66cce6"
+                    isEdit={false}
+                    size={18}
+                  />
+                  <Divider type="vertical" className="divider-slate" />
+                  <div className="flex gap-1 ">
+                    <span className="text-base border-b-2 border-black">
+                      {formatNumber(totalReviews)}
+                    </span>
+                    <span className="text-base text-slate-400"> đánh giá</span>
+                  </div>
+                  <Divider type="vertical" className="divider-slate" />
+                  <div className="flex gap-1 ">
+                    <span className="text-base">
+                      {formatNumber(detailsProduct?.sold || 0)}
+                    </span>
+                    <span className="text-base text-slate-400"> đã bán</span>
+                  </div>
+                </div>
+              </div>
+              {/***Giá sản phẩm*/}
+              <div className="py-[15px] px-[20px] flex items-center bg-[#fafafa] mt-4 gap-2 mb-6">
+                {sale_percents > 0 && (
+                  <>
+                    <span className="text-slate-400 text-[18px] mr-[10px] line-through">
+                      <sup>₫</sup>
+                      {price?.toLocaleString("vi-VN")}
+                    </span>
+                    <span className="text-primary font-[500] text-[30px]">
+                      <sup>₫</sup>
+                      {sale_price?.toLocaleString("vi-VN")}
+                    </span>
+                    <div className="text-[12px] bg-primary items-center justify-center py-[2px] px-1 text-white ml-[15px] font-semibold text-nowrap rounded-[2px]">
+                      {sale_percents}% GIẢM
+                    </div>
+                  </>
+                )}
+                {sale_percents === 0 && (
+                  <>
+                    <span className="text-primary font-[500] text-[30px]">
+                      <sup>₫</sup>
+                      {price?.toLocaleString("vi-VN")}
+                    </span>
+                  </>
+                )}
+              </div>
+              <div className="flex flex-col ">
+                {/***Trả hàng */}
+                <section className="flex flex-row mb-6 gap-1">
+                  <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
+                    Chính sách trả hàng
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TbTruckReturn className="text-primary text-base" />
+                    <span className="text-sm text-slate-400">
+                      Trả hàng 7 ngày
+                    </span>
+                  </div>
+                </section>
+                {/***Màu sắc */}
+                {detailsProduct?.ProductClassifies?.[0] && (
+                  <>
+                    <section className="flex flex-row mb-6">
+                      <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
+                        {detailsProduct?.ProductClassifies?.[0]?.type_name}
+                      </div>
+                      <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap">
+                        {detailsProduct?.ProductClassifies?.map(
+                          (classify, key) => (
+                            <button
+                              onClick={() =>
+                                classify?.total_stock > 0 &&
+                                handleClassifyClick(
+                                  classify?.product_classify_id
+                                )
+                              }
+                              className={`
+                                ${
+                                  classify?.total_stock > 0
+                                    ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
+                                    : "cursor-not-allowed bg-[#fafafa] text-gray-400"
+                                }
+                                 ${
+                                   selectedClassify ===
+                                   classify?.product_classify_id
+                                     ? "border-primary text-primary"
+                                     : ""
+                                 }  items-center  border-[1px] border-solid  rounded box-border inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
+                            >
+                              <img
+                                loading="lazy"
+                                src={classify?.thumbnail}
+                                className="w-6 h-6"
+                              />
+                              <span className="ml-2">
+                                {classify?.product_classify_name}
+                              </span>
+                              {selectedClassify ===
+                                classify?.product_classify_id && (
+                                <>
+                                  <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
+                                    <IoCheckmarkDone />
+                                  </div>
+                                </>
+                              )}
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </section>
+                  </>
+                )}
+
+                {/* **Kích cỡ */}
+                {detailsProduct?.ProductSizes?.[0] && (
+                  <>
+                    <section className="flex flex-row mb-6">
+                      <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
+                        {detailsProduct?.ProductSizes?.[0]?.type_of_size}
+                      </div>
+                      <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap">
+                        {sizes.map((size, key) => (
+                          <button
+                            onClick={() => {
+                              size?.stock > 0 && handleSizeClick(size);
+                            }}
+                            className={`${
+                              size?.stock > 0
+                                ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
+                                : "cursor-not-allowed bg-[#fafafa] text-gray-400"
+                            } ${
+                              size?.stock > 0 &&
+                              currentVarient?.ProductSize?.product_size_id ===
+                                size?.product_size_id
+                                ? "border-primary text-primary"
+                                : ""
+                            } items-center  border-[1px] border-solid rounded box-border  inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
+                          >
+                            <span className="ml-2">
+                              {size?.ProductSize?.product_size_name}
+                            </span>
+                            {size?.stock > 0 &&
+                              currentVarient?.ProductSize?.product_size_id ===
+                                size?.product_size_id && (
+                                <>
+                                  <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
+                                    <IoCheckmarkDone />
+                                  </div>
+                                </>
+                              )}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  </>
+                )}
+
+                {/***Số lượng */}
+                <section className="flex flex-row mb-6">
+                  <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
+                    Số lượng
+                  </div>
+                  {/* <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap"></div> */}
+                  <div className="flex justify-center items-center gap-2">
+                    <InputNumber
+                      min={1}
+                      max={currentVarient?.stock}
+                      defaultValue={1}
+                      onChange={quantityOnChange}
+                    />
+                    {currentVarient?.stock > 0 && (
+                      <>
+                        <span className="text-slate-400 text-sm">
+                          {currentVarient?.stock} sản phẩm có sẵn
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </section>
+                {/***Button */}
+                <div className="flex gap-5 mt-2">
+                  <Button
+                    size="large"
+                    className="h-14 px-5 hover:bg-primary text-lg"
+                    icon={<TiShoppingCart />}
+                    onClick={() => {
+                      console.log("Thêm vào giỏ hàng", currentVarient);
+                    }}
+                  >
+                    Thêm vào giỏ hàng
+                  </Button>
+                  <Button
+                    className="bg-primary text-white hover:bg-opacity-80 px-8 h-14 text-lg"
+                    size="large"
+                    onClick={() => {
+                      console.log("Mua Ngay", currentVarient);
+                    }}
+                  >
+                    Mua Ngay
+                  </Button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/***Shop Information*/}
+          <section className="bg-white rounded mt-[15px] pt-[25px]">
+            <Suspense fallback={<Skeleton avatar paragraph={{ rows: 1 }} />}>
+              <ShopInformationSection value={detailsProduct?.Shop} />
             </Suspense>
           </section>
-          <section className="col-span-7 pl-5 pt-5 pr-9">
-            {/***Tên sản phẩm */}
-            <span className="text-xl font-semibold">
-              {detailsProduct?.product_name}
-            </span>
-            {/***Đánh giá sản phẩm*/}
-            <div className="w-full mt-[10px]">
-              <div className="flex gap-1 items-center">
-                <span className="text-base text-primary border-b-2 border-primary">
-                  {avgRating}
+
+          {/***Product Description Container */}
+          <section className="bg-white rounded mt-[15px] p-[25px]">
+            {/***Product Detail */}
+            <div className="w-full flex flex-col mb-5">
+              <div className="p-[14px] text-lg font-normal text-black bg-neutral-100">
+                CHI TIẾT SẢN PHẨM
+              </div>
+              <div className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4">
+                {/***Danh Mục */}
+                <div className="flex flex-row items-center gap-2">
+                  <div className="text-slate-400 w-[150px] line-clamp-2 text-ellipsis">
+                    Danh Mục
+                  </div>
+                  <div className="">
+                    <Breadcrumb
+                      items={[
+                        {
+                          title: (
+                            <a
+                              className="text-blue-500 hover:opacity-85"
+                              href="/"
+                            >
+                              Ezy
+                            </a>
+                          ),
+                        },
+                        {
+                          title: (
+                            <a
+                              className="text-blue-500 hover:opacity-85"
+                              href="#"
+                            >
+                              {
+                                detailsProduct?.SubCategory?.Category
+                                  ?.category_name
+                              }
+                            </a>
+                          ),
+                        },
+                        {
+                          title: (
+                            <a
+                              className="text-blue-500 hover:opacity-85"
+                              href="#"
+                            >
+                              {detailsProduct?.SubCategory?.sub_category_name}
+                            </a>
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                </div>
+                {/***Số lượng sản phẩm còn lại */}
+                <div className="flex flex-row items-center gap-2">
+                  <div className="text-slate-400 w-[150px] line-clamp-2 text-ellipsis">
+                    Số sản phẩm còn lại
+                  </div>
+                  <div className="">{detailsProduct?.stock}</div>
+                </div>
+                {/***Đối tượng */}
+                <div className="flex flex-row items-center gap-2">
+                  <div className="text-slate-400 w-[150px] line-clamp-2 text-ellipsis">
+                    Đối tượng
+                  </div>
+                  <div className="">{detailsProduct?.gender_object}</div>
+                </div>
+
+                {/***Thương hiệu */}
+                <div className="flex flex-row items-center gap-2">
+                  <div className="text-slate-400 w-[150px] line-clamp-2 text-ellipsis">
+                    Thương hiệu
+                  </div>
+                  <div className="">{detailsProduct?.brand}</div>
+                </div>
+                {/***Xuất xứ */}
+                <div className="flex flex-row items-center gap-2">
+                  <div className="text-slate-400 w-[150px]">Xuất xứ</div>
+                  <div className="">{detailsProduct?.origin}</div>
+                </div>
+                {/***Gửi từ */}
+                <div className="flex flex-row items-center gap-2">
+                  <div className="text-slate-400 w-[150px]">Gửi từ</div>
+                  <div className="">
+                    {formatAddress(detailsProduct?.Shop?.shop_address)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/***Product Description */}
+            <div className="w-full flex flex-col">
+              <div className="p-[14px] text-lg font-normal text-black bg-neutral-100">
+                MÔ TẢ SẢN PHẨM
+              </div>
+              {detailsProduct?.description ? (
+                <>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: detailsProduct?.description,
+                    }}
+                    className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4"
+                  ></div>
+                </>
+              ) : (
+                <>
+                  <div className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4">
+                    Không có mô tả sản phẩm
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+
+          {/***Review Container */}
+          <section className="bg-white rounded mt-[15px] p-[25px]">
+            <p className="text-lg">ĐÁNH GIÁ SẢN PHẨM</p>
+            <div className="mt-4 p-[30px] justify-between border-primary bg-secondary border-[1px] border-solid flex flex-row gap-14">
+              {/***Rating */}
+              <div className="flex flex-row gap-3 w-fit">
+                <span className="text-primary text-lg text-center">
+                  <span className="text-3xl text-primary font-semibold">
+                    {avgRating}
+                  </span>{" "}
+                  trên 5
                 </span>
                 <ReactStars
                   value={avgRating}
                   activeColor="#66cce6"
                   inactiveColor="#66cce6"
                   isEdit={false}
-                  size={18}
+                  size={20}
                 />
-                <Divider type="vertical" className="divider-slate" />
-                <div className="flex gap-1 ">
-                  <span className="text-base border-b-2 border-black">
-                    {formatNumber(totalReviews)}
-                  </span>
-                  <span className="text-base text-slate-400"> đánh giá</span>
-                </div>
-                <Divider type="vertical" className="divider-slate" />
-                <div className="flex gap-1 ">
-                  <span className="text-base">
-                    {formatNumber(detailsProduct?.sold || 0)}
-                  </span>
-                  <span className="text-base text-slate-400"> đã bán</span>
-                </div>
+              </div>
+              {/***Filter Rating*/}
+              <div className="w-fit flex gap-2">
+                {" "}
+                <Dropdown
+                  className="border-primary border-[1px] border-solid rounded"
+                  menu={{
+                    items: [
+                      { key: "6", value: "6", label: "Tất cả" },
+                      { key: "5", value: "5", label: "5 sao" },
+                      { key: "4", value: "4", label: "4 sao" },
+                      { key: "3", value: "3", label: "3 sao" },
+                      { key: "2", value: "2", label: "2 sao" },
+                      { key: "1", value: "1", label: "1 sao" },
+                    ],
+                    onClick: handleRatingFilterClick,
+                    selectable: true,
+
+                    defaultSelectedKeys: ["0"],
+                  }}
+                  placement="bottom"
+                  arrow={{
+                    pointAtCenter: true,
+                  }}
+                >
+                  <Typography.Link className="text-primary ">
+                    <Space>
+                      {ratingFilter === 6 ? "Tất cả" : `${ratingFilter} sao`}
+                      <DownOutlined />
+                    </Space>
+                  </Typography.Link>
+                </Dropdown>
               </div>
             </div>
-            {/***Giá sản phẩm*/}
-            <div className="py-[15px] px-[20px] flex items-center bg-[#fafafa] mt-4 gap-2 mb-6">
-              {sale_percents > 0 && (
+            <div className="mt-4 flex flex-col gap-5 p-5">
+              {reviews?.length > 0 ? (
                 <>
-                  <span className="text-slate-400 text-[18px] mr-[10px] line-through">
-                    <sup>₫</sup>
-                    {price?.toLocaleString("vi-VN")}
-                  </span>
-                  <span className="text-primary font-[500] text-[30px]">
-                    <sup>₫</sup>
-                    {sale_price?.toLocaleString("vi-VN")}
-                  </span>
-                  <div className="text-[12px] bg-primary items-center justify-center py-[2px] px-1 text-white ml-[15px] font-semibold text-nowrap rounded-[2px]">
-                    {sale_percents}% GIẢM
+                  {reviews?.map((review, key) => (
+                    <Suspense
+                      fallback={
+                        <Skeleton
+                          avatar
+                          paragraph={{
+                            rows: 3,
+                          }}
+                        />
+                      }
+                    >
+                      <ReviewCard value={review} key={key} />
+                    </Suspense>
+                  ))}
+                  <Pagination
+                    align="center"
+                    defaultCurrent={page}
+                    total={reviews?.length || 0}
+                    hideOnSinglePage={true}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="w-full text-center mt-5">
+                    Không có dữ liệu đánh giá nào cho sản phẩm này
                   </div>
                 </>
               )}
-              {sale_percents === 0 && (
-                <>
-                  <span className="text-primary font-[500] text-[30px]">
-                    <sup>₫</sup>
-                    {price?.toLocaleString("vi-VN")}
-                  </span>
-                </>
-              )}
-            </div>
-            <div className="flex flex-col ">
-              {/***Trả hàng */}
-              <section className="flex flex-row mb-6 gap-1">
-                <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
-                  Chính sách trả hàng
-                </div>
-                <div className="flex items-center gap-2">
-                  <TbTruckReturn className="text-primary text-base" />
-                  <span className="text-sm text-slate-400">
-                    Trả hàng 7 ngày
-                  </span>
-                </div>
-              </section>
-              {/***Màu sắc */}
-              {detailsProduct?.ProductClassifies?.[0] && (
-                <>
-                  <section className="flex flex-row mb-6">
-                    <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
-                      {detailsProduct?.ProductClassifies?.[0]?.type_name}
-                    </div>
-                    <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap">
-                      {detailsProduct?.ProductClassifies?.map(
-                        (classify, key) => (
-                          <button
-                            onClick={() =>
-                              classify?.total_stock > 0 &&
-                              handleClassifyClick(classify?.product_classify_id)
-                            }
-                            className={`
-                              ${
-                                classify?.total_stock > 0
-                                  ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
-                                  : "cursor-not-allowed bg-[#fafafa] text-gray-400"
-                              }
-                               ${
-                                 selectedClassify ===
-                                 classify?.product_classify_id
-                                   ? "border-primary text-primary"
-                                   : ""
-                               }  items-center  border-[1px] border-solid  rounded box-border inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
-                          >
-                            <img
-                              loading="lazy"
-                              src={classify?.thumbnail}
-                              className="w-6 h-6"
-                            />
-                            <span className="ml-2">
-                              {classify?.product_classify_name}
-                            </span>
-                            {selectedClassify ===
-                              classify?.product_classify_id && (
-                              <>
-                                <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
-                                  <IoCheckmarkDone />
-                                </div>
-                              </>
-                            )}
-                          </button>
-                        )
-                      )}
-                    </div>
-                  </section>
-                </>
-              )}
-
-              {/* **Kích cỡ */}
-              {detailsProduct?.ProductSizes?.[0] && (
-                <>
-                  <section className="flex flex-row mb-6">
-                    <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
-                      {detailsProduct?.ProductSizes?.[0]?.type_of_size}
-                    </div>
-                    <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap">
-                      {sizes.map((size, key) => (
-                        <button
-                          onClick={() => {
-                            size?.stock > 0 && handleSizeClick(size);
-                          }}
-                          className={`${
-                            size?.stock > 0
-                              ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
-                              : "cursor-not-allowed bg-[#fafafa] text-gray-400"
-                          } ${
-                            size?.stock > 0 &&
-                            currentVarient?.ProductSize?.product_size_id ===
-                              size?.product_size_id
-                              ? "border-primary text-primary"
-                              : ""
-                          } items-center  border-[1px] border-solid rounded box-border  inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
-                        >
-                          <span className="ml-2">
-                            {size?.ProductSize?.product_size_name}
-                          </span>
-                          {size?.stock > 0 &&
-                            currentVarient?.ProductSize?.product_size_id ===
-                              size?.product_size_id && (
-                              <>
-                                <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
-                                  <IoCheckmarkDone />
-                                </div>
-                              </>
-                            )}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                </>
-              )}
-
-              {/***Số lượng */}
-              <section className="flex flex-row mb-6">
-                <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
-                  Số lượng
-                </div>
-                {/* <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap"></div> */}
-                <div className="flex justify-center items-center gap-2">
-                  <InputNumber
-                    min={1}
-                    max={currentVarient?.stock}
-                    defaultValue={1}
-                    onChange={quantityOnChange}
-                  />
-                  {currentVarient?.stock > 0 && (
-                    <>
-                      <span className="text-slate-400 text-sm">
-                        {currentVarient?.stock} sản phẩm có sẵn
-                      </span>
-                    </>
-                  )}
-                </div>
-              </section>
-              {/***Button */}
-              <div className="flex gap-5 mt-2">
-                <Button
-                  size="large"
-                  className="h-14 px-5 hover:bg-primary text-lg"
-                  icon={<TiShoppingCart />}
-                  onClick={() => {
-                    console.log("Thêm vào giỏ hàng", currentVarient);
-                  }}
-                >
-                  Thêm vào giỏ hàng
-                </Button>
-                <Button
-                  className="bg-primary text-white hover:bg-opacity-80 px-8 h-14 text-lg"
-                  size="large"
-                  onClick={() => {
-                    console.log("Mua Ngay", currentVarient);
-                  }}
-                >
-                  Mua Ngay
-                </Button>
-              </div>
             </div>
           </section>
-        </div>
+          {/***Other Product of Shop */}
+          {shopProducts?.length > 0 && (
+            <>
+              <div className="mt-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-normal">
+                    CÁC SẢN PHẨM KHÁC CỦA SHOP
+                  </span>
+                  <a href="#" className="text-primary flex items-center gap-1">
+                    Xem Tất Cả <MdArrowForwardIos size={16} />
+                  </a>
+                </div>
 
-        {/***Shop Information*/}
-        <section className="bg-white rounded mt-[15px] pt-[25px]">
-          <Suspense fallback={<Skeleton avatar paragraph={{ rows: 1 }} />}>
-            <ShopInformationSection value={detailsProduct?.Shop} />
-          </Suspense>
-        </section>
-
-        {/***Product Description Container */}
-        <section className="bg-white rounded mt-[15px] p-[25px]">
-          {/***Product Detail */}
-          <div className="w-full flex flex-col mb-5">
-            <div className="p-[14px] text-lg font-normal text-black bg-neutral-100">
-              CHI TIẾT SẢN PHẨM
-            </div>
-            <div className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4">
-              {/***Danh Mục */}
-              <div className="flex flex-row items-center gap-2">
-                <div className="text-slate-400 w-[150px] line-clamp-2 text-ellipsis">
-                  Danh Mục
-                </div>
-                <div className="">
-                  <Breadcrumb
-                    items={[
-                      {
-                        title: (
-                          <a
-                            className="text-blue-500 hover:opacity-85"
-                            href="/"
-                          >
-                            Ezy
-                          </a>
-                        ),
-                      },
-                      {
-                        title: (
-                          <a
-                            className="text-blue-500 hover:opacity-85"
-                            href="#"
-                          >
-                            {
-                              detailsProduct?.SubCategory?.Category
-                                ?.category_name
-                            }
-                          </a>
-                        ),
-                      },
-                      {
-                        title: (
-                          <a
-                            className="text-blue-500 hover:opacity-85"
-                            href="#"
-                          >
-                            {detailsProduct?.SubCategory?.sub_category_name}
-                          </a>
-                        ),
-                      },
-                    ]}
-                  />
-                </div>
-              </div>
-              {/***Số lượng sản phẩm còn lại */}
-              <div className="flex flex-row items-center gap-2">
-                <div className="text-slate-400 w-[150px] line-clamp-2 text-ellipsis">
-                  Số sản phẩm còn lại
-                </div>
-                <div className="">{detailsProduct?.stock}</div>
-              </div>
-              {/***Đối tượng */}
-              <div className="flex flex-row items-center gap-2">
-                <div className="text-slate-400 w-[150px] line-clamp-2 text-ellipsis">
-                  Đối tượng
-                </div>
-                <div className="">{detailsProduct?.gender_object}</div>
-              </div>
-
-              {/***Thương hiệu */}
-              <div className="flex flex-row items-center gap-2">
-                <div className="text-slate-400 w-[150px] line-clamp-2 text-ellipsis">
-                  Thương hiệu
-                </div>
-                <div className="">{detailsProduct?.brand}</div>
-              </div>
-              {/***Xuất xứ */}
-              <div className="flex flex-row items-center gap-2">
-                <div className="text-slate-400 w-[150px]">Xuất xứ</div>
-                <div className="">{detailsProduct?.origin}</div>
-              </div>
-              {/***Gửi từ */}
-              <div className="flex flex-row items-center gap-2">
-                <div className="text-slate-400 w-[150px]">Gửi từ</div>
-                <div className="">
-                  {formatAddress(detailsProduct?.Shop?.shop_address)}
-                </div>
-              </div>
-            </div>
-          </div>
-          {/***Product Description */}
-          <div className="w-full flex flex-col">
-            <div className="p-[14px] text-lg font-normal text-black bg-neutral-100">
-              MÔ TẢ SẢN PHẨM
-            </div>
-            {detailsProduct?.description ? (
-              <>
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: detailsProduct?.description,
-                  }}
-                  className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4"
-                ></div>
-              </>
-            ) : (
-              <>
-                <div className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4">
-                  Không có mô tả sản phẩm
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-
-        {/***Review Container */}
-        <section className="bg-white rounded mt-[15px] p-[25px]">
-          <p className="text-lg">ĐÁNH GIÁ SẢN PHẨM</p>
-          <div className="mt-4 p-[30px] justify-between border-primary bg-secondary border-[1px] border-solid flex flex-row gap-14">
-            {/***Rating */}
-            <div className="flex flex-row gap-3 w-fit">
-              <span className="text-primary text-lg text-center">
-                <span className="text-3xl text-primary font-semibold">
-                  {avgRating}
-                </span>{" "}
-                trên 5
-              </span>
-              <ReactStars
-                value={avgRating}
-                activeColor="#66cce6"
-                inactiveColor="#66cce6"
-                isEdit={false}
-                size={20}
-              />
-            </div>
-            {/***Filter Rating*/}
-            <div className="w-fit flex gap-2">
-              {" "}
-              <Dropdown
-                className="border-primary border-[1px] border-solid rounded"
-                menu={{
-                  items: [
-                    { key: "6", value: "6", label: "Tất cả" },
-                    { key: "5", value: "5", label: "5 sao" },
-                    { key: "4", value: "4", label: "4 sao" },
-                    { key: "3", value: "3", label: "3 sao" },
-                    { key: "2", value: "2", label: "2 sao" },
-                    { key: "1", value: "1", label: "1 sao" },
-                  ],
-                  onClick: handleRatingFilterClick,
-                  selectable: true,
-
-                  defaultSelectedKeys: ["0"],
-                }}
-                placement="bottom"
-                arrow={{
-                  pointAtCenter: true,
-                }}
-              >
-                <Typography.Link className="text-primary ">
-                  <Space>
-                    {ratingFilter === 6 ? "Tất cả" : `${ratingFilter} sao`}
-                    <DownOutlined />
-                  </Space>
-                </Typography.Link>
-              </Dropdown>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-col gap-5 p-5">
-            {reviews?.length > 0 ? (
-              <>
-                {reviews?.map((review, key) => (
-                  <Suspense
-                    fallback={
-                      <Skeleton
-                        avatar
-                        paragraph={{
-                          rows: 3,
-                        }}
-                      />
-                    }
-                  >
-                    <ReviewCard value={review} key={key} />
-                  </Suspense>
-                ))}
-                <Pagination
-                  align="center"
-                  defaultCurrent={page}
-                  total={totalPage}
-                />
-              </>
-            ) : (
-              <>
-                <div className="w-full text-center mt-5">
-                  Không có dữ liệu đánh giá nào cho sản phẩm này
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-        {/***Other Product of Shop */}
-        {shopProducts?.length > 0 && (
-          <>
-            <div className="mt-6">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-normal">
-                  CÁC SẢN PHẨM KHÁC CỦA SHOP
-                </span>
-                <a href="#" className="text-primary flex items-center gap-1">
-                  Xem Tất Cả <MdArrowForwardIos size={16} />
-                </a>
-              </div>
-
-              <Suspense fallback={<Spin size="large" />}>
                 <CarouselProduct
                   additionalTransfrom={0}
                   arrows
@@ -716,19 +733,19 @@ const DetailsProduct = () => {
                     <ProductCard value={product} key={key} />
                   ))}
                 </CarouselProduct>
-              </Suspense>
-            </div>
-          </>
-        )}
+              </div>
+            </>
+          )}
 
-        {/***Product Suggestions */}
-        <div className="mt-10">
-          <span className="text-lg font-normal">CÓ THỂ BẠN CŨNG THÍCH</span>
-          <Suspense fallback={<Spin size="large" />}>
+          {/***Product Suggestions */}
+          <div className="mt-10">
+            <span className="text-lg font-normal">CÓ THỂ BẠN CŨNG THÍCH</span>
             <ProductSuggestions />
-          </Suspense>
+          </div>
         </div>
-      </div>
+      ) : (
+        <ProductNotFounded />
+      )}
     </>
   );
 };

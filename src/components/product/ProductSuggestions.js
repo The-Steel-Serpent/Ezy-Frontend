@@ -1,7 +1,7 @@
-import { Button } from "antd";
-import React, { useEffect, useState } from "react";
-import ProductCard from "../product/ProductCard";
-import { Link } from "react-router-dom";
+import { Button, Skeleton } from "antd";
+import React, { Suspense, useEffect, useState } from "react";
+
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 const Products = [
   {
@@ -327,8 +327,10 @@ const Products = [
     sold: 6000,
   },
 ];
+const ProductCard = React.lazy(() => import("./ProductCard"));
 const ProductSuggestions = () => {
   const [suggestProducts, setSuggestProducts] = useState([]);
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -346,11 +348,23 @@ const ProductSuggestions = () => {
     <div className="max-w-[1200px] m-auto ">
       <div className="grid grid-cols-12 place-items-center">
         {suggestProducts.map((value, key) => {
-          return <ProductCard value={value} key={key} />;
+          return (
+            <Suspense
+              fallback={
+                <Skeleton.Image className="lg:w-48 lg:h-[261px] mt-3 lg:col-span-2" />
+              }
+            >
+              <ProductCard value={value} key={key} />
+            </Suspense>
+          );
         })}
       </div>
       <div className="flex justify-center items-center w-full ">
-        <Button size="large" className="lg:max-w-[390px] w-full my-4">
+        <Button
+          size="large"
+          className="lg:max-w-[390px] w-full my-4"
+          onClick={() => window.location.replace("/suggest-products")}
+        >
           Xem Thêm
         </Button>
       </div>

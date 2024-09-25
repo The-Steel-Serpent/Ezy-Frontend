@@ -1,25 +1,64 @@
 import { createBrowserRouter } from "react-router-dom";
+import { lazy } from "react";
+import withSuspense from "../hooks/HOC/withSuspense";
 import App from "../App";
-import AuthLayout from "../layout";
-import WorkingProducts from "../pages/seller/product_management/WorkingProducts";
-import InfringingProduct from "../pages/seller/product_management/InfringingProduct";
-import PendingProducts from "../pages/seller/product_management/PendingProducts";
 import AuthenticationLayout from "../layout/AuthenticationLayout";
-import DetailsProduct from "../pages/buyer/product-pages/DetailsProduct";
-import Home from "../pages/Home";
-import BuyerLogin from "../pages/buyer/user-pages/BuyerLogin";
-import BuyerRegister from "../pages/buyer/user-pages/BuyerRegister";
-import SellerLogin from "../pages/seller/SellerLogin";
-import SellerRegister from "../pages/seller/SellerRegister";
-import AdminLogin from "../pages/admin/AdminLogin";
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import SellerHome from "../pages/seller/SellerHome";
-import AllOrders from "../pages/seller/orders/AllOrders";
-import OrderCancelled from "../pages/seller/orders/OrderCancelled";
-import AllProduct from "../pages/seller/product_management/AllProduct";
-import AddProduct from "../pages/seller/product_management/AddProduct";
 import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
+import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
+const AuthLayout = withSuspenseNonFallback(lazy(() => import("../layout")));
+
+const WorkingProducts = withSuspense(
+  lazy(() => import("../pages/seller/product_management/WorkingProducts"))
+);
+const InfringingProduct = withSuspense(
+  lazy(() => import("../pages/seller/product_management/InfringingProduct"))
+);
+const PendingProducts = withSuspense(
+  lazy(() => import("../pages/seller/product_management/PendingProducts"))
+);
+
+const Home = withSuspense(lazy(() => import("../pages/Home")));
+const DetailsProduct = withSuspense(
+  lazy(() => import("../pages/buyer/product-pages/DetailsProduct"))
+);
+const BuyerLogin = withSuspense(
+  lazy(() => import("../pages/buyer/user-pages/BuyerLogin"))
+);
+const BuyerRegister = withSuspense(
+  lazy(() => import("../pages/buyer/user-pages/BuyerRegister"))
+);
+const SellerLogin = withSuspense(
+  lazy(() => import("../pages/seller/SellerLogin"))
+);
+const SellerRegister = withSuspense(
+  lazy(() => import("../pages/seller/SellerRegister"))
+);
+const AdminLogin = withSuspense(
+  lazy(() => import("../pages/admin/AdminLogin"))
+);
+const AdminDashboard = withSuspense(
+  lazy(() => import("../pages/admin/AdminDashboard"))
+);
+const SellerHome = withSuspense(
+  lazy(() => import("../pages/seller/SellerHome"))
+);
+const SuggestProduct = withSuspense(
+  lazy(() => import("../pages/buyer/product-pages/SuggestProduct"))
+);
+const AllOrders = withSuspense(
+  lazy(() => import("../pages/seller/orders/AllOrders"))
+);
+const OrderCancelled = withSuspense(
+  lazy(() => import("../pages/seller/orders/OrderCancelled"))
+);
+const AllProduct = withSuspense(
+  lazy(() => import("../pages/seller/product_management/AllProduct"))
+);
+const AddProduct = withSuspense(
+  lazy(() => import("../pages/seller/product_management/AddProduct"))
+);
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -57,6 +96,14 @@ const router = createBrowserRouter([
           <AuthLayout>
             <DetailsProduct />
             {/* <LoadingPage /> */}
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "/suggest-products",
+        element: (
+          <AuthLayout>
+            <SuggestProduct />
           </AuthLayout>
         ),
       },
