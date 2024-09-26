@@ -24,16 +24,16 @@ export const signUpWithEmailPassword = async (email, password) => {
         let errorMessage;
         switch (error.code) {
             case 'auth/email-already-in-use':
-                errorMessage = 'Email is already in use.';
+                errorMessage = 'Email này đã được sử dụng';
                 break;
             case 'auth/invalid-email':
-                errorMessage = 'Invalid email address.';
+                errorMessage = 'Email không hợp lệ';
                 break;
             case 'auth/operation-not-allowed':
                 errorMessage = 'Operation not allowed.';
                 break;
             case 'auth/weak-password':
-                errorMessage = 'Password is too weak.';
+                errorMessage = 'Mật khẩu quá ngắn';
                 break;
             default:
                 errorMessage = 'An unknown error occurred.';
@@ -43,37 +43,41 @@ export const signUpWithEmailPassword = async (email, password) => {
     }
 }
 
+
 export const signInWithEmailPassword = async (email, password) => {
     try {
         const userCredential = await signInWithEmailAndPassword(authFirebase, email, password);
         const user = userCredential.user;
-
-        if(user.emailVerified){
-            return user;
+        if (!user.emailVerified) {
+            throw new Error('unverified');
         }
-        else{
-            throw new Error("Please verify your email");
-        }
+        return user; 
     } catch (error) {
-        let errorMessage;
-        switch (error.code) {
-            case 'auth/user-disabled':
-                errorMessage = 'User account is disabled.';
-                break;
-            case 'auth/user-not-found':
-                errorMessage = 'No user found with this email.';
-                break;
-            case 'auth/wrong-password':
-                errorMessage = 'Incorrect password.';
-                break;
-            default:
-                errorMessage = error.message || 'An unknown error occurred.';
-                break;
+        let errorMessage = '';
+        if (error.message === 'unverified') {
+            errorMessage = 'Tài khoản của bạn chưa được xác thực. Vui lòng kiểm tra email để xác nhận tài khoản.'; 
+        } else {
+            switch (error.code) {
+                case 'auth/invalid-email':
+                    errorMessage = 'Email không hợp lệ. Vui lòng kiểm tra lại.';
+                    break;
+                case 'auth/user-disabled':
+                    errorMessage = 'Tài khoản này đã bị vô hiệu hóa.';
+                    break;
+                case 'auth/user-not-found':
+                    errorMessage = 'Không tìm thấy tài khoản với email này.';
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = 'Mật khẩu không chính xác. Vui lòng thử lại.';
+                    break;
+                default:
+                    errorMessage = 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
+            }
         }
-        throw new Error(errorMessage);
+        console.error(errorMessage); 
+        throw new Error(errorMessage); 
     }
-}
-
+};
 
 export const signInWithGoogle = async () => {
     const auth = getAuth();
@@ -82,8 +86,23 @@ export const signInWithGoogle = async () => {
         const result = await signInWithPopup(auth, provider);
         return result.user;
     } catch (error) {
-        console.error("Error signing in with Google:", error);
-        throw error
+        let errorMessage;
+        const errorCode = error.code;
+        switch (errorCode) {
+            case 'auth/popup-closed-by-user':
+                errorMessage = 'Đăng nhập bị hủy';
+                break;
+            case 'auth/cancelled-popup-request':
+                errorMessage = 'Đăng nhập bị hủy';
+                break;
+            case 'auth/network-request-failed':
+                errorMessage = 'Lỗi mạng. Hãy kiểm tra lại kết nối';
+                break;
+            default:
+                errorMessage = 'An unknown error occurred: ';
+                break;
+        }
+        throw new Error(errorMessage);
     }
 }
 

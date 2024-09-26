@@ -293,6 +293,7 @@ export const BasicInformation = () => {
                                     <Input
                                         className='border rounded-md'
                                         value={brand}
+                                        placeholder="Thương hiệu"
                                         onChange={(e) => setBrand(e.target.value)} />
                                 </Form.Item>
                             </Col>

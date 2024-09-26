@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, Divider } from "antd";
 import { FcGoogle } from "react-icons/fc";
 import { BsShop } from "react-icons/bs";
@@ -7,6 +7,7 @@ import { PiHandshake } from "react-icons/pi";
 import { signInWithGoogle, signUpWithEmailPassword } from "../../firebase/AuthenticationFirebase";
 import { IoMdEye } from "react-icons/io";
 import { RiEyeCloseLine } from "react-icons/ri";
+import axios from "axios";
 
 const SellerRegister = () => {
   const [email, setEmail] = useState('');
@@ -21,24 +22,64 @@ const SellerRegister = () => {
     e.preventDefault();
     setHidePassword(!hidePassword)
   }
-  const handleSignUp = async (e) => {
-    e.preventDefault();
+
+  const checkEmail = async ({ email }) => {
     try {
-      const user = await signUpWithEmailPassword(email, password);
-      setWarning('Please check your email to verify');
-      setError(null);
+      const URL = `${process.env.REACT_APP_BACKEND_URL}/api/check-email?email=${email}`;
+      const res = await axios({
+        method: "GET",
+        url: URL,
+        withCredentials: true
+      });
+      if (res.status === 200)
+        return true;
+      else
+        return false;
     } catch (error) {
-      setError(error.message);
-      setSuccess(null);
-      console.log("Error roi dcm:", error);
+      console.log("Error check email:", error.message);
+      return false;
     }
   }
 
-  const handleGoogleSignIn = async () => {
+  const saveSeller = async ({ user_id, email }) => {
+    const role_id = 2;
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/seller-register`, {
+        user_id,
+        email,
+        role_id
+      })
+      console.log('User created successfully:', res.data);
+      return res.data;
+    } catch (error) {
+      console.log("Register error:", error.message);
+      return error.message;
+    }
+  }
+
+
+
+  const handleGoogleSignIn = async (e) => {
+    e.preventDefault();
     try {
       const user = await signInWithGoogle();
       setSuccess('Successfully signed in with Google');
-      console.log(user);
+      const user_id = user.uid;
+      const email = user.email;
+      const check = await checkEmail({ email });
+      console.log("checkkkkkkkkkkkkkkkkkkkkk", check);
+      if (!check) {
+        const rs = await saveSeller({ user_id, email });
+        if (rs) {
+          console.log("Oke roi em oiw");
+        }
+        else {
+          console.log("Loi roi em oi");
+        }
+      }
+      else {
+        console.log("Đã có tài khoản");
+      }
       setError(null);
     } catch (error) {
       setError(error.message);
@@ -47,7 +88,39 @@ const SellerRegister = () => {
     }
   }
 
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+      try {
+        const user = await signUpWithEmailPassword(email, password);
+        setError(null);
+        setSuccess(null);
+        setWarning("Hãy kiểm tra email để xác thực tài khoản");
+      } catch (error) {
+        setError(error.message);
+        setSuccess(null);
+        setWarning(null);
+      }
+  }
 
+  // Clear Alert
+  useEffect(() => {
+    let timer;
+    if (success) {
+      timer = setTimeout(() => {
+        setSuccess(null);
+      }, 5000);
+    } else if (error) {
+      timer = setTimeout(() => {
+        setError(null);
+      }, 5000);
+    } else if (warning) {
+      timer = setTimeout(() => {
+        setWarning(null);
+      }, 5000);
+    }
+
+    return () => clearTimeout(timer);
+  }, [success, error, warning]);
   return (
     <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32 bg-inmg">
       <div className="max-w-96 px-3 my-24 hidden lg:block">
@@ -73,7 +146,7 @@ const SellerRegister = () => {
         </div>
       </div>
       <div className="pt-16">
-        <form className="lg:w-[400px] shadow-xl px-6 py-6 mb-10 bg-white" onSubmit={handleSignUp}>
+        <form className="lg:w-[400px] shadow-xl px-6 py-6 mb-10 bg-white">
           <h1 className="font-[450] text-xl mb-5">Đăng ký</h1>
           <input
             type="text"
@@ -108,16 +181,18 @@ const SellerRegister = () => {
             {error && <Alert message={error} type="error" showIcon className="mb-5" />}
             {warning && <Alert message={warning} type="warning" showIcon className="mb-5" />}
           </div>
-          <button className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
+          <button
+            onClick={handleSignUp}
+            className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
             TIẾP THEO
           </button>
           <Divider>
             <span className="text-slate-400 text-xs">HOẶC</span>
           </Divider>
           <div className="w-full flex items-center">
-            <button 
-            onClick={handleGoogleSignIn}
-            className="border rounded p-2 w-[165px] hover:bg-slate-100 flex justify-center items-center m-auto">
+            <button
+              onClick={handleGoogleSignIn}
+              className="border rounded p-2 w-[165px] hover:bg-slate-100 flex justify-center items-center m-auto">
               <span className="gap-1 flex justify-center">
                 <FcGoogle size={23} /> Google
               </span>
