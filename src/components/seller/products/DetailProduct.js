@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Menu } from 'antd';
 import { BasicInformation } from './BasicInformation';
+import SaleInformation from './SaleInformation';
 
 const items = [
     {
@@ -59,13 +60,13 @@ const DetailProduct = () => {
             <div ref={basicInfoRef} className="section bg-white mt-3 border rounded p-5">
                 <BasicInformation />
             </div>
-            <div ref={salesInfoRef} className="section h-56">
-                <h2>Thông tin bán hàng</h2>
+            <div ref={salesInfoRef} className="section bg-white mt-3 border rounded p-5">
+                <SaleInformation />
             </div>
-            <div ref={shippingInfoRef} className="section h-56">
+            <div ref={shippingInfoRef} className="section bg-white mt-3 border rounded p-5">
                 <h2>Vận chuyển</h2>
             </div>
-            <div ref={otherInfoRef} className="section h-56">
+            <div ref={otherInfoRef} className="section bg-white mt-3 border rounded p-5">
                 <h2>Thông tin khác</h2>
             </div>
           
