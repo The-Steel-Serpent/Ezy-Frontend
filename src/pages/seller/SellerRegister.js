@@ -8,6 +8,7 @@ import { signInWithGoogle, signUpWithEmailPassword } from "../../firebase/Authen
 import { IoMdEye } from "react-icons/io";
 import { RiEyeCloseLine } from "react-icons/ri";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SellerRegister = () => {
   const [email, setEmail] = useState('');
@@ -15,8 +16,9 @@ const SellerRegister = () => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const [warning, setWarning] = useState(null);
-
   const [hidePassword, setHidePassword] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleHidePassword = (e) => {
     e.preventDefault();
@@ -42,12 +44,10 @@ const SellerRegister = () => {
   }
 
   const saveSeller = async ({ user_id, email }) => {
-    const role_id = 2;
     try {
       const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/seller-register`, {
         user_id,
         email,
-        role_id
       })
       console.log('User created successfully:', res.data);
       return res.data;
@@ -80,6 +80,7 @@ const SellerRegister = () => {
       else {
         console.log("Đã có tài khoản");
       }
+      navigate("/seller");
       setError(null);
     } catch (error) {
       setError(error.message);
@@ -118,6 +119,7 @@ const SellerRegister = () => {
         setWarning(null);
       }, 5000);
     }
+
 
     return () => clearTimeout(timer);
   }, [success, error, warning]);
