@@ -4,7 +4,10 @@ import {
     GoogleAuthProvider, 
     signInWithEmailAndPassword, 
     signInWithPopup,
-    sendEmailVerification
+    sendEmailVerification,
+    setPersistence,
+    browserSessionPersistence,
+    browserLocalPersistence,
  } from "firebase/auth";
 
 
@@ -46,6 +49,7 @@ export const signUpWithEmailPassword = async (email, password) => {
 
 export const signInWithEmailPassword = async (email, password) => {
     try {
+        await setPersistence(authFirebase, browserLocalPersistence);
         const userCredential = await signInWithEmailAndPassword(authFirebase, email, password);
         const user = userCredential.user;
         if (!user.emailVerified) {
@@ -83,6 +87,7 @@ export const signInWithGoogle = async () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
+        await setPersistence(auth, browserLocalPersistence);
         const result = await signInWithPopup(auth, provider);
         return result.user;
     } catch (error) {

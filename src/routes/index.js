@@ -6,6 +6,7 @@ import AuthenticationLayout from "../layout/AuthenticationLayout";
 import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
+import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
 
 const AuthLayout = withSuspenseNonFallback(lazy(() => import("../layout")));
 const Categories = withSuspense(
@@ -125,9 +126,11 @@ const router = createBrowserRouter([
       {
         path: "seller",
         element: (
-          <SellerAuthLayout>
-            <SellerHome />
-          </SellerAuthLayout>
+          <PrivateRouteSeller>
+            <SellerAuthLayout>
+              <SellerHome />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
         ),
       },
       {
@@ -150,58 +153,73 @@ const router = createBrowserRouter([
       {
         path: "seller/order/all",
         element: (
-          <SellerAuthLayout>
-            <AllOrders />
-          </SellerAuthLayout>
+          <PrivateRouteSeller>
+            <SellerAuthLayout>
+              <AllOrders />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/order/ordercancelled",
         element: (
-          <SellerAuthLayout>
-            <OrderCancelled />
-          </SellerAuthLayout>
+          <PrivateRouteSeller>
+            <SellerAuthLayout>
+              <OrderCancelled />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
+
         ),
       },
       //seller/order
       {
         path: "seller/product-management/all",
         element: (
-          <SellerAuthLayout>
-            <AllProduct />
-          </SellerAuthLayout>
+          <PrivateRouteSeller>
+            <SellerAuthLayout>
+              <AllProduct />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/working-products",
         element: (
-          <SellerAuthLayout>
-            <WorkingProducts />
-          </SellerAuthLayout>
+          <PrivateRouteSeller >
+            <SellerAuthLayout>
+              <WorkingProducts />
+            </SellerAuthLayout>
+          </PrivateRouteSeller >
         ),
       },
       {
         path: "seller/product-management/infringing-products",
         element: (
-          <SellerAuthLayout>
-            <InfringingProduct />
-          </SellerAuthLayout>
+          <PrivateRouteSeller >
+            <SellerAuthLayout>
+              <InfringingProduct />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/pending-products",
         element: (
-          <SellerAuthLayout>
-            <PendingProducts />
-          </SellerAuthLayout>
+          <PrivateRouteSeller >
+            <SellerAuthLayout>
+              <PendingProducts />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/add-product",
         element: (
-          <SellerAuthLayout>
-            <AddProduct />
-          </SellerAuthLayout>
+          <PrivateRouteSeller >
+            <SellerAuthLayout>
+              <AddProduct />
+            </SellerAuthLayout>
+          </PrivateRouteSeller >
         ),
       },
       //Admin

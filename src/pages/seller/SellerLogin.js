@@ -6,6 +6,7 @@ import { RiEyeCloseLine } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
 import { signInWithGoogle, signInWithEmailPassword } from "../../firebase/AuthenticationFirebase";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SellerLogin = () => {
 
@@ -13,8 +14,8 @@ const SellerLogin = () => {
   const [password, setPassword] = useState('');
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
-
   const [hidePassword, setHidePassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleHidePassword = (e) => {
     e.preventDefault();
@@ -41,20 +42,19 @@ const SellerLogin = () => {
   }
 
   const saveSeller = async ({ user_id, email }) => {
-    const role_id = 2;
     try {
       const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/seller-register`, {
         user_id,
         email,
-        role_id
       })
       console.log('User created successfully:', res.data);
       return res.data;
     } catch (error) {
       console.log("Register error:", error.message);
-      throw new Error(error.message);
+      return error.message;
     }
   }
+
 
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
@@ -64,19 +64,19 @@ const SellerLogin = () => {
       const user_id = user.uid;
       const email = user.email;
       const check = await checkEmail({ email });
-      console.log("checkkkkkkkkkkkkkkkkkkkkk", check);
       if (!check) {
         const rs = await saveSeller({ user_id, email });
         if (rs) {
-          console.log("Save user successfully");
+          console.log("Oke roi em oiw");
         }
         else {
-          console.log("Error", rs.error);
+          console.log("Loi roi em oi");
         }
       }
       else {
         console.log("Đã có tài khoản");
       }
+      navigate("/seller");
       setError(null);
     } catch (error) {
       setError(error.message);
@@ -89,11 +89,26 @@ const SellerLogin = () => {
     e.preventDefault();
     try {
       const user = await signInWithEmailPassword(email, password);
-      setSuccess('Successfully email password');
+      if(user) {
+        console.log("Email is verified");
+      }
       const user_id = user.uid;
-      const user_save = await saveSeller({ user_id, email });
-      console.log("user_save:",user_save);
+      const check = await checkEmail({ email });
+      if (!check) {
+        const rs = await saveSeller({ user_id, email });
+        if (rs) {
+          console.log("Oke roi em oiw");
+        }
+        else {
+          console.log("Loi roi em oi");
+        }
+      }
+      else {
+        console.log("Đã có tài khoản");
+      }
+      setSuccess('Successfully email password');
       console.log("user:",user);
+      navigate("/seller");
       setError(null);
     } catch (error) {
       setError(error.message);
