@@ -8,6 +8,7 @@ import {
     setPersistence,
     browserSessionPersistence,
     browserLocalPersistence,
+    sendPasswordResetEmail,
  } from "firebase/auth";
 
 
@@ -52,6 +53,7 @@ export const signInWithEmailPassword = async (email, password) => {
         await setPersistence(authFirebase, browserLocalPersistence);
         const userCredential = await signInWithEmailAndPassword(authFirebase, email, password);
         const user = userCredential.user;
+        // Kiểm tra nếu email đã được xác thực
         if (!user.emailVerified) {
             throw new Error('unverified');
         }
@@ -59,7 +61,7 @@ export const signInWithEmailPassword = async (email, password) => {
     } catch (error) {
         let errorMessage = '';
         if (error.message === 'unverified') {
-            errorMessage = 'Tài khoản của bạn chưa được xác thực. Vui lòng kiểm tra email để xác nhận tài khoản.'; 
+            errorMessage = 'Tài khoản của bạn chưa được xác thực. Vui lòng kiểm tra email để xác nhận tài khoản.';
         } else {
             switch (error.code) {
                 case 'auth/invalid-email':
@@ -105,6 +107,27 @@ export const signInWithGoogle = async () => {
                 break;
             default:
                 errorMessage = 'An unknown error occurred: ';
+                break;
+        }
+        throw new Error(errorMessage);
+    }
+}
+
+export const resetPassword = async (email) => {
+    try {
+        await sendPasswordResetEmail(auth, email);
+        return true;
+    } catch (error) {
+        let errorMessage;
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorMessage = 'Email không hợp lệ';
+                break;
+            case 'auth/user-not-found':
+                errorMessage = 'Không tìm thấy tài khoản với email này';
+                break;
+            default:
+                errorMessage = 'An unknown error occurred';
                 break;
         }
         throw new Error(errorMessage);

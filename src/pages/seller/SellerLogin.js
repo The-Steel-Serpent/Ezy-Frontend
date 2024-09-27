@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import wallpaper from "../../assets/wallpaper-seller1.png"
-import { Alert, Divider } from "antd";
+import { Alert, Button, Divider, Input, Modal } from "antd";
 import { IoMdEye } from "react-icons/io";
 import { RiEyeCloseLine } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
-import { signInWithGoogle, signInWithEmailPassword } from "../../firebase/AuthenticationFirebase";
+import { signInWithGoogle, signInWithEmailPassword, resetPassword } from "../../firebase/AuthenticationFirebase";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { checkEmailFormat } from "../../helpers/formatEmail";
 
 const SellerLogin = () => {
 
@@ -14,7 +15,10 @@ const SellerLogin = () => {
   const [password, setPassword] = useState('');
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [warning, setWarning] = useState(null);
   const [hidePassword, setHidePassword] = useState(false);
+  const [isVisbleResetModal, setIsVisibleResetModal] = useState(false);
+  const [emailReset, setEmailReset] = useState('');
   const navigate = useNavigate();
 
   const handleHidePassword = (e) => {
@@ -22,6 +26,43 @@ const SellerLogin = () => {
     setHidePassword(!hidePassword)
   }
 
+  const showResetModal = () => {
+    setIsVisibleResetModal(true);
+  }
+
+  const handleEmailResetChange = (e) => {
+    const emailReset = e.target.value;
+    setEmailReset(emailReset);
+    if (!emailReset) {
+      setError("Email không được để trống");
+    }
+    else {
+      setError(null);
+    }
+  }
+
+  const onSubmitReset = async (e) => {
+    e.preventDefault();
+    if (!emailReset) {
+      setError("Email không được để trống");
+      return;
+    }
+    else if (!checkEmailFormat(emailReset)) {
+      setError("Email không hợp lệ");
+      return;
+    }
+    try {
+      await resetPassword(emailReset);
+      setError(null);
+      setWarning('Vui lòng kiểm tra email để đặt lại mật khẩu');
+    } catch (error) {
+      setError(error.message);
+    }
+  }
+
+  const onCancelReset = () => {
+    setIsVisibleResetModal(false);
+  }
 
   const checkEmail = async ({ email }) => {
     try {
@@ -89,7 +130,7 @@ const SellerLogin = () => {
     e.preventDefault();
     try {
       const user = await signInWithEmailPassword(email, password);
-      if(user) {
+      if (user) {
         console.log("Email is verified");
       }
       const user_id = user.uid;
@@ -107,7 +148,7 @@ const SellerLogin = () => {
         console.log("Đã có tài khoản");
       }
       setSuccess('Successfully email password');
-      console.log("user:",user);
+      console.log("user:", user);
       navigate("/seller");
       setError(null);
     } catch (error) {
@@ -128,9 +169,13 @@ const SellerLogin = () => {
       timer = setTimeout(() => {
         setError(null);
       }, 5000);
+    } else if (warning) {
+      timer = setTimeout(() => {
+        setWarning(null);
+      }, 5000);
     }
     return () => clearTimeout(timer);
-  }, [success, error]);
+  }, [success, error, warning]);
   return (
     <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32">
       <div className="max-w-96 px-3 my-24 hidden lg:block">
@@ -183,8 +228,11 @@ const SellerLogin = () => {
             className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
             Đăng nhập
           </button>
-          <div className="w-full py-3 flex">
-            <a className="text-[15px] text-[#05a]" href="#">Quên mật khẩu</a>
+          <div className="w-full py-3 flex cursor-pointer">
+            <span
+              className="text-[15px] text-[#05a]"
+              onClick={showResetModal}
+            >Quên mật khẩu</span>
           </div>
           <Divider>
             <span className="text-slate-400 text-xs">HOẶC</span>
@@ -203,6 +251,30 @@ const SellerLogin = () => {
             <a href="/seller/register" className="text-primary px-1">Đăng ký</a>
           </div>
         </form>
+        <Modal
+          open={isVisbleResetModal}
+          footer={null}
+          onCancel={onCancelReset}
+          centered
+        >
+          <h3 className="flex justify-center text-[25px]">Đặt lại mật khẩu</h3>
+          <div className="flex flex-col items-center gap-6 px-8 mb-3 mt-5">
+            <Input
+              placeholder="Nhập email của bạn"
+              className="w-full border p-3"
+              value={emailReset}
+              onChange={handleEmailResetChange}
+            />
+            <Button
+              onClick={onSubmitReset}
+              className="bg-primary text-white w-full h-12"
+            >
+              Tiếp theo
+            </Button>
+            {error && <Alert message={error} type="error" showIcon />}
+            {warning && <Alert message={warning} type="warning" showIcon />}
+          </div>
+        </Modal>
       </div>
     </div>
   )
