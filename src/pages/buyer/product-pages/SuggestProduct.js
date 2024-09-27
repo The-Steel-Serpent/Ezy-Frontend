@@ -26,7 +26,7 @@ const SuggestProduct = () => {
   useEffect(() => {
     const fetchSuggestList = async () => {
       try {
-        const url = `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products?pageNumber=${currentPage}`;
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products?pageNumbers=${currentPage}`;
         const res = await axios.get(url);
         if (res.status === 200) {
           console.log("res.data", res.data);
@@ -56,6 +56,7 @@ const SuggestProduct = () => {
         <ProductsWithPanigation
           list={listSuggest}
           currentPage={currentPage}
+          totalPage={totalPage}
           onPageChange={handlePageChange}
           itemsPerRow={6}
         />

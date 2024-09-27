@@ -26,8 +26,12 @@ const ProductsWithPanigation = ({
         </div>
         <Pagination
           align="center"
+          current={currentPage}
           defaultCurrent={currentPage}
-          total={productList.length || 0}
+          total={totalPage * 28}
+          pageSize={28}
+          showSizeChanger={false}
+          hideOnSinglePage={productList.length <= 28 ? true : false}
           onChange={(page, pageSize) => onPageChange(page)}
         />
       </div>

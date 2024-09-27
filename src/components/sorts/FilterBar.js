@@ -4,16 +4,18 @@ import {
   FilterOutlined,
   UpOutlined,
 } from "@ant-design/icons";
-import { Checkbox } from "antd";
+import { Button, Checkbox, Input, Rate, Tooltip } from "antd";
 import axios from "axios";
 import React, { useCallback, useEffect, useReducer } from "react";
 import { TfiMenuAlt } from "react-icons/tfi";
 import { useNavigate, useParams } from "react-router-dom";
 import formatNumber from "../../helpers/formatNumber";
+import NumericInput from "../input/NumericInput";
 
-const Filter = () => {
+const Filter = (props) => {
   const { cat_id } = useParams();
   const navigate = useNavigate();
+  const { enabledCategories = true, onFilterChange, filter } = props;
 
   const [state, dispatch] = useReducer(
     (state, action) => {
@@ -36,6 +38,12 @@ const Filter = () => {
             visibleSubCategoryItems: action.payload.visibleSubCategoryItems,
             isSubCategoryExpanded: action.payload.isSubCategoryExpanded,
           };
+        case "SET_MIN_PRICE":
+          return { ...state, minPrice: action.payload };
+        case "SET_MAX_PRICE":
+          return { ...state, maxPrice: action.payload };
+        case "SET_SELECTED_CHECKBOXES":
+          return { ...state, selectedCheckboxes: action.payload };
         default:
           return state;
       }
@@ -48,6 +56,9 @@ const Filter = () => {
       isCategoryExpanded: false,
       isSubCategoryExpanded: false,
       selectedCategory: null,
+      selectedCheckboxes: [],
+      minPrice: null,
+      maxPrice: null,
     }
   );
 
@@ -59,6 +70,9 @@ const Filter = () => {
     isCategoryExpanded,
     isSubCategoryExpanded,
     listSubCategories,
+    selectedCheckboxes,
+    minPrice,
+    maxPrice,
   } = state;
 
   //Side Effects
@@ -137,18 +151,32 @@ const Filter = () => {
     });
   }, [dispatch, listSubCategories]);
 
+  const handleCheckboxChange = useCallback(
+    (facet) => {
+      const updatedCheckboxes = selectedCheckboxes.includes(facet)
+        ? selectedCheckboxes.filter((item) => item !== facet)
+        : [...selectedCheckboxes, facet];
+      console.log("updatedCheckboxes", updatedCheckboxes);
+      dispatch({ type: "SET_SELECTED_CHECKBOXES", payload: updatedCheckboxes });
+      onFilterChange({ ...filter, facet: updatedCheckboxes });
+    },
+    [selectedCheckboxes]
+  );
+
   return (
     <>
       <div className="w-full flex flex-col items-start">
         {/* Tất cả danh mục */}
-        <section className="w-[90%] mb-2">
+        <section
+          className={`w-[90%] mb-2 ${enabledCategories ? "block" : "hidden"}`}
+        >
           <div className=" text-lg text-black font-bold h-[3.125rem] flex justify-start items-center gap-3 mb-[0.625rem] border-b-slate-300 border-b-[1px] border-solid">
             <TfiMenuAlt />
             Tất Cả Danh Mục
           </div>
           <ul
             className={`flex flex-col gap-3 ${
-              isCategoryExpanded ? "max-h-[1000px]" : `max-h-[200px]`
+              isCategoryExpanded ? "max-h-[1000px]" : `max-h-[230px]`
             }  transition-all overflow-hidden duration-700`}
           >
             {listCategory
@@ -157,13 +185,13 @@ const Filter = () => {
                 return (
                   <li
                     onClick={() =>
-                      navigate(`/categories/${category?.category_id}`)
+                      (window.location.href = `/categories/${category?.category_id}`)
                     }
                     className={`${
                       category?.category_id === parseInt(cat_id)
                         ? "text-primary"
                         : "hover:text-primary text-black pl-4"
-                    } cursor-pointer`}
+                    } cursor-pointer text-sm`}
                   >
                     {category?.category_id === parseInt(cat_id) && (
                       <CaretRightFilled />
@@ -190,46 +218,110 @@ const Filter = () => {
           </ul>
         </section>
         {/* Bộ Lọc Tìm Kiếm */}
-        <section className="w-full">
-          <div className=" text-lg text-black font-bold h-[3.125rem] flex justify-start items-center gap-3 mb-[0.625rem]">
+        <section className="w-[90%] ">
+          <div className=" text-[17px] text-black font-bold h-[3.125rem] flex justify-start items-center gap-3 mb-[0.625rem]">
             <FilterOutlined />
             BỘ LỌC TÌM KIẾM
           </div>
+
           {/* Theo danh mục */}
-          <div className="mb-2">Theo Danh Mục</div>
-          <div
-            className={`flex flex-col  gap-2 ${
-              isSubCategoryExpanded ? "max-h-[1200px]" : "max-h-[200px]"
-            } transition-all overflow-hidden duration-700`}
-          >
-            {listSubCategories
-              ?.slice(0, visibleSubCategoryItems)
-              ?.map((subCategory, key) => {
-                return (
-                  <>
-                    <Checkbox className="w-full">
-                      {subCategory?.sub_category_name} (
-                      {formatNumber(subCategory?.totalProduct || 0)})
-                    </Checkbox>
-                  </>
-                );
-              })}
-            {visibleSubCategoryItems < listSubCategories?.length ? (
-              <div
-                className="font-semibold flex items-center gap-1 cursor-pointer hover:text-primary pl-4"
-                onClick={handleSetMoreVisibleSubCategoryItems}
-              >
-                Thêm <DownOutlined size={10} />
+          <section className="mb-2">
+            <div className="mb-2">Theo Danh Mục</div>
+            <div
+              className={`flex flex-col  gap-2 ${
+                isSubCategoryExpanded ? "max-h-[1200px]" : "max-h-[200px]"
+              } transition-all overflow-hidden duration-700 border-b-[1px] border-solid border-b-slate-300 pb-4`}
+            >
+              {listSubCategories
+                ?.slice(0, visibleSubCategoryItems)
+                ?.map((subCategory, key) => {
+                  return (
+                    <>
+                      <Checkbox
+                        className="w-full"
+                        onChange={() =>
+                          handleCheckboxChange(subCategory?.sub_category_name)
+                        }
+                      >
+                        {subCategory?.sub_category_name} (
+                        {formatNumber(subCategory?.totalProduct || 0)})
+                      </Checkbox>
+                    </>
+                  );
+                })}
+              {visibleSubCategoryItems < listSubCategories?.length ? (
+                <div
+                  className="font-semibold flex items-center gap-1 cursor-pointer hover:text-primary pl-4"
+                  onClick={handleSetMoreVisibleSubCategoryItems}
+                >
+                  Thêm <DownOutlined size={10} />
+                </div>
+              ) : (
+                <div
+                  className="font-semibold flex items-center gap-1 cursor-pointer  hover:text-primary pl-4"
+                  onClick={handleSetDefaultVisibleSubCategoryItems}
+                >
+                  Thu Gọn <UpOutlined size={10} />
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Khoảng Giá */}
+          <section className="mb-2 mt-4 flex flex-col gap-3 border-b-[1px] border-solid border-b-slate-300 pb-4">
+            <div>Khoảng Giá</div>
+            <div className="flex justify-between items-center">
+              <NumericInput
+                style={{
+                  width: 80,
+                }}
+                value={minPrice}
+                onChange={(value) =>
+                  dispatch({ type: "SET_MIN_PRICE", payload: value })
+                }
+                placeholder="Từ"
+              />
+              <span> - </span>
+              <NumericInput
+                style={{
+                  width: 80,
+                }}
+                value={maxPrice}
+                onChange={(value) =>
+                  dispatch({ type: "SET_MAX_PRICE", payload: value })
+                }
+                placeholder="Đến"
+              />
+            </div>
+            <Button className="bg-primary text-white border-primary hover:opacity-80">
+              ÁP DỤNG
+            </Button>
+          </section>
+          {/* Đánh Giá */}
+          <section className="mb-2 mt-4 flex flex-col gap-3 border-b-[1px] border-solid border-b-slate-300 pb-4">
+            <div>Đánh Giá</div>
+            <div className="flex flex-col justify-start items-start pl-3 text-[16px]">
+              <div className="cursor-pointer w-full">
+                <Rate disabled defaultValue={5} />
               </div>
-            ) : (
-              <div
-                className="font-semibold flex items-center gap-1 cursor-pointer  hover:text-primary pl-4"
-                onClick={handleSetDefaultVisibleSubCategoryItems}
-              >
-                Thu Gọn <UpOutlined size={10} />
+              <div className="cursor-pointer w-full">
+                <Rate disabled defaultValue={4} />
               </div>
-            )}
-          </div>
+              <div className="cursor-pointer w-full">
+                <Rate disabled defaultValue={3} />
+              </div>
+              <div className="cursor-pointer w-full">
+                <Rate disabled defaultValue={2} />
+              </div>
+              <div className="cursor-pointer w-full">
+                <Rate disabled defaultValue={1} />
+              </div>
+            </div>
+          </section>
+          {/* Xóa tất cả */}
+          <Button className="w-full mt-3 bg-primary text-white border-primary hover:opacity-80">
+            XÓA TẤT CẢ
+          </Button>
         </section>
       </div>
     </>

@@ -26,6 +26,7 @@ import { DownOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
 import ProductNotFounded from "../../../components/product/ProductNotFounded";
 import withChildSuspense from "../../../hooks/HOC/withChildSuspense";
+import { de } from "date-fns/locale";
 
 const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
 const ReactImageGallery = lazy(() => import("react-image-gallery"));
@@ -436,19 +437,29 @@ const DetailsProduct = () => {
                 <div className="flex gap-5 mt-2">
                   <Button
                     size="large"
-                    className="h-14 px-5 hover:bg-primary text-lg"
+                    className={`${
+                      detailsProduct?.stock > 0
+                        ? `hover:bg-primary hover:text-white  cursor-pointer`
+                        : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
+                    } h-14 px-5  text-lg`}
                     icon={<TiShoppingCart />}
                     onClick={() => {
-                      console.log("Thêm vào giỏ hàng", currentVarient);
+                      detailsProduct?.stock > 0 &&
+                        console.log("Thêm vào giỏ hàng", currentVarient);
                     }}
                   >
                     Thêm vào giỏ hàng
                   </Button>
                   <Button
-                    className="bg-primary text-white hover:bg-opacity-80 px-8 h-14 text-lg"
+                    className={`${
+                      detailsProduct?.stock > 0
+                        ? "hover:bg-opacity-80 cursor-pointer"
+                        : "opacity-60 cursor-not-allowed"
+                    } bg-primary text-white px-8 h-14 text-lg`}
                     size="large"
                     onClick={() => {
-                      console.log("Mua Ngay", currentVarient);
+                      detailsProduct?.stock > 0 &&
+                        console.log("Mua Ngay", currentVarient);
                     }}
                   >
                     Mua Ngay
@@ -651,8 +662,9 @@ const DetailsProduct = () => {
                   <Pagination
                     align="center"
                     defaultCurrent={page}
-                    total={reviews?.length || 0}
-                    hideOnSinglePage={true}
+                    pageSize={10}
+                    total={totalPage * 10 || 0}
+                    hideOnSinglePage={reviews.length <= 10 ? true : false}
                   />
                 </>
               ) : (
@@ -730,7 +742,7 @@ const DetailsProduct = () => {
                   swipeable
                 >
                   {shopProducts.map((product, key) => (
-                    <ProductCard value={product} key={key} />
+                    <ProductCard value={product} />
                   ))}
                 </CarouselProduct>
               </div>
