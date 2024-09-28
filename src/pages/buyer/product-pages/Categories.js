@@ -48,9 +48,20 @@ const Categories = () => {
   useEffect(() => {
     const fetchProductByCategory = async () => {
       console.log("current page: ", currentPage);
-      const url = `${process.env.REACT_APP_BACKEND_URL}/api/product-by-sort-and-filter/${cat_id}?pageNumbers=${currentPage}`;
+      const url = `${
+        process.env.REACT_APP_BACKEND_URL
+      }/api/product-by-sort-and-filter/${cat_id}?pageNumbers=${currentPage}&sortBy=${
+        filter.sortBy
+      }&minPrice=${
+        filter.price.minPrice ? filter.price.minPrice : ""
+      }&maxPrice=${
+        filter.price.maxPrice ? filter.price.maxPrice : ""
+      }&ratingFilter=${filter.ratingFilter ? filter.ratingFilter : ""}&facet=${
+        filter.facet ? filter.facet : ""
+      }`;
       try {
         const response = await axios.get(url);
+        console.log(url);
         if (response.status === 200) {
           console.log(
             "Dữ liệu product theo category: ",
@@ -71,7 +82,7 @@ const Categories = () => {
       }
     };
     fetchProductByCategory();
-  }, [cat_id, currentPage]);
+  }, [cat_id, currentPage, filter]);
   return (
     <div className="max-w-[1200px] mx-auto grid grid-cols-12 py-10">
       <div className="col-span-2">
@@ -79,8 +90,8 @@ const Categories = () => {
           <FilterBar
             onFilterChange={(filter) => {
               dispatch({ type: "SET_FILTER", payload: filter });
-              console.log("filter sort", filter?.sortBy);
-              console.log("filter facet", filter?.facet);
+              dispatch({ type: "SET_CURRENT_PAGE", payload: 1 });
+              console.log("filter", filter);
             }}
             filter={filter}
           />
@@ -99,8 +110,8 @@ const Categories = () => {
               }
               onFilterChange={(filter) => {
                 dispatch({ type: "SET_FILTER", payload: filter });
-                console.log("filter sort", filter?.sortBy);
-                console.log("filter facet", filter?.facet);
+                dispatch({ type: "SET_CURRENT_PAGE", payload: 1 });
+                console.log("filter", filter);
               }}
             />
           </Suspense>

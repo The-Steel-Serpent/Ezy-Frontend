@@ -4,13 +4,14 @@ import {
   FilterOutlined,
   UpOutlined,
 } from "@ant-design/icons";
-import { Button, Checkbox, Input, Rate, Tooltip } from "antd";
+import { Button, Checkbox, Input, message, Rate, Tooltip } from "antd";
 import axios from "axios";
 import React, { useCallback, useEffect, useReducer } from "react";
 import { TfiMenuAlt } from "react-icons/tfi";
 import { useNavigate, useParams } from "react-router-dom";
 import formatNumber from "../../helpers/formatNumber";
 import NumericInput from "../input/NumericInput";
+import { min } from "date-fns";
 
 const Filter = (props) => {
   const { cat_id } = useParams();
@@ -44,6 +45,8 @@ const Filter = (props) => {
           return { ...state, maxPrice: action.payload };
         case "SET_SELECTED_CHECKBOXES":
           return { ...state, selectedCheckboxes: action.payload };
+        case "SET_RATING_FILTER":
+          return { ...state, ratingFilter: action.payload };
         default:
           return state;
       }
@@ -59,6 +62,7 @@ const Filter = (props) => {
       selectedCheckboxes: [],
       minPrice: null,
       maxPrice: null,
+      ratingFilter: null,
     }
   );
 
@@ -73,6 +77,7 @@ const Filter = (props) => {
     selectedCheckboxes,
     minPrice,
     maxPrice,
+    ratingFilter,
   } = state;
 
   //Side Effects
@@ -160,7 +165,7 @@ const Filter = (props) => {
       dispatch({ type: "SET_SELECTED_CHECKBOXES", payload: updatedCheckboxes });
       onFilterChange({ ...filter, facet: updatedCheckboxes });
     },
-    [selectedCheckboxes]
+    [selectedCheckboxes, filter, dispatch, onFilterChange]
   );
 
   return (
@@ -239,8 +244,13 @@ const Filter = (props) => {
                     <>
                       <Checkbox
                         className="w-full"
+                        checked={selectedCheckboxes.includes(
+                          subCategory?.sub_category_id?.toString()
+                        )}
                         onChange={() =>
-                          handleCheckboxChange(subCategory?.sub_category_name)
+                          handleCheckboxChange(
+                            subCategory?.sub_category_id?.toString()
+                          )
                         }
                       >
                         {subCategory?.sub_category_name} (
@@ -276,9 +286,9 @@ const Filter = (props) => {
                   width: 80,
                 }}
                 value={minPrice}
-                onChange={(value) =>
-                  dispatch({ type: "SET_MIN_PRICE", payload: value })
-                }
+                onChange={(value) => {
+                  dispatch({ type: "SET_MIN_PRICE", payload: value });
+                }}
                 placeholder="Từ"
               />
               <span> - </span>
@@ -287,39 +297,143 @@ const Filter = (props) => {
                   width: 80,
                 }}
                 value={maxPrice}
-                onChange={(value) =>
-                  dispatch({ type: "SET_MAX_PRICE", payload: value })
-                }
+                onChange={(value) => {
+                  dispatch({ type: "SET_MAX_PRICE", payload: value });
+                }}
                 placeholder="Đến"
               />
             </div>
-            <Button className="bg-primary text-white border-primary hover:opacity-80">
+            <Button
+              className="bg-primary text-white border-primary hover:opacity-80"
+              onClick={() => {
+                if (parseInt(minPrice) < 0 || parseInt(maxPrice) < 0) {
+                  message.error("Vui lòng nhập giá trị lớn hơn 0");
+                  return;
+                }
+                if (
+                  parseInt(minPrice) > parseInt(maxPrice) &&
+                  maxPrice !== "" &&
+                  minPrice !== ""
+                ) {
+                  message.error("Giá tối thiểu không được lớn hơn giá tối đa");
+                  return;
+                } else if (
+                  parseInt(minPrice) > parseInt(maxPrice) &&
+                  maxPrice !== "" &&
+                  minPrice !== ""
+                ) {
+                  message.error("Giá tối đa không được nhỏ hơn giá tối thiểu");
+                  return;
+                }
+                onFilterChange({
+                  ...filter,
+                  price: {
+                    ...filter.price,
+                    minPrice: minPrice === "" ? null : minPrice,
+                    maxPrice: maxPrice === "" ? null : maxPrice,
+                  },
+                });
+              }}
+            >
               ÁP DỤNG
             </Button>
           </section>
           {/* Đánh Giá */}
           <section className="mb-2 mt-4 flex flex-col gap-3 border-b-[1px] border-solid border-b-slate-300 pb-4">
             <div>Đánh Giá</div>
-            <div className="flex flex-col justify-start items-start pl-3 text-[16px]">
-              <div className="cursor-pointer w-full">
-                <Rate disabled defaultValue={5} />
+            <div className="flex flex-col justify-start items-start  text-[16px] ">
+              <div
+                className={`cursor-pointer w-fit px-2 py-1 ${
+                  ratingFilter === 5 ? "bg-neutral-200" : "bg-none"
+                }  rounded-3xl`}
+                onClick={() => {
+                  dispatch({ type: "SET_RATING_FILTER", payload: 5 });
+                  onFilterChange({
+                    ...filter,
+                    ratingFilter: 5,
+                  });
+                }}
+              >
+                <Rate className="text-primary" disabled defaultValue={5} />
               </div>
-              <div className="cursor-pointer w-full">
-                <Rate disabled defaultValue={4} />
+              <div
+                className={`cursor-pointer w-fit px-2 py-1 ${
+                  ratingFilter === 4 ? "bg-neutral-200" : "bg-none"
+                }  rounded-3xl`}
+                onClick={() => {
+                  dispatch({ type: "SET_RATING_FILTER", payload: 4 });
+                  onFilterChange({
+                    ...filter,
+                    ratingFilter: 4,
+                  });
+                }}
+              >
+                <Rate className="text-primary" disabled defaultValue={4} />
               </div>
-              <div className="cursor-pointer w-full">
-                <Rate disabled defaultValue={3} />
+              <div
+                className={`cursor-pointer w-fit px-2 py-1 ${
+                  ratingFilter === 3 ? "bg-neutral-200" : "bg-none"
+                }  rounded-3xl`}
+                onClick={() => {
+                  dispatch({ type: "SET_RATING_FILTER", payload: 3 });
+                  onFilterChange({
+                    ...filter,
+                    ratingFilter: 3,
+                  });
+                }}
+              >
+                <Rate className="text-primary" disabled defaultValue={3} />
               </div>
-              <div className="cursor-pointer w-full">
-                <Rate disabled defaultValue={2} />
+              <div
+                className={`cursor-pointer w-fit px-2 py-1 ${
+                  ratingFilter === 2 ? "bg-neutral-200" : "bg-none"
+                }  rounded-3xl`}
+                onClick={() => {
+                  dispatch({ type: "SET_RATING_FILTER", payload: 2 });
+                  onFilterChange({
+                    ...filter,
+                    ratingFilter: 2,
+                  });
+                }}
+              >
+                <Rate className="text-primary" disabled defaultValue={2} />
               </div>
-              <div className="cursor-pointer w-full">
-                <Rate disabled defaultValue={1} />
+              <div
+                className={`cursor-pointer w-fit px-2 py-1 ${
+                  ratingFilter === 1 ? "bg-neutral-200" : "bg-none"
+                }  rounded-3xl`}
+                onClick={() => {
+                  dispatch({ type: "SET_RATING_FILTER", payload: 1 });
+                  onFilterChange({
+                    ...filter,
+                    ratingFilter: 1,
+                  });
+                }}
+              >
+                <Rate className="text-primary" disabled defaultValue={1} />
               </div>
             </div>
           </section>
           {/* Xóa tất cả */}
-          <Button className="w-full mt-3 bg-primary text-white border-primary hover:opacity-80">
+          <Button
+            className="w-full mt-3 bg-primary text-white border-primary hover:opacity-80"
+            onClick={() => {
+              dispatch({ type: "SET_MIN_PRICE", payload: null });
+              dispatch({ type: "SET_MAX_PRICE", payload: null });
+              dispatch({ type: "SET_SELECTED_CHECKBOXES", payload: [] });
+              dispatch({ type: "SET_RATING_FILTER", payload: null });
+
+              onFilterChange({
+                ...filter,
+                ratingFilter: null,
+                price: {
+                  minPrice: null,
+                  maxPrice: null,
+                },
+                facet: [],
+              });
+            }}
+          >
             XÓA TẤT CẢ
           </Button>
         </section>

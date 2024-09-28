@@ -1,4 +1,4 @@
-import { Card } from "antd";
+import { Card, Rate } from "antd";
 import Meta from "antd/es/card/Meta";
 import React from "react";
 function formatNumber(num) {
@@ -11,6 +11,8 @@ function formatNumber(num) {
   }
 }
 const ProductCard = ({ value, key, itemsPerRow = 6 }) => {
+  const price =
+    value?.base_price - (value?.base_price * value?.sale_percents) / 100;
   return (
     <>
       <a
@@ -26,15 +28,30 @@ const ProductCard = ({ value, key, itemsPerRow = 6 }) => {
           cover={<img src={value.thumbnail} />}
         >
           <Meta style={{ fontSize: 14 }} title={value?.product_name} />
-          <div className="flex lg:flex-row flex-col w-100 justify-between items-start lg:items-center mt-4">
-            <div className="text-primary font-bold">
+          <div className="flex lg:flex-row flex-col w-100 items-start lg:items-center mt-4 text-ellipsis text-nowrap line-clamp-1">
+            <div className="text-primary font-bold text-base mr-1">
               <sup>₫</sup>
-              {value?.base_price?.toLocaleString("vi-VN")}
+              {price?.toLocaleString("vi-VN")}
             </div>
+            {value?.sale_percents > 0 && (
+              <div className="text-slate-400 line-through text-xs text-ellipsis line-clamp-1 text-nowrap">
+                <sup>₫</sup>
+                {value?.base_price?.toLocaleString("vi-VN")}
+              </div>
+            )}
+          </div>
+          <div className="flex lg:flex-row flex-col w-100  items-start lg:items-center">
+            <Rate
+              disabled
+              value={value?.avgRating}
+              className="text-[11px] mr-1"
+            />
+
             <div className="text-[10px] pt-1">
               Đã bán {formatNumber(value?.sold)}
             </div>
           </div>
+
           <div className="absolute top-0 right-0 text-xs bg-primary text-white pr-1 pl-1">
             {value?.sale_percents > 0 && "-" + value?.sale_percents + "%"}
           </div>
