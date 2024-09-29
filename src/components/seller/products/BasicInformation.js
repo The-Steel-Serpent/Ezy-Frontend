@@ -213,6 +213,7 @@ export const BasicInformation = () => {
                             fileList={thumbnail}
                             onChange={handleUploadThumbnailChange}
                             maxCount={1}
+                            beforeUpload={beforeUpload}
                             className='custom-upload'>
                             {thumbnail.length < 1 && (
                                 <div className='flex flex-col items-center '>
