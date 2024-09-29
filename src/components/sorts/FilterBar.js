@@ -11,11 +11,9 @@ import { TfiMenuAlt } from "react-icons/tfi";
 import { useNavigate, useParams } from "react-router-dom";
 import formatNumber from "../../helpers/formatNumber";
 import NumericInput from "../input/NumericInput";
-import { min } from "date-fns";
 
 const Filter = (props) => {
   const { cat_id } = useParams();
-  const navigate = useNavigate();
   const { enabledCategories = true, onFilterChange, filter } = props;
 
   const [state, dispatch] = useReducer(
@@ -230,52 +228,54 @@ const Filter = (props) => {
           </div>
 
           {/* Theo danh mục */}
-          <section className="mb-2">
-            <div className="mb-2">Theo Danh Mục</div>
-            <div
-              className={`flex flex-col  gap-2 ${
-                isSubCategoryExpanded ? "max-h-[1200px]" : "max-h-[200px]"
-              } transition-all overflow-hidden duration-700 border-b-[1px] border-solid border-b-slate-300 pb-4`}
-            >
-              {listSubCategories
-                ?.slice(0, visibleSubCategoryItems)
-                ?.map((subCategory, key) => {
-                  return (
-                    <>
-                      <Checkbox
-                        className="w-full"
-                        checked={selectedCheckboxes.includes(
-                          subCategory?.sub_category_id?.toString()
-                        )}
-                        onChange={() =>
-                          handleCheckboxChange(
+          {enabledCategories && (
+            <section className="mb-2">
+              <div className="mb-2">Theo Danh Mục</div>
+              <div
+                className={`flex flex-col  gap-2 ${
+                  isSubCategoryExpanded ? "max-h-[1200px]" : "max-h-[200px]"
+                } transition-all overflow-hidden duration-700 border-b-[1px] border-solid border-b-slate-300 pb-4`}
+              >
+                {listSubCategories
+                  ?.slice(0, visibleSubCategoryItems)
+                  ?.map((subCategory, key) => {
+                    return (
+                      <>
+                        <Checkbox
+                          className="w-full"
+                          checked={selectedCheckboxes.includes(
                             subCategory?.sub_category_id?.toString()
-                          )
-                        }
-                      >
-                        {subCategory?.sub_category_name} (
-                        {formatNumber(subCategory?.totalProduct || 0)})
-                      </Checkbox>
-                    </>
-                  );
-                })}
-              {visibleSubCategoryItems < listSubCategories?.length ? (
-                <div
-                  className="font-semibold flex items-center gap-1 cursor-pointer hover:text-primary pl-4"
-                  onClick={handleSetMoreVisibleSubCategoryItems}
-                >
-                  Thêm <DownOutlined size={10} />
-                </div>
-              ) : (
-                <div
-                  className="font-semibold flex items-center gap-1 cursor-pointer  hover:text-primary pl-4"
-                  onClick={handleSetDefaultVisibleSubCategoryItems}
-                >
-                  Thu Gọn <UpOutlined size={10} />
-                </div>
-              )}
-            </div>
-          </section>
+                          )}
+                          onChange={() =>
+                            handleCheckboxChange(
+                              subCategory?.sub_category_id?.toString()
+                            )
+                          }
+                        >
+                          {subCategory?.sub_category_name} (
+                          {formatNumber(subCategory?.totalProduct || 0)})
+                        </Checkbox>
+                      </>
+                    );
+                  })}
+                {visibleSubCategoryItems < listSubCategories?.length ? (
+                  <div
+                    className="font-semibold flex items-center gap-1 cursor-pointer hover:text-primary pl-4"
+                    onClick={handleSetMoreVisibleSubCategoryItems}
+                  >
+                    Thêm <DownOutlined size={10} />
+                  </div>
+                ) : (
+                  <div
+                    className="font-semibold flex items-center gap-1 cursor-pointer  hover:text-primary pl-4"
+                    onClick={handleSetDefaultVisibleSubCategoryItems}
+                  >
+                    Thu Gọn <UpOutlined size={10} />
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           {/* Khoảng Giá */}
           <section className="mb-2 mt-4 flex flex-col gap-3 border-b-[1px] border-solid border-b-slate-300 pb-4">
