@@ -62,7 +62,9 @@ const AllProduct = withSuspense(
 const AddProduct = withSuspense(
   lazy(() => import("../pages/seller/product_management/AddProduct"))
 );
-
+const SearchPage = withSuspense(
+  lazy(() => import("../pages/buyer/product-pages/SearchPage"))
+);
 const router = createBrowserRouter([
   {
     path: "/",
@@ -120,6 +122,14 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
+      {
+        path: "/search",
+        element: (
+          <AuthLayout>
+            <SearchPage />
+          </AuthLayout>
+        ),
+      },
 
       //Seller
       //login && register
@@ -168,7 +178,6 @@ const router = createBrowserRouter([
               <OrderCancelled />
             </SellerAuthLayout>
           </PrivateRouteSeller>
-
         ),
       },
       //seller/order
@@ -185,17 +194,17 @@ const router = createBrowserRouter([
       {
         path: "seller/product-management/working-products",
         element: (
-          <PrivateRouteSeller >
+          <PrivateRouteSeller>
             <SellerAuthLayout>
               <WorkingProducts />
             </SellerAuthLayout>
-          </PrivateRouteSeller >
+          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/infringing-products",
         element: (
-          <PrivateRouteSeller >
+          <PrivateRouteSeller>
             <SellerAuthLayout>
               <InfringingProduct />
             </SellerAuthLayout>
@@ -205,7 +214,7 @@ const router = createBrowserRouter([
       {
         path: "seller/product-management/pending-products",
         element: (
-          <PrivateRouteSeller >
+          <PrivateRouteSeller>
             <SellerAuthLayout>
               <PendingProducts />
             </SellerAuthLayout>
@@ -215,11 +224,11 @@ const router = createBrowserRouter([
       {
         path: "seller/product-management/add-product",
         element: (
-          <PrivateRouteSeller >
+          <PrivateRouteSeller>
             <SellerAuthLayout>
               <AddProduct />
             </SellerAuthLayout>
-          </PrivateRouteSeller >
+          </PrivateRouteSeller>
         ),
       },
       //Admin

@@ -9,6 +9,7 @@ import {
   useMemo,
   lazy,
   Suspense,
+  useReducer,
 } from "react";
 import withSuspense from "../hooks/HOC/withSuspense";
 import { IoLogoFacebook } from "react-icons/io5";
@@ -22,22 +23,79 @@ import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
-import { Skeleton } from "antd";
+import { Input, Skeleton } from "antd";
+import { AiTwotoneShop } from "react-icons/ai";
+import axios from "axios";
+import { useLocation } from "react-router-dom";
+import { el } from "date-fns/locale";
+
 // import FullLogo from "./FullLogo";
 const ChatBox = lazy(() => import("./chatbox/ChatBox"));
 
 const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const keyword = queryParams.get("keyword");
+  const [state, dispatch] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "SET_SEARCH":
+          return { ...state, search: action.payload };
+        case "SET_SEARCH_ITEM":
+          return { ...state, searchItem: action.payload };
+        case "SET_IS_FOCUSED":
+          return { ...state, isFocused: action.payload };
+        default:
+          return state;
+      }
+    },
+    {
+      search: "",
+      searchItem: [],
+      isFocused: false,
+    }
+  );
+  const { search, searchItem, isFocused } = state;
 
-  const searchItem = [
-    "Điện Thoại Giá 1k",
-    "Áo Thun Nam Form Rộng",
-    "Điện Thoại 8plus Giá Rẻ",
-    "Ăn Vặt",
-    "Váy Babydoll",
-    "Capybara Chảy Nước Mũi",
-    "Vòng Cổ Cặp",
-  ];
+  //Side Effect
+  useEffect(() => {
+    const fetchSuggestProductName = async () => {
+      try {
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products-name?search=${search}`;
+        const res = await axios.get(url);
+        console.log("res", res.data);
+        if (res.data.success) {
+          dispatch({ type: "SET_SEARCH_ITEM", payload: res.data.products });
+        }
+      } catch (error) {
+        console.log("Lỗi khi fetch gợi ý tên sản phẩm", error);
+      }
+    };
+    fetchSuggestProductName();
+  }, [search]);
+
+  useEffect(() => {
+    if (keyword) {
+      dispatch({ type: "SET_SEARCH", payload: keyword });
+    }
+  }, [keyword]);
+  //Handle Function
+  const handleOnSearch = useCallback(
+    (e) => {
+      dispatch({ type: "SET_SEARCH", payload: e.target.value });
+    },
+    [dispatch, search]
+  );
+
+  const handleOnSubmitSearch = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (search === "") window.location.href = "/categories/1";
+      else window.location.href = `/search?keyword=${search}`;
+    },
+    [search]
+  );
 
   return (
     <>
@@ -115,13 +173,61 @@ const PrimaryHeader = () => {
             {/* <FullLogo className="fill-white" /> */}
           </a>
           <div className="col-span-8 ml-2 lg:ml-0 items-center">
-            <form className="bg-white rounded flex p-[2px] lg:flex-row flex-row-reverse">
-              <input
-                type="text"
-                className="p-2 w-full text-sm rounded focus:after:border lg:mr-1 lg:ml-0 ml-1 text-ellipsis line-clamp-1"
-                placeholder="Shopee bao ship 0Đ - Đăng ký ngay!"
-              />
-              <button className="lg:bg-custom-gradient lg:text-white w-16 rounded flex justify-center items-center text-slate-400">
+            <form
+              onSubmit={handleOnSubmitSearch}
+              className="bg-white rounded flex p-[2px] lg:flex-row flex-row-reverse"
+            >
+              <div className="w-full relative">
+                <Input
+                  type="text"
+                  className="p-2  text-sm rounded focus:after:border lg:mr-1 lg:ml-0 ml-1 text-ellipsis line-clamp-1"
+                  placeholder="Bạn muốn tìm gì đó có Ezy lo..."
+                  value={search}
+                  onChange={(e) => handleOnSearch(e)}
+                  onFocus={() => {
+                    dispatch({ type: "SET_IS_FOCUSED", payload: true });
+                  }}
+                  onBlur={() => {
+                    setTimeout(
+                      () =>
+                        dispatch({ type: "SET_IS_FOCUSED", payload: false }),
+                      200
+                    );
+                  }}
+                />
+                <div
+                  id="search-content"
+                  className={`${
+                    isFocused ? "flex" : "hidden"
+                  } z-[99999] rounded  h-fit flex-col absolute bg-white w-full gap-2 p-2 `}
+                >
+                  {search && (
+                    <a
+                      href={`/search-shop?keyword=${search}`}
+                      className="flex gap-2"
+                    >
+                      <AiTwotoneShop className="text-primary" size={20} /> Tìm
+                      Shop "{search}"
+                    </a>
+                  )}
+                  {searchItem.length > 0 &&
+                    searchItem.map((value, key) => {
+                      return (
+                        <a
+                          href={`/search?keyword=${value?.product_name}`}
+                          className="block cursor-pointer text-slate-600 text-sm hover:text-white hover:bg-primary"
+                        >
+                          {value.product_name}
+                        </a>
+                      );
+                    })}
+                </div>
+              </div>
+
+              <button
+                onSubmit={handleOnSubmitSearch}
+                className="lg:bg-custom-gradient lg:text-white w-16 rounded flex justify-center items-center text-slate-400"
+              >
                 <span>
                   <IoIosSearch size={20} />
                 </span>
