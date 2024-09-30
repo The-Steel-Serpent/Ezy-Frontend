@@ -9,6 +9,8 @@ const Categories = () => {
   const [state, dispatch] = useReducer(
     (state, action) => {
       switch (action.type) {
+        case "SET_LOADING":
+          return { ...state, loading: action.payload };
         case "FETCH_PRODUCT_BY_CATEGORY":
           return { ...state, listProductByCategory: action.payload };
         case "SET_CURRENT_PAGE":
@@ -28,6 +30,7 @@ const Categories = () => {
       }
     },
     {
+      loading: false,
       listProductByCategory: [],
       currentPage: 1,
       totalPage: 0,
@@ -43,7 +46,8 @@ const Categories = () => {
     }
   );
 
-  const { listProductByCategory, currentPage, totalPage, filter } = state;
+  const { listProductByCategory, currentPage, totalPage, filter, loading } =
+    state;
 
   useEffect(() => {
     const fetchProductByCategory = async () => {
@@ -61,7 +65,7 @@ const Categories = () => {
       }`;
       try {
         const response = await axios.get(url);
-        console.log(url);
+        dispatch({ type: "SET_LOADING", payload: true });
         if (response.status === 200) {
           console.log(
             "Dữ liệu product theo category: ",
@@ -77,6 +81,7 @@ const Categories = () => {
             payload: response.data.totalPages,
           });
         }
+        dispatch({ type: "SET_LOADING", payload: false });
       } catch (error) {
         console.log("Lỗi khi fetch dữ liệu product theo category: ", error);
       }
@@ -102,6 +107,7 @@ const Categories = () => {
           <Suspense fallback={<div>Loading...</div>}>
             <SortBar
               listProductByCategory={listProductByCategory}
+              loading={loading}
               currentPage={currentPage}
               totalPage={totalPage}
               filter={filter}

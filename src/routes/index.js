@@ -69,6 +69,13 @@ const AddProduct = withSuspense(
 const SearchPage = withSuspense(
   lazy(() => import("../pages/buyer/product-pages/SearchPage"))
 );
+const SearchShop = withSuspense(
+  lazy(() => import("../pages/buyer/shop-pages/ShopSearchPage"))
+);
+
+const ShopDetails = withSuspense(
+  lazy(() => import("../pages/buyer/shop-pages/ShopDetails"))
+);
 const router = createBrowserRouter([
   {
     path: "/",
@@ -131,6 +138,23 @@ const router = createBrowserRouter([
         element: (
           <AuthLayout>
             <SearchPage />
+          </AuthLayout>
+        ),
+      },
+      // Shops
+      {
+        path: "/search_shop",
+        element: (
+          <AuthLayout>
+            <SearchShop />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "/shop/:shop_username",
+        element: (
+          <AuthLayout>
+            <ShopDetails />
           </AuthLayout>
         ),
       },

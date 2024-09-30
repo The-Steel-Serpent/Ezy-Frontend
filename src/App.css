@@ -283,3 +283,15 @@
 .ant-pagination .ant-pagination-item-active:hover a {
   @apply text-white;
 }
+.ant-menu-light.ant-menu-horizontal > .ant-menu-item-selected::after,
+:where(.css-dev-only-do-not-override-5wsri9).ant-menu-light
+  > .ant-menu.ant-menu-horizontal
+  > .ant-menu-item-selected::after,
+:where(.css-dev-only-do-not-override-5wsri9).ant-menu-light.ant-menu-horizontal
+  > .ant-menu-submenu-selected::after,
+:where(.css-dev-only-do-not-override-5wsri9).ant-menu-light
+  > .ant-menu.ant-menu-horizontal
+  > .ant-menu-submenu-selected::after {
+  border-bottom-width: 2px;
+  @apply border-primary;
+}
