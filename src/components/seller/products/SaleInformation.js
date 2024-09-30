@@ -20,10 +20,12 @@ const SaleInformation = () => {
     const [allPrice, setAllPrice] = useState([]);
     const [allStock, setAllStock] = useState([]);
 
-    
+    const [priceDefault, setPriceDefault] = useState('');
+    const [stockDefault, setStockDefault] = useState('');
+
+
     const [errorMessage, setErrorMessage] = useState('');
     const [errorVisible, setErrorVisible] = useState(false);
-
 
     const beforeUpload = file => {
         const isImage = file.type.startsWith('image/');
@@ -43,10 +45,10 @@ const SaleInformation = () => {
     const handleErrorCancel = () => setErrorVisible(false);
 
     const handleUploadImage = (file, classificationIndex) => {
-        console.log("Received classification index:", classificationIndex); 
+        console.log("Received classification index:", classificationIndex);
         const reader = new FileReader();
         reader.onload = () => {
-            const newImage = { index: classificationIndex, url: reader.result };  
+            const newImage = { index: classificationIndex, url: reader.result };
             setAllImgClassification(prevState => {
                 const updatedState = [...prevState];
                 const existingImageIndex = updatedState.findIndex(img => img.index === classificationIndex);
@@ -67,17 +69,28 @@ const SaleInformation = () => {
     };
 
     const handleInputPrice = (index) => (e) => {
-        const newPrice = [...allPrice];
-        newPrice[index] = e.target.value; // Cập nhật giá trị tại index
-        setAllPrice(newPrice); // Cập nhật state mà không làm mất các giá trị khác
+        if (isNaN(e.target.value)) {
+            message.error('Giá tiền phải là số!');
+        }
+        else {
+            const newPrice = [...allPrice];
+            newPrice[index] = e.target.value;
+            setAllPrice(newPrice);
+        }
     };
 
     const handleInputStock = (index) => (e) => {
-        const newStock = [...allStock];
-        newStock[index] = e.target.value; // Cập nhật giá trị tại index
-        setAllStock(newStock); // Cập nhật state mà không làm mất các giá trị khác
+        if (isNaN(e.target.value)) {
+            message.error('Số lượng hàng phải là số!');
+        }
+        else {
+            const newStock = [...allStock];
+            newStock[index] = e.target.value;
+            setAllStock(newStock);
+        }
+
     };
-    
+
     const toggleVisibility = () => {
         if (!showFormList) {
             form.setFieldsValue({ classifications: [{}] });
@@ -102,7 +115,7 @@ const SaleInformation = () => {
             form.setFieldsValue({ varients: [{}] });
         }
         setShowButtonList2(false);
-    
+
     };
 
     const toggleVisibility3 = () => {
@@ -114,7 +127,7 @@ const SaleInformation = () => {
         setAllImgClassification([]);
         setAllPrice([]);
         setAllStock([]);
-       
+
     };
 
     const handleInputChange = (index, add) => (e) => {
@@ -180,7 +193,7 @@ const SaleInformation = () => {
                 const currentClassify = row.allClassifyName;
                 const firstRowIndex = dataSource.findIndex(item => item.allClassifyName === currentClassify);
                 const sameClassifyCount = dataSource.filter(item => item.allClassifyName === currentClassify).length;
-                
+
                 if (index === firstRowIndex) {
                     return {
                         children: (
@@ -223,8 +236,9 @@ const SaleInformation = () => {
             key: 'stock',
             render: (text, record, index) => (
                 <Input
-                    defaultValue={allStock[index]} 
+                    defaultValue={allStock[index]}
                     onBlur={handleInputStock(index)}
+                    placeholder='Nhập số lượng hàng'
                 />
             ),
         },
@@ -234,8 +248,9 @@ const SaleInformation = () => {
             key: 'price',
             render: (text, record, index) => (
                 <Input
-                    defaultValue={allPrice[index]} 
+                    defaultValue={allPrice[index]}
                     onBlur={handleInputPrice(index)}
+                    placeholder='Nhập giá'
                 />
             ),
         },
@@ -260,7 +275,6 @@ const SaleInformation = () => {
         console.log(allImgClassification);
     }, [dataSource]);
 
-    
 
     return (
         <div>
@@ -481,6 +495,8 @@ const SaleInformation = () => {
                                     placeholder="Nhập vào"
                                     className='w-64'
                                     prefix='VND'
+                                    value={priceDefault}
+                                    onChange={(e) => setPriceDefault(e.target.value)}
                                 />
                             </Form.Item>
                         </Col>
@@ -513,6 +529,8 @@ const SaleInformation = () => {
                                     placeholder="Nhập vào"
                                     className='w-64'
                                     prefix={<BsQuestionCircle size={15} />}
+                                    value={stockDefault}
+                                    onChange={(e) => setStockDefault(e.target.value)}
                                 />
                             </Form.Item>
                         </Col>

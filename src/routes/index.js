@@ -47,6 +47,10 @@ const AdminDashboard = withSuspense(
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
+
+const SellerSetup = withSuspense(
+  lazy(() => import("../pages/seller/SellerSetup"))
+);
 const SuggestProduct = withSuspense(
   lazy(() => import("../pages/buyer/product-pages/SuggestProduct"))
 );
@@ -139,6 +143,16 @@ const router = createBrowserRouter([
           <PrivateRouteSeller>
             <SellerAuthLayout>
               <SellerHome />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
+        ),
+      },
+      {
+        path: "seller/seller-setup",
+        element: (
+          <PrivateRouteSeller>
+            <SellerAuthLayout>
+              <SellerSetup />
             </SellerAuthLayout>
           </PrivateRouteSeller>
         ),
