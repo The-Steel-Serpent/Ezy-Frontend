@@ -11,6 +11,14 @@ module.exports = {
       },
       backgroundImage: {
         "custom-gradient": "linear-gradient(-180deg, #66cce6, #298ab4)",
+        "background-Shop": "url('/src/assets/backgroundShop.jpg')",
+      },
+      backdropBlur: {
+        xs: "2px",
+        sm: "4px",
+        md: "8px",
+        lg: "12px",
+        xl: "16px",
       },
     },
   },

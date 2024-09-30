@@ -11,9 +11,9 @@ import { FaRegCommentDots } from "react-icons/fa";
 
 const ShopCard = ({ value }) => {
   return (
-    <div className="hover:shadow-lg w-full pt-5 px-[25px] pb-[25px] bg-white items-center flex  overflow-visible justify-between">
+    <div className="hover:shadow-lg w-full pt-5 px-[25px] pb-[25px] bg-white items-center flex  overflow-visible justify-between ">
       <div className="gap-4 justify-center items-center  flex max-w-[440px] pr-[25px]">
-        <a href="#">
+        <a href={`/shop/${value?.UserAccount?.username}`}>
           <img className="rounded-full size-20" src={value?.logo_url} />
         </a>
 
@@ -51,8 +51,11 @@ const ShopCard = ({ value }) => {
             Chat Ngay
           </Button>
           <Button
-            className="h-10 text-base border-slate-300 text-slate-800 hover:bg-slate-50 opacity-95"
+            className="h-10 text-base border-slate-300 text-slate-800 hover:bg-slate-50 opacity-95 cursor-pointer"
             icon={<BsShop />}
+            onClick={() =>
+              (window.location.href = `/shop/${value?.UserAccount?.username}`)
+            }
           >
             Xem Shop
           </Button>
