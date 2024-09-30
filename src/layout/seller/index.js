@@ -3,12 +3,11 @@ import logo from '../../assets/image (1) (2).png'
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { GoBook } from "react-icons/go";
 import { VscBell } from "react-icons/vsc";
-import { FaUserCircle } from "react-icons/fa";
-import { FaChevronDown } from "react-icons/fa";
-import { Layout } from 'antd';
-import { Divider, Menu, Button, theme } from 'antd';
+import { Divider, Menu, Button, theme, Layout, Dropdown, Space } from 'antd';
 import { TfiWallet } from "react-icons/tfi";
 import { BsShopWindow } from "react-icons/bs";
+import { FaUserCircle } from "react-icons/fa";
+import { authFirebase } from '../../firebase/firebase';
 
 import "../../styles/seller.css"
 
@@ -17,8 +16,10 @@ import {
     MailOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
+    DownOutlined
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
 
 
 const { Header, Content, Sider } = Layout;
@@ -93,11 +94,34 @@ const items = [
         ],
     },
 ];
+
+const items_info = [
+    {
+        key: 'info1',
+        label: 'Hồ sơ Shop',
+        icon: <MailOutlined />,
+    },
+    {
+        key: 'info2',
+        label: 'Thiết lập Shop',
+        icon: <AppstoreOutlined />,
+    },
+    {
+        key: 'info3',
+        label: 'Đăng xuất',
+        icon: <AppstoreOutlined />,
+    }
+];
 const SellerAuthLayout = ({ children }) => {
     const [current, setCurrent] = useState('1');
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
+    const location = useLocation();
+
+    const [userInfor, setUserInfor ] = useState(null);
+
     const navigate = useNavigate();
+
     const handleNavigate = (e) => {
         // console.log('click ', e.key);
         setCurrent(e.key);
@@ -120,10 +144,19 @@ const SellerAuthLayout = ({ children }) => {
             window.removeEventListener('resize', handleResize);
         };
     }, []);
+
     useEffect(() => {
         setCollapsed(false)
         // console.log(windowWidth)
     }, [windowWidth])
+
+    const isSellerSetupPath = location.pathname === '/seller/seller-setup';
+
+    useEffect(() => {
+        console.log(authFirebase);
+    },[]);
+
+    
     return (
         <>
             <Layout>
@@ -147,7 +180,7 @@ const SellerAuthLayout = ({ children }) => {
                         </div>
                         <div className='text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block'>
                             <GoBook
-                            color='white'
+                                color='white'
                                 size={25}
                             />
                         </div>
@@ -159,25 +192,36 @@ const SellerAuthLayout = ({ children }) => {
                         </div>
                         <Divider type="vertical" variant="dotted" style={{ height: 30 }} />
                         <div className='flex h-full items-center text-slate-600 gap-3 hover:bg-[#8ad3e5] py-4 px-3'>
-
-                            <FaUserCircle size={25} color='white' />
-                            <div className='text-[15px] text-white'>boquangdieu2003</div>
-                            <FaChevronDown size={12} color='white'/>
+                            <Dropdown
+                                menu={{
+                                    items: items_info,
+                                }}
+                            >
+                                <a onClick={(e) => e.preventDefault()}>
+                                    <Space className='bg-transparent'>
+                                        <FaUserCircle size={20} className='text-white'/>
+                                        <span className='text-white text-[15px]'></span>
+                                        <DownOutlined size={20} className='text-white' />
+                                    </Space>
+                                </a>
+                            </Dropdown>
                         </div>
                     </div>
                 </header>
                 <Layout className='h-full'>
-                    <Sider trigger={null} collapsible collapsed={collapsed} className='bg-white w-fit h-full shadow-xl sticky-sider'>
-                        <div className="demo-logo-vertical" />
-                        <Menu
-                            defaultOpenKeys={['sub1', 'sub2', 'sub3', 'sub4']}
-                            mode="inline"
-                            theme="light"
-                            items={items}
-                            onClick={handleNavigate}
-                            className='custom-menu text-slate-500 font-[400] lg:w-48 '
-                        />
-                    </Sider>
+                    {!isSellerSetupPath && (
+                        <Sider trigger={null} collapsible collapsed={collapsed} className='bg-white w-fit h-full shadow-xl sticky-sider'>
+                            <div className="demo-logo-vertical" />
+                            <Menu
+                                defaultOpenKeys={['sub1', 'sub2', 'sub3', 'sub4']}
+                                mode="inline"
+                                theme="light"
+                                items={items}
+                                onClick={handleNavigate}
+                                className='custom-menu text-slate-500 font-[400] lg:w-48 '
+                            />
+                        </Sider>
+                    )}
                     <Layout className='layout-full-height'>
                         <Header
                             style={{

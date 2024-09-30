@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Menu } from 'antd';
 import { BasicInformation } from './BasicInformation';
 import SaleInformation from './SaleInformation';
+import ShippingProductInformation from './ShippingProductInformation';
 
 const items = [
     {
@@ -15,46 +16,49 @@ const items = [
     {
         key: '3',
         label: 'Vận chuyển'
-    },
-    {
-        key: '4',
-        label: 'Thông tin khác'
-    },
+    }
 ];
 
 const DetailProduct = () => {
     const basicInfoRef = useRef(null);
     const salesInfoRef = useRef(null);
     const shippingInfoRef = useRef(null);
-    const otherInfoRef = useRef(null);
 
     const handleFocusMenu = (e) => {
+        const offset = 100; 
+        const scrollWithOffset = (element) => {
+            const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+            const offsetPosition = elementPosition - offset;
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        };
         switch (e.key) {
             case '1':
-                basicInfoRef.current.scrollIntoView({ behavior: 'smooth' });
+                scrollWithOffset(basicInfoRef.current);
                 break;
             case '2':
-                salesInfoRef.current.scrollIntoView({ behavior: 'smooth' });
+                scrollWithOffset(salesInfoRef.current);
                 break;
             case '3':
-                shippingInfoRef.current.scrollIntoView({ behavior: 'smooth' });
-                break;
-            case '4':
-                otherInfoRef.current.scrollIntoView({ behavior: 'smooth' });
+                scrollWithOffset(shippingInfoRef.current);
                 break;
             default:
                 break;
         }
     };
 
+ 
+
     return (
-        <div>
+        <div className='mb-32'>
             <Menu
                 mode="horizontal"
                 theme="light"
                 items={items}
-                defaultSelectedKeys={['1']}
                 className="custom-menu-seller-product bg-white sticky-menu"
+                defaultSelectedKeys={['1']}
                 onClick={handleFocusMenu}
             />
             <div ref={basicInfoRef} className="section bg-white mt-3 border rounded p-5">
@@ -64,12 +68,8 @@ const DetailProduct = () => {
                 <SaleInformation />
             </div>
             <div ref={shippingInfoRef} className="section bg-white mt-3 border rounded p-5">
-                <h2>Vận chuyển</h2>
+                <ShippingProductInformation />
             </div>
-            <div ref={otherInfoRef} className="section bg-white mt-3 border rounded p-5">
-                <h2>Thông tin khác</h2>
-            </div>
-          
         </div>
     );
 };
