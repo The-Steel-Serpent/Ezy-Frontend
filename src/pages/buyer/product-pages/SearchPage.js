@@ -1,3 +1,5 @@
+import { RightOutlined } from "@ant-design/icons";
+import { Skeleton } from "antd";
 import axios from "axios";
 import React, { Suspense, useEffect, useReducer } from "react";
 import { FaRegLightbulb } from "react-icons/fa6";
@@ -7,7 +9,7 @@ const FilterBar = React.lazy(() =>
   import("../../../components/sorts/FilterBar")
 );
 const SortBar = React.lazy(() => import("../../../components/sorts/SortBar"));
-
+const ShopCard = React.lazy(() => import("../../../components/shop/ShopCard"));
 const SearchPage = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -17,10 +19,14 @@ const SearchPage = () => {
       switch (action.type) {
         case "FETCH_PRODUCT_BY_CATEGORY":
           return { ...state, listProductByCategory: action.payload };
+        case "SET_LOADING":
+          return { ...state, loading: action.payload };
         case "SET_CURRENT_PAGE":
           return { ...state, currentPage: action.payload };
         case "SET_TOTAL_PAGE":
           return { ...state, totalPage: action.payload };
+        case "SET_SHOP":
+          return { ...state, shop: action.payload };
         case "SET_FILTER":
           return {
             ...state,
@@ -34,6 +40,7 @@ const SearchPage = () => {
       }
     },
     {
+      loading: false,
       listProductByCategory: [],
       currentPage: 1,
       totalPage: 0,
@@ -46,9 +53,17 @@ const SearchPage = () => {
         },
         ratingFilter: null,
       },
+      shop: null,
     }
   );
-  const { listProductByCategory, currentPage, totalPage, filter } = state;
+  const {
+    listProductByCategory,
+    currentPage,
+    totalPage,
+    filter,
+    shop,
+    loading,
+  } = state;
   //side effect
   useEffect(() => {
     const fetchProductByCategory = async () => {
@@ -65,12 +80,11 @@ const SearchPage = () => {
       `;
       try {
         const response = await axios.get(url);
-        console.log(url);
+        dispatch({ type: "SET_LOADING", payload: true });
         if (response.status === 200) {
-          console.log(
-            "Dữ liệu product theo category: ",
-            response.data.products
-          );
+          if (response.data.shop !== null) {
+            dispatch({ type: "SET_SHOP", payload: response.data.shop });
+          }
           dispatch({
             type: "FETCH_PRODUCT_BY_CATEGORY",
             payload: response.data.products,
@@ -81,6 +95,7 @@ const SearchPage = () => {
             payload: response.data.totalPages,
           });
         }
+        dispatch({ type: "SET_LOADING", payload: false });
       } catch (error) {
         console.log("Lỗi khi fetch dữ liệu product theo category: ", error);
       }
@@ -105,6 +120,32 @@ const SearchPage = () => {
       </div>
       <div className="col-span-10">
         <section className="">
+          {shop && (
+            <>
+              <div className="my-4 flex justify-between items-center text-slate-500 text-lg">
+                <span className="">
+                  SHOP LIÊN QUAN ĐẾN
+                  <span className="text-primary">"{keyword}"</span>
+                </span>
+                <a
+                  href={`/search_shop?keyword=${keyword}`}
+                  className="text-base text-primary"
+                >
+                  Thêm Kết Quả <RightOutlined size={16} />
+                </a>
+              </div>
+              <div className="w-full bg-white">
+                <Suspense
+                  fallback={
+                    <Skeleton className="p-5" avatar paragraph={{ rows: 1 }} />
+                  }
+                >
+                  <ShopCard value={shop} />
+                </Suspense>
+              </div>
+            </>
+          )}
+
           <div className="my-4 flex gap-3 items-center text-base text-slate-500">
             <FaRegLightbulb />
             <span>
@@ -118,6 +159,7 @@ const SearchPage = () => {
               listProductByCategory={listProductByCategory}
               currentPage={currentPage}
               totalPage={totalPage}
+              loading={loading}
               filter={filter}
               onPageChange={(page) =>
                 dispatch({ type: "SET_CURRENT_PAGE", payload: page })

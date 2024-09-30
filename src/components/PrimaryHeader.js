@@ -203,7 +203,7 @@ const PrimaryHeader = () => {
                 >
                   {search && (
                     <a
-                      href={`/search-shop?keyword=${search}`}
+                      href={`/search_shop?keyword=${search}`}
                       className="flex gap-2"
                     >
                       <AiTwotoneShop className="text-primary" size={20} /> Tìm
