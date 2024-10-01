@@ -137,7 +137,7 @@ export const BasicInformation = () => {
                 });
                 if (res.data && Array.isArray(res.data.data)) {
                     setCategories(res.data.data);
-                    console.log("data", categories);
+                    console.log("data", res.data.data);
                 } else {
                     console.error("API response is not an array:", res.data);
                 }

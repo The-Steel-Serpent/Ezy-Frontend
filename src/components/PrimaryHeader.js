@@ -18,7 +18,7 @@ import { IoMdNotificationsOutline } from "react-icons/io";
 import { AiOutlineQuestionCircle } from "react-icons/ai";
 import { FaAngleDown } from "react-icons/fa6";
 import { TfiWorld } from "react-icons/tfi";
-import WhitePhoto from "../assets/image (1) (2).png";
+import WhitePhoto from "../assets/logo_ezy.png";
 import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
