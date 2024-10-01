@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import wallpaper from "../../assets/wallpaper-seller1.png"
-import { Alert, Button, Divider, Input, Modal } from "antd";
+import { Alert, Button, Divider, Input, Modal, message } from "antd";
 import { IoMdEye } from "react-icons/io";
 import { RiEyeCloseLine } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
@@ -101,7 +101,8 @@ const SellerLogin = () => {
     e.preventDefault();
     try {
       const user = await signInWithGoogle();
-      setSuccess('Successfully signed in with Google');
+      // setSuccess('Successfully signed in with Google');
+      message.success('Đăng nhập thành công');
       const user_id = user.uid;
       const email = user.email;
       const check = await checkEmail({ email });
@@ -147,8 +148,9 @@ const SellerLogin = () => {
       else {
         console.log("Đã có tài khoản");
       }
-      setSuccess('Successfully email password');
+      // setSuccess('Successfully email password');
       console.log("user:", user);
+      message.success('Đăng nhập thành công');
       navigate("/seller");
       setError(null);
     } catch (error) {

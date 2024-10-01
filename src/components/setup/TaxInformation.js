@@ -1,16 +1,21 @@
 import { Button, Col, Row } from 'antd'
 import React from 'react'
+import { useLocation } from 'react-router-dom'
 
 const TaxInformation = () => {
+  const location = useLocation();
+  const isSellerSetupPath = location.pathname === '/seller/seller-setup';
   return (
     <div>
       <div className='flex justify-between'>
         <h3 className='text-lg font-semibold'>Thông tin thuế</h3>
-        <div className='flex gap-2'>
-          <Button>
-            Chỉnh sửa
-          </Button>
-        </div>
+        {!isSellerSetupPath && (
+          <div className='flex gap-2'>
+            <Button>
+              Chỉnh sửa
+            </Button>
+          </div>
+        )}
       </div>
       <div className='mt-5 ml-10 mb-20'>
         <Row gutter={12}>

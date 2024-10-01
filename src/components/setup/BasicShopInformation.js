@@ -60,14 +60,17 @@ const BasicShopInformation = () => {
         <div>
             <div className='flex justify-between'>
                 <h3 className='text-lg font-semibold'>Thông tin cơ bản</h3>
-                <div className='flex gap-2'>
-                    <Button>
-                        Xem Shop của tôi
-                    </Button>
-                    <Button>
-                        Chỉnh sửa
-                    </Button>
-                </div>
+                {!isSellerSetupPath && (
+                    <div className='flex gap-2'>
+                        <Button>
+                            Xem Shop của tôi
+                        </Button>
+                        <Button>
+                            Chỉnh sửa
+                        </Button>
+                    </div>
+                )}
+               
             </div>
             <div className='mt-8 ml-10'>
                 <Row gutter={12}>
