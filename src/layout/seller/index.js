@@ -3,12 +3,14 @@ import logo from '../../assets/image (1) (2).png'
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { GoBook } from "react-icons/go";
 import { VscBell } from "react-icons/vsc";
-import { Divider, Menu, Button, theme, Layout, Dropdown, Space } from 'antd';
+import { Divider, Menu, Button, theme, Layout, Dropdown, Space, message } from 'antd';
 import { TfiWallet } from "react-icons/tfi";
 import { BsShopWindow } from "react-icons/bs";
 import { FaUserCircle } from "react-icons/fa";
 import { authFirebase } from '../../firebase/firebase';
-
+import { CiShop } from "react-icons/ci";
+import { SlLogout } from "react-icons/sl"; 
+import { AiOutlineProfile } from "react-icons/ai";
 import "../../styles/seller.css"
 
 import {
@@ -19,7 +21,7 @@ import {
     DownOutlined
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 
 const { Header, Content, Sider } = Layout;
@@ -97,19 +99,19 @@ const items = [
 
 const items_info = [
     {
-        key: 'info1',
+        key: 'profile_shop',
         label: 'Hồ sơ Shop',
-        icon: <MailOutlined />,
+        icon: <AiOutlineProfile size={20} className='mr-3' />,
     },
     {
-        key: 'info2',
+        key: 'setting_shop',
         label: 'Thiết lập Shop',
-        icon: <AppstoreOutlined />,
+        icon: <CiShop size={20} className='mr-3' />,
     },
     {
-        key: 'info3',
+        key: 'logout',
         label: 'Đăng xuất',
-        icon: <AppstoreOutlined />,
+        icon: <SlLogout size={18} className='mr-3' />,
     }
 ];
 const SellerAuthLayout = ({ children }) => {
@@ -117,9 +119,7 @@ const SellerAuthLayout = ({ children }) => {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
     const location = useLocation();
-
-    const [userInfor, setUserInfor ] = useState(null);
-
+    const [user, setUser] = useState(null);
     const navigate = useNavigate();
 
     const handleNavigate = (e) => {
@@ -128,6 +128,27 @@ const SellerAuthLayout = ({ children }) => {
         if (e.key)
             navigate(e.key)
     };
+
+
+
+    const handleLogout = () => {
+        signOut(authFirebase)
+        .then(() => {
+            setUser(null);
+            message.success("Đăng xuất thành công");
+        })
+        .catch((error) => {
+            message.error('Error signing out:',error)
+        })
+    }
+
+    const handleDropDownProfileClick = (e) => {
+        console.log("key", e.key);
+        if (e.key == 'logout')
+            handleLogout();
+    }
+
+
     const [collapsed, setCollapsed] = useState(false);
     const {
         token: { colorBgContainer, borderRadiusLG },
@@ -147,16 +168,23 @@ const SellerAuthLayout = ({ children }) => {
 
     useEffect(() => {
         setCollapsed(false)
-        // console.log(windowWidth)
     }, [windowWidth])
 
-    const isSellerSetupPath = location.pathname === '/seller/seller-setup';
-
     useEffect(() => {
-        console.log(authFirebase);
-    },[]);
+        const unsubscribe = onAuthStateChanged(authFirebase, (currentUser) => {
+            if (currentUser) {
+                setUser(currentUser);
+                console.log(currentUser);
+            } else {
+                setUser(null);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
-    
+    const isSellerSetupPath = location.pathname === '/seller/seller-setup';
+    const isSellerSetupOnBoardingPath = location.pathname === '/seller/seller-setup-onboarding';
+
     return (
         <>
             <Layout>
@@ -193,14 +221,18 @@ const SellerAuthLayout = ({ children }) => {
                         <Divider type="vertical" variant="dotted" style={{ height: 30 }} />
                         <div className='flex h-full items-center text-slate-600 gap-3 hover:bg-[#8ad3e5] py-4 px-3'>
                             <Dropdown
-                                menu={{
-                                    items: items_info,
-                                }}
+                                menu={
+                                    {
+                                        items: items_info,
+                                        onClick: handleDropDownProfileClick
+                                    }
+                                }
+
                             >
                                 <a onClick={(e) => e.preventDefault()}>
                                     <Space className='bg-transparent'>
-                                        <FaUserCircle size={20} className='text-white'/>
-                                        <span className='text-white text-[15px]'></span>
+                                        <FaUserCircle size={20} className='text-white' />
+                                        <span className='text-white text-[15px]'>{user ? user.email.split("@gmail.com") : "dit me m"}</span>
                                         <DownOutlined size={20} className='text-white' />
                                     </Space>
                                 </a>
@@ -209,7 +241,7 @@ const SellerAuthLayout = ({ children }) => {
                     </div>
                 </header>
                 <Layout className='h-full'>
-                    {!isSellerSetupPath && (
+                    {!isSellerSetupPath && !isSellerSetupOnBoardingPath && (
                         <Sider trigger={null} collapsible collapsed={collapsed} className='bg-white w-fit h-full shadow-xl sticky-sider'>
                             <div className="demo-logo-vertical" />
                             <Menu

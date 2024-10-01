@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Divider } from "antd";
+import { Alert, Divider, message } from "antd";
 import { FcGoogle } from "react-icons/fc";
 import { BsShop } from "react-icons/bs";
 import { HiOutlineGift } from "react-icons/hi2";
@@ -63,7 +63,8 @@ const SellerRegister = () => {
     e.preventDefault();
     try {
       const user = await signInWithGoogle();
-      setSuccess('Successfully signed in with Google');
+      // setSuccess('Successfully signed in with Google');
+      message.success('Đăng nhập thành công');
       const user_id = user.uid;
       const email = user.email;
       const check = await checkEmail({ email });
