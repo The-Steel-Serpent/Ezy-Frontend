@@ -9,7 +9,7 @@ const ShopInformationSection = ({ value }) => {
   return (
     <div className="w-full pt-5 px-[25px] pb-[25px] items-center flex  overflow-visible">
       <div className="gap-4 justify-center items-center border-r-[1px] border-solid border-slate-300 flex max-w-[440px] pr-[25px]">
-        <a href="#">
+        <a href={`/shop/${value?.UserAccount?.username}`}>
           <img className="rounded-full size-20" src={value?.logo_url} />
         </a>
         <div className="flex flex-col gap-2">
@@ -21,6 +21,9 @@ const ShopInformationSection = ({ value }) => {
             <Button
               className="h-10 text-base border-slate-300 text-slate-800 hover:bg-slate-50 opacity-95"
               icon={<BsShop />}
+              onClick={() => {
+                window.location.href = `/shop/${value?.UserAccount?.username}`;
+              }}
             >
               Xem Shop
             </Button>
