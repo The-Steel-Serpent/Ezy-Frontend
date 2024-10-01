@@ -33,6 +33,7 @@ const ShopSearchPage = () => {
     }
   );
   const { currentPage, listShop, totalPage, loading } = state;
+  const arrayListShop = listShop?.length > 0 ? listShop : [];
   useEffect(() => {
     const fetchShops = async () => {
       try {
@@ -40,7 +41,7 @@ const ShopSearchPage = () => {
         const url = `${process.env.REACT_APP_BACKEND_URL}/api/search-shop?keyword=${keyword}&page=${currentPage}`;
         const res = await axios.get(url);
         if (res.data.success) {
-          dispatch({ type: "SET_LIST_SHOP", payload: res.data.shops.rows });
+          dispatch({ type: "SET_LIST_SHOP", payload: res.data.shops });
           dispatch({ type: "SET_TOTAL_PAGE", payload: res.data.totalPages });
         }
         dispatch({ type: "SET_LOADING", payload: false });
@@ -59,8 +60,8 @@ const ShopSearchPage = () => {
       <div className="flex flex-col gap-3 mt-7">
         {loading ? (
           <Spin />
-        ) : listShop.length > 0 ? (
-          listShop.map((shop) => {
+        ) : arrayListShop.length > 0 ? (
+          arrayListShop.map((shop) => {
             return <ShopCard value={shop} />;
           })
         ) : (
@@ -69,7 +70,7 @@ const ShopSearchPage = () => {
             <span>Không tìm thấy shop nào</span>
           </div>
         )}
-        {listShop.length > 0 && (
+        {arrayListShop.length > 0 && (
           <Pagination
             className="mt-5"
             align="center"
