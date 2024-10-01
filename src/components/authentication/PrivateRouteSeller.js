@@ -42,7 +42,7 @@ const PrivateRouteSeller = ({ children }) => {
                     console.log("Setup status:",res.data.user.setup);
                     if(res.data.user.setup === 0)
                     {
-                        navigate('/seller/seller-setup-onboarding');
+                        navigate('/seller/seller-setup');
                     }
                 } catch (error) {
                     console.log("Error check setup:", error);

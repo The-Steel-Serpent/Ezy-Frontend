@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import logo from '../../assets/onboarding-setup.png'
 import { Button } from 'antd'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +8,8 @@ const SetUpOnboarding = () => {
     const handleStart = () => {
         navigate('/seller/seller-setup');
     }
+
+    
     return (
         <div className='mx-auto w-[80%] h-[500px] bg-white pt-[35px] flex flex-col gap-3'>
             <img

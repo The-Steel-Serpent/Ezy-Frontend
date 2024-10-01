@@ -1,7 +1,8 @@
-import { Button, Col, Row, Flex, message, Upload } from 'antd';
-import React, { useState } from 'react'
+import { Button, Col, Row, message, Upload, Input, Select, Table, Modal } from 'antd';
+import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { LoadingOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
+import axios from 'axios';
 
 const getBase64 = (img, callback) => {
     const reader = new FileReader();
@@ -19,11 +20,28 @@ const beforeUpload = (file) => {
     }
     return isJpgOrPng && isLt2M;
 };
+
+
 const BasicShopInformation = () => {
     const location = useLocation();
     const isSellerSetupPath = location.pathname === '/seller/seller-setup';
     const [loading, setLoading] = useState(false);
     const [imageUrl, setImageUrl] = useState();
+    const [district, setDistrict] = useState([]);
+    const [ward, setWard] = useState([]);
+    const [provinces, setProvinces] = useState([]);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isRowClicked, setIsRowClicked] = useState(false);
+
+    const handleOK = () => {
+        setIsModalVisible(false);
+        setIsSubmitted(true);
+    }
+
+    const handleCancel = () => {
+        setIsModalVisible(false);
+    }
 
     const handleChange = (info) => {
         if (info.file.status === 'uploading') {
@@ -56,6 +74,57 @@ const BasicShopInformation = () => {
             </div>
         </button>
     );
+
+    useEffect(() => {
+        const URL = 'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province';
+        const getProvinces = async () => {
+            try {
+                const res = await axios({
+                    method: "GET",
+                    url: URL,
+                    headers: {
+                        'token': `${process.env.REACT_APP_GHV_KEY_TOKEN}`
+                    }
+                });
+                if (res.status === 200) {
+                    console.log("Oke em oi", res.data.data);
+                    setProvinces(res.data.data);
+                }
+                else
+                    console.log("Error");
+            } catch (error) {
+                console.log("Error fetch provinces:", error);
+            }
+        }
+        getProvinces();
+    }, []);
+
+
+    const provinceColumns = [
+        {
+            title: 'ProvinceName',
+            dataIndex: 'ProvinceName',
+            key: 'ProvinceID',
+            
+        }
+    ];
+
+    const districtColumns = [
+        {
+            title: 'DistrictName',
+            dataIndex: 'DistrictName',
+            key: 'DistrictID',
+
+        }
+    ];
+
+    const wardColumns = [
+        {
+            title: 'WardName',
+            dataIndex: 'WardName',
+            key: 'WardID',
+        }
+    ];
     return (
         <div>
             <div className='flex justify-between'>
@@ -70,16 +139,20 @@ const BasicShopInformation = () => {
                         </Button>
                     </div>
                 )}
-               
+
             </div>
-            <div className='mt-8 ml-10'>
-                <Row gutter={12}>
-                    <Col span={3} className='flex justify-end font-semibold'>Tên Shop</Col>
-                    <Col span={21}>boquangdieu2003</Col>
+            <div className='mt-3 ml-10'>
+                <Row gutter={12} className='flex items-center'>
+                    <Col span={4} className='flex justify-end font-semibold'>
+                        Tên Shop
+                    </Col>
+                    <Col span={20}>
+                        <Input placeholder='Nhập vào' className='w-72' />
+                    </Col>
                 </Row>
                 <Row gutter={12} className='flex items-center mt-10'>
-                    <Col span={3} className='flex justify-end font-semibold'>Logo của Shop</Col>
-                    <Col span={21}>
+                    <Col span={4} className='flex justify-end font-semibold'>Logo của Shop</Col>
+                    <Col span={20}>
                         <Upload
                             name="avatar"
                             listType="picture-circle"
@@ -103,11 +176,76 @@ const BasicShopInformation = () => {
                         </Upload>
                     </Col>
                 </Row>
-                <Row gutter={12} className='mt-10'>
-                    <Col span={3} className='flex justify-end font-semibold'>Mô tả Shop</Col>
-                    <Col span={21}>boquangdieu2003</Col>
+                <Row gutter={12} className='mt-10 flex items-center'>
+                    <Col span={4} className='flex justify-end font-semibold'>Mô tả Shop</Col>
+                    <Col span={20}>boquangdieu2003</Col>
+                </Row>
+                <Row gutter={12} className='mt-10 flex items-center'>
+                    <Col span={4} className='flex justify-end font-semibold'>Họ và tên</Col>
+                    <Col span={20}>
+                        <Input placeholder='Nhập vào' className='w-72' />
+                    </Col>
+                </Row>
+                <Row gutter={12} className='mt-10 flex items-center'>
+                    <Col span={4} className='flex justify-end font-semibold'>CCCD/CMND</Col>
+                    <Col span={20}>
+                        <Input placeholder='Nhập vào' className='w-72' />
+                    </Col>
+                </Row>
+                <Row gutter={12} className='mt-10 flex items-center'>
+                    <Col span={4} className='flex justify-end font-semibold'>Địa chỉ</Col>
+                    <Col span={20}>
+                        <Button
+                            onClick={(e) => setIsModalVisible(true)}
+                        >+ Thêm</Button>
+                    </Col>
                 </Row>
             </div>
+
+            <Modal
+                title="Thêm địa chỉ mới"
+                visible={isModalVisible}
+                onOk={handleOK}
+                onCancel={handleCancel}
+                footer={[
+                    <Button key="cancel" onClick={handleCancel}>Cancel</Button>,
+                    <Button disabled={!isRowClicked} key="confirm" type="primary" onClick={handleOK}>Confirm</Button>
+
+                ]}
+            >
+                <div className='flex h-72 overflow-hidden'>
+                    <Table
+                        columns={provinceColumns}
+                        dataSource={provinces}
+                        pagination={false}
+                        rowKey="province_id"
+                        showHeader={false}
+                        className='w-[50%] overflow-y-auto custom-scrollbar'
+
+                    />
+                    <Table
+                        // columns={subCategoryColumns}
+                        // dataSource={subCategories}
+                        pagination={false}
+                        rowKey="sub_category_id"
+                        showHeader={false}
+                        className='w-[50%] overflow-y-auto custom-scrollbar'
+
+                    />
+                    <Table
+                        // columns={subCategoryColumns}
+                        // dataSource={subCategories}
+                        pagination={false}
+                        rowKey="sub_category_id"
+                        showHeader={false}
+                        className='w-[50%] overflow-y-auto custom-scrollbar'
+
+                    />
+                </div>
+                {/* <div className='mt-4'>
+                    <p>Đã chọn: {selectedCategoryPath}</p>
+                </div> */}
+            </Modal>
         </div>
     )
 }
