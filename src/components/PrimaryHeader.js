@@ -23,11 +23,12 @@ import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
-import { Input, Skeleton } from "antd";
+import { Button, Dropdown, Input, Skeleton, Space, Typography } from "antd";
 import { AiTwotoneShop } from "react-icons/ai";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { el } from "date-fns/locale";
+import { DownOutlined } from "@ant-design/icons";
 
 // import FullLogo from "./FullLogo";
 const ChatBox = lazy(() => import("./chatbox/ChatBox"));
@@ -57,7 +58,44 @@ const PrimaryHeader = () => {
     }
   );
   const { search, searchItem, isFocused } = state;
-
+  const items = [
+    {
+      key: "1",
+      label: (
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://www.antgroup.com"
+        >
+          1st menu item
+        </a>
+      ),
+    },
+    {
+      key: "2",
+      label: (
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://www.aliyun.com"
+        >
+          2nd menu item
+        </a>
+      ),
+    },
+    {
+      key: "3",
+      label: (
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://www.luohanacademy.com"
+        >
+          3rd menu item
+        </a>
+      ),
+    },
+  ];
   //Side Effect
   useEffect(() => {
     const fetchSuggestProductName = async () => {
@@ -180,7 +218,7 @@ const PrimaryHeader = () => {
               <div className="w-full relative">
                 <Input
                   type="text"
-                  className="p-2  text-sm rounded focus:after:border lg:mr-1 lg:ml-0 ml-1 text-ellipsis line-clamp-1"
+                  className="p-2 border-none border-r-2  text-sm rounded  focus:after:border lg:mr-1 lg:ml-0 ml-1 text-ellipsis line-clamp-1"
                   placeholder="Bạn muốn tìm gì đó có Ezy lo..."
                   value={search}
                   onChange={(e) => handleOnSearch(e)}
@@ -223,7 +261,23 @@ const PrimaryHeader = () => {
                     })}
                 </div>
               </div>
+              <Dropdown
+                menu={{
+                  items,
+                  selectable: true,
+                  defaultSelectedKeys: ["3"],
+                }}
+              >
+                <Typography.Link className="flex items-center px-2 border-l-2">
+                  <div className="flex  gap-3 text-slate-500">
+                    <span className="line-clamp-1 text-ellipsis w-[90px]">
+                      Trong Shopee
+                    </span>
 
+                    <DownOutlined className="text-slate-700" />
+                  </div>
+                </Typography.Link>
+              </Dropdown>
               <button
                 onSubmit={handleOnSubmitSearch}
                 className="lg:bg-custom-gradient lg:text-white w-16 rounded flex justify-center items-center text-slate-400"
