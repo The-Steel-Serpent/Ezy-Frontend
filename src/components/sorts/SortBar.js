@@ -1,5 +1,5 @@
 import { DownOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Pagination, Space, Typography } from "antd";
+import { Button, Dropdown, Pagination, Space, Spin, Typography } from "antd";
 import React, { lazy, useCallback, useState } from "react";
 import withChildSuspense from "../../hooks/HOC/withChildSuspense";
 import { useParams } from "react-router-dom";
@@ -17,6 +17,7 @@ const Sorts = (props) => {
     onPageChange,
     onFilterChange,
     filter,
+    loading,
   } = props;
   const sortItems = [
     {
@@ -110,16 +111,22 @@ const Sorts = (props) => {
         />
       </div>
       <div className="w-full">
-        {listProductByCategory?.length > 0 ? (
-          <ProductsWithPanigation
-            list={listProductByCategory}
-            currentPage={currentPage}
-            itemsPerRow={5}
-            totalPage={totalPage}
-            onPageChange={onPageChange}
-          />
+        {loading ? (
+          <Spin className="mt-2" />
         ) : (
-          <ProductNotFounded />
+          <>
+            {listProductByCategory?.length > 0 ? (
+              <ProductsWithPanigation
+                list={listProductByCategory}
+                currentPage={currentPage}
+                itemsPerRow={5}
+                totalPage={totalPage}
+                onPageChange={onPageChange}
+              />
+            ) : (
+              <ProductNotFounded />
+            )}
+          </>
         )}
       </div>
     </>

@@ -7,6 +7,7 @@ import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
+import SetUpOnboarding from "../pages/seller/SetUpOnboarding";
 
 const AuthLayout = withSuspenseNonFallback(lazy(() => import("../layout")));
 const Categories = withSuspense(
@@ -47,6 +48,10 @@ const AdminDashboard = withSuspense(
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
+
+const SellerSetup = withSuspense(
+  lazy(() => import("../pages/seller/SellerSetup"))
+);
 const SuggestProduct = withSuspense(
   lazy(() => import("../pages/buyer/product-pages/SuggestProduct"))
 );
@@ -62,7 +67,19 @@ const AllProduct = withSuspense(
 const AddProduct = withSuspense(
   lazy(() => import("../pages/seller/product_management/AddProduct"))
 );
+const SearchPage = withSuspense(
+  lazy(() => import("../pages/buyer/product-pages/SearchPage"))
+);
+const SearchShop = withSuspense(
+  lazy(() => import("../pages/buyer/shop-pages/ShopSearchPage"))
+);
 
+const ShopDetails = withSuspense(
+  lazy(() => import("../pages/buyer/shop-pages/ShopDetails"))
+);
+const ShopRecommendations = withSuspense(
+  lazy(() => import("../pages/buyer/shop-pages/ShopRecommendations"))
+);
 const router = createBrowserRouter([
   {
     path: "/",
@@ -120,6 +137,39 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
+      {
+        path: "/search",
+        element: (
+          <AuthLayout>
+            <SearchPage />
+          </AuthLayout>
+        ),
+      },
+      // Shops
+      {
+        path: "/search_shop",
+        element: (
+          <AuthLayout>
+            <SearchShop />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "/shop/:shop_username",
+        element: (
+          <AuthLayout>
+            <ShopDetails />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "/shop/shop_recommendations/:shop_id",
+        element: (
+          <AuthLayout>
+            <ShopRecommendations />
+          </AuthLayout>
+        ),
+      },
 
       //Seller
       //login && register
@@ -129,6 +179,26 @@ const router = createBrowserRouter([
           <PrivateRouteSeller>
             <SellerAuthLayout>
               <SellerHome />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
+        ),
+      },
+      {
+        path: "seller/seller-setup-onboarding",
+        element: (
+          <PrivateRouteSeller>
+            <SellerAuthLayout>
+              <SetUpOnboarding />
+            </SellerAuthLayout>
+          </PrivateRouteSeller>
+        ),
+      },
+      {
+        path: "seller/seller-setup",
+        element: (
+          <PrivateRouteSeller>
+            <SellerAuthLayout>
+              <SellerSetup />
             </SellerAuthLayout>
           </PrivateRouteSeller>
         ),
@@ -168,7 +238,6 @@ const router = createBrowserRouter([
               <OrderCancelled />
             </SellerAuthLayout>
           </PrivateRouteSeller>
-
         ),
       },
       //seller/order
@@ -185,17 +254,17 @@ const router = createBrowserRouter([
       {
         path: "seller/product-management/working-products",
         element: (
-          <PrivateRouteSeller >
+          <PrivateRouteSeller>
             <SellerAuthLayout>
               <WorkingProducts />
             </SellerAuthLayout>
-          </PrivateRouteSeller >
+          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/infringing-products",
         element: (
-          <PrivateRouteSeller >
+          <PrivateRouteSeller>
             <SellerAuthLayout>
               <InfringingProduct />
             </SellerAuthLayout>
@@ -205,7 +274,7 @@ const router = createBrowserRouter([
       {
         path: "seller/product-management/pending-products",
         element: (
-          <PrivateRouteSeller >
+          <PrivateRouteSeller>
             <SellerAuthLayout>
               <PendingProducts />
             </SellerAuthLayout>
@@ -215,11 +284,11 @@ const router = createBrowserRouter([
       {
         path: "seller/product-management/add-product",
         element: (
-          <PrivateRouteSeller >
+          <PrivateRouteSeller>
             <SellerAuthLayout>
               <AddProduct />
             </SellerAuthLayout>
-          </PrivateRouteSeller >
+          </PrivateRouteSeller>
         ),
       },
       //Admin

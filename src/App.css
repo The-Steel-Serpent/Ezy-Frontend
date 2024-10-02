@@ -283,3 +283,46 @@
 .ant-pagination .ant-pagination-item-active:hover a {
   @apply text-white;
 }
+.ant-menu-light.ant-menu-horizontal > .ant-menu-item-selected::after,
+:where(.css-dev-only-do-not-override-5wsri9).ant-menu-light
+  > .ant-menu.ant-menu-horizontal
+  > .ant-menu-item-selected::after,
+:where(.css-dev-only-do-not-override-5wsri9).ant-menu-light.ant-menu-horizontal
+  > .ant-menu-submenu-selected::after,
+:where(.css-dev-only-do-not-override-5wsri9).ant-menu-light
+  > .ant-menu.ant-menu-horizontal
+  > .ant-menu-submenu-selected::after {
+  border-bottom-width: 2px;
+  @apply border-primary;
+}
+.ant-carousel .slick-dots li.slick-active button {
+  @apply bg-primary;
+  opacity: 1;
+}
+.ant-carousel .slick-dots li button {
+  background-color: rgb(0 0 0 / 26%);
+  opacity: 1;
+}
+.shop-carousel .ant-carousel .slick-next {
+  @apply w-[2.1875rem] h-[3.75rem] text-white  opacity-100;
+  background-color: rgb(0 0 0 / 26%);
+}
+
+.shop-carousel .ant-carousel .slick-prev {
+  @apply w-[2.1875rem] h-[3.75rem]  text-white opacity-100;
+  background-color: rgb(0 0 0 / 26%);
+  opacity: 1;
+}
+.shop-carousel .ant-carousel .slick-next:hover {
+  background-color: rgba(0, 0, 0, 0.527);
+}
+.shop-carousel .ant-carousel .slick-prev:hover {
+  background-color: rgba(0, 0, 0, 0.527);
+}
+.shop-carousel .ant-carousel .slick-next::after {
+  @apply size-5 top-[35%];
+}
+.shop-carousel .ant-carousel .slick-prev::after {
+  @apply size-5 top-[35%];
+  inset-inline-start: 12px;
+}
