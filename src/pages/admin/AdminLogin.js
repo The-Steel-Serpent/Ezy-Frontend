@@ -60,19 +60,6 @@ const AdminLogin = () => {
           <Divider>
             <span className="text-slate-400 text-xs">HOẶC</span>
           </Divider>
-          <div className="w-full flex justify-between">
-            <button className="border rounded p-2 w-[180px] hover:bg-slate-100">
-              <span className="flex gap-1 justify-center items-center">
-                <FaFacebook size={23} className="text-[#1877f2]" /> Facebook
-              </span>
-            </button>
-            <button className="border rounded p-2 w-[180px] hover:bg-slate-100">
-              <span className="flex gap-1 justify-center items-center">
-                <FcGoogle size={23} /> Google
-              </span>
-            </button>
-          </div>
-
         </form>
       </div>
     </div>
