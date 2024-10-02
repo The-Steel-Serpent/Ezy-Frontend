@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect, useMemo, useReducer } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import backgroundShop from "../../../assets/backgroundShop.jpg";
 import axios from "axios";
 import { BiChat, BiListPlus } from "react-icons/bi";
@@ -11,16 +11,32 @@ import { FaUserAstronaut } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { MdOutlineDescription } from "react-icons/md";
-import { RightOutlined } from "@ant-design/icons";
+import { CaretRightFilled, RightOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
 import { TfiMenuAlt } from "react-icons/tfi";
+
 const SortBar = lazy(() => import("../../../components/sorts/SortBar"));
 
 const ShopDetails = () => {
+  const navigate = useNavigate();
+  const query = new URLSearchParams(window.location.search);
+  let sub_category_id = query.get("sub_category_id");
+  if (!sub_category_id) {
+    sub_category_id = "-1";
+  }
   const { shop_username } = useParams();
   const [state, dispatch] = useReducer(
     (state, action) => {
       switch (action.type) {
+        case "SET_LOADING":
+          return { ...state, loading: action.payload };
+        case "SET_IS_FETCHED_PRODUCT": {
+          return {
+            ...state,
+            isFetchedProduct: action.payload,
+          };
+        }
+
         case "FETCH_SHOP":
           return {
             ...state,
@@ -31,6 +47,29 @@ const ShopDetails = () => {
             ...state,
             subCategory: action.payload,
           };
+        case "FETCH_PRODUCT_BY_SUB_CATEGORY":
+          return {
+            ...state,
+            productBySub: action.payload,
+          };
+        case "SET_CURRENT_PAGE":
+          return {
+            ...state,
+            currentPage: action.payload,
+          };
+        case "SET_TOTAL_PAGE":
+          return {
+            ...state,
+            totalPage: action.payload,
+          };
+        case "SET_FILTER":
+          return {
+            ...state,
+            filter: {
+              ...state.filter,
+              ...action.payload,
+            },
+          };
         case "FETCH_SUGGEST_PRODUCT":
           return { ...state, suggestProduct: action.payload };
         default:
@@ -40,11 +79,29 @@ const ShopDetails = () => {
 
     {
       shop: null,
+      loading: false,
+      isFetchedProduct: false,
       subCategory: [],
+      currentPage: 1,
+      totalPage: 0,
       suggestProduct: [],
+      productBySub: [],
+      filter: {
+        sortBy: "pop",
+      },
     }
   );
-
+  const {
+    shop,
+    subCategory,
+    productBySub,
+    suggestProduct,
+    currentPage,
+    totalPage,
+    filter,
+    loading,
+    isFetchedProduct,
+  } = state;
   useEffect(() => {
     const fetchShop = async () => {
       try {
@@ -69,14 +126,69 @@ const ShopDetails = () => {
     };
     fetchShop();
   }, []);
+  useEffect(() => {
+    const fetchProductBySubCategory = async () => {
+      dispatch({ type: "SET_IS_FETCHED_PRODUCT", payload: false });
 
-  const { shop, subCategory, suggestProduct } = state;
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/product-by-sub-category/${sub_category_id}?pageNumbers=${state.currentPage}&sortBy=${state.filter.sortBy}`
+        );
+        if (res.data.success) {
+          console.log("res.data", res.data);
+          dispatch({
+            type: "FETCH_PRODUCT_BY_SUB_CATEGORY",
+            payload: res.data.products,
+          });
+          dispatch({
+            type: "SET_TOTAL_PAGE",
+            payload: res.data.totalPages,
+          });
+        }
+        dispatch({ type: "SET_IS_FETCHED_PRODUCT", payload: true });
+        localStorage.setItem("isFetchedProduct", "true");
+      } catch (error) {
+        console.log(
+          "Lỗi khi fetch dữ liệu sản phẩm theo sub category: ",
+          error
+        );
+        dispatch({ type: "SET_IS_FETCHED_PRODUCT", payload: true });
+        localStorage.setItem("isFetchedProduct", "true");
+      }
+    };
+    fetchProductBySubCategory();
+  }, [sub_category_id, currentPage, filter.sortBy]);
+
+  useEffect(() => {
+    const scrollToProductList = () => {
+      if (window.location.hash === "#productList") {
+        const element = document.getElementById("productList");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    };
+    const timeout = setTimeout(scrollToProductList, 200);
+
+    window.addEventListener("hashchange", scrollToProductList);
+    return () => {
+      window.removeEventListener("hashchange", scrollToProductList);
+      clearTimeout(timeout);
+    };
+  }, [isFetchedProduct]);
+  useEffect(() => {
+    const savedIsFetchedProduct = localStorage.getItem("isFetchedProduct");
+    if (savedIsFetchedProduct === "true") {
+      dispatch({ type: "SET_IS_FETCHED_PRODUCT", payload: true });
+    }
+  }, []);
+
   const menuItems = useMemo(
     () => [
       {
         key: "1",
         label: (
-          <a href="#" className="w-[200px] text-center">
+          <a href={`/shop/${shop_username}`} className="w-[200px] text-center">
             <span className="text-sm">Dạo</span>
           </a>
         ),
@@ -85,7 +197,10 @@ const ShopDetails = () => {
       {
         key: "2",
         label: (
-          <a href="#productList" className="w-[200px] text-center">
+          <a
+            href={`?sub_category_id=-1#productList`}
+            className="w-[200px] text-center"
+          >
             <span className="text-sm">TẤT CẢ SẢN PHẨM</span>
           </a>
         ),
@@ -94,7 +209,10 @@ const ShopDetails = () => {
         ? subCategory.map((items) => ({
             key: items.sub_category_id,
             label: (
-              <a href="#" className="w-[200px] text-center">
+              <a
+                href={`?sub_category_id=${items.sub_category_id}#productList`}
+                className="w-[200px] text-center"
+              >
                 <span className="text-sm">{items.sub_category_name}</span>
               </a>
             ),
@@ -204,39 +322,31 @@ const ShopDetails = () => {
           </section>
         )}
         {/**CarouselBanner*/}
-        {shop?.CustomizeShop != null && (
-          <section className="w-full  mt-10">
-            <Carousel arrows={true} infinite={false}>
-              {shop?.CustomizeShop?.img_carousel_1 && (
-                <div>
-                  <img
-                    className="h-full"
-                    src={shop?.CustomizeShop?.img_carousel_1}
-                  />
+        {shop?.CustomizeShops.length > 0 && (
+          <section className="w-full flex flex-col gap-4 mt-10">
+            {shop?.CustomizeShops?.map((banner) => {
+              return (
+                <div className="shop-carousel">
+                  <Carousel arrows={true} infinite={true}>
+                    {banner?.ImgCustomizeShops?.length > 0 &&
+                      banner?.ImgCustomizeShops?.map((img) => {
+                        return (
+                          <img
+                            className="w-[1200px] object-contain"
+                            src={img.img_url}
+                          />
+                        );
+                      })}
+                  </Carousel>
                 </div>
-              )}
-              {shop?.CustomizeShop?.img_carousel_2 && (
-                <div>
-                  <img
-                    className="h-full"
-                    src={shop?.CustomizeShop?.img_carousel_2}
-                  />
-                </div>
-              )}
-              {shop?.CustomizeShop?.img_carousel_3 && (
-                <div>
-                  <img
-                    className="h-full"
-                    src={shop?.CustomizeShop?.img_carousel_3}
-                  />
-                </div>
-              )}
-            </Carousel>
+              );
+            })}
           </section>
         )}
         {/**Sản phẩm*/}
-        <section id="productList" className="mt-10">
+        <section id="productList" className="my-10 max-h-[1200px]">
           <div className="grid grid-cols-12 w-full">
+            {/**Danh mục */}
             <div className="col-span-2">
               <div className="w-[90%] mb-2">
                 <div className=" text-lg text-black font-bold h-[3.125rem] flex justify-start items-center gap-3 mb-[0.625rem] border-b-slate-300 border-b-[1px] border-solid">
@@ -246,20 +356,56 @@ const ShopDetails = () => {
                 <ul
                   className={`flex flex-col gap-3 transition-all overflow-hidden duration-700`}
                 >
+                  <li
+                    onClick={() => navigate(`?sub_category_id=-1#productList`)}
+                    className={`${
+                      parseInt(sub_category_id) === -1
+                        ? "text-primary pl-1"
+                        : "hover:text-primary text-black pl-4 "
+                    }   cursor-pointer text-sm`}
+                  >
+                    {parseInt(sub_category_id) === -1 && <CaretRightFilled />}
+                    Sản phẩm
+                  </li>
                   {subCategory.map((item) => (
                     <li
-                      key={item.sub_category_id}
-                      className="text-slate-500 text-base"
+                      onClick={() =>
+                        navigate(
+                          `?sub_category_id=${item.sub_category_id}#productList`
+                        )
+                      }
+                      className={`${
+                        item.sub_category_id === parseInt(sub_category_id)
+                          ? "text-primary pl-1"
+                          : "hover:text-primary text-black pl-4"
+                      }   cursor-pointer text-sm`}
                     >
-                      <a href="#">{item.sub_category_name}</a>
+                      {item.sub_category_id === parseInt(sub_category_id) && (
+                        <CaretRightFilled />
+                      )}
+                      <span>{item.sub_category_name}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
+            {/**Sản phẩm */}
             <div className="col-span-10">
               <Suspense fallback={<div>Loading...</div>}>
-                <SortBar />
+                <SortBar
+                  listProductByCategory={productBySub}
+                  currentPage={currentPage}
+                  totalPage={totalPage}
+                  filter={filter}
+                  onPageChange={(page) =>
+                    dispatch({ type: "SET_CURRENT_PAGE", payload: page })
+                  }
+                  onFilterChange={(filter) => {
+                    dispatch({ type: "SET_FILTER", payload: filter });
+                    dispatch({ type: "SET_CURRENT_PAGE", payload: 1 });
+                    console.log("filter", filter);
+                  }}
+                />
               </Suspense>
             </div>
           </div>
