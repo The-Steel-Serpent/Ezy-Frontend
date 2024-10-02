@@ -1,6 +1,5 @@
 import { Flex, Menu } from 'antd'
 import React from 'react'
-import OrangeLogo from "../assets/logo-without-text.png";
 import { HomeOutlined, 
         OrderedListOutlined, 
         ProductOutlined, 
@@ -10,11 +9,7 @@ from '@ant-design/icons';
 const AdminSidebar = () => {
   return (
     <>
-        <Flex align='center' justify='center'>
-            <div className='logo'>
-                <img src={OrangeLogo} width={80} />
-            </div>
-        </Flex>
+        
         <Menu 
             mode='inline' 
             defaultSelectedKeys={['1']} 
@@ -28,22 +23,39 @@ const AdminSidebar = () => {
                 {
                     key: '2',
                     icon: <ProductOutlined />,
-                    label: 'Sản phẩm',
+                    label: 'Danh mục',
                     children: [
                         {
                             key: '2.1',
                             icon: <ProductOutlined />,
-                            label: 'option 1',
+                            label: 'Người dùng',
                         },
                         {
                             key: '2.2',
                             icon: <ProductOutlined />,
-                            label: 'option 2',
+                            label: 'Nhóm người dùng',
                         },
                         {
                             key: '2.3',
                             icon: <ProductOutlined />,
-                            label: 'option 3',
+                            label: 'Phân quyền',
+                        },
+                        {
+                            key: 'category',
+                            icon: <ProductOutlined />,
+                            label: 'Danh mục sản phẩm',
+                            children: [
+                                {
+                                    key: '2.4.1',
+                                    icon: <ProductOutlined />,
+                                    label: 'Danh mục chính',
+                                },
+                                {
+                                    key: '2.4.2',
+                                    icon: <ProductOutlined />, 
+                                    label: 'Danh mục phụ',
+                                },
+                            ],
                         },
                     ],
                 },
