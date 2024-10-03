@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text */
 import {
   Breadcrumb,
   Button,
@@ -27,6 +28,7 @@ import ProductCard from "../../../components/product/ProductCard";
 import ProductNotFounded from "../../../components/product/ProductNotFounded";
 import withChildSuspense from "../../../hooks/HOC/withChildSuspense";
 import { de } from "date-fns/locale";
+import { set } from "date-fns";
 
 const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
 const ReactImageGallery = lazy(() => import("react-image-gallery"));
@@ -52,7 +54,8 @@ const DetailsProduct = () => {
   const [avgRating, setAvgRating] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
-  // const [currentThumbnail, setCurrentThumbnail] = useState("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageUrl, setCurrentImageUrl] = useState(null);
   const [detailsProduct, setDetailsProduct] = useState({});
   const [reviews, setReviews] = useState([]);
   const [shopProducts, setShopProducts] = useState([]);
@@ -73,6 +76,7 @@ const DetailsProduct = () => {
             (classify) => classify.total_stock > 0
           );
           setSelectedClassify(firstClassify?.product_classify_id);
+          setCurrentImageUrl(firstClassify?.thumbnail);
         }
         setAvgRating(res.data.avgRating);
         setTotalReviews(res.data.totalReviews);
@@ -140,6 +144,14 @@ const DetailsProduct = () => {
     }
   }, [detailsProduct?.Shop?.shop_id]);
   //Handle
+  const handleMouseEnter = (thumbnail) => {
+    setCurrentImageUrl(thumbnail);
+  };
+
+  const handleSlide = (currentIndex) => {
+    setCurrentImageIndex(currentIndex);
+    setCurrentImageUrl(null);
+  };
 
   const handleSizeClick = useCallback(
     (size) => {
@@ -174,6 +186,14 @@ const DetailsProduct = () => {
       original: img?.url,
       thumbnail: img?.url,
     })) || [];
+
+  const updatedImgs = imgs.map((img, index) => ({
+    ...img,
+    original:
+      index === currentImageIndex && currentImageUrl
+        ? currentImageUrl
+        : img.original,
+  }));
 
   const price =
     currentVarient != null ? currentVarient?.price : detailsProduct?.base_price;
@@ -234,8 +254,10 @@ const DetailsProduct = () => {
               <Suspense fallback={<Skeleton.Image className="size-[470px]" />}>
                 <ReactImageGallery
                   lazyLoad={true}
-                  items={imgs}
+                  items={updatedImgs}
                   showThumbnails={true}
+                  onSlide={handleSlide}
+                  startIndex={currentImageIndex}
                 />
               </Suspense>
             </section>
@@ -324,12 +346,15 @@ const DetailsProduct = () => {
                         {detailsProduct?.ProductClassifies?.map(
                           (classify, key) => (
                             <button
-                              onClick={() =>
-                                classify?.total_stock > 0 &&
-                                handleClassifyClick(
-                                  classify?.product_classify_id
-                                )
-                              }
+                              onClick={() => {
+                                if (classify?.total_stock > 0) {
+                                  handleClassifyClick(
+                                    classify?.product_classify_id
+                                  );
+                                  classify?.thumbnail &&
+                                    handleMouseEnter(classify?.thumbnail);
+                                }
+                              }}
                               className={`
                                 ${
                                   classify?.total_stock > 0

@@ -210,6 +210,23 @@ const PrimaryHeader = () => {
     },
     [search, selectedDropdown]
   );
+  const placeholderText = useMemo(() => {
+    if (selectedDropdown?.key === "1") {
+      return "Bạn muốn tìm gì đó có Ezy lo...";
+    } else if ((catIdExists || cat_id) && !shopUsernameExists) {
+      return `Tìm trong ${currentCategory?.category_name}`;
+    } else if (shopUsernameExists) {
+      return "Tìm trong Shop này";
+    } else {
+      return "Tìm kiếm";
+    }
+  }, [
+    selectedDropdown,
+    catIdExists,
+    shopUsernameExists,
+    currentCategory,
+    cat_id,
+  ]);
 
   return (
     <>
@@ -295,7 +312,7 @@ const PrimaryHeader = () => {
                 <Input
                   type="text"
                   className="p-2 border-none border-r-2  text-sm rounded  focus:after:border lg:mr-1 lg:ml-0 ml-1 text-ellipsis line-clamp-1"
-                  placeholder="Bạn muốn tìm gì đó có Ezy lo..."
+                  placeholder={placeholderText}
                   value={search}
                   onChange={(e) => handleOnSearch(e)}
                   onFocus={() => {
