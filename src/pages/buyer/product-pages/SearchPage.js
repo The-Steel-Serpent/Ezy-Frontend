@@ -14,6 +14,16 @@ const SearchPage = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const keyword = queryParams.get("keyword");
+  const catIdExists =
+    queryParams.has("cat_id") && queryParams.get("cat_id") !== "";
+
+  const shopUsernameExists =
+    queryParams.has("shop_username") && queryParams.get("shop_username") !== "";
+
+  const catID = catIdExists ? queryParams.get("cat_id") : "";
+  const shopUsername = shopUsernameExists
+    ? queryParams.get("shop_username")
+    : "";
   const [state, dispatch] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -67,6 +77,7 @@ const SearchPage = () => {
   //side effect
   useEffect(() => {
     const fetchProductByCategory = async () => {
+      dispatch({ type: "SET_LOADING", payload: true });
       console.log("current page: ", currentPage);
       const url = `${
         process.env.REACT_APP_BACKEND_URL
@@ -76,12 +87,15 @@ const SearchPage = () => {
         filter.price.minPrice ? filter.price.minPrice : ""
       }&maxPrice=${
         filter.price.maxPrice ? filter.price.maxPrice : ""
-      }&ratingFilter=${filter.ratingFilter ? filter.ratingFilter : ""}
+      }&ratingFilter=${
+        filter.ratingFilter ? filter.ratingFilter : ""
+      }&cat_id=${catID}&shop_username=${shopUsername}
       `;
       try {
         const response = await axios.get(url);
-        dispatch({ type: "SET_LOADING", payload: true });
+
         if (response.status === 200) {
+          console.log("response.data", response.data);
           if (response.data.shop !== null) {
             dispatch({ type: "SET_SHOP", payload: response.data.shop });
           }
@@ -120,7 +134,7 @@ const SearchPage = () => {
       </div>
       <div className="col-span-10">
         <section className="">
-          {shop && (
+          {shop && !shopUsernameExists && (
             <>
               <div className="my-4 flex justify-between items-center text-slate-500 text-lg">
                 <span className="">

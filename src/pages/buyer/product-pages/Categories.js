@@ -51,6 +51,7 @@ const Categories = () => {
 
   useEffect(() => {
     const fetchProductByCategory = async () => {
+      dispatch({ type: "SET_LOADING", payload: true });
       console.log("current page: ", currentPage);
       const url = `${
         process.env.REACT_APP_BACKEND_URL
@@ -65,7 +66,7 @@ const Categories = () => {
       }`;
       try {
         const response = await axios.get(url);
-        dispatch({ type: "SET_LOADING", payload: true });
+
         if (response.status === 200) {
           console.log(
             "Dữ liệu product theo category: ",
@@ -84,6 +85,7 @@ const Categories = () => {
         dispatch({ type: "SET_LOADING", payload: false });
       } catch (error) {
         console.log("Lỗi khi fetch dữ liệu product theo category: ", error);
+        dispatch({ type: "SET_LOADING", payload: false });
       }
     };
     fetchProductByCategory();

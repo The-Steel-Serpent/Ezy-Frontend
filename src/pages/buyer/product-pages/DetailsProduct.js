@@ -684,7 +684,10 @@ const DetailsProduct = () => {
                   <span className="text-lg font-normal">
                     CÁC SẢN PHẨM KHÁC CỦA SHOP
                   </span>
-                  <a href="#" className="text-primary flex items-center gap-1">
+                  <a
+                    href={`/shop/${detailsProduct?.Shop?.UserAccount?.username}?sub_category_id=-1#productList`}
+                    className="text-primary flex items-center gap-1"
+                  >
                     Xem Tất Cả <MdArrowForwardIos size={16} />
                   </a>
                 </div>

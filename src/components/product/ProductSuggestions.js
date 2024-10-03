@@ -330,20 +330,26 @@ const Products = [
 const ProductCard = React.lazy(() => import("./ProductCard"));
 const ProductSuggestions = () => {
   const [suggestProducts, setSuggestProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products-limit`
         );
+        console.log(res.data);
         setSuggestProducts(res.data.data);
+        setLoading(false);
       } catch (error) {
         console.log(error);
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
+
   return (
     <div className="max-w-[1200px] m-auto ">
       <div className="grid grid-cols-12 place-items-center">
@@ -354,7 +360,7 @@ const ProductSuggestions = () => {
                 <Skeleton.Image className="lg:w-48 lg:h-[261px] mt-3 lg:col-span-2" />
               }
             >
-              <ProductCard value={value} key={key} />
+              <ProductCard loading={loading} value={value} key={key} />
             </Suspense>
           );
         })}

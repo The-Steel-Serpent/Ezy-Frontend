@@ -112,7 +112,7 @@ const Sorts = (props) => {
       </div>
       <div className="w-full">
         {loading ? (
-          <Spin className="mt-2" />
+          <Spin className="pt-40 flex justify-center items-center max-h-full" />
         ) : (
           <>
             {listProductByCategory?.length > 0 ? (

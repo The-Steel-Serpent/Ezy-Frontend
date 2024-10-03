@@ -10,7 +10,7 @@ function formatNumber(num) {
     return num.toString(); // Dưới 1000 không cần format
   }
 }
-const ProductCard = ({ value, key, itemsPerRow = 6 }) => {
+const ProductCard = ({ value, key, loading, itemsPerRow = 6 }) => {
   const price =
     value?.base_price - (value?.base_price * value?.sale_percents) / 100;
   return (
@@ -22,10 +22,9 @@ const ProductCard = ({ value, key, itemsPerRow = 6 }) => {
         } col-span-4  mt-3`}
       >
         <Card
-          key={key}
-          loading={false}
+          loading={loading}
           hoverable
-          cover={<img src={value.thumbnail} />}
+          cover={<img loading="lazy" src={value.thumbnail} />}
         >
           <Meta style={{ fontSize: 14 }} title={value?.product_name} />
           <div className="flex lg:flex-row flex-col w-100 items-start lg:items-center mt-4 text-ellipsis text-nowrap line-clamp-1">
