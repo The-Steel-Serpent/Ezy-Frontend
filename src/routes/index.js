@@ -7,7 +7,6 @@ import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
-import SetUpOnboarding from "../pages/seller/SetUpOnboarding";
 
 const AuthLayout = withSuspenseNonFallback(lazy(() => import("../layout")));
 const Categories = withSuspense(
@@ -179,16 +178,6 @@ const router = createBrowserRouter([
           <PrivateRouteSeller>
             <SellerAuthLayout>
               <SellerHome />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
-        ),
-      },
-      {
-        path: "seller/seller-setup-onboarding",
-        element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <SetUpOnboarding />
             </SellerAuthLayout>
           </PrivateRouteSeller>
         ),
