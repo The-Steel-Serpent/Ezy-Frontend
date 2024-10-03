@@ -1,8 +1,9 @@
 import { Button, Col, Row, message, Upload, Input, Select, Table, Modal } from 'antd';
 import React, { useEffect, useReducer, useState } from 'react'
 import { useLocation } from 'react-router-dom';
-import {  PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import AddressModal from '../address/AddressModal';
 
 const beforeUpload = (file) => {
     const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
@@ -16,92 +17,95 @@ const beforeUpload = (file) => {
     return isJpgOrPng && isLt2M;
 };
 
-const initialState = {
-    loading: false,
-    imageUrl: [],
-    district: [],
-    ward: [],
-    provinces: [],
-    isModalVisible: false,
-    isSubmitted: false,
-    provinceSelected: null,
-    districtSelected: null,
-    wardSelected: null,
-    enableConfirm: true,
-    detailAddress: null,
-    shop_name: '',
-    shop_description: '',
-    full_name: '',
-    cccd: '',
-    touch: {
-        shop_name: false,
-        shop_description: false,
-        full_name: false,
-        cccd: false
-    },
-    errors: {
-        shop_name: '',
-        shop_description: '',
-        full_name: '',
-        cccd: ''
-    }
-};
-
-const reducer = (state, action) => {
-    switch (action.type) {
-        case 'SET_LOADING':
-            return { ...state, loading: action.payload };
-        case 'SET_IMAGE_URL':
-            return { ...state, imageUrl: action.payload };
-        case 'SET_DISTRICTS':
-            return { ...state, district: action.payload };
-        case 'SET_WARDS':
-            return { ...state, ward: action.payload };
-        case 'SET_PROVINCES':
-            return { ...state, provinces: action.payload };
-        case 'SET_SUBMITTED':
-            return { ...state, isSubmitted: action.payload };
-        case 'SET_SELECTED_PROVINCE':
-            return { ...state, provinceSelected: action.payload };
-        case 'SET_SELECTED_DISTRICT':
-            return { ...state, districtSelected: action.payload };
-        case 'SET_SELECTED_WARD':
-            return { ...state, wardSelected: action.payload };
-        case 'SET_ENABLE_CONFIRM':
-            return { ...state, enableConfirm: action.payload };
-        case 'SET_DETAIL_ADDRESS':
-            return { ...state, detailAddress: action.payload };
-        case 'SET_SHOP_NAME':
-            return { ...state, shop_name: action.payload };
-        case 'SET_SHOP_DESCRIPTION':
-            return { ...state, shop_description: action.payload };
-        case 'SET_FULL_NAME':
-            return { ...state, full_name: action.payload };
-        case 'SET_CCCD':
-            return { ...state, cccd: action.payload };
-        case 'SET_TOUCHED':
-            return {
-                ...state,
-                touch: {
-                    ...state.touch,
-                    [action.payload]: true
-                }
-            };
-        case 'SET_ERRORS':
-            return {
-                ...state,
-                errors: action.payload
-            };
-        default:
-            return state;
-    }
-};
-
 
 const BasicShopInformation = ({ onData }) => {
     const location = useLocation();
     const isSellerSetupPath = location.pathname === '/seller/seller-setup';
     const [isModalVisible, setIsModalVisible] = useState(false);
+
+    const initialState = {
+        loading: false,
+        imageUrl: [],
+        district: [],
+        ward: [],
+        provinces: [],
+        isModalVisible: false,
+        isSubmitted: false,
+        provinceSelected: null,
+        districtSelected: null,
+        wardSelected: null,
+        enableConfirm: true,
+        detailAddress: null,
+        shop_name: '',
+        shop_description: '',
+        full_name: '',
+        cccd: '',
+        address_full: '',
+        touch: {
+            shop_name: false,
+            shop_description: false,
+            full_name: false,
+            cccd: false
+        },
+        errors: {
+            shop_name: '',
+            shop_description: '',
+            full_name: '',
+            cccd: ''
+        }
+    };
+
+    const reducer = (state, action) => {
+        switch (action.type) {
+            case 'SET_LOADING':
+                return { ...state, loading: action.payload };
+            case 'SET_IMAGE_URL':
+                return { ...state, imageUrl: action.payload };
+            case 'SET_DISTRICTS':
+                return { ...state, district: action.payload };
+            case 'SET_WARDS':
+                return { ...state, ward: action.payload };
+            case 'SET_PROVINCES':
+                return { ...state, provinces: action.payload };
+            case 'SET_SUBMITTED':
+                return { ...state, isSubmitted: action.payload };
+            case 'SET_SELECTED_PROVINCE':
+                return { ...state, provinceSelected: action.payload };
+            case 'SET_SELECTED_DISTRICT':
+                return { ...state, districtSelected: action.payload };
+            case 'SET_SELECTED_WARD':
+                return { ...state, wardSelected: action.payload };
+            case 'SET_ENABLE_CONFIRM':
+                return { ...state, enableConfirm: action.payload };
+            case 'SET_DETAIL_ADDRESS':
+                return { ...state, detailAddress: action.payload };
+            case 'SET_SHOP_NAME':
+                return { ...state, shop_name: action.payload };
+            case 'SET_SHOP_DESCRIPTION':
+                return { ...state, shop_description: action.payload };
+            case 'SET_FULL_NAME':
+                return { ...state, full_name: action.payload };
+            case 'SET_CCCD':
+                return { ...state, cccd: action.payload };
+            case 'SET_ADDRESS_FULL':
+                return { ...state, address_full: action.payload };
+            case 'SET_TOUCHED':
+                return {
+                    ...state,
+                    touch: {
+                        ...state.touch,
+                        [action.payload]: true
+                    }
+                };
+            case 'SET_ERRORS':
+                return {
+                    ...state,
+                    errors: action.payload
+                };
+            default:
+                return state;
+        }
+    };
 
     const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -115,10 +119,14 @@ const BasicShopInformation = ({ onData }) => {
     };
 
     const handleChange = ({ fileList: newList }) => {
-        if(newList.length > 1) {
+        if (newList.length > 1) {
             newList.shift();
         }
-            dispatch({ type: 'SET_IMAGE_URL', payload: newList });
+        dispatch({ type: 'SET_IMAGE_URL', payload: newList });
+    };
+
+    const handleRemove = (file) => {
+        dispatch({ type: 'SET_IMAGE_URL', payload: state.imageUrl.filter(item => item.uid !== file.uid) });
     };
 
     const handleInputChange = (e) => {
@@ -164,16 +172,17 @@ const BasicShopInformation = ({ onData }) => {
             newErrors.cccd = 'CCCD/CMND phải là số';
             valid = false;
         }
+
+        // Validate address
+        if(state.detailAddress === '')
+            valid = false;
         dispatch({ type: 'SET_ERRORS', payload: newErrors });
         return valid;
     };
-    // validate input and pass data to parent component
+
     useEffect(() => {
-        onData({ noErrorBasicInfo: false });
-        console.log("Truc oiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii:", state);
-        const check =  validate();
-        if (check && state.provinceSelected && state.districtSelected && state.wardSelected && state.imageUrl.length > 0 
-            && state.detailAddress) {
+        const check = validate();
+        if (check && state.provinceSelected && state.districtSelected && state.wardSelected) {
             const data = {
                 shop_name: state.shop_name,
                 shop_description: state.shop_description,
@@ -189,12 +198,10 @@ const BasicShopInformation = ({ onData }) => {
                 noErrorBasicInfo: true
             };
             onData(data);
-        }
-        else {
+        } else {
             onData({ noErrorBasicInfo: false });
         }
-    }, [state.shop_name, state.shop_description, state.full_name, state.cccd, state.provinces, state.district, state.ward, state.detailAddress, state.imageUrl]);
-
+    }, [state.shop_name, state.shop_description, state.full_name, state.cccd, state.provinces, state.district, state.ward, state.detailAddress]);
 
     const uploadButton = (
         <button
@@ -211,33 +218,36 @@ const BasicShopInformation = ({ onData }) => {
         </button>
     );
 
-    const handleProvinceClick = (record) => {
-        dispatch({ type: 'SET_SELECTED_PROVINCE', payload: record });
+    const handleProvinceClick = (value) => {
+        const selectedProvince = state.provinces.find(province => province.ProvinceID === value);
+        dispatch({ type: 'SET_SELECTED_PROVINCE', payload: selectedProvince });
         dispatch({ type: 'SET_WARDS', payload: null });
         dispatch({ type: 'SET_SELECTED_WARD', payload: null });
     };
 
-    const handleDistrictClick = (record) => {
-        dispatch({ type: 'SET_SELECTED_DISTRICT', payload: record });
+    const handleDistrictClick = (value) => {
+        const selectedDistrict = state.district.find(district => district.DistrictID === value);
+        dispatch({ type: 'SET_SELECTED_DISTRICT', payload: selectedDistrict });
     };
 
-    const handleWardClick = (record) => {
-        dispatch({ type: 'SET_SELECTED_WARD', payload: record });
+    const handleWardClick = (value) => {
+        const selectedWard = state.ward.find(ward => ward.WardCode === value);
+        dispatch({ type: 'SET_SELECTED_WARD', payload: selectedWard });
     };
 
     const handleDetailAddressChange = (e) => {
         dispatch({ type: 'SET_DETAIL_ADDRESS', payload: e.target.value });
-    }
+    };
 
     useEffect(() => {
-        console.log("Detail address:", state.detailAddress);
         if (state.detailAddress && state.provinceSelected && state.districtSelected && state.wardSelected)
+        {
             dispatch({ type: 'SET_ENABLE_CONFIRM', payload: false });
+            dispatch({ type: 'SET_ADDRESS_FULL', payload: `${state.detailAddress}, ${state.wardSelected.WardName}, ${state.districtSelected.DistrictName}, ${state.provinceSelected.ProvinceName}` });
+        }
         else
-            dispatch({
-                type: 'SET_ENABLE_CONFIRM', payload: true
-            });
-    }, [state.detailAddress])
+            dispatch({ type: 'SET_ENABLE_CONFIRM', payload: true });
+    }, [state.detailAddress]);
 
     useEffect(() => {
         const getDistricts = async () => {
@@ -255,17 +265,17 @@ const BasicShopInformation = ({ onData }) => {
                 });
                 if (res.status === 200) {
                     dispatch({ type: 'SET_DISTRICTS', payload: res.data.data });
-                }
-                else
+                } else {
                     console.log("Error");
+                }
             } catch (error) {
                 console.log("Error fetch DISTRICTS:", error);
             }
-        }
+        };
         getDistricts();
     }, [state.provinceSelected]);
+
     useEffect(() => {
-        console.log("District selected:", state.districtSelected);
         const getWards = async () => {
             const URL = 'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward';
             try {
@@ -281,19 +291,16 @@ const BasicShopInformation = ({ onData }) => {
                 });
                 if (res.status === 200) {
                     dispatch({ type: 'SET_WARDS', payload: res.data.data });
-                }
-                else
+                } else {
                     console.log("Error");
+                }
             } catch (error) {
                 console.log("Error fetch WARDS:", error);
             }
-        }
+        };
         getWards();
     }, [state.districtSelected]);
 
-    useEffect(() => {
-        console.log("Ward selected:", state.wardSelected);
-    }, [state.wardSelected]);
     useEffect(() => {
         const URL = 'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province';
         const getProvinces = async () => {
@@ -307,37 +314,15 @@ const BasicShopInformation = ({ onData }) => {
                 });
                 if (res.status === 200) {
                     dispatch({ type: 'SET_PROVINCES', payload: res.data.data });
-                }
-                else
+                } else {
                     console.log("Error");
+                }
             } catch (error) {
                 console.log("Error fetch provinces:", error);
             }
-        }
+        };
         getProvinces();
     }, []);
-    const provinceColumns = [
-        {
-            title: 'Tỉnh/Thành phố',
-            dataIndex: 'ProvinceName',
-            key: 'ProvinceID',
-        }
-    ];
-
-    const districtColumns = [
-        {
-            title: 'Quận/Huyện',
-            dataIndex: 'DistrictName',
-            key: 'DistrictID',
-        }
-    ];
-    const wardColumns = [
-        {
-            title: 'Phường/Xã',
-            dataIndex: 'WardName',
-            key: 'WardCode',
-        }
-    ];
 
     return (
         <div>
@@ -353,7 +338,6 @@ const BasicShopInformation = ({ onData }) => {
                         </Button>
                     </div>
                 )}
-
             </div>
             <div className='mt-3 ml-10'>
                 <Row gutter={12} className='flex items-center'>
@@ -382,6 +366,7 @@ const BasicShopInformation = ({ onData }) => {
                             maxCount={1}
                             beforeUpload={beforeUpload}
                             onChange={handleChange}
+                            onRemove={handleRemove}
                         >
                             {state.imageUrl.length < 1 && (
                                 uploadButton
@@ -424,7 +409,6 @@ const BasicShopInformation = ({ onData }) => {
                             name='cccd'
                             className='w-72' />
                         {state.touch.cccd && state.errors.cccd && <div className='text-red-500 ml-5'>{state.errors.cccd}</div>}
-
                     </Col>
                 </Row>
                 <Row gutter={12} className='mt-10 flex items-center'>
@@ -432,68 +416,23 @@ const BasicShopInformation = ({ onData }) => {
                     <Col span={20}>
                         <Button
                             onClick={(e) => setIsModalVisible(true)}
-                        >Thêm</Button>
+                        >
+                            {state.address_full ? state.address_full : 'Chọn địa chỉ'}
+                        </Button>
                     </Col>
                 </Row>
             </div>
 
-            <Modal
-                title="Thêm địa chỉ mới"
-                visible={isModalVisible}
-                onCancel={handleCancel}
-                footer={[
-                    <Button key="cancel" onClick={handleCancel}>Cancel</Button>,
-                    <Button disabled={state.enableConfirm} key="confirm" type="primary" onClick={handleConfirm}>Confirm</Button>
-
-                ]}
-            >
-                <div className='flex flex-col'>
-                    <Table
-                        columns={provinceColumns}
-                        dataSource={state.provinces}
-                        pagination={false}
-                        rowKey="province_id"
-                        showHeader={true}
-                        className='w-[100%] overflow-y-auto custom-scrollbar max-h-[200px] border-b mt-3'
-                        onRow={(record) => ({
-                            onClick: () => handleProvinceClick(record),
-                            className: state.provinceSelected === record ? 'bg-gray-200' : ''
-                        })}
-                    />
-                    <Table
-                        columns={districtColumns}
-                        dataSource={state.district}
-                        pagination={false}
-                        rowKey="sub_category_id"
-                        showHeader={true}
-                        className='w-[100%] overflow-y-auto custom-scrollbar max-h-[200px] mt-3'
-                        onRow={(record) => ({
-                            onClick: () => handleDistrictClick(record),
-                            className: state.districtSelected === record ? 'bg-gray-200' : ''
-                        })}
-                    />
-                    <Table
-                        columns={wardColumns}
-                        dataSource={state.ward}
-                        pagination={false}
-                        rowKey="sub_category_id"
-                        showHeader={true}
-                        className='w-[100%] overflow-y-auto custom-scrollbar max-h-[200px] mt-3'
-                        onRow={(record) => ({
-                            onClick: () => handleWardClick(record),
-                            className: state.wardSelected === record ? 'bg-gray-200' : ''
-                        })}
-                    />
-                    <div className='flex items-center flex-col justify-center'>
-                        <span className='text-lg font-semibold'>Địa chỉ chi tiết</span>
-                        <Input
-                            value={state.detailAddress}
-                            onChange={handleDetailAddressChange}
-                            placeholder='Số nhà, tên đường, ...'
-                        />
-                    </div>
-                </div>
-            </Modal>
+            <AddressModal
+                isModalVisible={isModalVisible}
+                handleCancel={handleCancel}
+                handleConfirm={handleConfirm}
+                handleProvinceClick={handleProvinceClick}
+                handleDistrictClick={handleDistrictClick}
+                handleWardClick={handleWardClick}
+                handleDetailAddressChange={handleDetailAddressChange}
+                state={state}
+            />
         </div>
     )
 }
