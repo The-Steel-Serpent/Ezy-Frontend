@@ -334,3 +334,9 @@
 .ant-input-outlined:focus {
   border-color: #66cce6 !important;
 }
+.ant-float-btn {
+  @apply bottom-20 text-primary;
+}
+.anticon {
+  @apply text-primary;
+}

@@ -1,4 +1,5 @@
 import { Button, Skeleton } from "antd";
+import { motion } from "framer-motion";
 import React, { Suspense, useEffect, useState } from "react";
 
 import axios from "axios";
@@ -29,7 +30,7 @@ const ProductSuggestions = () => {
 
   return (
     <div className="max-w-[1200px] m-auto ">
-      <div className="grid grid-cols-12 place-items-center">
+      <motion.div className="grid grid-cols-12 place-items-center">
         {suggestProducts.map((value, key) => {
           return (
             <Suspense
@@ -41,7 +42,7 @@ const ProductSuggestions = () => {
             </Suspense>
           );
         })}
-      </div>
+      </motion.div>
       <div className="flex justify-center items-center w-full ">
         <Button
           size="large"

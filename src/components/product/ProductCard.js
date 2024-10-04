@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Card, Rate } from "antd";
 import Meta from "antd/es/card/Meta";
 import React from "react";
@@ -15,7 +16,7 @@ const ProductCard = ({ value, key, loading, itemsPerRow = 6 }) => {
     value?.base_price - (value?.base_price * value?.sale_percents) / 100;
   return (
     <>
-      <a
+      <motion.a
         href={"/product-details/" + { value }.value?.product_id}
         className={`animation-pulse relative w-32 lg:w-48 ${
           itemsPerRow === 6 ? "lg:col-span-2" : "lg:col-span-2"
@@ -55,7 +56,7 @@ const ProductCard = ({ value, key, loading, itemsPerRow = 6 }) => {
             {value?.sale_percents > 0 && "-" + value?.sale_percents + "%"}
           </div>
         </Card>
-      </a>
+      </motion.a>
     </>
   );
 };

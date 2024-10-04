@@ -1,6 +1,5 @@
 import React, { lazy, useEffect } from "react";
 import PrimaryHeader from "../components/PrimaryHeader";
-import SecondaryHeader from "../components/SecondaryHeader";
 
 const AuthLayout = ({ children }) => {
   const pathname = window.location.pathname;

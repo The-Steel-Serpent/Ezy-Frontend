@@ -23,7 +23,15 @@ import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
-import { Button, Dropdown, Input, Skeleton, Space, Typography } from "antd";
+import {
+  Button,
+  Dropdown,
+  FloatButton,
+  Input,
+  Skeleton,
+  Space,
+  Typography,
+} from "antd";
 import { AiTwotoneShop } from "react-icons/ai";
 import axios from "axios";
 import { useLocation, useParams } from "react-router-dom";
@@ -394,9 +402,14 @@ const PrimaryHeader = () => {
             </form>
           </div>
           <div className="col-span-2 text-white flex justify-center items-center">
-            <a href="#">
-              <PiShoppingCartSimpleBold size={27} />
-            </a>
+            <div className="w-fit">
+              <a href="#" className="relative">
+                <div className="rounded-full text-primary bg-white px-2 py-1 -right-3 absolute bottom-3">
+                  0
+                </div>
+                <PiShoppingCartSimpleBold size={35} />
+              </a>
+            </div>
           </div>
           <div className="col-span-2 lg:hidden flex text-white text-sm items-center">
             {!user._id && (
@@ -409,6 +422,7 @@ const PrimaryHeader = () => {
         </div>
       </header>
       <Suspense>
+        <FloatButton.BackTop />
         <ChatBox />
       </Suspense>
     </>

@@ -4,6 +4,9 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        garibato: ["Garibato", "sans-serif"], // thêm phông chữ "Garibato"
+      },
       colors: {
         // primary: "#ee4d2d",
         // primary: "#66cce6",

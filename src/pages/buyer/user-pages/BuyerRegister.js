@@ -1,21 +1,10 @@
-import React, { useState } from "react";
-import FlashSale from "../../../assets/flash-sale.png";
-import {
-  Button,
-  DatePicker,
-  Divider,
-  Dropdown,
-  Input,
-  message,
-  Select,
-  Space,
-  Upload,
-} from "antd";
+import React, { useEffect, useReducer } from "react";
+import { motion } from "framer-motion";
+import { Button, DatePicker, Divider, Input, Select } from "antd";
 import { FcGoogle } from "react-icons/fc";
 import bgAbstract from "../../../assets/engaged.png";
-import { DownOutlined } from "@ant-design/icons";
-import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import SecondaryHeader from "../../../components/SecondaryHeader";
+
 const items = [
   {
     value: "Nam",
@@ -31,117 +20,382 @@ const items = [
   },
 ];
 const BuyerRegister = () => {
-  const [loading, setLoading] = useState(false);
+  const [state, dispatch] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "SET_LOADING":
+          return { ...state, loading: action.payload };
+        case "hasStartedTyping":
+          return { ...state, hasStartedTyping: true };
+        case "SET_DATA":
+          return {
+            ...state,
+            data: {
+              ...state.data,
+              [action.payload.name]: action.payload.value,
+            },
+          };
+        case "SET_ERROR":
+          return {
+            ...state,
+            error: {
+              ...state.error,
+              [action.payload.name]: action.payload.value,
+            },
+          };
 
-  const uploadButton = (
-    <button
-      style={{
-        border: 0,
-        background: "none",
-      }}
-      type="button"
-    >
-      {loading ? <LoadingOutlined /> : <PlusOutlined />}
-      <div
-        style={{
-          marginTop: 8,
-        }}
-      >
-        Upload
-      </div>
-    </button>
+        default:
+          return state;
+      }
+    },
+    {
+      loading: false,
+      data: {
+        username: "",
+        fullname: "",
+        email: "",
+        phoneNumber: "",
+        dob: "",
+        gender: "",
+        password: "",
+        retypePassword: "",
+      },
+      error: {
+        username: "",
+        fullname: "",
+        email: "",
+        phoneNumber: "",
+        dob: "",
+        gender: "",
+        password: "",
+        retypePassword: "",
+      },
+      hasStartedTyping: false,
+    }
   );
+
+  const { loading, data, error, hasStartedTyping } = state;
+  const onTextChanged = (e) => {
+    const { name, value } = e.target;
+    dispatch({
+      type: "hasStartedTyping",
+    });
+    dispatch({
+      type: "SET_DATA",
+      payload: { name, value },
+    });
+  };
+
+  useEffect(() => {
+    if (!hasStartedTyping) return;
+    //Username
+    if (data.username === "") {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "username",
+          value: "Tên đăng nhập không được để trống",
+        },
+      });
+    } else {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "username", value: "" },
+      });
+    }
+
+    //Fullname
+    if (data.fullname === "") {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "fullname", value: "Họ và tên không được để trống" },
+      });
+    } else {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "fullname", value: "" },
+      });
+    }
+
+    //Email
+    if (data.email === "") {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "email", value: "Email không được để trống" },
+      });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "email", value: "Email không hợp lệ" },
+      });
+    } else {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "email", value: "" },
+      });
+    }
+
+    //PhoneNumber
+    if (data.phoneNumber === "") {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "phoneNumber",
+          value: "Số điện thoại không được để trống",
+        },
+      });
+    } else if (!/^\d{10}$/.test(data.phoneNumber)) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "phoneNumber",
+          value: "Số điện thoại không hợp lệ",
+        },
+      });
+    } else {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "phoneNumber", value: "" },
+      });
+    }
+
+    //DOB
+    if (data.dob === "") {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "dob", value: "Ngày sinh không được để trống" },
+      });
+    } else if (new Date(data.dob) > new Date()) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "dob", value: "Ngày sinh không hợp lệ" },
+      });
+    } else {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "dob", value: "" },
+      });
+    }
+
+    //GENDER
+    if (data.gender === "") {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "gender", value: "Giới tính không được để trống" },
+      });
+    } else {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "gender", value: "" },
+      });
+    }
+
+    //Password
+    if (data.password === "") {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "password", value: "Mật khẩu không được để trống" },
+      });
+    } else if (data.password.length > 0 && data.password.length < 6) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "password",
+          value: "Mật khẩu phải có ít nhất 6 ký tự",
+        },
+      });
+    } else {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "password", value: "" },
+      });
+    }
+
+    //RetypePassword
+    if (data.retypePassword === "") {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "retypePassword",
+          value: "Nhập lại mật khẩu không được để trống",
+        },
+      });
+    } else {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "retypePassword", value: "" },
+      });
+    }
+
+    // Trường hợp mật khẩu không khớp
+    if (data.password !== data.retypePassword) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "retypePassword", value: "Mật khẩu không khớp" },
+      });
+    }
+  }, [data]);
   document.title = "Đăng Ký";
 
   return (
     <div className="w-full bg-cover bg-background-Shop-2 h-screen relative flex items-center justify-center ">
       <div className="w-full h-full backdrop-blur-md ">
         <SecondaryHeader />
-        <div className="flex justify-center mt-8">
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 1 }}
+          className="flex justify-center mt-8"
+        >
           <section className="w-fit flex justify-center  items-center border-solid shadow-2xl">
-            <div className="hidden lg:block">
+            <div className="hidden lg:block h-full">
               <img
-                className="object-cover w-[700px] h-[700px] rounded-s"
+                className="w-[700px] h-full object-cover  rounded-s"
                 src={bgAbstract}
               />
             </div>
             <div className="w-[450px] h-full bg-white rounded px-7 py-11 ">
-              <form className=" flex flex-col gap-3 ">
+              <form className=" flex flex-col ">
                 <h1 className="font-[500] text-primary text-2xl text-center">
                   Đăng Ký
                 </h1>
-
-                <Input
-                  tabIndex={1}
-                  className="border py-2 px-3 w-full"
-                  name="username"
-                  placeholder="Tên Đăng Nhập"
-                  type="text"
-                />
-                <Input
-                  tabIndex={2}
-                  className="border py-2 px-3 w-full"
-                  name="fullname"
-                  placeholder="Họ và Tên"
-                  type="text"
-                />
-                <Input
-                  tabIndex={3}
-                  className="border py-2 px-3 w-full"
-                  name="email"
-                  placeholder="Email"
-                  type="email"
-                />
-                <Input
-                  tabIndex={5}
-                  className="border py-2 px-3 w-full"
-                  name="phoneNumber"
-                  placeholder="Số Điện Thoại"
-                  type="tel"
-                />
-                <div className="grid grid-cols-12 gap-4">
-                  <DatePicker
-                    className="col-span-8"
-                    format={{
-                      format: "YYYY-MM-DD",
-                      type: "mask",
-                    }}
-                    tabIndex={6}
-                    placeholder="Ngày Sinh"
-                    // onChange={onChange}
+                <div className=" h-[60.45px]">
+                  <Input
+                    tabIndex={1}
+                    className="border py-2 px-3 w-full"
+                    status={error?.username ? "error" : ""}
+                    name="username"
+                    placeholder="Tên Đăng Nhập"
+                    type="text"
+                    onChange={onTextChanged}
                   />
-                  <Select
-                    className="col-span-4"
-                    placeholder="Giới Tính"
-                    style={{ width: 120 }}
-                    // onChange={handleChange}
-                    options={items}
-                    tabIndex={7}
+                  <span className="text-sm text-red-700">
+                    {error?.username ? error?.username : ""}
+                  </span>
+                </div>
+                <div className=" h-[60.45px]">
+                  <Input
+                    tabIndex={2}
+                    className="border py-2 px-3 w-full"
+                    name="fullname"
+                    status={error?.fullname ? "error" : ""}
+                    placeholder={"Họ và Tên"}
+                    type="text"
+                    onChange={onTextChanged}
                   />
+                  <span className="text-sm text-red-700">
+                    {error?.fullname ? error?.fullname : ""}
+                  </span>
+                </div>
+                <div className=" h-[60.45px]">
+                  <Input
+                    tabIndex={3}
+                    className="border py-2 px-3 w-full"
+                    name="email"
+                    status={error?.email ? "error" : ""}
+                    placeholder={error?.email ? error?.email : "Email"}
+                    type="email"
+                    onChange={onTextChanged}
+                  />
+                  <span className="text-sm text-red-700">
+                    {error?.email ? error?.email : ""}
+                  </span>
+                </div>
+                <div className=" h-[60.45px]">
+                  <Input
+                    tabIndex={4}
+                    className="border py-2 px-3 w-full"
+                    name="phoneNumber"
+                    status={error?.phoneNumber ? "error" : ""}
+                    placeholder={
+                      error?.phoneNumber ? error?.phoneNumber : "Số Điện Thoại"
+                    }
+                    type="tel"
+                    onChange={onTextChanged}
+                  />
+                  <span className="text-sm text-red-700">
+                    {error?.phoneNumber ? error?.phoneNumber : ""}
+                  </span>
                 </div>
 
-                <div className="relative flex">
+                <div className="grid grid-cols-12 gap-4 h-[60.45px]">
+                  <div className="col-span-8 flex flex-col">
+                    <DatePicker
+                      format="YYYY-MM-DD"
+                      tabIndex={6}
+                      status={error?.dob ? "error" : ""}
+                      placeholder={"Ngày Sinh"}
+                      onChange={(date, dateString) => {
+                        dispatch({
+                          type: "SET_DATA",
+                          payload: { name: "dob", value: dateString },
+                        });
+                      }}
+                    />
+                    <span className="text-sm text-red-700">
+                      {error?.dob ? error?.dob : ""}
+                    </span>
+                  </div>
+
+                  <Select
+                    className="col-span-4"
+                    placeholder={error?.gender ? error?.gender : "Giới Tính"}
+                    status={error?.gender ? "error" : ""}
+                    style={{ width: 120 }}
+                    options={items}
+                    tabIndex={7}
+                    onChange={(value) => {
+                      dispatch({
+                        type: "SET_DATA",
+                        payload: { name: "gender", value },
+                      });
+                    }}
+                  />
+                </div>
+                <div className=" h-[60.45px]">
                   <Input
                     tabIndex={8}
                     className="border py-2 px-3 w-full"
                     name="password"
-                    placeholder="Mật khẩu"
+                    status={error?.password ? "error" : ""}
+                    onChange={onTextChanged}
+                    placeholder={"Mật khẩu"}
+                    type="password"
                     // type={passwordInputType}
                     // onChange={handleOnChange}
                   />
+                  <span className="text-sm text-red-700">
+                    {error?.password ? error?.password : ""}
+                  </span>
+                </div>
+                <div className=" h-[60.45px]">
+                  <Input
+                    tabIndex={8}
+                    className="border py-2 px-3 w-full"
+                    name="retypePassword"
+                    onChange={onTextChanged}
+                    status={error?.retypePassword ? "error" : ""}
+                    placeholder={"Nhập lại mật khẩu"}
+                    type="password"
+                    // type={passwordInputType}
+                    // onChange={handleOnChange}
+                  />
+                  <span className="text-sm text-red-700">
+                    {error?.retypePassword ? error?.retypePassword : ""}
+                  </span>
                 </div>
 
                 <Button
-                  className="bg-custom-gradient text-white hover:opacity-90 "
+                  className="bg-custom-gradient text-white hover:opacity-90 mt-4"
                   // onSubmit={handleOnSubmit}
-                  tabIndex={9}
+                  tabIndex={10}
                 >
                   ĐĂNG KÝ
                 </Button>
               </form>
               <div
                 className="flex justify-end mt-4 text-sm text-[#05a]"
-                tabIndex={10}
+                tabIndex={11}
               >
                 <a href="/">Quên mật khẩu</a>
               </div>
@@ -157,13 +411,13 @@ const BuyerRegister = () => {
               </div>
               <div className="flex justify-center items-center gap-1 mt-8 mb-4 text-sm">
                 <span className="text-slate-400 ">Đã có tài khoản?</span>
-                <a href="/buyer/login" className="text-primary" tabIndex={11}>
+                <a href="/buyer/login" className="text-primary" tabIndex={12}>
                   Đăng nhập
                 </a>
               </div>
             </div>
           </section>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

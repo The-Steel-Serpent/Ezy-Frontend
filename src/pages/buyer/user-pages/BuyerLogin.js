@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 import { setToken, setUser } from "../../../redux/userSlice";
 import bgAbstract from "../../../assets/engaged.png";
 import SecondaryHeader from "../../../components/SecondaryHeader";
+import { motion } from "framer-motion";
 const BuyerLogin = () => {
   document.title = "Đăng nhập";
 
@@ -66,15 +67,20 @@ const BuyerLogin = () => {
     <div className="w-full bg-cover bg-background-Shop-2 h-screen relative flex items-center justify-center">
       <div className="w-full h-full backdrop-blur-md">
         <SecondaryHeader />
-        <div className="flex justify-center mt-14">
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 1 }}
+          className="flex justify-center mt-14"
+        >
           <section className="w-fit flex justify-center  items-center border-solid shadow-2xl">
-            <div className="hidden lg:block">
+            <div className="hidden h-full lg:block">
               <img
-                className="object-cover w-[400px] h-[477px] rounded-s"
+                className="object-cover w-[500px] h-full rounded-s"
                 src={bgAbstract}
               />
             </div>
-            <div className="w-96 h-full bg-white rounded px-7 py-5 ">
+            <div className="w-[400px] h-full bg-white rounded px-7 py-10 ">
               <form className=" flex flex-col gap-7 " onSubmit={handleOnSubmit}>
                 <h1 className="font-[500] text-primary text-2xl text-center">
                   Đăng nhập
@@ -143,7 +149,7 @@ const BuyerLogin = () => {
               </div>
             </div>
           </section>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
