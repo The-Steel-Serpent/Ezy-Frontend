@@ -10,7 +10,10 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setToken, setUser } from "../../../redux/userSlice";
+import bgAbstract from "../../../assets/engaged.png";
 const BuyerLogin = () => {
+  document.title = "Đăng nhập";
+
   const [data, setData] = useState(null);
   const [hidePassword, setHidePassword] = useState(false);
   const navigate = useNavigate();
@@ -59,76 +62,86 @@ const BuyerLogin = () => {
     }
   };
   return (
-    <div>
-      <div className="bg-primary w-full flex justify-center items-center p-10 gap-10">
-        <div className="max-w-[1200px] hidden lg:block">
-          <img src={FlashSale} width={500} />
-        </div>
-        <div className="w-96 bg-white rounded px-7 py-5 ">
-          <form className=" flex flex-col gap-7 " onSubmit={handleOnSubmit}>
-            <h1 className="font-[500] text-xl">Đăng nhập</h1>
-            <input
-              className="border py-2 px-3 w-full"
-              name="phoneNumber"
-              placeholder="Email/Số điện thoại/Tên đăng nhập"
-              onChange={handleOnChange}
-              type="text"
-            />
-            <div className="relative flex">
-              <input
-                className="border py-2 px-3 w-full"
-                name="password"
-                placeholder="Mật khẩu"
-                type={passwordInputType}
-                onChange={handleOnChange}
+    <div className="w-full bg-cover bg-background-Shop-2 h-screen relative ">
+      <div className="absolute w-full h-full backdrop-blur-md">
+        <div className="flex justify-center  px-10 py-36 ">
+          <section className="w-fit flex justify-center  items-center border-solid shadow-2xl">
+            <div className="hidden lg:block">
+              <img
+                className="object-cover w-[400px] h-[477px] rounded-s"
+                src={bgAbstract}
               />
-              <button onClick={handleHidePassword}>
-                {hidePassword ? (
-                  <IoMdEye
-                    size={20}
-                    className="absolute right-3 top-3 text-slate-500"
-                  />
-                ) : (
-                  <RiEyeCloseLine
-                    size={20}
-                    className="absolute right-3 top-3 text-slate-500"
-                  />
-                )}
-              </button>
             </div>
+            <div className="w-96 h-full bg-white rounded px-7 py-5 ">
+              <form className=" flex flex-col gap-7 " onSubmit={handleOnSubmit}>
+                <h1 className="font-[500] text-primary text-2xl text-center">
+                  Đăng nhập
+                </h1>
+                <input
+                  tabIndex={1}
+                  className="border py-2 px-3 w-full"
+                  name="phoneNumber"
+                  placeholder="Email/Tên đăng nhập"
+                  onChange={handleOnChange}
+                  type="text"
+                />
+                <div className="relative flex">
+                  <input
+                    tabIndex={2}
+                    className="border py-2 px-3 w-full"
+                    name="password"
+                    placeholder="Mật khẩu"
+                    type={passwordInputType}
+                    onChange={handleOnChange}
+                  />
+                  <div onClick={handleHidePassword}>
+                    {hidePassword ? (
+                      <IoMdEye
+                        size={20}
+                        className="absolute right-3 top-2 text-slate-500"
+                      />
+                    ) : (
+                      <RiEyeCloseLine
+                        size={20}
+                        className="absolute right-3 top-2 text-slate-500"
+                      />
+                    )}
+                  </div>
+                </div>
 
-            <button
-              className="bg-custom-gradient text-white hover:opacity-90 rounded py-2"
-              onSubmit={handleOnSubmit}
-            >
-              ĐĂNG NHẬP
-            </button>
-          </form>
-          <div className="flex justify-between mt-4 text-sm text-[#05a]">
-            <a href="/">Quên mật khẩu</a>
-            <a href="/">Đăng nhập với SMS</a>
-          </div>
-          <Divider>
-            <span className="text-slate-400 text-xs">HOẶC</span>
-          </Divider>
-          <div className="flex gap-2">
-            <button className="border rounded p-2 w-[165px]">
-              <span className="flex gap-1 justify-center items-center">
-                <FaFacebook size={23} className="text-[#1877f2]" /> Facebook
-              </span>
-            </button>
-            <button className="border rounded p-2 w-[165px]">
-              <span className="flex gap-1 justify-center items-center">
-                <FcGoogle size={23} /> Google
-              </span>
-            </button>
-          </div>
-          <div className="flex justify-center items-center gap-1 mt-8 mb-4 text-sm">
-            <span className="text-slate-400 ">Bạn mới biết đến Shopee?</span>
-            <a href="/buyer/register" className="text-primary">
-              Đăng ký
-            </a>
-          </div>
+                <button
+                  className="bg-custom-gradient text-white hover:opacity-90 rounded py-2"
+                  type="submit"
+                  onSubmit={handleOnSubmit}
+                  tabIndex={3}
+                >
+                  ĐĂNG NHẬP
+                </button>
+              </form>
+              <div
+                className="flex justify-end mt-4 text-sm text-[#05a]"
+                tabIndex={4}
+              >
+                <a href="/">Quên mật khẩu</a>
+              </div>
+              <Divider>
+                <span className="text-slate-400 text-xs">HOẶC</span>
+              </Divider>
+              <div className="flex justify-center">
+                <button className="border rounded p-2 w-[165px]">
+                  <span className="flex gap-1 justify-center items-center">
+                    <FcGoogle size={23} /> Google
+                  </span>
+                </button>
+              </div>
+              <div className="flex justify-center items-center gap-1 mt-8 mb-4 text-sm">
+                <span className="text-slate-400 ">Bạn mới biết đến Ezy?</span>
+                <a href="/buyer/register" className="text-primary" tabIndex={5}>
+                  Đăng ký
+                </a>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

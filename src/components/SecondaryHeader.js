@@ -2,14 +2,13 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { React, useEffect, memo } from "react";
 import OrangeLogo from "../assets/orange-logo.png";
-
 const SecondaryHeader = () => {
   const pathname = window.location.pathname;
   const title = pathname.split("/")[2];
 
   return (
     <div className="bg-white h-20 shadow">
-      <div className="max-w-[1200px] flex m-auto p-4 justify-between">
+      <div className="max-w-[1200px] flex m-auto p-4 justify-between ">
         <div className="flex gap-3">
           <a href="/">
             <img src={OrangeLogo} width={130} />
@@ -20,7 +19,7 @@ const SecondaryHeader = () => {
         </div>
         <a
           href="#"
-          className="items-center justify-center flex text-sm text-[#ee4d2d]"
+          className="items-center justify-center flex text-sm text-primary"
         >
           Bạn cần giúp đỡ?
         </a>

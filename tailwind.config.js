@@ -12,6 +12,7 @@ module.exports = {
       backgroundImage: {
         "custom-gradient": "linear-gradient(-180deg, #66cce6, #298ab4)",
         "background-Shop": "url('/src/assets/backgroundShop.jpg')",
+        "background-Shop-2": "url('/src/assets/view-wild-goat.jpg')",
       },
       backdropBlur: {
         xs: "2px",
