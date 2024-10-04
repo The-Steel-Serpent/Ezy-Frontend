@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import FlashSale from "../../../assets/flash-sale.png";
-import { Divider } from "antd";
+import { Button, Divider, Input } from "antd";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { IoMdEye } from "react-icons/io";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setToken, setUser } from "../../../redux/userSlice";
 import bgAbstract from "../../../assets/engaged.png";
+import SecondaryHeader from "../../../components/SecondaryHeader";
 const BuyerLogin = () => {
   document.title = "Đăng nhập";
 
@@ -62,9 +63,10 @@ const BuyerLogin = () => {
     }
   };
   return (
-    <div className="w-full bg-cover bg-background-Shop-2 h-screen relative ">
-      <div className="absolute w-full h-full backdrop-blur-md">
-        <div className="flex justify-center  px-10 py-36 ">
+    <div className="w-full bg-cover bg-background-Shop-2 h-screen relative flex items-center justify-center">
+      <div className="w-full h-full backdrop-blur-md">
+        <SecondaryHeader />
+        <div className="flex justify-center mt-14">
           <section className="w-fit flex justify-center  items-center border-solid shadow-2xl">
             <div className="hidden lg:block">
               <img
@@ -77,7 +79,7 @@ const BuyerLogin = () => {
                 <h1 className="font-[500] text-primary text-2xl text-center">
                   Đăng nhập
                 </h1>
-                <input
+                <Input
                   tabIndex={1}
                   className="border py-2 px-3 w-full"
                   name="phoneNumber"
@@ -86,7 +88,7 @@ const BuyerLogin = () => {
                   type="text"
                 />
                 <div className="relative flex">
-                  <input
+                  <Input
                     tabIndex={2}
                     className="border py-2 px-3 w-full"
                     name="password"
@@ -109,14 +111,13 @@ const BuyerLogin = () => {
                   </div>
                 </div>
 
-                <button
+                <Button
                   className="bg-custom-gradient text-white hover:opacity-90 rounded py-2"
-                  type="submit"
                   onSubmit={handleOnSubmit}
                   tabIndex={3}
                 >
                   ĐĂNG NHẬP
-                </button>
+                </Button>
               </form>
               <div
                 className="flex justify-end mt-4 text-sm text-[#05a]"

@@ -1,36 +1,128 @@
-import React from "react";
+import React, { useState } from "react";
 import FlashSale from "../../../assets/flash-sale.png";
-import { Divider } from "antd";
+import {
+  Button,
+  DatePicker,
+  Divider,
+  Dropdown,
+  Input,
+  message,
+  Select,
+  Space,
+  Upload,
+} from "antd";
 import { FcGoogle } from "react-icons/fc";
 import bgAbstract from "../../../assets/engaged.png";
+import { DownOutlined } from "@ant-design/icons";
+import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
+import SecondaryHeader from "../../../components/SecondaryHeader";
+const items = [
+  {
+    value: "Nam",
+    label: <span>Nam</span>,
+  },
+  {
+    value: "Nữ",
+    label: <span>Nữ</span>,
+  },
+  {
+    value: "Khác",
+    label: <span>Khác</span>,
+  },
+];
 const BuyerRegister = () => {
+  const [loading, setLoading] = useState(false);
+
+  const uploadButton = (
+    <button
+      style={{
+        border: 0,
+        background: "none",
+      }}
+      type="button"
+    >
+      {loading ? <LoadingOutlined /> : <PlusOutlined />}
+      <div
+        style={{
+          marginTop: 8,
+        }}
+      >
+        Upload
+      </div>
+    </button>
+  );
   document.title = "Đăng Ký";
+
   return (
-    <div className="w-full bg-cover bg-background-Shop-2 h-screen relative ">
-      <div className="absolute w-full h-full backdrop-blur-md">
-        <div className="flex justify-center  px-10 py-36 ">
+    <div className="w-full bg-cover bg-background-Shop-2 h-screen relative flex items-center justify-center ">
+      <div className="w-full h-full backdrop-blur-md ">
+        <SecondaryHeader />
+        <div className="flex justify-center mt-8">
           <section className="w-fit flex justify-center  items-center border-solid shadow-2xl">
             <div className="hidden lg:block">
               <img
-                className="object-cover w-[400px] h-[477px] rounded-s"
+                className="object-cover w-[700px] h-[700px] rounded-s"
                 src={bgAbstract}
               />
             </div>
-            <div className="w-96 h-full bg-white rounded px-7 py-5 ">
-              <form className=" flex flex-col gap-7 ">
+            <div className="w-[450px] h-full bg-white rounded px-7 py-11 ">
+              <form className=" flex flex-col gap-3 ">
                 <h1 className="font-[500] text-primary text-2xl text-center">
                   Đăng Ký
                 </h1>
-                <input
+
+                <Input
                   tabIndex={1}
                   className="border py-2 px-3 w-full"
-                  name="phoneNumber"
-                  placeholder="Email/Tên đăng nhập"
+                  name="username"
+                  placeholder="Tên Đăng Nhập"
                   type="text"
                 />
+                <Input
+                  tabIndex={2}
+                  className="border py-2 px-3 w-full"
+                  name="fullname"
+                  placeholder="Họ và Tên"
+                  type="text"
+                />
+                <Input
+                  tabIndex={3}
+                  className="border py-2 px-3 w-full"
+                  name="email"
+                  placeholder="Email"
+                  type="email"
+                />
+                <Input
+                  tabIndex={5}
+                  className="border py-2 px-3 w-full"
+                  name="phoneNumber"
+                  placeholder="Số Điện Thoại"
+                  type="tel"
+                />
+                <div className="grid grid-cols-12 gap-4">
+                  <DatePicker
+                    className="col-span-8"
+                    format={{
+                      format: "YYYY-MM-DD",
+                      type: "mask",
+                    }}
+                    tabIndex={6}
+                    placeholder="Ngày Sinh"
+                    // onChange={onChange}
+                  />
+                  <Select
+                    className="col-span-4"
+                    placeholder="Giới Tính"
+                    style={{ width: 120 }}
+                    // onChange={handleChange}
+                    options={items}
+                    tabIndex={7}
+                  />
+                </div>
+
                 <div className="relative flex">
-                  <input
-                    tabIndex={2}
+                  <Input
+                    tabIndex={8}
                     className="border py-2 px-3 w-full"
                     name="password"
                     placeholder="Mật khẩu"
@@ -39,18 +131,17 @@ const BuyerRegister = () => {
                   />
                 </div>
 
-                <button
-                  className="bg-custom-gradient text-white hover:opacity-90 rounded py-2"
-                  type="submit"
+                <Button
+                  className="bg-custom-gradient text-white hover:opacity-90 "
                   // onSubmit={handleOnSubmit}
-                  tabIndex={3}
+                  tabIndex={9}
                 >
                   ĐĂNG KÝ
-                </button>
+                </Button>
               </form>
               <div
                 className="flex justify-end mt-4 text-sm text-[#05a]"
-                tabIndex={4}
+                tabIndex={10}
               >
                 <a href="/">Quên mật khẩu</a>
               </div>
@@ -66,7 +157,7 @@ const BuyerRegister = () => {
               </div>
               <div className="flex justify-center items-center gap-1 mt-8 mb-4 text-sm">
                 <span className="text-slate-400 ">Đã có tài khoản?</span>
-                <a href="/buyer/login" className="text-primary" tabIndex={5}>
+                <a href="/buyer/login" className="text-primary" tabIndex={11}>
                   Đăng nhập
                 </a>
               </div>

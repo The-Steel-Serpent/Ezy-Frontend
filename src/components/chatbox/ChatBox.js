@@ -70,7 +70,7 @@ const ChatBox = () => {
   // }, [socketC, user?._id]);
   return (
     <>
-      <div className="fixed right-2 bottom-0 z-[99999] font-[400]">
+      <div className="fixed right-2 bottom-0 z-[99999] font-[400] bg-white rounded">
         {/**Modal Chatbox*/}
         <div
           className={`${openChatBox ? `w-0 h-0 hidden` : `w-[100px] h-12`} ${

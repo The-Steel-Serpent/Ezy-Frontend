@@ -326,3 +326,11 @@
   @apply size-5 top-[35%];
   inset-inline-start: 12px;
 }
+
+.ant-input-outlined:hover {
+  border-color: #66cce6 !important;
+}
+
+.ant-input-outlined:focus {
+  border-color: #66cce6 !important;
+}

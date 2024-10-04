@@ -230,7 +230,7 @@ const PrimaryHeader = () => {
 
   return (
     <>
-      <header className="w-full h-fit bg-custom-gradient pt-1 sticky top-0 z-[100] left-0 right-0">
+      <header className="w-full h-fit bg-custom-gradient pt-1 sticky top-0 z-[100] left-0 right-0 shadow">
         <div className="text-white text-sm max-w-[1200px] hidden lg:flex m-auto h-[34px]">
           <ul className="flex ">
             <li className="p-1 nav-link nav-link-hoverable">
