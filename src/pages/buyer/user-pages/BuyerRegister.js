@@ -1,9 +1,11 @@
 import React, { useEffect, useReducer } from "react";
 import { motion } from "framer-motion";
-import { Button, DatePicker, Divider, Input, Select } from "antd";
+import { Button, DatePicker, Divider, Input, message, Select } from "antd";
 import { FcGoogle } from "react-icons/fc";
 import bgAbstract from "../../../assets/engaged.png";
 import SecondaryHeader from "../../../components/SecondaryHeader";
+import { signUpWithEmailPassword } from "../../../firebase/AuthenticationFirebase";
+import axios from "axios";
 
 const items = [
   {
@@ -86,6 +88,134 @@ const BuyerRegister = () => {
     });
   };
 
+  //Handle
+
+  const saveUserAccount = async ({
+    user_id,
+    username,
+    fullname,
+    email,
+    phoneNumber,
+    gender,
+    dob,
+  }) => {
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/api/buyer-register`,
+        {
+          user_id,
+          username,
+          fullname,
+          email,
+          phoneNumber,
+          gender,
+          dob,
+        }
+      );
+      if (res.status === 201) return true;
+    } catch (error) {
+      console.log("Error save user account:", error.message);
+      return false;
+    }
+  };
+
+  const checkEmail = async ({ email }) => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/check-email?email=${email}`
+      );
+      if (res.status === 200) return true;
+      if (res.status === 400) return false;
+    } catch (error) {
+      console.log("Error check email:", error.message);
+      return false;
+    }
+  };
+  const checkUsername = async ({ username }) => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/check-username?username=${username}`
+      );
+      if (res.status === 200) return true;
+      if (res.status === 400) return false;
+    } catch (error) {
+      console.log("Error check email:", error.message);
+      return false;
+    }
+  };
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    if (!hasStartedTyping) {
+      message.error("Vui lòng nhập thông tin");
+      return;
+    }
+    dispatch({
+      type: "SET_LOADING",
+      payload: true,
+    });
+    try {
+      const email = await checkEmail({ email: data.email });
+      const username = await checkUsername({ username: data.username });
+      if (email) {
+        message.error("Email đã tồn tại");
+        dispatch({
+          type: "SET_LOADING",
+          payload: false,
+        });
+        return;
+      }
+      if (username) {
+        message.error("Tên đăng nhập đã tồn tại");
+        dispatch({
+          type: "SET_LOADING",
+          payload: false,
+        });
+        return;
+      }
+      if (
+        error?.username ||
+        error?.fullname ||
+        error?.email ||
+        error?.phoneNumber ||
+        error?.dob ||
+        error?.gender ||
+        error?.password ||
+        error?.retypePassword
+      ) {
+        dispatch({
+          type: "SET_LOADING",
+          payload: false,
+        });
+        message.error("Vui lòng kiểm tra lại thông tin");
+        return;
+      }
+      const user = await signUpWithEmailPassword(data?.email, data?.password);
+      if (user) {
+        await saveUserAccount({
+          user_id: user.uid,
+          username: data.username,
+          fullname: data.fullname,
+          email: data.email,
+          phoneNumber: data.phoneNumber,
+          gender: data.gender,
+          dob: data.dob,
+        });
+        message.warning("Vui lòng xác thực email để hoàn tất đăng ký");
+      }
+      dispatch({
+        type: "SET_LOADING",
+        payload: false,
+      });
+    } catch (error) {
+      message.error(error.message);
+      dispatch({
+        type: "SET_LOADING",
+        payload: false,
+      });
+    }
+  };
+
   useEffect(() => {
     if (!hasStartedTyping) return;
     //Username
@@ -165,10 +295,26 @@ const BuyerRegister = () => {
         type: "SET_ERROR",
         payload: { name: "dob", value: "Ngày sinh không được để trống" },
       });
-    } else if (new Date(data.dob) > new Date()) {
+    }
+    const dob = new Date(data.dob);
+
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    const dayDiff = today.getDate() - dob.getDate();
+
+    if (dob > today) {
       dispatch({
         type: "SET_ERROR",
         payload: { name: "dob", value: "Ngày sinh không hợp lệ" },
+      });
+    } else if (
+      age < 16 ||
+      (age === 16 && (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)))
+    ) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { name: "dob", value: "Bạn phải đủ 16 tuổi" },
       });
     } else {
       dispatch({
@@ -255,7 +401,7 @@ const BuyerRegister = () => {
               />
             </div>
             <div className="w-[450px] h-full bg-white rounded px-7 py-11 ">
-              <form className=" flex flex-col ">
+              <form onSubmit={handleSignUp} className=" flex flex-col ">
                 <h1 className="font-[500] text-primary text-2xl text-center">
                   Đăng Ký
                 </h1>
@@ -330,6 +476,9 @@ const BuyerRegister = () => {
                           type: "SET_DATA",
                           payload: { name: "dob", value: dateString },
                         });
+                        dispatch({
+                          type: "hasStartedTyping",
+                        });
                       }}
                     />
                     <span className="text-sm text-red-700">
@@ -348,6 +497,9 @@ const BuyerRegister = () => {
                       dispatch({
                         type: "SET_DATA",
                         payload: { name: "gender", value },
+                      });
+                      dispatch({
+                        type: "hasStartedTyping",
                       });
                     }}
                   />
@@ -389,6 +541,8 @@ const BuyerRegister = () => {
                   className="bg-custom-gradient text-white hover:opacity-90 mt-4"
                   // onSubmit={handleOnSubmit}
                   tabIndex={10}
+                  htmlType="submit"
+                  loading={loading}
                 >
                   ĐĂNG KÝ
                 </Button>
