@@ -5,19 +5,6 @@ import { PlusOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import AddressModal from '../address/AddressModal';
 
-const beforeUpload = (file) => {
-    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-    if (!isJpgOrPng) {
-        message.error('You can only upload JPG/PNG file!');
-    }
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    if (!isLt2M) {
-        message.error('Image must smaller than 2MB!');
-    }
-    return isJpgOrPng && isLt2M;
-};
-
-
 const BasicShopInformation = ({ onData }) => {
     const location = useLocation();
     const isSellerSetupPath = location.pathname === '/seller/seller-setup';
@@ -106,7 +93,19 @@ const BasicShopInformation = ({ onData }) => {
                 return state;
         }
     };
-
+    const beforeUpload = file => {
+        const isImage = file.type.startsWith('image/');
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isImage) {
+            message.error('Bạn chỉ có thể tải lên tệp hình ảnh!');
+            return Upload.LIST_IGNORE;
+        }
+        if (!isLt2M) {
+            message.error('Kích thước tập tin vượt quá 2.0 MB');
+            return Upload.LIST_IGNORE;
+        }
+        return true;
+    };
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const handleConfirm = () => {
@@ -174,7 +173,7 @@ const BasicShopInformation = ({ onData }) => {
         }
 
         // Validate address
-        if(state.detailAddress === '')
+        if (state.detailAddress === '')
             valid = false;
         dispatch({ type: 'SET_ERRORS', payload: newErrors });
         return valid;
@@ -182,26 +181,24 @@ const BasicShopInformation = ({ onData }) => {
 
     useEffect(() => {
         const check = validate();
-        if (check && state.provinceSelected && state.districtSelected && state.wardSelected) {
+        if (check && state.provinceSelected && state.districtSelected && state.wardSelected && state.imageUrl.length > 0) {
             const data = {
                 shop_name: state.shop_name,
                 shop_description: state.shop_description,
                 full_name: state.full_name,
-                cccd: state.cccd,
+                citizen_number: state.cccd,
                 imageUrl: state.imageUrl,
-                address: {
-                    province: state.provinceSelected,
-                    district: state.districtSelected,
-                    ward: state.wardSelected,
-                    detail: state.detailAddress
-                },
+                province_id: state.provinceSelected.ProvinceID,
+                district_id: state.districtSelected.DistrictID,
+                ward_code: state.wardSelected.WardCode,
+                shop_address: state.detailAddress,
                 noErrorBasicInfo: true
             };
             onData(data);
         } else {
             onData({ noErrorBasicInfo: false });
         }
-    }, [state.shop_name, state.shop_description, state.full_name, state.cccd, state.provinces, state.district, state.ward, state.detailAddress]);
+    }, [state.shop_name, state.shop_description, state.full_name, state.cccd, state.provinces, state.district, state.ward, state.detailAddress, state.imageUrl]);
 
     const uploadButton = (
         <button
@@ -240,8 +237,7 @@ const BasicShopInformation = ({ onData }) => {
     };
 
     useEffect(() => {
-        if (state.detailAddress && state.provinceSelected && state.districtSelected && state.wardSelected)
-        {
+        if (state.detailAddress && state.provinceSelected && state.districtSelected && state.wardSelected) {
             dispatch({ type: 'SET_ENABLE_CONFIRM', payload: false });
             dispatch({ type: 'SET_ADDRESS_FULL', payload: `${state.detailAddress}, ${state.wardSelected.WardName}, ${state.districtSelected.DistrictName}, ${state.provinceSelected.ProvinceName}` });
         }

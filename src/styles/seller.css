@@ -150,3 +150,7 @@ body,
 .border-rd {
     border-radius: 8px;
 }
+
+.custom-slider .ant-slider-track {
+    background-color: #28cd08;
+}

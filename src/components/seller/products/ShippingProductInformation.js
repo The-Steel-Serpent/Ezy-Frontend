@@ -1,5 +1,6 @@
 import { Col, Form, Input, Row } from 'antd';
 import React, { useReducer } from 'react';
+import { handleBeforeInput } from '../../../helpers/handleInput';
 
 const initialState = {
     length: '',
@@ -35,12 +36,6 @@ const ShippingProductInformation = () => {
     };
 
 
-    const handleBeforeInput = (e) => {
-        const char = e.data;
-        if (!char.match(/[0-9]/)) {
-            e.preventDefault();
-        }
-    };
     return (
         <div>
             <h3 className='text-lg'>Vận chuyển</h3>
@@ -77,7 +72,8 @@ const ShippingProductInformation = () => {
                             <Input
                                 value={state.width}
                                 onChange={(e) => handleInputChange(e, 'set_width')}
-                                onBeforeInput={handleBeforeInput} />
+                                onBeforeInput={handleBeforeInput}
+                                 />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -94,7 +90,8 @@ const ShippingProductInformation = () => {
                             <Input
                                 value={state.height}
                                 onChange={(e) => handleInputChange(e, 'set_height')}
-                                onBeforeInput={handleBeforeInput} />
+                                onBeforeInput={handleBeforeInput}
+                                 />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -111,7 +108,8 @@ const ShippingProductInformation = () => {
                             <Input
                                 value={state.weight}
                                 onChange={(e) => handleInputChange(e, 'set_weight')}
-                                onBeforeInput={handleBeforeInput} />
+                                onBeforeInput={handleBeforeInput}
+                                 />
                         </Form.Item>
                     </Col>
                 </Row>

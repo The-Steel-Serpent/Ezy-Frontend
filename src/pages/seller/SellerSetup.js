@@ -4,6 +4,9 @@ import BasicShopInformation from '../../components/setup/BasicShopInformation';
 import TaxInformation from '../../components/setup/TaxInformation';
 import { SmileOutlined } from '@ant-design/icons';
 import logo from '../../assets/onboarding-setup.png'
+import uploadFile from '../../helpers/uploadFile';
+import axios from 'axios';
+
 
 const steps = [
     {
@@ -25,12 +28,13 @@ const steps = [
 ];
 
 const initialState = {
-    basicShopInfo: [],
-    taxInfo: [],
+    basicShopInfo: null,
+    taxInfo: null,
     noErrorBasicInfo: false,
     noErrorTaxInfo: false,
     enableNextBasicInfo: false,
-    enableNextTaxInfo: false
+    enableNextTaxInfo: false,
+    logo_url: null
 }
 
 const reducer = (state, action) => {
@@ -65,12 +69,18 @@ const reducer = (state, action) => {
                 ...state,
                 enableNextTaxInfo: action.payload
             }
+        case 'SET_LOGO_IMAGE':
+            return {
+                ...state,
+                logo_url: action.payload
+            }
         default:
             return state;
     }
 }
 
 const SellerSetup = () => {
+    
     const [current, setCurrent] = useState(0);
     const [state, dispatch] = useReducer(reducer, initialState);
     const next = () => {
@@ -103,6 +113,48 @@ const SellerSetup = () => {
 
     const [stepOn, setStepOn] = useState(false);
 
+    const handleUpload  = async () => {
+        const img = state.basicShopInfo ? state.basicShopInfo.imageUrl : null;
+        const upload = await uploadFile(img[0].originFileObj,'seller-img');
+        if(upload.url) {
+            dispatch({ type: 'SET_LOGO_IMAGE', payload: upload.url });
+            console.log("URL checkkkkkk:", state.logo_url);
+        }
+    }
+
+    const handleSaveSeller = async () => {
+        await handleUpload();
+        const basicShopInfo = state.basicShopInfo;
+        const taxInfo = state.taxInfo;
+        const payload = {
+            shop_name: basicShopInfo.shop_name,
+            logo_url: state.logo_url,
+            shop_description: basicShopInfo.shop_description,
+            business_style_id: taxInfo.business_style_id,
+            tax_code: taxInfo.tax_code,
+            business_email: taxInfo.business_email,
+            province_id: basicShopInfo.province_id,
+            district_id: basicShopInfo.district_id,
+            ward_code: basicShopInfo.ward_code,
+            shop_address: basicShopInfo.shop_address,
+            full_name: basicShopInfo.full_name,
+            citizen_number: basicShopInfo.citizen_number,
+            user_id: 'vyFYL0fKQgPxbFXXd3KTpPNXUmk2' // test em oi
+        };
+
+        console.log("Payload being sent to server:", payload);
+
+        try {
+            const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/create-shop`, payload);
+            console.log('Shop created successfully:', res.data);
+            return res.data;
+        } catch (error) {
+            console.log("Create shop error:", error.message);
+            console.log("Error response data:", error.response ? error.response.data : "No response data");
+            return error.message;
+        }
+    };
+
     useEffect(() => {
         // reset state when stepOn is false
         dispatch({ type: 'SET_ENABLE_NEXT_BASIC_INFO', payload: false });
@@ -112,13 +164,16 @@ const SellerSetup = () => {
         const noErrorTaxInfo = state.taxInfo ? state.taxInfo.noErrorTaxInfo : null;
         if (noErrorBasicInfo) {
             dispatch({ type: 'SET_ENABLE_NEXT_BASIC_INFO', payload: true });
-            // console.log("Basic Info: ", state.basicShopInfo);
+            console.log("Basic Info: ", state.basicShopInfo);
         }
+        else
+            console.log("Basic Info: ", state.basicShopInfo);
+
         if (noErrorTaxInfo) {
             dispatch({ type: 'SET_ENABLE_NEXT_TAX_INFO', payload: true });
             console.log("Tax info Truc oiiiiiiiiiiiiiii: ", state.taxInfo);
-
-        }
+        }else
+            console.log("Tax info Truc oiiiiiiiiiiiiiii: ", state.taxInfo);
     }, [state.basicShopInfo, state.taxInfo])
 
     return (
@@ -153,7 +208,12 @@ const SellerSetup = () => {
                             <Result
                                 icon={<SmileOutlined />}
                                 title="Chọn tiếp theo để hoàn tất hồ sơ"
-                                extra={<Button type="primary">Tiếp theo</Button>}
+                                extra={
+                                    <Button
+                                        onClick={handleSaveSeller}
+                                        type="primary"
+                                    >Tiếp theo
+                                    </Button>}
                             />
                         )}
                     </div>
@@ -178,11 +238,6 @@ const SellerSetup = () => {
                                 </Button>
                             )
                         }
-                        {current === steps.length - 1 && (
-                            <Button type="primary" onClick={() => message.success('Processing complete!')}>
-                                Xong
-                            </Button>
-                        )}
                         {current > 0 && (
                             <Button
                                 style={{ margin: '0 8px' }}
