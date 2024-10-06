@@ -103,9 +103,9 @@ const TaxInformation = ({ onData }) => {
     const check = validate();
     if (check && state.selectedBusinessStyle) {
       const data = {
-        businessEmail: state.businessEmail,
-        businessTaxCode: state.businessTaxCode,
-        selectedBusinessStyle: state.selectedBusinessStyle,
+        business_email: state.businessEmail,
+        tax_code: state.businessTaxCode,
+        business_style_id: state.selectedBusinessStyle,
         noErrorTaxInfo: true
       }
       onData(data);
