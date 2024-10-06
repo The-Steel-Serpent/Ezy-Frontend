@@ -282,7 +282,7 @@ const PrimaryHeader = () => {
               </a>
             </li>
             <li className="p-1 flex gap-2 ">
-              {!user._id && (
+              {!user.user_id && (
                 <>
                   <a href="/buyer/register" className="nav-link-hoverable">
                     Đăng ký
@@ -293,10 +293,10 @@ const PrimaryHeader = () => {
                   </a>
                 </>
               )}
-              {user._id && (
+              {user.user_id && (
                 <AvatarWithPopover
                   name={user.username}
-                  img={user.profile_pic}
+                  img={user.avt_url}
                   size={23}
                 />
               )}

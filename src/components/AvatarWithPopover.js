@@ -13,8 +13,17 @@ const AvatarWithPopover = (props) => {
   const handleLogout = async () => {
     try {
       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
-      const res = await axios.get(URL);
-      toast.success(res.data.message);
+      const res = await axios.post(
+        URL,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      toast.success("Đăng xuất thành công");
       if (res.data.success) {
         dispatch(logout());
         navigate("/");
@@ -56,8 +65,8 @@ const AvatarWithPopover = (props) => {
   ];
 
   return (
-    <Space direction="vertical">
-      <Space wrap>
+    <div className="flex flex-col">
+      <div className="flex flex-wrap">
         <Dropdown
           menu={{
             items,
@@ -67,22 +76,22 @@ const AvatarWithPopover = (props) => {
             pointAtCenter: true,
           }}
         >
-          <Space wrap>
+          <div className="flex gap-2">
             {props.img && <Avatar src={props.img} size={props.size} />}
             {!props.img && (
               <Avatar
-                style={{ backgroundColor: "#87d068" }}
+                className="bg-primary"
                 size={props.size}
-                icon={<UserOutlined />}
+                icon={<UserOutlined className="text-white" />}
               />
             )}
             <button className="text-white lg:block hidden hover:text-slate-300">
               {props.name}
             </button>
-          </Space>
+          </div>
         </Dropdown>
-      </Space>
-    </Space>
+      </div>
+    </div>
   );
 };
 

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import FlashSale from "../../../assets/flash-sale.png";
-import { Button, Divider, Input } from "antd";
+import { Button, Divider, Input, message } from "antd";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { IoMdEye } from "react-icons/io";
@@ -13,11 +13,19 @@ import { setToken, setUser } from "../../../redux/userSlice";
 import bgAbstract from "../../../assets/engaged.png";
 import SecondaryHeader from "../../../components/SecondaryHeader";
 import { motion } from "framer-motion";
+import {
+  signInWithGoogle,
+  signInWithEmailPassword,
+} from "../../../firebase/AuthenticationFirebase";
 const BuyerLogin = () => {
   document.title = "Đăng nhập";
 
   const [data, setData] = useState(null);
   const [hidePassword, setHidePassword] = useState(false);
+  const [error, setError] = useState({
+    identifier: "",
+    password: "",
+  });
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const passwordInputType = hidePassword ? "text" : "password";
@@ -36,33 +44,161 @@ const BuyerLogin = () => {
       };
     });
   };
-  const handleOnSubmit = async (e) => {
-    e.preventDefault();
-    const url = `${process.env.REACT_APP_BACKEND_URL}/api/login`;
+  const handleSignIn = async ({ email, password }) => {
     try {
-      const response = await axios({
-        method: "POST",
-        url: url,
-        data: {
-          phoneNumber: data?.phoneNumber,
-          password: data?.password,
-        },
-        withCredentials: true,
-      });
-      toast.success(response.data.message);
-      if (response.data.success) {
-        console.log(response?.data?.token);
-        dispatch(setToken(response?.data?.token));
-        localStorage.setItem("token", response?.data?.token);
-        setData({
-          password: "",
-        });
-        navigate("/");
+      const user = await signInWithEmailPassword(email, password);
+
+      if (user.emailVerified) {
+        const token = await user.getIdToken();
+        localStorage.setItem("token", token);
+        message.success("Đăng nhập thành công");
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+      } else {
+        message.error(
+          "Tài khoản của bạn chưa xác thực vui lòng xác thực email trước khi đăng nhập"
+        );
+        return;
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      console.error("Error during sign-in:", error.message);
+      message.error(error.message || "Đăng nhập thất bại");
     }
   };
+  const handleOnSubmit = async (e) => {
+    e.preventDefault();
+    if (!data?.identifier || !data?.password) {
+      message.error("Vui lòng nhập đầy đủ thông tin.");
+      return;
+    }
+    const url = `${process.env.REACT_APP_BACKEND_URL}/api/find-user-email-or-username`;
+    try {
+      const response = await axios.post(
+        url,
+        {
+          identifier: data.identifier,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      if (response.status === 200) {
+        const email = response.data.user.email;
+        const password = data.password;
+        await handleSignIn({ email, password });
+      } else if (response.status === 404) {
+        message.error("Tài khoản không tồn tại");
+      }
+    } catch (error) {
+      message.error("Đăng nhập thất bại");
+    }
+  };
+
+  const saveUserAccount = async ({
+    user_id,
+    username,
+    fullname,
+    email,
+    phoneNumber,
+    gender,
+    dob,
+    avtUrl,
+    isVerified = 0,
+  }) => {
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/api/buyer-register`,
+        {
+          user_id,
+          username,
+          fullname,
+          email,
+          phoneNumber,
+          gender,
+          dob,
+          avtUrl,
+          isVerified,
+        }
+      );
+      if (res.status === 201) return true;
+    } catch (error) {
+      console.log("Error save user account:", error.message);
+      return false;
+    }
+  };
+  const checkEmail = async ({ email }) => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/check-email?email=${email}`
+      );
+      if (res.status === 200) return true;
+      if (res.status === 400) return false;
+    } catch (error) {
+      console.log("Error check email:", error.message);
+      return false;
+    }
+  };
+  const handleGoogleSignIn = async (e) => {
+    e.preventDefault();
+    try {
+      const user = await signInWithGoogle();
+      // setSuccess('Successfully signed in with Google');
+      message.success("Đăng nhập thành công");
+      const user_id = user.uid;
+      const email = user.email;
+      const check = await checkEmail({ email });
+      const username = email.split("@")[0];
+      if (!check) {
+        const rs = await saveUserAccount({
+          user_id,
+          email,
+          username,
+          fullname: user.displayName,
+          avtUrl: user.photoURL,
+          isVerified: 1,
+        });
+        if (rs) {
+          console.log("Lưu tài khoản thành công");
+        } else {
+          console.log("Lưu tài khoản thất bại");
+        }
+      } else {
+        console.log("Đã có tài khoản");
+      }
+      localStorage.setItem("token", await user.getIdToken());
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (data?.identifier === "") {
+      setError((prev) => ({
+        ...prev,
+        identifier: "Vui lòng không để trống Email/Tên Đăng Nhập",
+      }));
+    } else {
+      setError((prev) => ({
+        ...prev,
+        identifier: "",
+      }));
+    }
+    if (data?.password === "") {
+      setError((prev) => ({
+        ...prev,
+        password: "Vui lòng không để trống mật khẩu",
+      }));
+    } else {
+      setError((prev) => ({
+        ...prev,
+        password: "",
+      }));
+    }
+  }, [data]);
   return (
     <div className="w-full bg-cover bg-background-Shop-2 h-screen relative flex items-center justify-center">
       <div className="w-full h-full backdrop-blur-md">
@@ -81,27 +217,41 @@ const BuyerLogin = () => {
               />
             </div>
             <div className="w-[400px] h-full bg-white rounded px-7 py-10 ">
-              <form className=" flex flex-col gap-7 " onSubmit={handleOnSubmit}>
-                <h1 className="font-[500] text-primary text-2xl text-center">
+              <form className=" flex flex-col" onSubmit={handleOnSubmit}>
+                <h1 className="font-[500] text-primary text-2xl text-center mb-7">
                   Đăng nhập
                 </h1>
-                <Input
-                  tabIndex={1}
-                  className="border py-2 px-3 w-full"
-                  name="phoneNumber"
-                  placeholder="Email/Tên đăng nhập"
-                  onChange={handleOnChange}
-                  type="text"
-                />
-                <div className="relative flex">
+                <div className="flex flex-col h-[74px]">
                   <Input
-                    tabIndex={2}
+                    tabIndex={1}
                     className="border py-2 px-3 w-full"
-                    name="password"
-                    placeholder="Mật khẩu"
-                    type={passwordInputType}
+                    name="identifier"
+                    status={error?.identifier ? "error" : ""}
+                    placeholder="Email/Tên đăng nhập"
                     onChange={handleOnChange}
+                    type="text"
                   />
+                  <span className="text-red-700 text-sm">
+                    {error?.identifier}
+                  </span>
+                </div>
+
+                <div className="relative flex">
+                  <div className="w-full h-[74px]">
+                    <Input
+                      tabIndex={2}
+                      className="border py-2 px-3 w-full"
+                      name="password"
+                      status={error?.password ? "error" : ""}
+                      placeholder="Mật khẩu"
+                      type={passwordInputType}
+                      onChange={handleOnChange}
+                    />
+                    <span className="text-red-700 text-sm">
+                      {error?.password}
+                    </span>
+                  </div>
+
                   <div onClick={handleHidePassword}>
                     {hidePassword ? (
                       <IoMdEye
@@ -119,7 +269,7 @@ const BuyerLogin = () => {
 
                 <Button
                   className="bg-custom-gradient text-white hover:opacity-90 rounded py-2"
-                  onSubmit={handleOnSubmit}
+                  htmlType="submit"
                   tabIndex={3}
                 >
                   ĐĂNG NHẬP
@@ -135,7 +285,10 @@ const BuyerLogin = () => {
                 <span className="text-slate-400 text-xs">HOẶC</span>
               </Divider>
               <div className="flex justify-center">
-                <button className="border rounded p-2 w-[165px]">
+                <button
+                  className="border rounded p-2 w-[165px]"
+                  onClick={handleGoogleSignIn}
+                >
                   <span className="flex gap-1 justify-center items-center">
                     <FcGoogle size={23} /> Google
                   </span>

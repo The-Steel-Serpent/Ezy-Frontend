@@ -11,7 +11,7 @@ function formatNumber(num) {
     return num.toString(); // Dưới 1000 không cần format
   }
 }
-const ProductCard = ({ value, key, loading, itemsPerRow = 6 }) => {
+const ProductCard = ({ value, loading, itemsPerRow = 6 }) => {
   const price =
     value?.base_price - (value?.base_price * value?.sale_percents) / 100;
   return (

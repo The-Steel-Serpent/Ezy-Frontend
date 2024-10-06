@@ -38,7 +38,7 @@ const ProductSuggestions = () => {
                 <Skeleton.Image className="lg:w-48 lg:h-[261px] mt-3 lg:col-span-2" />
               }
             >
-              <ProductCard loading={loading} value={value} key={key} />
+              <ProductCard loading={loading} value={value} />
             </Suspense>
           );
         })}

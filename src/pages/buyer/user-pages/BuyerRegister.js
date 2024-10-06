@@ -4,8 +4,14 @@ import { Button, DatePicker, Divider, Input, message, Select } from "antd";
 import { FcGoogle } from "react-icons/fc";
 import bgAbstract from "../../../assets/engaged.png";
 import SecondaryHeader from "../../../components/SecondaryHeader";
-import { signUpWithEmailPassword } from "../../../firebase/AuthenticationFirebase";
+import {
+  signUpWithEmailPassword,
+  signInWithGoogle,
+} from "../../../firebase/AuthenticationFirebase";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../../redux/userSlice";
 
 const items = [
   {
@@ -22,6 +28,7 @@ const items = [
   },
 ];
 const BuyerRegister = () => {
+  const navigate = useNavigate();
   const [state, dispatch] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -77,6 +84,43 @@ const BuyerRegister = () => {
   );
 
   const { loading, data, error, hasStartedTyping } = state;
+
+  const handleGoogleSignIn = async (e) => {
+    e.preventDefault();
+    try {
+      const user = await signInWithGoogle();
+      // setSuccess('Successfully signed in with Google');
+      message.success("Đăng nhập thành công");
+      const user_id = user.uid;
+      const email = user.email;
+      const check = await checkEmail({ email });
+      const username = email.split("@")[0];
+      if (!check) {
+        const rs = await saveUserAccount({
+          user_id,
+          email,
+          username,
+          fullname: user.displayName,
+          avtUrl: user.photoURL,
+          isVerified: 1,
+        });
+        if (rs) {
+          console.log("Lưu tài khoản thành công");
+        } else {
+          console.log("Lưu tài khoản thất bại");
+        }
+      } else {
+        console.log("Đã có tài khoản");
+      }
+      localStorage.setItem("token", await user.getIdToken());
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  };
+  //onTextChanged
   const onTextChanged = (e) => {
     const { name, value } = e.target;
     dispatch({
@@ -98,6 +142,8 @@ const BuyerRegister = () => {
     phoneNumber,
     gender,
     dob,
+    avtUrl,
+    isVerified = 0,
   }) => {
     try {
       const res = await axios.post(
@@ -110,6 +156,8 @@ const BuyerRegister = () => {
           phoneNumber,
           gender,
           dob,
+          avtUrl,
+          isVerified,
         }
       );
       if (res.status === 201) return true;
@@ -202,6 +250,9 @@ const BuyerRegister = () => {
           dob: data.dob,
         });
         message.warning("Vui lòng xác thực email để hoàn tất đăng ký");
+        setTimeout(() => {
+          navigate("/buyer/login");
+        }, 3000);
       }
       dispatch({
         type: "SET_LOADING",
@@ -384,14 +435,14 @@ const BuyerRegister = () => {
   document.title = "Đăng Ký";
 
   return (
-    <div className="w-full bg-cover bg-background-Shop-2 h-screen relative flex items-center justify-center ">
+    <div className="w-full bg-cover bg-background-Shop-2 relative flex items-center justify-center ">
       <div className="w-full h-full backdrop-blur-md ">
         <SecondaryHeader />
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1 }}
-          className="flex justify-center mt-8"
+          className="flex justify-center py-5"
         >
           <section className="w-fit flex justify-center  items-center border-solid shadow-2xl">
             <div className="hidden lg:block h-full">
@@ -557,7 +608,10 @@ const BuyerRegister = () => {
                 <span className="text-slate-400 text-xs">HOẶC</span>
               </Divider>
               <div className="flex justify-center">
-                <button className="border rounded p-2 w-[165px]">
+                <button
+                  className="border rounded p-2 w-[165px]"
+                  onClick={handleGoogleSignIn}
+                >
                   <span className="flex gap-1 justify-center items-center">
                     <FcGoogle size={23} /> Google
                   </span>
