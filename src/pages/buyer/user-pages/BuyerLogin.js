@@ -17,6 +17,7 @@ import {
   signInWithGoogle,
   signInWithEmailPassword,
 } from "../../../firebase/AuthenticationFirebase";
+import ModalForgotPassword from "../../../components/user/ModalForgotPassword";
 const BuyerLogin = () => {
   document.title = "Đăng nhập";
 
@@ -26,8 +27,8 @@ const BuyerLogin = () => {
     identifier: "",
     password: "",
   });
+  const [isVisbleResetModal, setIsVisbleResetModal] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const passwordInputType = hidePassword ? "text" : "password";
 
   const handleHidePassword = (e) => {
@@ -279,7 +280,12 @@ const BuyerLogin = () => {
                 className="flex justify-end mt-4 text-sm text-[#05a]"
                 tabIndex={4}
               >
-                <a href="/">Quên mật khẩu</a>
+                <span
+                  className="cursor-pointer"
+                  onClick={() => setIsVisbleResetModal(true)}
+                >
+                  Quên mật khẩu
+                </span>
               </div>
               <Divider>
                 <span className="text-slate-400 text-xs">HOẶC</span>
@@ -304,6 +310,15 @@ const BuyerLogin = () => {
           </section>
         </motion.div>
       </div>
+      <ModalForgotPassword
+        isVisbleResetModal={isVisbleResetModal}
+        onClosed={(callback) => {
+          setIsVisbleResetModal(false);
+          if (callback) {
+            setIsVisbleResetModal(callback);
+          }
+        }}
+      />
     </div>
   );
 };

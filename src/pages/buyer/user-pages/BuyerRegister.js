@@ -10,9 +10,7 @@ import {
 } from "../../../firebase/AuthenticationFirebase";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { setToken } from "../../../redux/userSlice";
-
+import ModalForgotPassword from "../../../components/user/ModalForgotPassword";
 const items = [
   {
     value: "Nam",
@@ -36,6 +34,8 @@ const BuyerRegister = () => {
           return { ...state, loading: action.payload };
         case "hasStartedTyping":
           return { ...state, hasStartedTyping: true };
+        case "SET_isVisbleResetModal":
+          return { ...state, isVisbleResetModal: action.payload };
         case "SET_DATA":
           return {
             ...state,
@@ -58,6 +58,7 @@ const BuyerRegister = () => {
       }
     },
     {
+      isVisbleResetModal: false,
       loading: false,
       data: {
         username: "",
@@ -83,7 +84,7 @@ const BuyerRegister = () => {
     }
   );
 
-  const { loading, data, error, hasStartedTyping } = state;
+  const { loading, data, error, hasStartedTyping, isVisbleResetModal } = state;
 
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
@@ -602,7 +603,14 @@ const BuyerRegister = () => {
                 className="flex justify-end mt-4 text-sm text-[#05a]"
                 tabIndex={11}
               >
-                <a href="/">Quên mật khẩu</a>
+                <span
+                  className="cursor-pointer"
+                  onClick={() =>
+                    dispatch({ type: "SET_isVisbleResetModal", payload: true })
+                  }
+                >
+                  Quên mật khẩu
+                </span>
               </div>
               <Divider>
                 <span className="text-slate-400 text-xs">HOẶC</span>
@@ -627,6 +635,15 @@ const BuyerRegister = () => {
           </section>
         </motion.div>
       </div>
+      <ModalForgotPassword
+        isVisbleResetModal={isVisbleResetModal}
+        onClosed={(callback) => {
+          dispatch({ type: "SET_isVisbleResetModal", payload: false });
+          if (callback) {
+            dispatch({ type: "SET_isVisbleResetModal", payload: callback });
+          }
+        }}
+      />
     </div>
   );
 };
