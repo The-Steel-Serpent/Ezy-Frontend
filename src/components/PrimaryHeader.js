@@ -37,7 +37,7 @@ import axios from "axios";
 import { useLocation, useParams } from "react-router-dom";
 import { el } from "date-fns/locale";
 import { DownOutlined } from "@ant-design/icons";
-
+const CartComponent = lazy(() => import("./cart/CartComponent"));
 // import FullLogo from "./FullLogo";
 const ChatBox = lazy(() => import("./chatbox/ChatBox"));
 
@@ -402,14 +402,15 @@ const PrimaryHeader = () => {
             </form>
           </div>
           <div className="col-span-2 text-white flex justify-center items-center">
-            <div className="w-fit">
-              <a href="#" className="relative">
-                <div className="rounded-full text-primary bg-white px-2 py-1 -right-3 absolute bottom-3">
-                  0
+            <Suspense
+              fallback={
+                <div className="w-fit">
+                  <Skeleton avatar className="size-[35px]" />
                 </div>
-                <PiShoppingCartSimpleBold size={35} />
-              </a>
-            </div>
+              }
+            >
+              <CartComponent />
+            </Suspense>
           </div>
           <div className="col-span-2 lg:hidden flex text-white text-sm items-center">
             {!user._id && (

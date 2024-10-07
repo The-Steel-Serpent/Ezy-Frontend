@@ -6,6 +6,7 @@ import {
   Divider,
   Dropdown,
   InputNumber,
+  notification,
   Pagination,
   Skeleton,
   Space,
@@ -16,7 +17,7 @@ import "react-multi-carousel/lib/styles.css";
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import ReactStars from "react-rating-star-with-type";
 import formatNumber from "../../../helpers/formatNumber";
-import { useParams } from "react-router-dom";
+import { useNavigate, useNavigation, useParams } from "react-router-dom";
 import axios from "axios";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { TiShoppingCart } from "react-icons/ti";
@@ -27,8 +28,7 @@ import { DownOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
 import ProductNotFounded from "../../../components/product/ProductNotFounded";
 import withChildSuspense from "../../../hooks/HOC/withChildSuspense";
-import { de } from "date-fns/locale";
-import { set } from "date-fns";
+import { useSelector } from "react-redux";
 
 const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
 const ReactImageGallery = lazy(() => import("react-image-gallery"));
@@ -41,7 +41,12 @@ const CarouselProduct = withChildSuspense(
 const ProductSuggestions = withChildSuspense(
   lazy(() => import("../../../components/product/ProductSuggestions"))
 );
+
+const { addToCart } = require("../../../services/cartService");
+
 const DetailsProduct = () => {
+  const user = useSelector((state) => state.user);
+  const navigate = useNavigate();
   const { id } = useParams();
   const [success, setSuccess] = useState(true);
   const [sizes, setSizes] = useState([]);
@@ -180,6 +185,39 @@ const DetailsProduct = () => {
     },
     [ratingFilter]
   );
+
+  //Cart
+  const handleAddToCart = async (productVarient) => {
+    try {
+      if (detailsProduct?.stock <= 0 || currentVarient?.stock <= 0) {
+        return;
+      }
+      if (!user.user_id) {
+        navigate("/buyer/login");
+      }
+      // console.log("Quantity: ", quantity);
+      const res = await addToCart(
+        user.user_id,
+        detailsProduct?.Shop?.shop_id,
+        productVarient.product_varients_id,
+        quantity
+      );
+      if (res.success) {
+        notification.success({
+          message: res.message,
+          showProgress: true,
+          pauseOnHover: false,
+        });
+      }
+      console.log("Add to cart: ", res);
+    } catch (error) {
+      notification.error({
+        message: error?.response?.data?.message,
+        showProgress: true,
+        pauseOnHover: false,
+      });
+    }
+  };
   //Product Details
   const imgs =
     detailsProduct?.ProductImgs?.map((img) => ({
@@ -463,28 +501,29 @@ const DetailsProduct = () => {
                   <Button
                     size="large"
                     className={`${
-                      detailsProduct?.stock > 0
+                      detailsProduct?.stock > 0 || currentVarient?.stock > 0
                         ? `hover:bg-primary hover:text-white  cursor-pointer`
                         : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
                     } h-14 px-5  text-lg`}
                     icon={<TiShoppingCart />}
-                    onClick={() => {
-                      detailsProduct?.stock > 0 &&
-                        console.log("Thêm vào giỏ hàng", currentVarient);
-                    }}
+                    onClick={async () => await handleAddToCart(currentVarient)}
                   >
                     Thêm vào giỏ hàng
                   </Button>
                   <Button
                     className={`${
-                      detailsProduct?.stock > 0
+                      detailsProduct?.stock > 0 || currentVarient?.stock > 0
                         ? "hover:bg-opacity-80 cursor-pointer"
                         : "opacity-60 cursor-not-allowed"
                     } bg-primary text-white px-8 h-14 text-lg`}
                     size="large"
                     onClick={() => {
-                      detailsProduct?.stock > 0 &&
+                      if (
+                        detailsProduct?.stock > 0 ||
+                        currentVarient?.stock > 0
+                      ) {
                         console.log("Mua Ngay", currentVarient);
+                      }
                     }}
                   >
                     Mua Ngay
