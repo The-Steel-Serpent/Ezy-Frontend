@@ -83,6 +83,23 @@ export const signInWithEmailPassword = async (email, password) => {
         case "auth/wrong-password":
           errorMessage = "Mật khẩu không chính xác. Vui lòng thử lại.";
           break;
+        case "auth/too-many-requests":
+          errorMessage = "Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau.";
+          break;
+        case "auth/network-request-failed":
+          errorMessage = "Lỗi mạng. Vui lòng kiểm tra kết nối.";
+          break;
+        case "auth/popup-closed-by-user":
+          errorMessage = "Đăng nhập bị hủy.";
+          break;
+        case "auth/cancelled-popup-request":
+          errorMessage = "Đăng nhập bị hủy.";
+          break;
+        case "auth/invalid-credential":
+          errorMessage =
+            "Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại.";
+          break;
+
         default:
           errorMessage = "Đã xảy ra lỗi. Vui lòng thử lại sau.";
       }

@@ -85,38 +85,68 @@ const BuyerRegister = () => {
   );
 
   const { loading, data, error, hasStartedTyping, isVisbleResetModal } = state;
+  const checkRole = async (user) => {
+    const user_id = user.uid;
+    const email = user.email;
+    const username = email.split("@")[0];
+    const fullname = user.displayName;
+    const avtUrl = user.photoURL;
 
-  const handleGoogleSignIn = async (e) => {
-    e.preventDefault();
+    const url = `${process.env.REACT_APP_BACKEND_URL}/api/find-user-email-or-username`;
     try {
-      const user = await signInWithGoogle();
-      // setSuccess('Successfully signed in with Google');
-      message.success("Đăng nhập thành công");
-      const user_id = user.uid;
-      const email = user.email;
-      const check = await checkEmail({ email });
-      const username = email.split("@")[0];
-      if (!check) {
+      const response = await axios.post(
+        url,
+        {
+          identifier: email,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (response.status === 200) {
+        if (response.data.user.role_id !== 1) {
+          message.error(
+            "Đăng nhập thất bại. Tài khoản của bạn không phải là tài khoản khách hàng"
+          );
+          return;
+        }
+        localStorage.setItem("token", await user.getIdToken());
+        message.success("Đăng nhập thành công");
+        setTimeout(() => {
+          navigate("/");
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Error:", error.response || error.message);
+
+      //Lưu tài khoản khi không tìm thấy tài khoản trong db
+      if (error.status === 404) {
         const rs = await saveUserAccount({
           user_id,
           email,
           username,
-          fullname: user.displayName,
-          avtUrl: user.photoURL,
+          fullname: fullname,
+          avtUrl: avtUrl,
           isVerified: 1,
         });
-        if (rs) {
-          console.log("Lưu tài khoản thành công");
-        } else {
-          console.log("Lưu tài khoản thất bại");
-        }
-      } else {
-        console.log("Đã có tài khoản");
+        console.log(rs ? "Lưu tài khoản thành công" : "Lưu tài khoản thất bại");
+        localStorage.setItem("token", await user.getIdToken());
+        message.success("Đăng nhập thành công");
+        setTimeout(() => {
+          navigate("/");
+        }, 3000);
+      } else message.error("Đăng nhập thất bại");
+    }
+  };
+  const handleGoogleSignIn = async (e) => {
+    e.preventDefault();
+
+    try {
+      const user = await signInWithGoogle();
+      if (user) {
+        await checkRole(user);
       }
-      localStorage.setItem("token", await user.getIdToken());
-      setTimeout(() => {
-        navigate("/");
-      }, 3000);
     } catch (error) {
       console.log("Error:", error);
     }

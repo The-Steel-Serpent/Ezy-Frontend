@@ -64,6 +64,7 @@ const BuyerLogin = () => {
       }
     } catch (error) {
       console.error("Error during sign-in:", error.message);
+      console.error("Error message:", error.message);
       message.error(error.message || "Đăng nhập thất bại");
     }
   };
@@ -85,14 +86,19 @@ const BuyerLogin = () => {
         }
       );
       if (response.status === 200) {
-        const email = response.data.user.email;
-        const password = data.password;
-        await handleSignIn({ email, password });
-      } else if (response.status === 404) {
-        message.error("Tài khoản không tồn tại");
+        if (response.data.user.role_id !== 1) {
+          message.error("Tài khoản của bạn không phải là tài khoản khách hàng");
+          return;
+        } else {
+          const email = response.data.user.email;
+          const password = data.password;
+          await handleSignIn({ email, password });
+        }
       }
     } catch (error) {
-      message.error("Đăng nhập thất bại");
+      if (error.status === 404) {
+        message.error("Tài khoản không tồn tại");
+      } else message.error("Đăng nhập thất bại");
     }
   };
 
@@ -128,54 +134,69 @@ const BuyerLogin = () => {
       return false;
     }
   };
-  const checkEmail = async ({ email }) => {
+  const checkRole = async (user) => {
+    const user_id = user.uid;
+    const email = user.email;
+    const username = email.split("@")[0];
+    const fullname = user.displayName;
+    const avtUrl = user.photoURL;
+
+    const url = `${process.env.REACT_APP_BACKEND_URL}/api/find-user-email-or-username`;
     try {
-      const res = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/check-email?email=${email}`
+      const response = await axios.post(
+        url,
+        {
+          identifier: email,
+        },
+        {
+          withCredentials: true,
+        }
       );
-      if (res.status === 200) return true;
-      if (res.status === 400) return false;
+      if (response.status === 200) {
+        if (response.data.user.role_id !== 1) {
+          message.error(
+            "Đăng nhập thất bại. Tài khoản của bạn không phải là tài khoản khách hàng"
+          );
+          return;
+        }
+        localStorage.setItem("token", await user.getIdToken());
+        message.success("Đăng nhập thành công");
+        setTimeout(() => {
+          navigate("/");
+        }, 3000);
+      }
     } catch (error) {
-      console.log("Error check email:", error.message);
-      return false;
-    }
-  };
-  const handleGoogleSignIn = async (e) => {
-    e.preventDefault();
-    try {
-      const user = await signInWithGoogle();
-      // setSuccess('Successfully signed in with Google');
-      message.success("Đăng nhập thành công");
-      const user_id = user.uid;
-      const email = user.email;
-      const check = await checkEmail({ email });
-      const username = email.split("@")[0];
-      if (!check) {
+      console.error("Error:", error.response || error.message);
+      if (error.status === 404) {
         const rs = await saveUserAccount({
           user_id,
           email,
           username,
-          fullname: user.displayName,
-          avtUrl: user.photoURL,
+          fullname: fullname,
+          avtUrl: avtUrl,
           isVerified: 1,
         });
-        if (rs) {
-          console.log("Lưu tài khoản thành công");
-        } else {
-          console.log("Lưu tài khoản thất bại");
-        }
-      } else {
-        console.log("Đã có tài khoản");
+        console.log(rs ? "Lưu tài khoản thành công" : "Lưu tài khoản thất bại");
+        localStorage.setItem("token", await user.getIdToken());
+        message.success("Đăng nhập thành công");
+        setTimeout(() => {
+          navigate("/");
+        }, 3000);
+      } else message.error("Đăng nhập thất bại");
+    }
+  };
+  const handleGoogleSignIn = async (e) => {
+    e.preventDefault();
+
+    try {
+      const user = await signInWithGoogle();
+      if (user) {
+        await checkRole(user);
       }
-      localStorage.setItem("token", await user.getIdToken());
-      setTimeout(() => {
-        navigate("/");
-      }, 3000);
     } catch (error) {
       console.log("Error:", error);
     }
   };
-
   useEffect(() => {
     if (data?.identifier === "") {
       setError((prev) => ({
