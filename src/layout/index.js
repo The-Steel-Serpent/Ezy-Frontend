@@ -33,13 +33,13 @@ const AuthLayout = ({ children }) => {
         localStorage.clear();
       }
     } catch (error) {
-      message.error(error?.response?.data?.message);
+      if (error.response.data.code === "auth/id-token-expired") {
+        message.error("Phiên Đăng nhập đã hết hạn");
+      }
     }
   };
   //side Effect
   useEffect(() => {
-    console.log("Token: ", token);
-    console.log("User: ", user);
     const fetchUserData = async () => {
       try {
         const url = `${process.env.REACT_APP_BACKEND_URL}/api/fetch_user_data`;
@@ -54,7 +54,6 @@ const AuthLayout = ({ children }) => {
 
         if (res.status === 200) {
           const user = res.data.user;
-          console.log("Dữ liệu: ", user);
           if (user.role_id === 1) {
             dispatch(
               setUser({
@@ -79,12 +78,18 @@ const AuthLayout = ({ children }) => {
           console.log("Lỗi khi Fetch dữ liệu người dùng: ", res);
         }
       } catch (error) {
+        switch (error.status) {
+          case 500:
+            message.error("Phiên Đăng nhập đã hết hạn");
+            break;
+          default:
+            break;
+        }
         console.log("Lỗi khi Fetch dữ liệu người dùng: ", error);
       }
     };
     if (token && !user?.user_id) {
       fetchUserData();
-      console.log("Fetch dữ liệu người dùng thành", user);
     } else {
       console.log("Token không tồn tại hoặc đã có dữ liệu");
     }

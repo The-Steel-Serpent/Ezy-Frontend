@@ -30,7 +30,9 @@ const AvatarWithPopover = (props) => {
         localStorage.clear();
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      if (error.response.data.code === "auth/id-token-expired") {
+        toast.error("Phiên Đăng nhập đã hết hạn");
+      }
     }
   };
   const items = [
