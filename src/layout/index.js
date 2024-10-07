@@ -5,6 +5,7 @@ import { setUser, setToken } from "../redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { message } from "antd";
+import { logout } from "../redux/userSlice";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
@@ -12,6 +13,29 @@ const AuthLayout = ({ children }) => {
   const location = useLocation();
   const useType = location.pathname.split("/")[1];
 
+  const logOut = async () => {
+    try {
+      const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
+      const res = await axios.post(
+        URL,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (res.data.success) {
+        message.error("Tài khoản của bạn không phải là tài khoản khách hàng");
+        dispatch(logout());
+        localStorage.clear();
+      }
+    } catch (error) {
+      message.error(error?.response?.data?.message);
+    }
+  };
   //side Effect
   useEffect(() => {
     console.log("Token: ", token);
@@ -49,9 +73,7 @@ const AuthLayout = ({ children }) => {
             );
             dispatch(setToken(token));
           } else {
-            message.error(
-              "Tài khoản của bạn không phải là tài khoản khách hàng"
-            );
+            await logOut();
           }
         } else {
           console.log("Lỗi khi Fetch dữ liệu người dùng: ", res);
