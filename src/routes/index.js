@@ -175,21 +175,18 @@ const router = createBrowserRouter([
       {
         path: "seller",
         element: (
-          <PrivateRouteSeller>
             <SellerAuthLayout>
               <SellerHome />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/seller-setup",
         element: (
-          <PrivateRouteSeller>
+        
             <SellerAuthLayout>
               <SellerSetup />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       {
@@ -212,72 +209,65 @@ const router = createBrowserRouter([
       {
         path: "seller/order/all",
         element: (
-          <PrivateRouteSeller>
+        
             <SellerAuthLayout>
               <AllOrders />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/order/ordercancelled",
         element: (
-          <PrivateRouteSeller>
+        
             <SellerAuthLayout>
               <OrderCancelled />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       //seller/order
       {
         path: "seller/product-management/all",
         element: (
-          <PrivateRouteSeller>
+        
             <SellerAuthLayout>
               <AllProduct />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/working-products",
         element: (
-          <PrivateRouteSeller>
+        
             <SellerAuthLayout>
               <WorkingProducts />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/infringing-products",
         element: (
-          <PrivateRouteSeller>
+        
             <SellerAuthLayout>
               <InfringingProduct />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/pending-products",
         element: (
-          <PrivateRouteSeller>
+        
             <SellerAuthLayout>
               <PendingProducts />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       {
         path: "seller/product-management/add-product",
         element: (
-          <PrivateRouteSeller>
+        
             <SellerAuthLayout>
               <AddProduct />
             </SellerAuthLayout>
-          </PrivateRouteSeller>
         ),
       },
       //Admin

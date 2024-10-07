@@ -113,22 +113,14 @@ const SellerSetup = () => {
 
     const [stepOn, setStepOn] = useState(false);
 
-    const handleUpload  = async () => {
-        const img = state.basicShopInfo ? state.basicShopInfo.imageUrl : null;
-        const upload = await uploadFile(img[0].originFileObj,'seller-img');
-        if(upload.url) {
-            dispatch({ type: 'SET_LOGO_IMAGE', payload: upload.url });
-            console.log("URL checkkkkkk:", state.logo_url);
-        }
-    }
-
     const handleSaveSeller = async () => {
-        await handleUpload();
+        const img = state.basicShopInfo ? state.basicShopInfo.imageUrl : null;
+        const upload = await uploadFile(img[0].originFileObj, 'seller-img');
         const basicShopInfo = state.basicShopInfo;
         const taxInfo = state.taxInfo;
         const payload = {
             shop_name: basicShopInfo.shop_name,
-            logo_url: state.logo_url,
+            logo_url: upload.url,
             shop_description: basicShopInfo.shop_description,
             business_style_id: taxInfo.business_style_id,
             tax_code: taxInfo.tax_code,
@@ -139,7 +131,7 @@ const SellerSetup = () => {
             shop_address: basicShopInfo.shop_address,
             full_name: basicShopInfo.full_name,
             citizen_number: basicShopInfo.citizen_number,
-            user_id: 'vyFYL0fKQgPxbFXXd3KTpPNXUmk2' // test em oi
+            user_id: '42qF4ueRs6fisnVclJubR684lqJ2' // test em oi
         };
 
         console.log("Payload being sent to server:", payload);
