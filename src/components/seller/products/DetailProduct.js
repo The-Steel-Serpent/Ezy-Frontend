@@ -3,6 +3,7 @@ import { Button, Menu } from 'antd';
 import { BasicInformation } from './BasicInformation';
 import SaleInformation from './SaleInformation';
 import ShippingProductInformation from './ShippingProductInformation';
+import uploadFile from '../../../helpers/uploadFile';
 
 const items = [
     {
@@ -23,19 +24,31 @@ const initialState = {
     basicInfo: null,
     saleInfo: null,
     shippingInfo: null,
+    basicinfo_enable_submit: false,
+    saleinfo_enable_submit: false,
+    shippinginfo_enable_submit: false,
+    list_product_images: [],
     enable_submit: false
 };
 
 const reducer = (state, action) => {
     switch (action.type) {
-        case 'set_basic_info':
+        case 'SET_BASIC_INFO':
             return { ...state, basicInfo: action.payload };
-        case 'set_sale_info':
+        case 'SET_SALE_INFO':
             return { ...state, saleInfo: action.payload };
-        case 'set_shipping_info':
+        case 'SET_SHIPPING_INFO':
             return { ...state, shippingInfo: action.payload };
-        case 'enable_submit':
+        case 'SET_BASIC_INFO_ENABLE_SUBMIT':
+            return { ...state, basicinfo_enable_submit: action.payload };
+        case 'SET_SALE_INFO_ENABLE_SUBMIT':
+            return { ...state, saleinfo_enable_submit: action.payload };
+        case 'SET_SHIPPING_INFO_ENABLE_SUBMIT':
+            return { ...state, shippinginfo_enable_submit: action.payload };
+        case 'SET_ENABLE_SUBMIT':
             return { ...state, enable_submit: action.payload };
+        case 'SET_LIST_PRODUCT_IMAGES':
+            return { ...state, list_product_images: action.payload };
         default:
             return state;
     }
@@ -49,15 +62,15 @@ const DetailProduct = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const handleBasicInfo = (data) => {
-        dispatch({ type: 'set_basic_info', payload: data });
+        dispatch({ type: 'SET_BASIC_INFO', payload: data });
     }
 
     const handleSaleInfo = (data) => {
-        dispatch({ type: 'set_sale_info', payload: data });
+        dispatch({ type: 'SET_SALE_INFO', payload: data });
     }
 
     const handleShippingInfo = (data) => {
-        dispatch({ type: 'set_shipping_info', payload: data });
+        dispatch({ type: 'SET_SHIPPING_INFO', payload: data });
     }
 
     const handleFocusMenu = (e) => {
@@ -85,18 +98,66 @@ const DetailProduct = () => {
         }
     };
 
+    const handleUploadProductImages = async () => {
+        console.log("List Image:", state.basicInfo.fileListProduct);
+        for(let i = 0; i < state.basicInfo.fileListProduct.length; i++){
+            await uploadFile(state.basicInfo.fileListProduct[i].originFileObj, 'seller-img');
+        }
+    }
+
+    const handleSubmit = async () => {
+        handleUploadProductImages();
+        // const URL = `${ process.env.REACT_APP_BACKEND_URL }/api/add-product`;
+        // const payload = {
+        //     shop_id: 11, // test em oi
+        //     sub_category_id: basicInfoRef.subcategory,
+        //     product_name: basicInfoRef.product_name,
+        // }
+    }
+
     useEffect(() => {
-        dispatch({ type: 'enable_submit', payload: false });
-        console.log("Basic info:",state.basicInfo);
+        dispatch({ type: 'SET_BASIC_INFO_ENABLE_SUBMIT', payload: false });
+        dispatch({ type: 'SET_SALE_INFO_ENABLE_SUBMIT', payload: false });
+        dispatch({ type: 'SET_SHIPPING_INFO_ENABLE_SUBMIT', payload: false });
         const noErrorBasicInfo = state.basicInfo ? state.basicInfo.noErrorBasicInfo : false;
+        const noErrorSaleInfo = state.saleInfo ? state.saleInfo.noErrorSaleInfo : false;
+        const noErrorShippingInfo = state.shippingInfo ? state.shippingInfo.noErrorShippingInfo : false;
+        // Basic Info
         if (noErrorBasicInfo) {
-            dispatch({ type: 'enable_submit', payload: true });
+            dispatch({ type: 'SET_BASIC_INFO_ENABLE_SUBMIT', payload: true });
             console.log("Basic Info: ", state.basicInfo);
         }
         else {
             console.log("Basic Info: ", state.basicInfo);
         }
-    },[state.basicInfo]);
+        // Sale Info
+        if (noErrorSaleInfo) {
+            dispatch({ type: 'SET_SALE_INFO_ENABLE_SUBMIT', payload: true });
+            console.log("Sale Info: ", state.saleInfo);
+        }
+        else {
+            
+            console.log("Sale Info: ", state.saleInfo);
+        }
+        // Shipping Info
+        if (noErrorShippingInfo) {
+            dispatch({ type: 'SET_SHIPPING_INFO_ENABLE_SUBMIT', payload: true });
+            console.log("Shipping Info: ", state.shippingInfo);
+        }
+        else {
+            console.log("Shipping Info: ", state.shippingInfo);
+        }
+
+        if(noErrorBasicInfo && noErrorSaleInfo && noErrorShippingInfo){
+            console.log("Enable Submit", noErrorBasicInfo && noErrorSaleInfo && noErrorShippingInfo);
+            dispatch({ type: 'SET_ENABLE_SUBMIT', payload: true });
+        }
+        else
+        {
+            dispatch({ type: 'SET_ENABLE_SUBMIT', payload: false });
+        }
+
+    },[state.basicInfo, state.saleInfo, state.shippingInfo]);
 
  
 
@@ -121,7 +182,11 @@ const DetailProduct = () => {
             </div>
             <div className='flex gap-3 mt-5 justify-end'>
                 <Button type="primary" >Hủy</Button>
-                <Button type="primary" disabled={!state.enable_submit}>Lưu</Button>
+                <Button 
+                    onClick={handleSubmit}
+                    type="primary" 
+                    disabled={!state.enable_submit}
+                    >Lưu</Button>
             </div>
         </div>
     );

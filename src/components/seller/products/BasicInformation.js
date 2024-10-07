@@ -142,10 +142,12 @@ export const BasicInformation = ({ onData }) => {
     };
 
     const handleUploadListProductChange = ({ fileList: newFileList }) => {
-        if (newFileList.length > 1) {
-            newFileList.shift();
-        }
+        // if (newFileList.length > 1) {
+        //     newFileList.shift();
+        // }
         dispatch({ type: 'SET_FILE_LIST_PRODUCT', payload: newFileList });
+        console.log("File List: ", state.fileListProduct);
+        console.log("New List: ", newFileList);
     };
     const handleRemoveProductImage = (file) => {
         dispatch({ type: 'SET_FILE_LIST_PRODUCT', payload: state.fileListProduct.filter(item => item.uid !== file.uid) });
@@ -180,7 +182,7 @@ export const BasicInformation = ({ onData }) => {
         return true;
     };
 
-   
+
 
     const handleDescription = (value) => {
         dispatch({ type: 'SET_DESCRIPTION', payload: value });
@@ -219,7 +221,7 @@ export const BasicInformation = ({ onData }) => {
         fetchCategories();
     }, []);
 
-   
+
 
     const categoryColumns = [
         {
@@ -278,7 +280,7 @@ export const BasicInformation = ({ onData }) => {
         if (state.description.trim().length === 0) {
             newErrors.description = 'Mô tả sản phẩm không được để trống';
             valid = false;
-        }else if (state.description.trim().length < 50) {
+        } else if (state.description.trim().length < 50) {
             newErrors.description = 'Mô tả sản phẩm quá ngắn. Vui lòng nhập ít nhất 50 kí tự';
             valid = false;
         }
@@ -294,13 +296,13 @@ export const BasicInformation = ({ onData }) => {
         }
 
         // gender
-        if(state.gender.trim().length === 0){
+        if (state.gender.trim().length === 0) {
             newErrors.gender = 'Hãy chọn giới tính';
             valid = false;
         }
 
         // subcategory
-        if(state.subcategory.trim().length === 0){
+        if (state.subcategory.trim().length === 0) {
             newErrors.subcategory = 'Hãy chọn danh mục';
             valid = false;
         }
@@ -313,33 +315,41 @@ export const BasicInformation = ({ onData }) => {
         console.log("Product Name: ", state.product_name);
         validate();
     }, [
-        state.product_name, 
-        state.description, 
-        state.origin, 
-        state.brand, 
-        state.gender, 
-        state.fileListProduct, 
+        state.product_name,
+        state.description,
+        state.origin,
+        state.brand,
+        state.gender,
+        state.fileListProduct,
         state.thumbnail,
         state.subcategory
     ]);
 
     useEffect(() => {
+        onData({ noErrorBasicInfo: false });
         const errors = state.errors;
-        if (errors.product_name === '' && errors.description === '' && errors.origin === '' && errors.brand === '') {
+        if (
+            errors.product_name === '' &&
+            errors.description === '' &&
+            errors.origin === '' &&
+            errors.brand === '' &&
+            errors.fileListProduct === '' &&
+            errors.thumbnail === '' &&
+            errors.subcategory === ''
+        ) {
             const data = {
                 product_name: state.product_name,
                 description: state.description,
                 origin: state.origin,
                 brand: state.brand,
+                fileListProduct: state.fileListProduct,
+                thumbnail: state.thumbnail,
                 noErrorBasicInfo: true
             };
             onData(data);
             console.log("No errors: ", state.errors);
         } else {
-            const data = {
-                noErrorBasicInfo: false
-            };
-            onData(data);
+            onData({ noErrorBasicInfo: false });
             console.log("Errors: ", state.errors);
         }
     }, [state.errors]);

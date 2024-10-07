@@ -23,10 +23,10 @@ const initialState = {
     stockDefault: '',
     errorMessage: '',
     errorVisible: false,
-    errors: {
-        priceError: false,
-        stockError: false,
-        salePercentError: false,
+    errorsDefault: {
+        priceDefault: '',
+        stockDefault: '',
+        sale_percent_default: '',
     }
 };
 
@@ -64,6 +64,8 @@ const reducer = (state, action) => {
             return { ...state, errorVisible: action.payload };
         case 'SET_SALE_PERCENT_DEFAULT':
             return { ...state, sale_percent_default: action.payload };
+        case 'SET_ERRORS_DEFAULT':
+            return { ...state, errorsDefault: action.payload };
         default:
             return state;
     }
@@ -349,14 +351,64 @@ const SaleInformation = ({ onData }) => {
             }];
     });
 
-    useEffect(() => {
-        if (state.add_product_level === 1) {
-            console.log('only product');
-            console.log('Price:', state.priceDefault);
-            console.log('Stock:', state.stockDefault);
-            console.log('Sale percent:', state.sale_percent_default);
+    const validateDefault = () => {
+        let valid = true;
+        let errors = {
+            priceDefault: '',
+            stockDefault: ''
+        };
+
+        if (state.priceDefault === '') {
+            errors.priceDefault = 'Vui lòng nhập giá sản phẩm!';
+            valid = false;
         }
-    }, [state.priceDefault, state.stockDefault, state.sale_percent_default])
+        if (state.stockDefault === '') {
+            errors.stockDefault = 'Vui lòng nhập số lượng hàng!';
+            valid = false;
+        }
+        dispatch({ type: 'SET_ERRORS_DEFAULT', payload: errors });
+        return valid;
+    }
+
+    
+    useEffect(() => {
+        validateDefault();
+    }, [])
+    
+    useEffect(() => {
+        validateDefault();
+    },[
+        state.priceDefault,
+        state.stockDefault,
+        state.sale_percent_default
+    ])
+
+    useEffect(() => {
+        onData({ noErrorSaleInfo: false });
+        if (state.add_product_level === 1) {
+            const errorsDefault = state.errorsDefault;
+            if (
+                errorsDefault.priceDefault === '' &&
+                errorsDefault.stockDefault === ''
+            ) {
+                const data = {
+                    price: state.priceDefault,
+                    stock: state.stockDefault,
+                    sale_percent: state.sale_percent_default,
+                    noErrorSaleInfo: true
+                };
+                onData(data);
+                console.log("No errors: ", state.errorsDefault);
+
+            }
+            else {
+                onData({ noErrorSaleInfo: false });
+                console.log("Errors: ", state.errorsDefault);
+            }
+        }
+    }, [
+        state.errorsDefault
+    ])
 
     return (
         <div>
@@ -559,7 +611,6 @@ const SaleInformation = ({ onData }) => {
                             <Input
                                 placeholder='Nhập giá'
                                 value={state.priceDefault}
-                                // onChange={(e) => dispatch({ type: 'SET_PRICE_DEFAULT', payload: e.target.value })}
                                 onChange={(e) => handleNumberInputChange(e, 'SET_PRICE_DEFAULT')}
                                 onBeforeInput={handleBeforeInput}
                             />
