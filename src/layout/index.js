@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { message } from "antd";
 import { logout } from "../redux/userSlice";
+import { clearCart } from "../redux/cartSlice";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
@@ -30,6 +31,7 @@ const AuthLayout = ({ children }) => {
       if (res.data.success) {
         message.error("Tài khoản của bạn không phải là tài khoản khách hàng");
         dispatch(logout());
+        dispatch(clearCart());
         localStorage.clear();
       }
     } catch (error) {
@@ -93,7 +95,7 @@ const AuthLayout = ({ children }) => {
     } else {
       console.log("Token không tồn tại hoặc đã có dữ liệu");
     }
-  }, [token, user?.user_id]);
+  }, [token]);
 
   return (
     <>

@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
+import { clearCart } from "../redux/cartSlice";
 
 const AvatarWithPopover = (props) => {
   const dispatch = useDispatch();
@@ -26,6 +27,7 @@ const AvatarWithPopover = (props) => {
       toast.success("Đăng xuất thành công");
       if (res.data.success) {
         dispatch(logout());
+        dispatch(clearCart());
         navigate("/");
         localStorage.clear();
       }
