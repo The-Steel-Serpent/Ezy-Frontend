@@ -80,7 +80,11 @@ const AuthLayout = ({ children }) => {
           console.log("Lỗi khi Fetch dữ liệu người dùng: ", res);
         }
       } catch (error) {
-        switch (error.status) {
+        console.log(
+          "Lỗi khi Fetch dữ liệu người dùng: ",
+          error.response.status
+        );
+        switch (error.response.status) {
           case 500:
             message.error("Phiên Đăng nhập đã hết hạn");
             break;
