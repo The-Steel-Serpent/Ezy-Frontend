@@ -28,7 +28,7 @@ import { DownOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
 import ProductNotFounded from "../../../components/product/ProductNotFounded";
 import withChildSuspense from "../../../hooks/HOC/withChildSuspense";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
 const ReactImageGallery = lazy(() => import("react-image-gallery"));
@@ -43,10 +43,11 @@ const ProductSuggestions = withChildSuspense(
 );
 
 const { addToCart } = require("../../../services/cartService");
-
+const { fetchMiniCartData } = require("../../../redux/cartSlice");
 const DetailsProduct = () => {
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { id } = useParams();
   const [success, setSuccess] = useState(true);
   const [sizes, setSizes] = useState([]);
@@ -208,8 +209,8 @@ const DetailsProduct = () => {
           showProgress: true,
           pauseOnHover: false,
         });
+        dispatch(fetchMiniCartData(user.user_id));
       }
-      console.log("Add to cart: ", res);
     } catch (error) {
       notification.error({
         message: error?.response?.data?.message,

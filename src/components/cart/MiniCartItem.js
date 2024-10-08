@@ -1,26 +1,35 @@
 import React, { memo } from "react";
 
-const MiniCartItem = () => {
+const MiniCartItem = (props) => {
+  const { item } = props;
+  console.log("item", item);
   return (
-    <div className="grid grid-cols-12 p-3 gap-3 hover:bg-slate-200">
+    <a
+      href={`/product-details/${item?.ProductVarient?.product_id}`}
+      className="grid grid-cols-12 p-3 gap-3 hover:bg-slate-200 cursor-pointer"
+    >
       <div className="col-span-2">
         <img
-          src="https://down-vn.img.susercontent.com/file/sg-11134201-7rd45-lx4lpxipu4mh6d@resize_w450_nl.webp"
+          src={
+            item?.ProductVarient?.ProductClassify != null
+              ? item?.ProductVarient?.ProductClassify?.thumbnail
+              : item?.ProductVarient?.Product?.thumbnail
+          }
           className="size-9"
         />
       </div>
       <div className="col-span-7">
         <span className="text-ellipsis line-clamp-1">
-          2006 ARG Argentina sân khách sân nhà Retro Soccer Jersey Bóng đá Messi
-          #19
+          {item?.ProductVarient?.Product?.product_name}
         </span>
       </div>
       <div className="col-span-3">
         <span className="text-primary text-end text-ellipsis line-clamp-1">
-          ₫199.000
+          <sup>₫</sup>
+          {item?.price?.toLocaleString("vi-VN")}
         </span>
       </div>
-    </div>
+    </a>
   );
 };
 
