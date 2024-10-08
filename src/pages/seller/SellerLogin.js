@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import wallpaper from "../../assets/wallpaper-seller1.png";
-import {  Button, Divider, Input, message } from "antd";
+import { Button, Divider, Input, message } from "antd";
 import { IoMdEye } from "react-icons/io";
 import { RiEyeCloseLine } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
@@ -275,7 +275,9 @@ const SellerLogin = () => {
             Đăng nhập
           </Button>
           <div className="w-full py-3 flex cursor-pointer">
-            <span className="text-[15px] text-[#05a]" >
+            <span
+              onClick={() => setIsVisibleResetModal(true)}
+              className="text-[15px] text-[#05a]" >
               Quên mật khẩu
             </span>
           </div>

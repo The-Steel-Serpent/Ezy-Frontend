@@ -10,7 +10,8 @@ import { FaUserCircle } from "react-icons/fa";
 import { CiShop } from "react-icons/ci";
 import { SlLogout } from "react-icons/sl";
 import { AiOutlineProfile } from "react-icons/ai";
-import { logout, setShop, setToken } from "../../redux/shopSlice";
+import { logoutShop, setShop } from "../../redux/shopSlice";
+import { logout, setUser, setToken } from "../../redux/userSlice";
 
 import "../../styles/seller.css"
 
@@ -125,17 +126,18 @@ const initialState = () => {
             full_name: "",
             email: "",
             phone_number: "",
-        }
+            setup: 0,
+        },
+        authenticate: false,
     }
 }
 
 const reducer = (state, action) => {
     switch (action.type) {
         case 'SET_USER':
-            return {
-                ...state,
-                user: action.payload
-            }
+            return { ...state, user: action.payload }
+        case 'SET_AUTHENTICATE':
+            return { ...state, authenticate: action.payload }
         default:
             return state;
     }
@@ -157,7 +159,9 @@ const SellerAuthLayout = ({ children }) => {
 
 
     const dispatch = useDispatch();
-    const user = useSelector((state) => state.shop);
+    const dispatchShop = useDispatch();
+    const user = useSelector((state) => state.user);
+    const shop = useSelector((state) => state.shop);
     const token = localStorage.getItem("token");
     //
     const logOut = async () => {
@@ -183,8 +187,6 @@ const SellerAuthLayout = ({ children }) => {
             message.error(error?.response?.data?.message);
         }
     };
-    //
-
 
     const handleDropDownProfileClick = (e) => {
         console.log("key", e.key);
@@ -220,6 +222,7 @@ const SellerAuthLayout = ({ children }) => {
     useEffect(() => {
         console.log("Token: ", token);
         console.log("User: ", user);
+        console.log("Shop: ", shop);
 
         const fetchUserData = async () => {
             try {
@@ -238,7 +241,7 @@ const SellerAuthLayout = ({ children }) => {
                     console.log("Dữ liệu: ", user);
                     if (user.role_id === 2) {
                         dispatch(
-                            setShop({
+                            setUser({
                                 user_id: user.user_id,
                                 username: user.username,
                                 full_name: user.full_name,
@@ -253,6 +256,7 @@ const SellerAuthLayout = ({ children }) => {
                             })
                         );
                         dispatchMain({ type: 'SET_USER', payload: user });
+                        dispatchMain({ type: 'SET_AUTHENTICATE', payload: true });
                         dispatch(setToken(token));
                     } else {
                         await logOut();
@@ -268,6 +272,7 @@ const SellerAuthLayout = ({ children }) => {
         if (token && !user?.user_id) {
             fetchUserData();
             console.log("Fetch dữ liệu người dùng thành", user);
+
         } else {
             console.log("Token không tồn tại hoặc đã có dữ liệu");
             if (user.user_id == '') {
@@ -275,6 +280,37 @@ const SellerAuthLayout = ({ children }) => {
             }
         }
     }, [token, user?.user_id]);
+
+    useEffect(() => {
+        const fetchShopData = async () => {
+            try {
+                const url = `${process.env.REACT_APP_BACKEND_URL}/api/get-shop`;
+                const res = await axios.get(url, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { user_id: user.user_id },
+                    withCredentials: true,
+                });
+
+                if (res.status === 200 && res.data.success) {
+                    const shop = res.data.data;
+                    console.log("Dữ liệu Shop: ", shop);
+                    dispatchShop(setShop(shop));
+                } else {
+                    console.log("Lỗi khi Fetch dữ liệu Shop: ", res);
+                }
+            } catch (error) {
+                console.log("Lỗi khi Fetch dữ liệu Shop: ", error);
+            }
+        };
+
+        if (state.authenticate) {
+            if (state.user.setup === 0) {
+                navigate("/seller/seller-setup");
+            } else {
+                fetchShopData();
+            }
+        }
+    }, [state.authenticate]);
 
     const isSellerSetupPath = location.pathname === '/seller/seller-setup';
     const isSellerSetupOnBoardingPath = location.pathname === '/seller/seller-setup-onboarding';

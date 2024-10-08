@@ -28,6 +28,7 @@ const initialState = {
     saleinfo_enable_submit: false,
     shippinginfo_enable_submit: false,
     list_product_images: [],
+    uploadComplete: false,
     enable_submit: false
 };
 
@@ -49,6 +50,8 @@ const reducer = (state, action) => {
             return { ...state, enable_submit: action.payload };
         case 'SET_LIST_PRODUCT_IMAGES':
             return { ...state, list_product_images: action.payload };
+        case 'SET_UPLOAD_COMPLETE':
+            return { ...state, uploadComplete: action.payload };
         default:
             return state;
     }
@@ -74,7 +77,7 @@ const DetailProduct = () => {
     }
 
     const handleFocusMenu = (e) => {
-        const offset = 100; 
+        const offset = 100;
         const scrollWithOffset = (element) => {
             const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
             const offsetPosition = elementPosition - offset;
@@ -100,20 +103,27 @@ const DetailProduct = () => {
 
     const handleUploadProductImages = async () => {
         console.log("List Image:", state.basicInfo.fileListProduct);
-        for(let i = 0; i < state.basicInfo.fileListProduct.length; i++){
-            await uploadFile(state.basicInfo.fileListProduct[i].originFileObj, 'seller-img');
+        const uploadPromises = state.basicInfo.fileListProduct.map(file =>uploadFile(file.originFileObj, 'seller-img'));
+        try {
+            const uploadResults = await Promise.all(uploadPromises);
+            console.log("Upload: ", uploadResults);
+            const uploadUrls = uploadResults.map(file => file.url);
+            dispatch({ type: 'SET_LIST_PRODUCT_IMAGES', payload: uploadUrls });
+            dispatch({ type: 'SET_UPLOAD_COMPLETE', payload: true });
+        } catch (error) {
+            console.error("Error uploading images:", error);
         }
     }
 
     const handleSubmit = async () => {
-        handleUploadProductImages();
-        // const URL = `${ process.env.REACT_APP_BACKEND_URL }/api/add-product`;
-        // const payload = {
-        //     shop_id: 11, // test em oi
-        //     sub_category_id: basicInfoRef.subcategory,
-        //     product_name: basicInfoRef.product_name,
-        // }
+        await handleUploadProductImages();
     }
+
+    useEffect(() => {
+        if (state.uploadComplete)
+            console.log("Checkkk:", state.fileListProduct);
+    }, [state.fileListProduct, state.uploadComplete]);
+
 
     useEffect(() => {
         dispatch({ type: 'SET_BASIC_INFO_ENABLE_SUBMIT', payload: false });
@@ -136,7 +146,7 @@ const DetailProduct = () => {
             console.log("Sale Info: ", state.saleInfo);
         }
         else {
-            
+
             console.log("Sale Info: ", state.saleInfo);
         }
         // Shipping Info
@@ -148,18 +158,17 @@ const DetailProduct = () => {
             console.log("Shipping Info: ", state.shippingInfo);
         }
 
-        if(noErrorBasicInfo && noErrorSaleInfo && noErrorShippingInfo){
+        if (noErrorBasicInfo && noErrorSaleInfo && noErrorShippingInfo) {
             console.log("Enable Submit", noErrorBasicInfo && noErrorSaleInfo && noErrorShippingInfo);
             dispatch({ type: 'SET_ENABLE_SUBMIT', payload: true });
         }
-        else
-        {
+        else {
             dispatch({ type: 'SET_ENABLE_SUBMIT', payload: false });
         }
 
-    },[state.basicInfo, state.saleInfo, state.shippingInfo]);
+    }, [state.basicInfo, state.saleInfo, state.shippingInfo]);
 
- 
+
 
     return (
         <div className='mb-32'>
@@ -182,11 +191,11 @@ const DetailProduct = () => {
             </div>
             <div className='flex gap-3 mt-5 justify-end'>
                 <Button type="primary" >Hủy</Button>
-                <Button 
+                <Button
                     onClick={handleSubmit}
-                    type="primary" 
+                    type="primary"
                     disabled={!state.enable_submit}
-                    >Lưu</Button>
+                >Lưu</Button>
             </div>
         </div>
     );
