@@ -2,10 +2,14 @@ import React, { useEffect, useReducer, useState } from 'react'
 import { Button, message, Steps, theme, Result } from 'antd';
 import BasicShopInformation from '../../components/setup/BasicShopInformation';
 import TaxInformation from '../../components/setup/TaxInformation';
-import { SmileOutlined } from '@ant-design/icons';
+import { CodeSandboxCircleFilled, SmileOutlined } from '@ant-design/icons';
 import logo from '../../assets/onboarding-setup.png'
 import uploadFile from '../../helpers/uploadFile';
 import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import LoadingModal from '../../components/loading/LoadingModal';
+import { useNavigate } from 'react-router-dom';
+import { setUpDone } from '../../redux/userSlice';
 
 
 const steps = [
@@ -34,6 +38,8 @@ const initialState = {
     noErrorTaxInfo: false,
     enableNextBasicInfo: false,
     enableNextTaxInfo: false,
+    loading: false,
+    successfully: false,
     logo_url: null
 }
 
@@ -74,15 +80,29 @@ const reducer = (state, action) => {
                 ...state,
                 logo_url: action.payload
             }
+        case 'SET_LOADING':
+            return {
+                ...state,
+                loading: action.payload
+            }
+        case 'SET_SUCCESSFULLY':
+            return {
+                ...state,
+                successfully: action.payload
+            }
         default:
             return state;
     }
 }
 
 const SellerSetup = () => {
-    
+
     const [current, setCurrent] = useState(0);
     const [state, dispatch] = useReducer(reducer, initialState);
+    const dispatchUser = useDispatch();
+    const user = useSelector(state => state.user);
+    const navigate = useNavigate();
+    const token = localStorage.getItem("token");
     const next = () => {
         setCurrent(current + 1);
     };
@@ -113,7 +133,25 @@ const SellerSetup = () => {
 
     const [stepOn, setStepOn] = useState(false);
 
+    const handleChangeSetupStatus = async () => {
+        const user_id = user.user_id;
+        try {
+            const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/update-setup-status`, {
+                user_id: user_id
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+            console.log("Successfully change setup status:");
+            dispatchUser(setUpDone());
+        } catch (error) {
+            console.log("Change setup status error:", error.message);
+            console.log("Error response data:", error.response ? error.response.data : "No response data");
+        }
+    }
     const handleSaveSeller = async () => {
+        dispatch({ type: 'SET_LOADING', payload: true });
         const img = state.basicShopInfo ? state.basicShopInfo.imageUrl : null;
         const upload = await uploadFile(img[0].originFileObj, 'seller-img');
         const basicShopInfo = state.basicShopInfo;
@@ -131,7 +169,7 @@ const SellerSetup = () => {
             shop_address: basicShopInfo.shop_address,
             full_name: basicShopInfo.full_name,
             citizen_number: basicShopInfo.citizen_number,
-            user_id: '42qF4ueRs6fisnVclJubR684lqJ2' // test em oi
+            user_id: user.user_id
         };
 
         console.log("Payload being sent to server:", payload);
@@ -139,6 +177,7 @@ const SellerSetup = () => {
         try {
             const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/create-shop`, payload);
             console.log('Shop created successfully:', res.data);
+            dispatch({ type: 'SET_SUCCESSFULLY', payload: true });
             return res.data;
         } catch (error) {
             console.log("Create shop error:", error.message);
@@ -164,9 +203,28 @@ const SellerSetup = () => {
         if (noErrorTaxInfo) {
             dispatch({ type: 'SET_ENABLE_NEXT_TAX_INFO', payload: true });
             console.log("Tax info Truc oiiiiiiiiiiiiiii: ", state.taxInfo);
-        }else
+        } else
             console.log("Tax info Truc oiiiiiiiiiiiiiii: ", state.taxInfo);
     }, [state.basicShopInfo, state.taxInfo])
+
+    useEffect(() => {
+        const updateSetupStatus = async () => {
+            if (state.successfully) {
+                await handleChangeSetupStatus();
+                dispatch({ type: 'SET_SUCCESSFULLY', payload: false });
+                dispatch({ type: 'SET_LOADING', payload: false });
+                message.success('Đăng kí cửa hàng thành công');
+                navigate('/seller');
+            }
+        };
+        updateSetupStatus();
+    }, [state.successfully])
+
+    useEffect(() => {
+        if (user.setup === 1) {
+            navigate('/seller');
+        }
+    }, [user])
 
     return (
         <div>
@@ -241,6 +299,10 @@ const SellerSetup = () => {
                     </div>
                 </div>
             )}
+            {state.loading && (
+                <LoadingModal />
+            )}
+
         </div>
 
     )

@@ -7,7 +7,6 @@ import axios from "axios";
 const PrivateRouteSeller = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(null);
     const [user, setUser] = useState(null);
-    const [checkSetUp, setCheckSetup] = useState(false);
 
     const navigate = useNavigate();
 

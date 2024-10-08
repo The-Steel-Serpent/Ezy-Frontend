@@ -50,6 +50,9 @@ export const userSlice = createSlice({
       state.isVerified = false;
       state.token = "";
     },
+    setUpDone: (state) => {
+      state.setup = 1;
+    },
     setOnlineUser: (state, action) => {
       state.onlineUser = action.payload;
     },
@@ -57,7 +60,7 @@ export const userSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { setUser, setToken, logout, setOnlineUser, setSocketConnection } =
+export const { setUser, setToken, logout, setOnlineUser, setSocketConnection, setUpDone } =
   userSlice.actions;
 
 export default userSlice.reducer;
