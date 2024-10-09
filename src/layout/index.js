@@ -7,9 +7,11 @@ import axios from "axios";
 import { message } from "antd";
 import { logout } from "../redux/userSlice";
 import { clearCart } from "../redux/cartSlice";
+import { logoutShop } from "../redux/shopSlice";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
+  const shop = useSelector((state) => state.shop);
   const token = localStorage.getItem("token");
   const location = useLocation();
   const useType = location.pathname.split("/")[1];
@@ -31,6 +33,7 @@ const AuthLayout = ({ children }) => {
       if (res.data.success) {
         message.error("Tài khoản của bạn không phải là tài khoản khách hàng");
         dispatch(logout());
+        dispatch(logoutShop());
         dispatch(clearCart());
         localStorage.clear();
       }
