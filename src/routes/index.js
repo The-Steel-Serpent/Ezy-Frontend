@@ -7,6 +7,9 @@ import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
+const CartPage = withSuspense(
+  lazy(() => import("../pages/buyer/cart-pages/CartPage"))
+);
 
 const AuthLayout = withSuspenseNonFallback(lazy(() => import("../layout")));
 const Categories = withSuspense(
@@ -169,24 +172,32 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
+      //Cart
+      {
+        path: "/cart",
+        element: (
+          <AuthLayout>
+            <CartPage />
+          </AuthLayout>
+        ),
+      },
 
       //Seller
       //login && register
       {
         path: "seller",
         element: (
-            <SellerAuthLayout>
-              <SellerHome />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <SellerHome />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/seller-setup",
         element: (
-        
-            <SellerAuthLayout>
-              <SellerSetup />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <SellerSetup />
+          </SellerAuthLayout>
         ),
       },
       {
@@ -209,65 +220,58 @@ const router = createBrowserRouter([
       {
         path: "seller/order/all",
         element: (
-        
-            <SellerAuthLayout>
-              <AllOrders />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <AllOrders />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/order/ordercancelled",
         element: (
-        
-            <SellerAuthLayout>
-              <OrderCancelled />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <OrderCancelled />
+          </SellerAuthLayout>
         ),
       },
       //seller/order
       {
         path: "seller/product-management/all",
         element: (
-        
-            <SellerAuthLayout>
-              <AllProduct />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <AllProduct />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/product-management/working-products",
         element: (
-        
-            <SellerAuthLayout>
-              <WorkingProducts />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <WorkingProducts />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/product-management/infringing-products",
         element: (
-        
-            <SellerAuthLayout>
-              <InfringingProduct />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <InfringingProduct />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/product-management/pending-products",
         element: (
-        
-            <SellerAuthLayout>
-              <PendingProducts />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <PendingProducts />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/product-management/add-product",
         element: (
-        
-            <SellerAuthLayout>
-              <AddProduct />
-            </SellerAuthLayout>
+          <SellerAuthLayout>
+            <AddProduct />
+          </SellerAuthLayout>
         ),
       },
       //Admin

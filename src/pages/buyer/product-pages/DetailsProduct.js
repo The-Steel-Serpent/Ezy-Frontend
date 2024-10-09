@@ -193,7 +193,7 @@ const DetailsProduct = () => {
       if (detailsProduct?.stock <= 0 || currentVarient?.stock <= 0) {
         return;
       }
-      if (!user.user_id) {
+      if (!user?.user_id) {
         navigate("/buyer/login");
       }
       // console.log("Quantity: ", quantity);

@@ -413,12 +413,14 @@ const PrimaryHeader = () => {
             </Suspense>
           </div>
           <div className="col-span-2 lg:hidden flex text-white text-sm items-center">
-            {!user._id && (
+            {!user.user_id && (
               <a href="/buyer/login" className="divider nav-link-hoverable">
                 Đăng nhập
               </a>
             )}
-            {user._id && <AvatarWithPopover img={user.profile_pic} size={30} />}
+            {user.user_id && (
+              <AvatarWithPopover img={user.profile_pic} size={30} />
+            )}
           </div>
         </div>
       </header>

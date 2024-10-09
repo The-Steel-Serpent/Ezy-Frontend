@@ -8,6 +8,7 @@ import { message } from "antd";
 import { logout } from "../redux/userSlice";
 import { clearCart } from "../redux/cartSlice";
 import { logoutShop } from "../redux/shopSlice";
+import CartHeader from "../components/CartHeader";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
@@ -106,7 +107,8 @@ const AuthLayout = ({ children }) => {
 
   return (
     <>
-      {useType !== "buyer" && <PrimaryHeader />}
+      {useType !== "buyer" && useType !== "cart" && <PrimaryHeader />}
+      {useType === "cart" && <CartHeader />}
       {children}
     </>
   );

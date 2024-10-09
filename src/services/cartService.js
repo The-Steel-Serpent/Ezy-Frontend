@@ -2,6 +2,21 @@ import axios from "axios";
 
 const url = `${process.env.REACT_APP_BACKEND_URL}/api/cart`;
 
+export const getCart = async (userID) => {
+  try {
+    const response = await axios.get(`${url}/get-cart?user_id=${userID}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy giỏ hàng: ", error);
+    switch (error.status) {
+      case 500:
+        return { error: true, message: "Lỗi server" };
+      default:
+        return { error: true, message: error.message || error };
+    }
+  }
+};
+
 export const getLimitCartItems = async (userID) => {
   try {
     const response = await axios.get(`${url}/limit-items?user_id=${userID}`);

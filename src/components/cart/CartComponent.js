@@ -1,22 +1,19 @@
 import { Badge, Button, Empty, Popover } from "antd";
-import React, { memo, useEffect, useReducer, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useDispatch, useSelector } from "react-redux";
 import MiniCartItem from "./MiniCartItem";
-import { getLimitCartItems } from "../../services/cartService";
 import { fetchMiniCartData } from "../../redux/cartSlice";
-import { MdOutlineRemoveShoppingCart } from "react-icons/md";
-import CartDrawer from "./CartDrawer";
+import { useNavigate } from "react-router-dom";
 
 const CartComponent = () => {
   const user = useSelector((state) => state.user);
   const cart = useSelector((state) => state.cart);
   const dispatch = useDispatch();
-
-  const [openCartDrawer, setOpenCartDrawer] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (user?.user_id) {
+    if (user?.user_id !== "") {
       dispatch(fetchMiniCartData(user?.user_id));
     }
   }, [user?.user_id, dispatch]);
@@ -64,20 +61,13 @@ const CartComponent = () => {
         </div> */}
           <Badge count={cart?.totalItems} showZero>
             <PiShoppingCartSimpleBold
-              className="text-white"
+              className="text-white cursor-pointer"
               size={35}
-              onClick={() => setOpenCartDrawer(true)}
+              onClick={() => navigate("/cart")}
             />
           </Badge>
         </Popover>
       </div>
-      {/* <CartDrawer
-        onShowCartDrawer={(callback) => {
-          setOpenCartDrawer(true);
-          if (callback) setOpenCartDrawer(false);
-        }}
-        openCartDrawer={openCartDrawer}
-      /> */}
     </>
   );
 };
