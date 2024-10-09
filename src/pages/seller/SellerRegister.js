@@ -124,7 +124,7 @@ const SellerRegister = () => {
       console.error("Error:", error.response || error.message);
 
       //Lưu tài khoản khi không tìm thấy tài khoản trong db
-      if (error.status === 404) {
+      if (error.response.status === 404) {
         const rs = await saveUserAccount({
           user_id,
           email,

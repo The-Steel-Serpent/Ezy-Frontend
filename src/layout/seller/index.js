@@ -3,7 +3,7 @@ import logo from '../../assets/logo_ezy.png'
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { GoBook } from "react-icons/go";
 import { VscBell } from "react-icons/vsc";
-import { Divider, Menu, Button, theme, Layout, Dropdown, Space, message } from 'antd';
+import { Divider, Menu, Button, theme, Layout, Dropdown, Space, message, Avatar } from 'antd';
 import { TfiWallet } from "react-icons/tfi";
 import { BsShopWindow } from "react-icons/bs";
 import { FaUserCircle } from "react-icons/fa";
@@ -127,6 +127,7 @@ const initialState = () => {
             email: "",
             phone_number: "",
             setup: 0,
+            avt_url: "",
         },
         authenticate: false,
     }
@@ -179,12 +180,15 @@ const SellerAuthLayout = ({ children }) => {
             );
 
             if (res.data.success) {
+                message.error("Tài khoản của bạn không phải là tài khoản cửa hàng");
                 dispatch(logout());
+                dispatch(logoutShop());
                 localStorage.clear();
             }
-            navigate("/seller/login");
         } catch (error) {
-            message.error(error?.response?.data?.message);
+            if (error.response.data.code === "auth/id-token-expired") {
+                message.error("Phiên Đăng nhập đã hết hạn");
+            }
         }
     };
 
@@ -238,7 +242,6 @@ const SellerAuthLayout = ({ children }) => {
 
                 if (res.status === 200) {
                     const user = res.data.user;
-                    console.log("Dữ liệu: ", user);
                     if (user.role_id === 2) {
                         dispatch(
                             setUser({
@@ -260,12 +263,23 @@ const SellerAuthLayout = ({ children }) => {
                         dispatch(setToken(token));
                     } else {
                         await logOut();
-                        message.error("Tài khoản của bạn không phải là tài khoản cửa hàng");
                     }
                 } else {
                     console.log("Lỗi khi Fetch dữ liệu người dùng: ", res);
                 }
             } catch (error) {
+                console.log(
+                    "Lỗi khi Fetch dữ liệu người dùng: ",
+                    error.response.status
+                );
+                switch (error.response.status) {
+                    case 500:
+                        message.error("Phiên Đăng nhập đã hết hạn");
+                        navigate("/seller/login");
+                        break;
+                    default:
+                        break;
+                }
                 console.log("Lỗi khi Fetch dữ liệu người dùng: ", error);
             }
         };
@@ -279,7 +293,7 @@ const SellerAuthLayout = ({ children }) => {
                 navigate("/seller/login");
             }
         }
-    }, [token, user?.user_id]);
+    }, [token]);
 
     useEffect(() => {
         const fetchShopData = async () => {
@@ -349,7 +363,7 @@ const SellerAuthLayout = ({ children }) => {
                             />
                         </div>
                         <Divider type="vertical" variant="dotted" style={{ height: 30 }} />
-                        <div className='flex h-full items-center text-slate-600 gap-3 hover:bg-[#8ad3e5] py-4 px-3'>
+                        <div className='flex h-full items-center text-slate-600 gap-3 hover:bg-[#8ad3e5] py-4'>
                             <Dropdown
                                 menu={
                                     {
@@ -361,7 +375,7 @@ const SellerAuthLayout = ({ children }) => {
                             >
                                 <a onClick={(e) => e.preventDefault()}>
                                     <Space className='bg-transparent'>
-                                        <FaUserCircle size={20} className='text-white' />
+                                        {state.user ? <Avatar src={state.user.avt_url} size={20} /> : <Avatar size={20} icon={<FaUserCircle />} />}
                                         <span className='text-white text-[15px]'>{state.user ? state.user.email.split('@gmail.com') : ''}</span>
                                         <DownOutlined size={20} className='text-white' />
                                     </Space>

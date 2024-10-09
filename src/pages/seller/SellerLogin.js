@@ -163,7 +163,7 @@ const SellerLogin = () => {
       }
     } catch (error) {
       console.error("Error:", error.response || error.message);
-      if (error.status === 404) {
+      if (error.response.status === 404) {
         const rs = await saveUserAccount({
           user_id,
           email,

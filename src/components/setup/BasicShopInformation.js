@@ -181,7 +181,7 @@ const BasicShopInformation = ({ onData }) => {
 
     useEffect(() => {
         const check = validate();
-        if (check && state.provinceSelected && state.districtSelected && state.wardSelected && state.imageUrl.length > 0) {
+        if (check && state.provinceSelected && state.districtSelected && state.wardSelected && state.imageUrl.length > 0 && state.detailAddress) {
             const data = {
                 shop_name: state.shop_name,
                 shop_description: state.shop_description,
@@ -198,7 +198,20 @@ const BasicShopInformation = ({ onData }) => {
         } else {
             onData({ noErrorBasicInfo: false });
         }
-    }, [state.shop_name, state.shop_description, state.full_name, state.cccd, state.provinces, state.district, state.ward, state.detailAddress, state.imageUrl]);
+    }, [
+        state.shop_name, 
+        state.shop_description, 
+        state.full_name, 
+        state.cccd, 
+        state.provinces, 
+        state.district, 
+        state.ward, 
+        state.detailAddress, 
+        state.imageUrl,
+        state.provinceSelected,
+        state.districtSelected,
+        state.wardSelected
+    ]);
 
     const uploadButton = (
         <button
@@ -218,13 +231,14 @@ const BasicShopInformation = ({ onData }) => {
     const handleProvinceClick = (value) => {
         const selectedProvince = state.provinces.find(province => province.ProvinceID === value);
         dispatch({ type: 'SET_SELECTED_PROVINCE', payload: selectedProvince });
-        dispatch({ type: 'SET_WARDS', payload: null });
+        dispatch({ type: 'SET_SELECTED_DISTRICT', payload: null });
         dispatch({ type: 'SET_SELECTED_WARD', payload: null });
     };
 
     const handleDistrictClick = (value) => {
         const selectedDistrict = state.district.find(district => district.DistrictID === value);
         dispatch({ type: 'SET_SELECTED_DISTRICT', payload: selectedDistrict });
+        dispatch({ type: 'SET_SELECTED_WARD', payload: null });
     };
 
     const handleWardClick = (value) => {
