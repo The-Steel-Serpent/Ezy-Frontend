@@ -1,16 +1,25 @@
 /* eslint-disable jsx-a11y/alt-text */
 import { DownOutlined, SearchOutlined } from "@ant-design/icons";
-import { current } from "@reduxjs/toolkit";
-import { Avatar, Button, Checkbox, InputNumber, Popover } from "antd";
+import { Avatar, Button, Checkbox, InputNumber, message, Popover } from "antd";
 import axios from "axios";
 import React, { useEffect, useReducer } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { IoCheckmarkDone } from "react-icons/io5";
+import { updateItemQuantity, updateVarients } from "../../services/cartService";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchCartData,
+  updateCartVarients,
+  updateVarientQuantity,
+} from "../../redux/cartSlice";
 
 const text = <span className="text-lg font-semibold">Phân loại hàng</span>;
 
 const CartItem = (props) => {
   const { item } = props;
+  const user = useSelector((state) => state.user);
+  const cart = useSelector((state) => state.cart.cart);
+  const dispatch = useDispatch();
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -44,6 +53,140 @@ const CartItem = (props) => {
     sizeList,
     openPopover,
   } = state;
+
+  //Side Effect
+  useEffect(() => {
+    const fetchClassify = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/classify-products?product_id=${item?.ProductVarient?.Product?.product_id}`
+        );
+        if (res.status === 200) {
+          setState({ type: "classifyList", payload: res.data.data });
+          if (res.data.data.length > 0 && Array.isArray(res.data.data)) {
+            const selectedClassify = res.data.data.find(
+              (data) =>
+                data.product_classify_id ===
+                item?.ProductVarient?.product_classify_id
+            );
+            if (selectedClassify) {
+              setState({
+                type: "selectedClassify",
+                payload: selectedClassify?.product_classify_id,
+              });
+            } else {
+              setState({
+                type: "selectedClassify",
+                payload: res?.data?.data?.[0]?.product_classify_id,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.log("Lỗi khi fetch dữ liệu phân loại: ", error);
+      }
+    };
+    if (openPopover && item?.ProductVarient?.Product?.product_id) {
+      fetchClassify();
+    }
+  }, [openPopover]);
+
+  useEffect(() => {
+    const fetchSize = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${item?.ProductVarient?.Product?.product_id}&product_classify_id=${selectedClassify}`
+        );
+        if (res.status === 200) {
+          if (res?.data?.data?.[0]?.ProductSize === null) {
+            setState({
+              type: "currentVarients",
+              payload: res?.data?.data?.[0],
+            });
+          } else {
+            if (res.data.data.length > 0 && Array.isArray(res.data.data)) {
+              const selectedSize = res.data.data.find(
+                (data) =>
+                  data.ProductSize.product_size_id ===
+                  item?.ProductVarient?.product_size_id
+              );
+              if (selectedSize) {
+                setState({ type: "currentVarients", payload: selectedSize });
+              } else {
+                setState({
+                  type: "currentVarients",
+                  payload: res?.data?.data?.[0],
+                });
+              }
+              setState({ type: "sizeList", payload: res.data.data });
+            }
+          }
+        }
+      } catch (error) {
+        console.log("Lỗi khi fetch dữ liệu size: ", error);
+      }
+    };
+    if (selectedClassify && item?.ProductVarient?.Product?.product_id) {
+      fetchSize();
+    }
+  }, [openPopover, selectedClassify]);
+
+  //Handler
+  const handleOpenChange = (newOpen) => {
+    setState({ type: "openPopover", payload: newOpen });
+  };
+
+  const handleUpdateVarient = async () => {
+    try {
+      const res = await updateVarients(
+        item?.cart_item_id,
+        currentVarient?.product_varients_id
+      );
+      if (res.success) {
+        message.success("Cập nhật sản phẩm thành công");
+
+        if (user?.user_id !== "") {
+          dispatch(
+            updateCartVarients({
+              cartItemID: item?.cart_item_id,
+              productVarientsID: currentVarient?.product_varients_id,
+            })
+          );
+          dispatch(fetchCartData({ userID: user?.user_id }));
+          setState({ type: "openPopover", payload: false });
+        }
+      }
+    } catch (error) {
+      console.log("Lỗi khi cập nhật biến thể: ", error);
+      message.error(error?.message || "Cập nhật sản phẩm thất bại");
+    }
+  };
+
+  const handleUpdateQuantity = async (value) => {
+    const quantityValue = parseInt(value, 10);
+    if (quantityValue !== 0) {
+      try {
+        const res = await updateItemQuantity(item?.cart_item_id, quantityValue);
+        console.log("res", res);
+        if (res?.success) {
+          if (user?.user_id !== "") {
+            dispatch(
+              updateVarientQuantity({
+                cartItemID: item?.cart_item_id,
+                quantity: quantityValue,
+              })
+            );
+            dispatch(fetchCartData({ userID: user?.user_id }));
+          }
+        }
+      } catch (error) {
+        console.log("Lỗi khi cập nhật số lượng sản phẩm: ", error);
+        message.error(error?.message || "Cập nhật số lượng sản phẩm thất bại");
+      }
+    }
+  };
+
+  //popover content
   const content = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
@@ -65,6 +208,7 @@ const CartItem = (props) => {
                     ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
                     : "cursor-not-allowed bg-[#fafafa] text-gray-400"
                 }
+                
                  ${
                    selectedClassify === classify?.product_classify_id
                      ? "border-primary text-primary"
@@ -130,69 +274,30 @@ const CartItem = (props) => {
         )}
       </div>
       <div className="flex gap-2 justify-end items-center">
-        <Button>TRỞ LẠI</Button>
-        <Button>XÁC NHẬN</Button>
+        <Button
+          onClick={() => {
+            setState({ type: "openPopover", payload: false });
+          }}
+        >
+          TRỞ LẠI
+        </Button>
+        <Button
+          onClick={() => {
+            if (
+              currentVarient?.product_varients_id !==
+              item?.ProductVarient?.product_varients_id
+            ) {
+              handleUpdateVarient();
+            } else {
+              setState({ type: "openPopover", payload: false });
+            }
+          }}
+        >
+          XÁC NHẬN
+        </Button>
       </div>
     </div>
   );
-
-  useEffect(() => {
-    const fetchClassify = async () => {
-      try {
-        const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/classify-products?product_id=${item?.ProductVarient?.Product?.product_id}`
-        );
-        if (res.status === 200) {
-          setState({ type: "classifyList", payload: res.data.data });
-          setState({
-            type: "selectedClassify",
-            payload: item?.ProductVarient?.product_classify_id,
-          });
-        }
-      } catch (error) {
-        console.log("Lỗi khi fetch dữ liệu phân loại: ", error);
-      }
-    };
-    if (openPopover && item?.ProductVarient?.Product?.product_id) {
-      fetchClassify();
-    }
-  }, [openPopover]);
-
-  useEffect(() => {
-    console.log("currentVarient", currentVarient);
-  }, [currentVarient]);
-
-  useEffect(() => {
-    const fetchSize = async () => {
-      try {
-        console.log("selectedClassify", selectedClassify);
-        const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${item?.ProductVarient?.Product?.product_id}&product_classify_id=${selectedClassify}`
-        );
-        if (res.status === 200) {
-          console.log("sizeList", res.data.data);
-          if (res?.data?.data?.[0]?.ProductSize === null) {
-            setState({
-              type: "currentVarients",
-              payload: res?.data?.data?.[0],
-            });
-          } else {
-            setState({ type: "sizeList", payload: res.data.data });
-          }
-        }
-      } catch (error) {
-        console.log("Lỗi khi fetch dữ liệu size: ", error);
-      }
-    };
-    if (selectedClassify && item?.ProductVarient?.Product?.product_id) {
-      fetchSize();
-    }
-  }, [openPopover, selectedClassify]);
-
-  //Handler
-  const handleOpenChange = (newOpen) => {
-    setState({ type: "openPopover", payload: newOpen });
-  };
 
   return (
     <div className="grid grid-cols-12 gap-3  ">
@@ -230,6 +335,7 @@ const CartItem = (props) => {
               content={content}
               open={openPopover}
               onOpenChange={handleOpenChange}
+              trigger={["click"]}
             >
               <span className="w-fit cursor-pointer flex gap-2 items-center">
                 Phân loại hàng:{" "}
@@ -261,8 +367,11 @@ const CartItem = (props) => {
             <div className="flex gap-4">
               <InputNumber
                 prefix="Sl: "
-                min={1}
+                min={0}
+                max={item?.ProductVarient?.stock}
                 defaultValue={item?.quantity}
+                value={item?.quantity}
+                onChange={handleUpdateQuantity}
               />
               <Button
                 className="border-0 hover:bg-secondary"

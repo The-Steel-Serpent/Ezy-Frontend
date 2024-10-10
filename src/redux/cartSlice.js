@@ -1,5 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { getCart, getLimitCartItems } from "../services/cartService";
+import {
+  getCart,
+  getLimitCartItems,
+  updateVarients,
+} from "../services/cartService";
 
 export const fetchMiniCartData = createAsyncThunk(
   "cart/fetchMiniCartData",
@@ -42,6 +46,50 @@ const cartSlice = createSlice({
       state.miniCart = [];
       state.status = "idle";
     },
+    updateCartVarients: (state, action) => {
+      const { cartItemID, productVarientsID } = action.payload;
+      const cartItemIndex = state.cart.findIndex(
+        (item) => item.cart_item_id === cartItemID
+      );
+      if (cartItemIndex !== -1) {
+        const cartItem = state.cart[cartItemIndex];
+        const existingCartItemIndex = state.cart.findIndex(
+          (item) =>
+            item.cart_shop_id === cartItem?.cart_shop_id &&
+            item.product_varients_id === productVarientsID
+        );
+        console.log(
+          "cartItemIndex:",
+          cartItemIndex,
+          "existingCartItemIndex:",
+          existingCartItemIndex
+        );
+        if (existingCartItemIndex !== -1) {
+          state.cart[existingCartItemIndex] = {
+            ...state.cart[existingCartItemIndex],
+            quantity:
+              state.cart[existingCartItemIndex].quantity + cartItem.quantity,
+          };
+          state.cart = state.cart.filter(
+            (item) => item.cart_item_id !== cartItemID
+          );
+        } else {
+          state.cart[cartItemIndex] = {
+            ...state.cart[cartItemIndex],
+            product_varients_id: productVarientsID,
+          };
+        }
+      }
+    },
+    updateVarientQuantity: (state, action) => {
+      const { cartItemID, quantity } = action.payload;
+      const cartItem = state.cart.find(
+        (item) => item.cart_item_id === cartItemID
+      );
+      if (cartItem) {
+        cartItem.quantity = quantity;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -73,6 +121,7 @@ const cartSlice = createSlice({
   },
 });
 
-export const { clearCart } = cartSlice.actions;
+export const { clearCart, updateCartVarients, updateVarientQuantity } =
+  cartSlice.actions;
 
 export default cartSlice.reducer;

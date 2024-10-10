@@ -58,10 +58,55 @@ export const addToCart = async (
   }
 };
 
-export const updateCart = async (userID, productID, quantity) => {};
+export const updateVarients = async (cartItemID, productVarientsID) => {
+  try {
+    const response = await axios.post(
+      `${url}/update-varients?cart_item_id=${cartItemID}&product_varients_id=${productVarientsID}`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật sản phẩm: ", error);
+    switch (error?.response?.status) {
+      case 404:
+        return { error: true, message: "Không tìm thấy sản phẩm" };
+      case 500:
+        return { error: true, message: "Lỗi server" };
+      case 400:
+        return { error: true, message: "Số lượng sản phẩm không đủ" };
+      default:
+        return { error: true, message: error.response.message || error };
+    }
+  }
+};
 
-export const deleteCart = async (userID, productID) => {};
-
-export const deleteAllCart = async (userID) => {};
-
-export const checkout = async (userID, data) => {};
+export const updateItemQuantity = async (cartItemID, quantity) => {
+  try {
+    const response = await axios.post(
+      `${url}/update-quantity?cart_item_id=${cartItemID}&quantity=${quantity}`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Lỗi khi cập nhật số lượng sản phẩm trong giỏ hàng: ", error);
+    switch (error?.resposne?.status) {
+      case 404:
+        return {
+          error: true,
+          message: "Không tìm thấy sản phẩm trong giỏ hàng",
+        };
+      case 500:
+        return { error: true, message: "Lỗi server" };
+      case 400:
+        return { error: true, message: "Số lượng sản phẩm không đủ" };
+      default:
+        return { error: true, message: error.message || error };
+    }
+  }
+};

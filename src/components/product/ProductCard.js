@@ -25,7 +25,13 @@ const ProductCard = ({ value, loading, itemsPerRow = 6 }) => {
         <Card
           loading={loading}
           hoverable
-          cover={<img loading="lazy" src={value.thumbnail} />}
+          cover={
+            <img
+              className="size-[190px]"
+              loading="lazy"
+              src={value.thumbnail}
+            />
+          }
         >
           <Meta style={{ fontSize: 14 }} title={value?.product_name} />
           <div className="flex lg:flex-row flex-col w-100 items-start lg:items-center mt-4 text-ellipsis text-nowrap line-clamp-1">

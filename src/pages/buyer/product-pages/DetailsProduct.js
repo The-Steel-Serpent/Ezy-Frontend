@@ -50,6 +50,7 @@ const DetailsProduct = () => {
   const dispatch = useDispatch();
   const { id } = useParams();
   const [success, setSuccess] = useState(true);
+  const [isGalleryReady, setIsGalleryReady] = useState(false);
   const [sizes, setSizes] = useState([]);
   const [currentVarient, setCurrentVarient] = useState({});
   const [selectedClassify, setSelectedClassify] = useState("");
@@ -233,6 +234,11 @@ const DetailsProduct = () => {
         ? currentImageUrl
         : img.original,
   }));
+  useEffect(() => {
+    if (updatedImgs && updatedImgs.length > 0) {
+      setIsGalleryReady(true);
+    }
+  }, [updatedImgs]);
 
   const price =
     currentVarient != null ? currentVarient?.price : detailsProduct?.base_price;
@@ -291,13 +297,15 @@ const DetailsProduct = () => {
             {/***Ảnh sản phẩm */}
             <section className="col-span-5 p-[15px]">
               <Suspense fallback={<Skeleton.Image className="size-[470px]" />}>
-                <ReactImageGallery
-                  lazyLoad={true}
-                  items={updatedImgs}
-                  showThumbnails={true}
-                  onSlide={handleSlide}
-                  startIndex={currentImageIndex}
-                />
+                {isGalleryReady && (
+                  <ReactImageGallery
+                    lazyLoad={true}
+                    items={updatedImgs}
+                    showThumbnails={true}
+                    onSlide={handleSlide}
+                    startIndex={currentImageIndex}
+                  />
+                )}
               </Suspense>
             </section>
             {/***Lựa chọn sản phẩm */}
