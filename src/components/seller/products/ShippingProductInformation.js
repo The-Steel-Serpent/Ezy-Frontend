@@ -98,10 +98,9 @@ const ShippingProductInformation = ({ onData }) => {
             onData(data);
             console.log("No Error:", errors);
         }
-        else
-        {
+        else {
             console.log("Error shipping info:", errors);
-            onData({noErrorShippingInfo: false});
+            onData({ noErrorShippingInfo: false });
         }
 
     }, [state.errors]);
@@ -127,7 +126,9 @@ const ShippingProductInformation = ({ onData }) => {
                             <Input
                                 value={state.length}
                                 onChange={(e) => handleInputChange(e, 'set_length')}
-                                onBeforeInput={handleBeforeInput} />
+                                onBeforeInput={handleBeforeInput}
+                                addonAfter='cm'
+                            />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -145,6 +146,7 @@ const ShippingProductInformation = ({ onData }) => {
                                 value={state.width}
                                 onChange={(e) => handleInputChange(e, 'set_width')}
                                 onBeforeInput={handleBeforeInput}
+                                addonAfter='cm'
                             />
                         </Form.Item>
                     </Col>
@@ -163,6 +165,7 @@ const ShippingProductInformation = ({ onData }) => {
                                 value={state.height}
                                 onChange={(e) => handleInputChange(e, 'set_height')}
                                 onBeforeInput={handleBeforeInput}
+                                addonAfter='cm'
                             />
                         </Form.Item>
                     </Col>
@@ -181,6 +184,7 @@ const ShippingProductInformation = ({ onData }) => {
                                 value={state.weight}
                                 onChange={(e) => handleInputChange(e, 'set_weight')}
                                 onBeforeInput={handleBeforeInput}
+                                addonAfter='gram'
                             />
                         </Form.Item>
                     </Col>

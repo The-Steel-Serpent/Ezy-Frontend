@@ -299,9 +299,7 @@ const SellerSetup = () => {
                     </div>
                 </div>
             )}
-            {state.loading && (
-                <LoadingModal />
-            )}
+            <LoadingModal visible={state.loading} />
 
         </div>
 
