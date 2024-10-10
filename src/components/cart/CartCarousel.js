@@ -13,10 +13,6 @@ const CartCarousel = () => {
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
-        case "offset":
-          return { ...state, offset: action.payload };
-        case "limit":
-          return { ...state, limit: action.payload };
         default:
           return state;
       }
@@ -26,7 +22,6 @@ const CartCarousel = () => {
       limit: 3,
     }
   );
-  const { offset, limit } = state;
 
   useEffect(() => {
     if (user?.user_id !== "") {
@@ -42,10 +37,6 @@ const CartCarousel = () => {
           <Checkbox className="checkbox-cart" />
           <span className=" text-lg text-primary font-garibato">Tất cả</span>
         </div>
-        <Input
-          className="w-[160px]"
-          placeholder="Tìm kiếm sản phẩm trong giỏ hàng..."
-        />
       </div>
       <div className="w-full rounded flex flex-col gap-3">
         {cart?.length > 0 &&
