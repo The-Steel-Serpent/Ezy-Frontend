@@ -125,7 +125,7 @@ export const BasicInformation = ({ onData }) => {
                 }
                 return pathArray.join(' > ');
             });
-            dispatch({ type: 'SET_SUBCATEGORY', payload: record.sub_category_name });
+            dispatch({ type: 'SET_SUBCATEGORY', payload: record.sub_category_id });
         } else {
             console.error('Subcategory record is undefined or missing sub_category_name');
         }
@@ -241,7 +241,7 @@ export const BasicInformation = ({ onData }) => {
         {
             title: 'Subcategory Name',
             dataIndex: 'sub_category_name',
-            key: 'sub_category_name',
+            key: 'sub_category_id',
         }
     ];
     const validate = () => {
@@ -302,7 +302,7 @@ export const BasicInformation = ({ onData }) => {
         }
 
         // subcategory
-        if (state.subcategory.trim().length === 0) {
+        if (state.subcategory.length === 0) {
             newErrors.subcategory = 'Hãy chọn danh mục';
             valid = false;
         }
@@ -344,6 +344,8 @@ export const BasicInformation = ({ onData }) => {
                 brand: state.brand,
                 fileListProduct: state.fileListProduct,
                 thumbnail: state.thumbnail,
+                sub_category_id: state.subcategory,
+                gender: state.gender,
                 noErrorBasicInfo: true
             };
             onData(data);

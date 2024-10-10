@@ -370,14 +370,14 @@ const SaleInformation = ({ onData }) => {
         return valid;
     }
 
-    
+
     useEffect(() => {
         validateDefault();
     }, [])
-    
+
     useEffect(() => {
         validateDefault();
-    },[
+    }, [
         state.priceDefault,
         state.stockDefault,
         state.sale_percent_default
@@ -395,6 +395,7 @@ const SaleInformation = ({ onData }) => {
                     price: state.priceDefault,
                     stock: state.stockDefault,
                     sale_percent: state.sale_percent_default,
+                    add_product_level: state.add_product_level,
                     noErrorSaleInfo: true
                 };
                 onData(data);

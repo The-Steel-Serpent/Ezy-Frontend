@@ -1,20 +1,14 @@
 import React from 'react'
 import { LoadingOutlined } from '@ant-design/icons';
-import { Flex, Spin, Modal } from 'antd';
-const LoadingModal = () => {
+import { Spin, Modal } from 'antd';
+const LoadingModal = ({ visible }) => {
   return (
-    <div>
-        <Modal
-            title={null}
-            open={true}
-            footer={null}
-            closable={false}
-            centered
-            width={100}
-        >
-            <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
-        </Modal>
-    </div>
+    <Modal open={visible} footer={null} closable={false} centered>
+      <div className="flex flex-col justify-center items-center h-full">
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+        <p>Vui lòng đợi trong giây lát</p>
+      </div>
+    </Modal>
   )
 }
 

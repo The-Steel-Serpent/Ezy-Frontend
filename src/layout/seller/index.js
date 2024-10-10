@@ -145,6 +145,7 @@ const reducer = (state, action) => {
 }
 
 const SellerAuthLayout = ({ children }) => {
+    document.title = "Ezy - Seller";
     const [current, setCurrent] = useState('1');
     const [state, dispatchMain] = useReducer(reducer, initialState);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
