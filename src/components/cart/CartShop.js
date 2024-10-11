@@ -1,15 +1,84 @@
 import { Avatar, Checkbox, Tree } from "antd";
-import React, { memo } from "react";
+import React, { memo, useCallback, useEffect, useReducer } from "react";
 import CartItem from "./CartItem";
+import {
+  updateAllItemsOfShop,
+  updateSelected,
+} from "../../services/cartService";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCartData } from "../../redux/cartSlice";
 
 const CartShop = (props) => {
-  const { item } = props;
-  console.log("item: ", item);
+  const user = useSelector((state) => state.user);
+  const { item, onShopSelectedChange } = props;
+  const dispatch = useDispatch();
+  const [state, setState] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "setSelectAll":
+          return { ...state, selectAll: action.payload };
+        default:
+          return state;
+      }
+    },
+    {
+      selectAll: false,
+    }
+  );
+
+  const { selectAll } = state;
+
+  //side Effect
+  useEffect(() => {
+    const selectedAll = item.CartItems.some((cartItem) => cartItem.selected);
+    if (selectedAll === true) {
+      setState({
+        type: "setSelectAll",
+        payload: selectedAll,
+      });
+    } else {
+      setState({
+        type: "setSelectAll",
+        payload: false,
+      });
+    }
+  }, [dispatch, item.CartItems]);
+
+  //Handler
+  const handleSelectAllShopChange = useCallback(
+    (e) => {
+      const checked = e.target.checked === true ? 1 : 0;
+      setState({
+        type: "setSelectAll",
+        payload: checked,
+      });
+      onShopSelectedChange(item.cart_shop_id, checked);
+    },
+    [item.cart_shop_id, onShopSelectedChange]
+  );
+
+  const handleSelectedItemChange = useCallback(
+    async (cartItemID, checked) => {
+      try {
+        await updateSelected(cartItemID, checked);
+        dispatch(fetchCartData({ userID: user?.user_id }));
+      } catch (error) {
+        console.log("Lỗi khi cập nhật select: ", error);
+      }
+
+      updateSelected(cartItemID, checked);
+    },
+    [dispatch, user?.user_id]
+  );
 
   return (
     <div className=" flex flex-col w-full gap-1">
       <div className="flex py-3 gap-3  items-center border-b-[1px] border-b-slate-200">
-        <Checkbox className="ml-3 checkbox-cart" />
+        <Checkbox
+          className="ml-3 checkbox-cart"
+          checked={selectAll}
+          onChange={handleSelectAllShopChange}
+        />
         <Avatar src={item?.Shop?.logo_url} size={40} />
         <span className="text-lg font-semibold">{item?.Shop?.shop_name}</span>
         <div className="size-5 fill-primary cursor-pointer">
@@ -20,8 +89,13 @@ const CartShop = (props) => {
       </div>
       <div className="m-5">
         <div className="flex flex-col gap-5 p-4">
-          {item?.CartItems?.map((cartItem) => {
-            return <CartItem item={cartItem} />;
+          {item?.CartItems?.map((cartItem, key) => {
+            return (
+              <CartItem
+                item={cartItem}
+                onCartItemSelectedChange={handleSelectedItemChange}
+              />
+            );
           })}
         </div>
       </div>

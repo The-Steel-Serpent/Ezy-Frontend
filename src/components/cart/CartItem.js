@@ -2,10 +2,14 @@
 import { DownOutlined, SearchOutlined } from "@ant-design/icons";
 import { Avatar, Button, Checkbox, InputNumber, message, Popover } from "antd";
 import axios from "axios";
-import React, { useEffect, useReducer } from "react";
+import React, { memo, useCallback, useEffect, useReducer } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { IoCheckmarkDone } from "react-icons/io5";
-import { updateItemQuantity, updateVarients } from "../../services/cartService";
+import {
+  updateItemQuantity,
+  updateSelected,
+  updateVarients,
+} from "../../services/cartService";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCartData,
@@ -16,13 +20,15 @@ import {
 const text = <span className="text-lg font-semibold">Phân loại hàng</span>;
 
 const CartItem = (props) => {
-  const { item } = props;
+  const { item, onCartItemSelectedChange } = props;
   const user = useSelector((state) => state.user);
-  const cart = useSelector((state) => state.cart.cart);
+
   const dispatch = useDispatch();
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
+        case "checked":
+          return { ...state, checked: action.payload };
         case "openPopover":
           return { ...state, openPopover: action.payload };
         case "selectedClassify":
@@ -38,6 +44,7 @@ const CartItem = (props) => {
       }
     },
     {
+      checked: item.selected,
       selectedClassify: null,
       currentVarient: item?.ProductVarient || null,
       classifyList: [],
@@ -47,6 +54,7 @@ const CartItem = (props) => {
   );
 
   const {
+    checked,
     selectedClassify,
     currentVarient,
     classifyList,
@@ -129,7 +137,16 @@ const CartItem = (props) => {
     if (selectedClassify && item?.ProductVarient?.Product?.product_id) {
       fetchSize();
     }
-  }, [openPopover, selectedClassify]);
+  }, [
+    openPopover,
+    selectedClassify,
+    item?.ProductVarient?.Product?.product_id,
+    item?.ProductVarient?.product_size_id,
+  ]);
+
+  useEffect(() => {
+    setState({ type: "checked", payload: item.selected });
+  }, [item.selected]);
 
   //Handler
   const handleOpenChange = (newOpen) => {
@@ -162,29 +179,40 @@ const CartItem = (props) => {
     }
   };
 
-  const handleUpdateQuantity = async (value) => {
-    const quantityValue = parseInt(value, 10);
-    if (quantityValue !== 0) {
-      try {
-        const res = await updateItemQuantity(item?.cart_item_id, quantityValue);
-        console.log("res", res);
-        if (res?.success) {
-          if (user?.user_id !== "") {
-            dispatch(
-              updateVarientQuantity({
-                cartItemID: item?.cart_item_id,
-                quantity: quantityValue,
-              })
-            );
-            dispatch(fetchCartData({ userID: user?.user_id }));
+  const handleUpdateQuantity = useCallback(
+    async (value) => {
+      const quantityValue = parseInt(value, 10);
+      if (quantityValue !== 0) {
+        try {
+          const res = await updateItemQuantity(
+            item?.cart_item_id,
+            quantityValue
+          );
+          console.log("res", res);
+          if (res?.success) {
+            if (user?.user_id !== "") {
+              dispatch(fetchCartData({ userID: user?.user_id }));
+            }
           }
+        } catch (error) {
+          console.log("Lỗi khi cập nhật số lượng sản phẩm: ", error);
+          message.error(
+            error?.message || "Cập nhật số lượng sản phẩm thất bại"
+          );
         }
-      } catch (error) {
-        console.log("Lỗi khi cập nhật số lượng sản phẩm: ", error);
-        message.error(error?.message || "Cập nhật số lượng sản phẩm thất bại");
       }
-    }
-  };
+    },
+    [item.cart_item_id, dispatch, user?.user_id]
+  );
+
+  const handleCheckboxChange = useCallback(
+    async (e) => {
+      const isChecked = e.target.checked === true ? 1 : 0;
+      setState({ type: "checked", payload: isChecked });
+      onCartItemSelectedChange(item.cart_item_id, isChecked);
+    },
+    [onCartItemSelectedChange, item.cart_item_id]
+  );
 
   //popover content
   const content = (
@@ -192,8 +220,9 @@ const CartItem = (props) => {
       <div className="flex flex-col gap-1">
         <span className="font-semibold">{classifyList[0]?.type_name}</span>
         <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap">
-          {classifyList.map((classify) => (
+          {classifyList.map((classify, key) => (
             <button
+              key={key}
               onClick={() => {
                 if (classify?.total_stock > 0) {
                   setState({
@@ -238,8 +267,9 @@ const CartItem = (props) => {
         </span>
         {sizeList.length > 0 && (
           <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap">
-            {sizeList.map((size) => (
+            {sizeList.map((size, key) => (
               <button
+                key={key}
                 onClick={() => {
                   size?.stock > 0 &&
                     setState({ type: "currentVarients", payload: size });
@@ -302,7 +332,11 @@ const CartItem = (props) => {
   return (
     <div className="grid grid-cols-12 gap-3  ">
       <div className="col-span-1 items-center flex justify-center">
-        <Checkbox className="checkbox-cart" />
+        <Checkbox
+          checked={checked}
+          onChange={handleCheckboxChange}
+          className="checkbox-cart"
+        />
       </div>
 
       <div className="col-span-2 items-center flex justify-center">
@@ -391,4 +425,4 @@ const CartItem = (props) => {
   );
 };
 
-export default CartItem;
+export default memo(CartItem);

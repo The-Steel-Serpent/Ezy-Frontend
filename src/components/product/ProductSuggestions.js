@@ -15,7 +15,6 @@ const ProductSuggestions = () => {
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products-limit`
         );
-        console.log(res.data);
         if (res.data.success) {
           setSuggestProducts(res.data.data);
         }

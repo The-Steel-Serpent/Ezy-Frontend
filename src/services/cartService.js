@@ -110,3 +110,60 @@ export const updateItemQuantity = async (cartItemID, quantity) => {
     }
   }
 };
+
+export const updateSelectedAll = async (cart_id, selected) => {
+  try {
+    const response = await axios.post(
+      `${url}/update-selected-all?cart_id=${cart_id}&selected=${selected}`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Lỗi khi cập nhật select all: ", error);
+    switch (error?.response?.status) {
+      default:
+        return { error: true, message: error.message || error };
+    }
+  }
+};
+
+export const updateAllItemsOfShop = async (cart_shop_id, selected) => {
+  try {
+    const response = await axios.post(
+      `${url}/update-all-items-of-shop?cart_shop_id=${cart_shop_id}&selected=${selected}`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Lỗi khi cập nhật select all: ", error);
+    switch (error?.response?.status) {
+      default:
+        return { error: true, message: error.message || error };
+    }
+  }
+};
+
+export const updateSelected = async (cart_item_id, selected) => {
+  try {
+    const response = await axios.post(
+      `${url}/update-selected-item?cart_item_id=${cart_item_id}&selected=${selected}`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Lỗi khi cập nhật select: ", error);
+    switch (error?.response?.status) {
+      default:
+        return { error: true, message: error.message || error };
+    }
+  }
+};

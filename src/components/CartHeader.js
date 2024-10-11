@@ -23,7 +23,6 @@ const CartHeader = () => {
       navigate("/buyer/login");
     }
   }, [userID, navigate]);
-  console.log(user);
   return (
     <>
       <div className="bg-custom-gradient w-full px-[29px] py-3 flex items-center justify-between">

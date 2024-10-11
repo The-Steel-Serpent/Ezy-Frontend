@@ -31,6 +31,7 @@ const initialState = {
   cart: [],
   miniCart: [],
   quantity: 0,
+  totalPrice: 0,
   totalItems: 0,
   status: "idle",
 };
@@ -42,7 +43,9 @@ const cartSlice = createSlice({
     clearCart: (state) => {
       state.cart = [];
       state.quantity = 0;
+      state.discountPrice = 0;
       state.totalItems = 0;
+      state.totalPrice = 0;
       state.miniCart = [];
       state.status = "idle";
     },
@@ -57,12 +60,6 @@ const cartSlice = createSlice({
           (item) =>
             item.cart_shop_id === cartItem?.cart_shop_id &&
             item.product_varients_id === productVarientsID
-        );
-        console.log(
-          "cartItemIndex:",
-          cartItemIndex,
-          "existingCartItemIndex:",
-          existingCartItemIndex
         );
         if (existingCartItemIndex !== -1) {
           state.cart[existingCartItemIndex] = {
@@ -83,11 +80,30 @@ const cartSlice = createSlice({
     },
     updateVarientQuantity: (state, action) => {
       const { cartItemID, quantity } = action.payload;
-      const cartItem = state.cart.find(
-        (item) => item.cart_item_id === cartItemID
-      );
-      if (cartItem) {
-        cartItem.quantity = quantity;
+      for (let i = 0; i < state.cart.length; i++) {
+        for (let j = 0; j < state.cart[i].CartItems.length; j++) {
+          if (state.cart[i].CartItems[j].cart_item_id === cartItemID) {
+            state.cart[i].CartItems[j].quantity = quantity;
+            state.cart[i].CartItems[j].price =
+              ((state.cart[i].CartItems[j].ProductVarient.price *
+                (100 -
+                  state.cart[i].CartItems[j].ProductVarient.sale_percents)) /
+                100) *
+              quantity;
+            break;
+          }
+        }
+      }
+    },
+    updateCartItems: (state, action) => {
+      const { cart_item_id, checked } = action.payload;
+      for (let i = 0; i < state.cart.length; i++) {
+        for (let j = 0; j < state.cart[i].CartItems.length; j++) {
+          if (state.cart[i].CartItems[j].cart_item_id === cart_item_id) {
+            state.cart[i].CartItems[j].selected = checked;
+            break;
+          }
+        }
       }
     },
   },
@@ -113,6 +129,36 @@ const cartSlice = createSlice({
       .addCase(fetchCartData.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.cart = action.payload.cartShop;
+        const totalItems = action.payload?.cartShop?.reduce(
+          (total, shop) =>
+            shop.selected === 1 ? total + shop.total_quantity : total,
+          0
+        );
+
+        // Tính tổng giá cho các item đã chọn
+        const totalPrice = action.payload?.cartShop?.reduce(
+          (total, shop) =>
+            shop.selected === 1 ? total + shop.total_price : total,
+
+          0
+        );
+        const discountPrice = action.payload?.cartShop?.reduce(
+          (total, shop) =>
+            shop?.CartItems?.reduce(
+              (total, cartItem) =>
+                cartItem.selected === 1
+                  ? total +
+                    (cartItem.ProductVarient.price *
+                      cartItem.ProductVarient.sale_percents) /
+                      100
+                  : total,
+              0
+            ),
+          0
+        );
+        state.totalItems = totalItems;
+        state.totalPrice = totalPrice;
+        state.discountPrice = discountPrice * totalItems;
       })
       .addCase(fetchCartData.rejected, (state, action) => {
         state.status = "failed";
@@ -121,7 +167,11 @@ const cartSlice = createSlice({
   },
 });
 
-export const { clearCart, updateCartVarients, updateVarientQuantity } =
-  cartSlice.actions;
+export const {
+  clearCart,
+  updateCartVarients,
+  updateVarientQuantity,
+  updateCartItems,
+} = cartSlice.actions;
 
 export default cartSlice.reducer;
