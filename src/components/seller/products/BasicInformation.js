@@ -142,9 +142,6 @@ export const BasicInformation = ({ onData }) => {
     };
 
     const handleUploadListProductChange = ({ fileList: newFileList }) => {
-        // if (newFileList.length > 1) {
-        //     newFileList.shift();
-        // }
         dispatch({ type: 'SET_FILE_LIST_PRODUCT', payload: newFileList });
         console.log("File List: ", state.fileListProduct);
         console.log("New List: ", newFileList);
@@ -199,7 +196,6 @@ export const BasicInformation = ({ onData }) => {
                 });
                 if (res.data && Array.isArray(res.data.data)) {
                     setCategories(res.data.data);
-                    console.log("data", res.data.data);
                 } else {
                     console.error("API response is not an array:", res.data);
                 }

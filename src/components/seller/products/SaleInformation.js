@@ -5,6 +5,7 @@ import { VscClose } from "react-icons/vsc";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { RiImageAddFill } from "react-icons/ri";
 import { handleBeforeInput } from '../../../helpers/handleInput';
+import { all } from 'axios';
 
 const initialState = {
     add_product_level: 1, // 1: only product, 2: have classify, 3: have classify and varient
@@ -18,6 +19,7 @@ const initialState = {
     allImgClassification: [],
     allPrice: [],
     allStock: [],
+    allSalePercent: [],
     priceDefault: '',
     sale_percent_default: 0,
     stockDefault: '',
@@ -54,6 +56,8 @@ const reducer = (state, action) => {
             return { ...state, allPrice: action.payload };
         case 'SET_ALL_STOCK':
             return { ...state, allStock: action.payload };
+        case 'SET_ALL_SALE_PERCENT':
+            return { ...state, allSalePercent: action.payload };
         case 'SET_PRICE_DEFAULT':
             return { ...state, priceDefault: action.payload };
         case 'SET_STOCK_DEFAULT':
@@ -91,26 +95,57 @@ const SaleInformation = ({ onData }) => {
         return true;
     };
 
-    const handleErrorCancel = () => dispatch({ type: 'SET_ERROR_VISIBLE', payload: false });
+    const handleUploadClassifyImage = (index, e) => {
+        let newImgClassification = [...state.allImgClassification];
 
-    const handleUploadImage = (file, classificationIndex) => {
-        console.log("Received classification index:", classificationIndex);
-        const reader = new FileReader();
-        reader.onload = () => {
-            const newImage = { index: classificationIndex, url: reader.result };
-            dispatch({
-                type: 'SET_ALL_IMG_CLASSIFICATION',
-                payload: state.allImgClassification.map((img, idx) => idx === classificationIndex ? newImage : img)
-            });
-        };
-        reader.readAsDataURL(file.originFileObj);
-        console.log("Processing file for classification index:", classificationIndex);
-        console.log("allImgClassification", state.allImgClassification);
+        // Get the new file with its pos attribute
+        const newFile = { file: e.file, pos: index };
+
+        // Check if the file with the same pos already exists
+        const existingIndex = newImgClassification.findIndex(item => item && item.pos === index);
+
+        if (existingIndex !== -1) {
+            // If file with the same pos exists, update it
+            newImgClassification[existingIndex] = newFile;
+        } else {
+            // If it doesn't exist, add a new file
+            newImgClassification.push(newFile);
+        }
+
+        // Check if the file is removed
+        if (e.file.status === 'removed') {
+            console.log('File removed');
+            // Set the file and pos to null for removal
+            newImgClassification[existingIndex] = { ...newFile, file: null, pos: null };
+
+            // Filter out elements where both file and pos are null
+            newImgClassification = newImgClassification.filter(
+                item => item.file !== null || item.pos !== null
+            );
+        }
+
+        // Dispatch the updated state
+        dispatch({ type: 'SET_ALL_IMG_CLASSIFICATION', payload: newImgClassification });
     };
 
+
+
+    const handleErrorCancel = () => dispatch({ type: 'SET_ERROR_VISIBLE', payload: false });
+
     const handleInputPrice = (index) => (e) => {
+        // remove all price at index before set new price
+        const removePrice = [...state.allPrice];
+        removePrice[index] = null;
+        dispatch({ type: 'SET_ALL_PRICE', payload: removePrice });
+
         if (isNaN(e.target.value)) {
             message.error('Giá tiền phải là số!');
+        }
+        else if (e.target.value === '') {
+            message.error('Giá tiền không được để trống!');
+        }
+        else if (e.target.value < 1000) {
+            message.error('Giá phải tối thiểu là 1000!');
         } else {
             const newPrice = [...state.allPrice];
             newPrice[index] = e.target.value;
@@ -126,8 +161,18 @@ const SaleInformation = ({ onData }) => {
     };
 
     const handleInputStock = (index) => (e) => {
+        const removeStock = [...state.allStock];
+        removeStock[index] = null;
+        dispatch({ type: 'SET_ALL_STOCK', payload: removeStock });
+
         if (isNaN(e.target.value)) {
             message.error('Số lượng hàng phải là số!');
+        }
+        else if (e.target.value === '') {
+            message.error('Số lượng hàng không được để trống!');
+        }
+        else if (e.target.value <= 0) {
+            message.error('Số lượng hàng phải lớn hơn 0 !');
         } else {
             const newStock = [...state.allStock];
             newStock[index] = e.target.value;
@@ -135,20 +180,46 @@ const SaleInformation = ({ onData }) => {
         }
     };
 
+    const handleSalePercent = (index) => (e) => {
+        const removeSalePercent = [...state.allSalePercent];
+        removeSalePercent[index] = null;
+        dispatch({ type: 'SET_ALL_SALE_PERCENT', payload: removeSalePercent });
+
+        if (isNaN(e.target.value)) {
+            message.error('Số lượng hàng phải là số!');
+        }
+        else if (e.target.value === '') {
+            message.error('Phần trăm giảm giá không được để trống!');
+        }
+        else if (e.target.value < 0 || e.target.value > 60) {
+            message.error('Phần trăm giảm giá phải từ 0 đến 60!');
+        } else {
+            const newSalePercent = [...state.allSalePercent];
+            newSalePercent[index] = e.target.value;
+            dispatch({ type: 'SET_ALL_SALE_PERCENT', payload: newSalePercent });
+        }
+    };
+
     const toggleVisibility = () => {
         if (!state.showFormList) {
             form.setFieldsValue({ classifications: [{}] });
         }
+        dispatch({ type: 'SET_CLASSIFY_TYPE_NAME', payload: '' });
+        dispatch({ type: 'SET_VARIANT_NAME', payload: '' });
         dispatch({ type: 'SET_SHOW_FORM_LIST', payload: !state.showFormList });
         dispatch({ type: 'SET_SHOW_BUTTON_LIST2', payload: !state.showFormList });
         dispatch({ type: 'SET_SHOW_FORM_LIST2', payload: false });
-        dispatch({ type: 'SET_CLASSIFY_TYPE_NAME', payload: '' });
-        dispatch({ type: 'SET_VARIANT_NAME', payload: '' });
         dispatch({ type: 'SET_ALL_CLASSIFY_NAME', payload: [] });
         dispatch({ type: 'SET_ALL_VARIANT_NAME', payload: [] });
-        dispatch({ type: 'SET_ALL_IMG_CLASSIFICATION', payload: [] });
         dispatch({ type: 'SET_ALL_PRICE', payload: [] });
         dispatch({ type: 'SET_ALL_STOCK', payload: [] });
+        dispatch({ type: 'SET_PRICE_DEFAULT', payload: '' });
+        dispatch({ type: 'SET_STOCK_DEFAULT', payload: '' });
+        dispatch({ type: 'SET_SALE_PERCENT_DEFAULT', payload: 0 });
+        if (state.add_product_level === 1)
+            dispatch({ type: 'SET_ADD_PRODUCT_LEVEL', payload: 2 });
+        else
+            dispatch({ type: 'SET_ADD_PRODUCT_LEVEL', payload: 1 });
     };
 
     const toggleVisibility2 = () => {
@@ -157,6 +228,9 @@ const SaleInformation = ({ onData }) => {
             form.setFieldsValue({ varients: [{}] });
         }
         dispatch({ type: 'SET_SHOW_BUTTON_LIST2', payload: false });
+        dispatch({ type: 'SET_ADD_PRODUCT_LEVEL', payload: 3 });
+        dispatch({ type: 'SET_ALL_CLASSIFY_NAME', payload: [] });
+        dispatch({ type: 'SET_ALL_VARIANT_NAME', payload: [] });
     };
 
     const toggleVisibility3 = () => {
@@ -164,9 +238,9 @@ const SaleInformation = ({ onData }) => {
         dispatch({ type: 'SET_SHOW_BUTTON_LIST2', payload: true });
         dispatch({ type: 'SET_ALL_CLASSIFY_NAME', payload: [] });
         dispatch({ type: 'SET_ALL_VARIANT_NAME', payload: [] });
-        dispatch({ type: 'SET_ALL_IMG_CLASSIFICATION', payload: [] });
         dispatch({ type: 'SET_ALL_PRICE', payload: [] });
         dispatch({ type: 'SET_ALL_STOCK', payload: [] });
+        dispatch({ type: 'SET_ADD_PRODUCT_LEVEL', payload: 2 });
     };
 
     const handleRemoveClassification = (index, remove) => {
@@ -178,15 +252,16 @@ const SaleInformation = ({ onData }) => {
         const newClassifyName = [...state.allClassifyName];
         newClassifyName.splice(index, 1);
         dispatch({ type: 'SET_ALL_CLASSIFY_NAME', payload: newClassifyName });
-        const newImgClassification = [...state.allImgClassification];
-        newImgClassification.splice(index, 1);
-        dispatch({ type: 'SET_ALL_IMG_CLASSIFICATION', payload: newImgClassification });
         const newPrice = [...state.allPrice];
         newPrice.splice(index, 1);
         dispatch({ type: 'SET_ALL_PRICE', payload: newPrice });
         const newStock = [...state.allStock];
         newStock.splice(index, 1);
         dispatch({ type: 'SET_ALL_STOCK', payload: newStock });
+        // remove allClassifyName, allPrice, allStock, allImgClassification at index
+        const newImgClassification = [...state.allImgClassification];
+        newImgClassification.splice(index, 1);
+        dispatch({ type: 'SET_ALL_IMG_CLASSIFICATION', payload: newImgClassification });
     }
 
     const handleRemoveVariant = (index, remove) => {
@@ -272,25 +347,10 @@ const SaleInformation = ({ onData }) => {
                 const currentClassify = row.allClassifyName;
                 const firstRowIndex = dataSource.findIndex(item => item.allClassifyName === currentClassify);
                 const sameClassifyCount = dataSource.filter(item => item.allClassifyName === currentClassify).length;
-
                 if (index === firstRowIndex) {
                     return {
                         children: (
-                            <div className='flex items-center gap-3 justify-center'>
-                                <Upload
-                                    listType="picture-card"
-                                    maxCount={1}
-                                    fileList={state.allImgClassification[index]}
-                                    onChange={({ file }) => handleUploadImage(file, index)}
-                                    beforeUpload={beforeUpload}
-                                >
-                                    {state.allImgClassification.find(img => img.index === index) ? (
-                                        <img src={state.allImgClassification.find(img => img.index === index).url} alt="uploaded" className='w-16 h-16' />
-                                    ) : (
-                                        <RiImageAddFill size={18} />
-                                    )}
-
-                                </Upload>
+                            <div>
                                 {text}
                             </div>
                         ),
@@ -320,6 +380,7 @@ const SaleInformation = ({ onData }) => {
                     defaultValue={state.allStock[index]}
                     onBlur={handleInputStock(index)}
                     placeholder='Nhập số lượng hàng'
+                    addonAfter='Cái'
                 />
             ),
         },
@@ -332,6 +393,20 @@ const SaleInformation = ({ onData }) => {
                     defaultValue={state.allPrice[index]}
                     onBlur={handleInputPrice(index)}
                     placeholder='Nhập giá'
+                    addonAfter='VND'
+                />
+            ),
+        },
+        {
+            title: 'Giảm giá',
+            dataIndex: 'sale_percent',
+            key: 'sale_percent',
+            render: (text, record, index) => (
+                <Input
+                    defaultValue={state.allSalePercent[index]}
+                    onBlur={handleSalePercent(index)}
+                    placeholder='Phần trăm giảm giá'
+                    addonAfter='%'
                 />
             ),
         },
@@ -370,6 +445,66 @@ const SaleInformation = ({ onData }) => {
         return valid;
     }
 
+    const validateAddProductLevel2 = () => {
+        let valid = true;
+        const count_classification = state.allClassifyName.length;
+        const count_img_classification = state.allImgClassification.length;
+        const count_stock = state.allStock.length;
+        const count_price = state.allPrice.length;
+        const count_sale_percent = state.allSalePercent.length;
+        if (
+            count_classification !== count_img_classification ||
+            state.classifyTypeName === '' ||
+            state.allClassifyName.length === 0 ||
+            count_stock !== count_classification ||
+            count_price !== count_classification ||
+            count_sale_percent !== count_classification) {
+            valid = false;
+        }
+        for (let i = 0; i < count_classification; i++) {
+            if (
+                state.allClassifyName[i] === '' ||
+                state.allImgClassification[i] === null ||
+                state.allPrice[i] === null ||
+                state.allStock[i] === null ||
+                state.allSalePercent[i] === null) {
+                valid = false;
+                break;
+            }
+        }
+        return valid;
+    }
+
+    const validateAddProductLevel3 = () => {
+        let valid = true;
+        const count_classification = state.allClassifyName.length;
+        const count_img_classification = state.allImgClassification.length;
+        const count_stock = state.allStock.length;
+        const count_price = state.allPrice.length;
+        const count_sale_percent = state.allSalePercent.length;
+        if (
+            count_classification !== count_img_classification ||
+            state.classifyTypeName === '' ||
+            state.allClassifyName.length === 0 ||
+            count_stock !== count_classification ||
+            count_price !== count_classification ||
+            count_sale_percent !== count_classification ||
+            state.allVarientName.length === 0 ||
+            state.variantName === '') {
+            valid = false;
+        }
+        for (let i = 0; i < count_classification; i++) {
+            if (
+                state.allClassifyName[i] === '' ||
+                state.allImgClassification[i] === null ||
+                state.allPrice[i] === null ||
+                state.allStock[i] === null ||
+                state.allSalePercent[i] === null) {
+                valid = false;
+                break;
+            }
+        }
+    }
 
     useEffect(() => {
         validateDefault();
@@ -407,8 +542,56 @@ const SaleInformation = ({ onData }) => {
                 console.log("Errors: ", state.errorsDefault);
             }
         }
+        else if (state.add_product_level === 2) {
+            const check = validateAddProductLevel2();
+            if (!check) {
+                onData({
+                    add_product_level: state.add_product_level,
+                    noErrorSaleInfo: false
+                });
+            }
+            else {
+                onData({
+                    noErrorSaleInfo: true,
+                    classifyTypeName: state.classifyTypeName,
+                    allClassifyName: state.allClassifyName,
+                    add_product_level: state.add_product_level,
+                    classifyImage: state.allImgClassification,
+                    stocks: state.allStock,
+                    prices: state.allPrice,
+                    sale_percent: state.allSalePercent
+                });
+            }
+
+        }
+        else if (state.add_product_level === 3) {
+            onData({
+                noErrorSaleInfo: true,
+                classifyTypeName: state.classifyTypeName,
+                allClassifyName: state.allClassifyName,
+                add_product_level: state.add_product_level,
+                classifyImage: state.allImgClassification,
+                stock: state.allStock,
+                price: state.allPrice,
+                sale_percent: state.allSalePercent,
+                allVarientName: state.allVarientName,
+                variantName: state.variantName
+            });
+        }
+
     }, [
-        state.errorsDefault
+        state.errorsDefault,
+        state.add_product_level,
+        state.classifyTypeName,
+        state.variantName,
+        state.allClassifyName,
+        state.allVarientName,
+        state.allClassifyName,
+        state.allImgClassification,
+        state.allStock,
+        state.allPrice,
+        state.priceDefault,
+        state.allSalePercent,
     ])
 
     return (
@@ -454,7 +637,7 @@ const SaleInformation = ({ onData }) => {
                                     </Row>
                                 </div>
                                 <div className='mt-3'>
-                                    <Row gutter={24}>
+                                    <Row gutter={12}>
                                         <Col span={3}>
                                             <span className='text-sm'>Tùy chọn</span>
                                         </Col>
@@ -463,8 +646,22 @@ const SaleInformation = ({ onData }) => {
                                                 {(fields, { add, remove }) => (
                                                     <div>
                                                         {fields.map(({ key, name, fieldKey, ...restField }, index) => (
-                                                            <Row key={key} gutter={12} className='flex items-center'>
+                                                            <Row key={key} gutter={12} className='flex items-center gap-3'>
                                                                 <Col span={10}>
+                                                                    <Upload
+                                                                        beforeUpload={beforeUpload}
+                                                                        maxCount={1}
+                                                                        listType='picture-card'
+                                                                        className='cursor-pointer'
+                                                                        onChange={(e) => handleUploadClassifyImage(index, e)}
+                                                                    >
+                                                                        {(!state.allImgClassification[index] || state.allImgClassification[index].file === null) && (
+                                                                            <RiImageAddFill size={20} />
+                                                                        )}
+                                                                    </Upload>
+
+                                                                </Col>
+                                                                <Col span={14}>
                                                                     <Form.Item
                                                                         {...restField}
                                                                         name={[name, 'classification']}
@@ -475,16 +672,16 @@ const SaleInformation = ({ onData }) => {
                                                                         ]}
                                                                     >
                                                                         <Row gutter={12} className='flex items-center'>
-                                                                            <Col span={20}>
+                                                                            <Col span={12}>
                                                                                 <Input
                                                                                     placeholder="Nhập phân loại hàng"
                                                                                     onChange={handleInputChange(index, add)}
                                                                                     maxLength={20}
                                                                                     showCount
-                                                                                    className='w-64'
+                                                                                    className='w-64 input-classification'
                                                                                 />
                                                                             </Col>
-                                                                            <Col span={4}>
+                                                                            <Col span={2}>
                                                                                 {index > 0 && (
                                                                                     <RiDeleteBin6Line
                                                                                         onClick={

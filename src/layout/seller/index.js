@@ -181,7 +181,6 @@ const SellerAuthLayout = ({ children }) => {
             );
 
             if (res.data.success) {
-                message.error("Tài khoản của bạn không phải là tài khoản cửa hàng");
                 dispatch(logout());
                 dispatch(logoutShop());
                 localStorage.clear();
@@ -225,9 +224,9 @@ const SellerAuthLayout = ({ children }) => {
     }, [windowWidth])
 
     useEffect(() => {
-        console.log("Token: ", token);
-        console.log("User: ", user);
-        console.log("Shop: ", shop);
+        // console.log("Token: ", token);
+        // console.log("User: ", user);
+        // console.log("Shop: ", shop);
 
         const fetchUserData = async () => {
             try {
@@ -263,6 +262,7 @@ const SellerAuthLayout = ({ children }) => {
                         dispatchMain({ type: 'SET_AUTHENTICATE', payload: true });
                         dispatch(setToken(token));
                     } else {
+                        message.error("Tài khoản của bạn không phải là tài khoản cửa hàng");
                         await logOut();
                     }
                 } else {
