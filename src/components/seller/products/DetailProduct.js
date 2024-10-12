@@ -5,7 +5,7 @@ import SaleInformation from './SaleInformation';
 import ShippingProductInformation from './ShippingProductInformation';
 import uploadFile from '../../../helpers/uploadFile';
 import { useSelector } from 'react-redux';
-import { addProduct, addProductVarient, saveProductImages } from '../../../services/productService';
+import { addProduct, addProductClassify, addProductVarient, saveProductImages } from '../../../services/productService';
 import LoadingModal from '../../loading/LoadingModal';
 import { useNavigate } from 'react-router-dom';
 
@@ -33,6 +33,8 @@ const initialState = {
     shippinginfo_enable_submit: false,
     list_product_images: [],
     thumbail_upload: null,
+    classify_thumnail: [],
+    upload_classify_thumbnails_complete: false,
     uploadComplete: false,
     uploadThumbnailComplete: false,
     enable_submit: false,
@@ -61,8 +63,12 @@ const reducer = (state, action) => {
             return { ...state, uploadComplete: action.payload };
         case 'SET_UPLOAD_THUMBNAIL_COMPLETE':
             return { ...state, uploadThumbnailComplete: action.payload };
+        case 'SET_UPLOAD_CLASSIFY_THUMBNAIL_COMPLETE':
+            return { ...state, upload_classify_thumbnails_complete: action.payload };
         case 'SET_THUMBNAIL_UPLOAD':
             return { ...state, thumbail_upload: action.payload };
+        case 'SET_CLASSIFY_THUMBNAIL':
+            return { ...state, classify_thumnail: action.payload };
         case 'SET_LOADING':
             return { ...state, loading: action.payload };
         default:
@@ -132,6 +138,20 @@ const DetailProduct = () => {
         }
     }
 
+    const handleUploadClassifyThumnail = async (thumnails) => {
+        console.log("Classify Thumnail: ", thumnails);
+        const uploadPromises = thumnails.map(file => uploadFile(file.file.originFileObj, 'seller-img'));
+        try {
+            const uploadResults = await Promise.all(uploadPromises);
+            console.log("Upload Classify Thumnail: ", uploadResults);
+            const uploadUrls = uploadResults.map(file => file.url);
+            dispatch({ type: 'SET_CLASSIFY_THUMBNAIL', payload: uploadUrls });
+            dispatch({ type: 'SET_UPLOAD_CLASSIFY_THUMBNAIL_COMPLETE', payload: true });
+        } catch (error) {
+            console.log("Error uploading classify thumnail:", error);
+        }
+    }
+
     const handleUploadThumnail = async () => {
         const thumbnail = state.basicInfo.thumbnail[0].originFileObj;
         try {
@@ -159,6 +179,76 @@ const DetailProduct = () => {
     const handleSubmit = async () => {
         await handleUploadProductImages();
         await handleUploadThumnail();
+        if (state.saleInfo.add_product_level === 2) {
+            await handleUploadClassifyThumnail(state.saleInfo.classifyImage);
+        }
+    }
+
+    const addProductAndSaveImages = async (payload) => {
+        try {
+            const res = await addProduct(payload);
+            console.log("Add Product: ", res);
+            if (res.success) {
+                const product_id = res.data.product_id;
+                // save product images
+                await handleSaveProductImages(product_id);
+                // save product varient
+                const payload = {
+                    product_id: product_id,
+                    price: res.data.base_price,
+                    stock: res.data.stock,
+                    sale_percents: res.data.sale_percents,
+                    height: state.shippingInfo.height,
+                    lenght: state.shippingInfo.length,
+                    width: state.shippingInfo.width,
+                    weight: state.shippingInfo.weight,
+                }
+                addProductVarient(payload).then(res => {
+                    console.log("Add Product Varient: ", res);
+                });
+                dispatch({ type: 'SET_LOADING', payload: false });
+                message.success("Thêm sản phẩm thành công");
+            }
+
+        } catch (err) {
+            console.log("Error Add Product: ", err);
+            message.error("Thêm sản phẩm thất bại");
+        }
+    };
+
+    const addProductLevel2 = async (payload) => {
+        try {
+            const res = await addProduct(payload);
+            console.log("Add Product: ", res);
+            if (res.success) {
+                const product_id = res.data.product_id;
+                await handleSaveProductImages(product_id);
+                const promises = [];
+                for (let i = 0; i < state.saleInfo.classifyTypeName.length; i++) {
+                    const payload = {
+                        product_id: product_id,
+                        product_classify_name: state.saleInfo.allClassifyName[i],
+                        type_name: state.saleInfo.classifyTypeName,
+                        thumbnail: state.classify_thumnail[i],
+                    };
+                    promises.push(addProductClassify(payload));
+                }
+                Promise.all(promises)
+                    .then(results => {
+                        results.forEach(res => {
+                            console.log("Add Product Classify: ", res);
+                        });
+                    })
+                    .catch(error => {
+                        console.error("Error adding product classify: ", error);
+                    });
+                dispatch({ type: 'SET_LOADING', payload: false });
+                message.success("Thêm sản phẩm thành công");
+            }
+        } catch (error) {
+            console.error("Error adding product: ", error);
+            message.error("Thêm sản phẩm thất bại");
+        }
     }
 
     useEffect(() => {
@@ -177,44 +267,46 @@ const DetailProduct = () => {
                 sale_percents: state.saleInfo.sale_percent,
                 stock: state.saleInfo.stock,
             }
+            if (state.uploadComplete && state.uploadThumbnailComplete) {
+                console.log("Checkkk image product uploaded:", state.list_product_images);
+                console.log("Checkkk thumbnail uploaded", state.thumbail_upload);
+                (async () => {
+                    await addProductAndSaveImages(payload);
+                })();
+            }
+        } else if (state.saleInfo != null && state.saleInfo.add_product_level === 2) {
+            payload = {
+                shop_id: shop.shop_id,
+                sub_category_id: state.basicInfo.sub_category_id,
+                product_name: state.basicInfo.product_name,
+                brand: state.basicInfo.brand,
+                description: state.basicInfo.description,
+                gender_object: state.basicInfo.gender,
+                origin: state.basicInfo.origin,
+                thumbnail: state.thumbail_upload,
+                base_price: Array.isArray(state.saleInfo.prices) ? Math.min(...state.saleInfo.prices) : 0,
+                // trigger update stock
+                stock: 0,
+                sale_percents: 0,
+            }
+            console.log("Check payload level 2: ", payload);
+            if (state.uploadComplete && state.uploadThumbnailComplete && state.upload_classify_thumbnails_complete) {
+                (async () => {
+                    await addProductLevel2(payload);
+                })();
+            }
         }
-        if (state.uploadComplete && state.uploadThumbnailComplete) {
-            console.log("Checkkk image product uploaded:", state.list_product_images);
-            console.log("Checkkk thumbnail uploaded", state.thumbail_upload);
-            const addProductAndSaveImages = async () => {
-                try {
-                    const res = await addProduct(payload);
-                    console.log("Add Product: ", res);
-                    if (res.success) {
-                        const product_id = res.data.product_id;
-                        // save product images
-                        await handleSaveProductImages(product_id);
-                        // save product varient
-                        const payload = {
-                            product_id: product_id,
-                            price: res.data.base_price,
-                            stock: res.data.stock,
-                            sale_percents: res.data.sale_percents,
-                            height: state.shippingInfo.height,
-                            lenght: state.shippingInfo.length,
-                            width: state.shippingInfo.width,
-                            weight: state.shippingInfo.weight,
-                        }
-                        addProductVarient(payload).then(res => {
-                            console.log("Add Product Varient: ", res);
-                        });
-                        dispatch({ type: 'SET_LOADING', payload: false });
-                        message.success("Thêm sản phẩm thành công");
-                    }
 
-                } catch (err) {
-                    console.log("Error Add Product: ", err);
-                    message.error("Thêm sản phẩm thất bại");
-                }
-            };
-            addProductAndSaveImages();
-        }
-    }, [state.list_product_images, state.uploadComplete, state.thumbail_upload]);
+    }, [
+        state.list_product_images,
+        state.uploadComplete,
+        state.thumbail_upload,
+        state.saleInfo,
+        state.uploadThumbnailComplete,
+        state.upload_classify_thumbnails_complete
+    ]);
+
+
 
 
     useEffect(() => {
@@ -227,10 +319,10 @@ const DetailProduct = () => {
         // Basic Info
         if (noErrorBasicInfo) {
             dispatch({ type: 'SET_BASIC_INFO_ENABLE_SUBMIT', payload: true });
-            console.log("Basic Info: ", state.basicInfo);
+            // console.log("Basic Info: ", state.basicInfo);
         }
         else {
-            console.log("Basic Info: ", state.basicInfo);
+            // console.log("Basic Info: ", state.basicInfo);
         }
         // Sale Info
         if (noErrorSaleInfo) {
@@ -238,16 +330,15 @@ const DetailProduct = () => {
             console.log("Sale Info: ", state.saleInfo);
         }
         else {
-
             console.log("Sale Info: ", state.saleInfo);
         }
         // Shipping Info
         if (noErrorShippingInfo) {
             dispatch({ type: 'SET_SHIPPING_INFO_ENABLE_SUBMIT', payload: true });
-            console.log("Shipping Info: ", state.shippingInfo);
+            // console.log("Shipping Info: ", state.shippingInfo);
         }
         else {
-            console.log("Shipping Info: ", state.shippingInfo);
+            // console.log("Shipping Info: ", state.shippingInfo);
         }
 
         if (noErrorBasicInfo && noErrorSaleInfo && noErrorShippingInfo) {

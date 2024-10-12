@@ -40,3 +40,15 @@ export const addProductVarient = async (payload) => {
         return { error: true, message: error.message || error };
     }
 }
+
+export const addProductClassify = async (payload) => {
+    try {
+        const url = URL + "add-product-classify";
+        const res = await axios.post(url, payload);
+        if (res.status === 200) {
+            return res.data;
+        }
+    } catch (error) {
+        return { error: true, message: error.message || error };
+    }
+}
