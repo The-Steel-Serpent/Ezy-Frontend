@@ -35,7 +35,10 @@ const CartComponent = () => {
           <span className="">
             {cart?.miniCart?.length}/{cart?.totalItems} trong giỏ hàng
           </span>
-          <Button className="bg-primary text-white hover:opacity-80">
+          <Button
+            className="bg-primary text-white hover:opacity-80"
+            onClick={() => navigate("/cart")}
+          >
             Xem Giỏ Hàng
           </Button>
         </div>

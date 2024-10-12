@@ -1,11 +1,21 @@
 /* eslint-disable jsx-a11y/alt-text */
-import { DownOutlined, SearchOutlined } from "@ant-design/icons";
-import { Avatar, Button, Checkbox, InputNumber, message, Popover } from "antd";
+import { DownOutlined, SearchOutlined, WarningFilled } from "@ant-design/icons";
+import {
+  Avatar,
+  Button,
+  Checkbox,
+  InputNumber,
+  message,
+  Modal,
+  notification,
+  Popover,
+} from "antd";
 import axios from "axios";
 import React, { memo, useCallback, useEffect, useReducer } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { IoCheckmarkDone } from "react-icons/io5";
 import {
+  removeItem,
   updateItemQuantity,
   updateSelected,
   updateVarients,
@@ -20,7 +30,7 @@ import {
 const text = <span className="text-lg font-semibold">Phân loại hàng</span>;
 
 const CartItem = (props) => {
-  const { item, onCartItemSelectedChange } = props;
+  const { item, onCartItemSelectedChange, type = "valid" } = props;
   const user = useSelector((state) => state.user);
 
   const dispatch = useDispatch();
@@ -39,6 +49,8 @@ const CartItem = (props) => {
           return { ...state, classifyList: action.payload };
         case "sizeList":
           return { ...state, sizeList: action.payload };
+        case "setOpenModal":
+          return { ...state, openModal: action.payload };
         default:
           return state;
       }
@@ -50,6 +62,7 @@ const CartItem = (props) => {
       classifyList: [],
       sizeList: [],
       openPopover: false,
+      openModal: false,
     }
   );
 
@@ -60,6 +73,7 @@ const CartItem = (props) => {
     classifyList,
     sizeList,
     openPopover,
+    openModal,
   } = state;
 
   //Side Effect
@@ -200,6 +214,8 @@ const CartItem = (props) => {
             error?.message || "Cập nhật số lượng sản phẩm thất bại"
           );
         }
+      } else {
+        handleShowModal();
       }
     },
     [item.cart_item_id, dispatch, user?.user_id]
@@ -213,7 +229,27 @@ const CartItem = (props) => {
     },
     [onCartItemSelectedChange, item.cart_item_id]
   );
-
+  const handleRemoveCartItem = async () => {
+    try {
+      const res = await removeItem(item?.cart_item_id);
+      if (res.success) {
+        notification.success({
+          message: "Xóa sản phẩm thành công",
+          showProgress: true,
+          pauseOnHover: false,
+        });
+        setState({ type: "setOpenModal", payload: false });
+        dispatch(fetchCartData({ userID: user?.user_id }));
+      }
+    } catch (error) {
+      console.log("Lỗi khi xóa sản phẩm: ", error);
+      notification.error({
+        message: error.message,
+        showProgress: true,
+        pauseOnHover: false,
+      });
+    }
+  };
   //popover content
   const content = (
     <div className="flex flex-col gap-4">
@@ -328,100 +364,145 @@ const CartItem = (props) => {
       </div>
     </div>
   );
+  const handleCancelModal = () => {
+    setState({
+      type: "setOpenModal",
+      payload: false,
+    });
+  };
+  const handleShowModal = () => {
+    setState({
+      type: "setOpenModal",
+      payload: true,
+    });
+  };
 
   return (
-    <div className="grid grid-cols-12 gap-3  ">
-      <div className="col-span-1 items-center flex justify-center">
-        <Checkbox
-          checked={checked}
-          onChange={handleCheckboxChange}
-          className="checkbox-cart"
-        />
-      </div>
+    <>
+      <div
+        className={`${
+          type === "invalid" && "opacity-50"
+        } grid grid-cols-12 gap-3  `}
+      >
+        {type === "valid" && (
+          <div className="col-span-1 items-center flex justify-center">
+            <Checkbox
+              checked={checked}
+              onChange={handleCheckboxChange}
+              className="checkbox-cart"
+            />
+          </div>
+        )}
 
-      <div className="col-span-2 items-center flex justify-center">
-        <img
-          loading="lazy"
-          onClick={() =>
-            (window.location.href = `/product-details/${item?.ProductVarient?.Product?.product_id}`)
-          }
-          className="size-24 cursor-pointer"
-          src={
-            item?.ProductVarient?.ProductClassify !== null
-              ? item?.ProductVarient?.ProductClassify?.thumbnail
-              : item?.ProductVarient?.Product?.thumbnail
-          }
-        />
-      </div>
-      <div className="col-span-9 relative">
-        <div className="flex flex-col gap-2">
-          <a
-            href={`/product-details/${item?.ProductVarient?.Product?.product_id}`}
-            className="text-base font-garibato font-semibold hover:text-primary text-ellipsis line-clamp-1"
-            title={item?.ProductVarient?.Product?.product_name}
-          >
-            {item?.ProductVarient?.Product?.product_name}
-          </a>
-          {item?.ProductVarient?.ProductClassify !== null && (
-            <Popover
-              placement="bottom"
-              title={text}
-              content={content}
-              open={openPopover}
-              onOpenChange={handleOpenChange}
-              trigger={["click"]}
-            >
-              <span className="w-fit cursor-pointer flex gap-2 items-center">
-                Phân loại hàng:{" "}
-                {item?.ProductVarient?.ProductClassify?.product_classify_name},{" "}
-                {item?.ProductVarient?.ProductSize &&
-                  item?.ProductVarient?.ProductSize?.product_size_name}{" "}
-                <DownOutlined />
-              </span>
-            </Popover>
-          )}
+        <div className="col-span-2 items-center flex justify-center">
+          <img
+            loading="lazy"
+            onClick={() =>
+              (window.location.href = `/product-details/${item?.ProductVarient?.Product?.product_id}`)
+            }
+            className="size-24 cursor-pointer"
+            src={
+              item?.ProductVarient?.ProductClassify !== null
+                ? item?.ProductVarient?.ProductClassify?.thumbnail
+                : item?.ProductVarient?.Product?.thumbnail
+            }
+          />
         </div>
-        <div className="absolute bottom-0 w-full">
-          <div className="flex justify-between ">
-            <div className="flex gap-2">
-              <span className="flex text-lg text-primary items-center font-garibato font-bold">
-                <sup>₫</sup>
-                {item?.price?.toLocaleString("vi-VN")}
-              </span>
-              {item?.ProductVarient?.sale_percents > 0 && (
-                <span className="flex items-center text-slate-400 line-through font-garibato italic">
-                  <sup>₫</sup>
-                  {(
-                    item?.quantity * item?.ProductVarient?.price
-                  ).toLocaleString("vi-VN")}
+        <div className="col-span-9 relative">
+          <div className="flex flex-col gap-2">
+            <a
+              href={`/product-details/${item?.ProductVarient?.Product?.product_id}`}
+              className="text-base font-garibato font-semibold hover:text-primary text-ellipsis line-clamp-1"
+              title={item?.ProductVarient?.Product?.product_name}
+            >
+              {item?.ProductVarient?.Product?.product_name}
+            </a>
+            {item?.ProductVarient?.ProductClassify !== null && (
+              <Popover
+                placement="bottom"
+                title={text}
+                content={content}
+                open={openPopover}
+                onOpenChange={handleOpenChange}
+                trigger={["click"]}
+              >
+                <span className="w-fit cursor-pointer flex gap-2 items-center">
+                  Phân loại hàng:{" "}
+                  {item?.ProductVarient?.ProductClassify?.product_classify_name}
+                  ,{" "}
+                  {item?.ProductVarient?.ProductSize &&
+                    item?.ProductVarient?.ProductSize?.product_size_name}{" "}
+                  <DownOutlined />
                 </span>
-              )}
-            </div>
+              </Popover>
+            )}
+          </div>
+          <div className="absolute bottom-0 w-full">
+            <div className="flex justify-between ">
+              <div className="flex gap-2">
+                <span className="flex text-lg text-primary items-center font-garibato font-bold">
+                  <sup>₫</sup>
+                  {item?.price?.toLocaleString("vi-VN")}
+                </span>
+                {item?.ProductVarient?.sale_percents > 0 && (
+                  <span className="flex items-center text-slate-400 line-through font-garibato italic">
+                    <sup>₫</sup>
+                    {(
+                      item?.quantity * item?.ProductVarient?.price
+                    ).toLocaleString("vi-VN")}
+                  </span>
+                )}
+              </div>
 
-            <div className="flex gap-4">
-              <InputNumber
-                prefix="Sl: "
-                min={0}
-                max={item?.ProductVarient?.stock}
-                defaultValue={item?.quantity}
-                value={item?.quantity}
-                onChange={handleUpdateQuantity}
-              />
-              <Button
-                className="border-0 hover:bg-secondary"
-                shape="circle"
-                icon={<SearchOutlined />}
-              />
-              <Button
-                className="border-0 hover:bg-secondary text-primary"
-                shape="circle"
-                icon={<FaRegTrashAlt />}
-              />
+              <div className="flex gap-4">
+                {type === "valid" && (
+                  <InputNumber
+                    prefix="Sl: "
+                    min={0}
+                    max={item?.ProductVarient?.stock}
+                    defaultValue={item?.quantity}
+                    value={item?.quantity}
+                    onChange={handleUpdateQuantity}
+                  />
+                )}
+
+                <Button
+                  className="border-0 hover:bg-secondary"
+                  shape="circle"
+                  onClick={() => {}}
+                  icon={<SearchOutlined />}
+                />
+                <Button
+                  className="border-0 hover:bg-secondary text-primary"
+                  shape="circle"
+                  onClick={handleShowModal}
+                  icon={<FaRegTrashAlt />}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+      <Modal
+        title={
+          <span className="text-2xl">
+            <WarningFilled className="text-yellow-400" /> Xóa Sản Phẩm
+          </span>
+        }
+        open={openModal}
+        onCancel={handleCancelModal}
+        onOk={handleRemoveCartItem}
+        okButtonProps={{ className: "bg-primary text-white hover:opacity-80" }}
+        cancelButtonProps={{
+          className:
+            "bg-white text-primary hover:bg-secondary hover:text-white hover:border-secondary",
+        }}
+        okText="Đồng ý"
+        cancelText="Trở lại"
+      >
+        <p className="text-lg">Bạn có chắc chắn muốn xóa sản phẩm không?</p>
+      </Modal>
+    </>
   );
 };
 

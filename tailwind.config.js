@@ -13,6 +13,7 @@ module.exports = {
         // primary: "#658197",
         primary: "#327bb3",
         secondary: "#5fa0be",
+        third: "#E1F5FE",
       },
       backgroundImage: {
         // "custom-gradient": "linear-gradient(-180deg, #66cce6, #298ab4)",

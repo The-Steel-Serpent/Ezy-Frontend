@@ -167,3 +167,41 @@ export const updateSelected = async (cart_item_id, selected) => {
     }
   }
 };
+
+export const removeAllItems = async (cart_id) => {
+  try {
+    const response = await axios.post(
+      `${url}/destroy-cart?cart_id=${cart_id}`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Lỗi khi xóa giỏ hàng: ", error);
+    switch (error?.response?.status) {
+      default:
+        return { error: true, message: error.message || error };
+    }
+  }
+};
+
+export const removeItem = async (cart_item_id) => {
+  try {
+    const response = await axios.post(
+      `${url}/remove-item?cart_item_id=${cart_item_id}`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Lỗi khi xóa sản phẩm: ", error);
+    switch (error?.response?.status) {
+      default:
+        return { error: true, message: error.message || error };
+    }
+  }
+};

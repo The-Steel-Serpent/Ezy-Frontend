@@ -29,9 +29,9 @@ import ProductCard from "../../../components/product/ProductCard";
 import ProductNotFounded from "../../../components/product/ProductNotFounded";
 import withChildSuspense from "../../../hooks/HOC/withChildSuspense";
 import { useDispatch, useSelector } from "react-redux";
+import ReactImageGallery from "react-image-gallery";
 
 const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
-const ReactImageGallery = lazy(() => import("react-image-gallery"));
 const ShopInformationSection = lazy(() =>
   import("../../../components/shop/ShopInformationSection")
 );
@@ -66,6 +66,7 @@ const DetailsProduct = () => {
   const [detailsProduct, setDetailsProduct] = useState({});
   const [reviews, setReviews] = useState([]);
   const [shopProducts, setShopProducts] = useState([]);
+
   //Side Effect
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -94,7 +95,6 @@ const DetailsProduct = () => {
     };
     fetchProductDetails();
   }, [id]);
-
   useEffect(() => {
     const fetchProductReviews = async () => {
       try {
@@ -114,16 +114,23 @@ const DetailsProduct = () => {
   useEffect(() => {
     const fetchProductVarient = async () => {
       try {
+        console.log(
+          "url: ",
+          `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${id}&product_classify_id=${selectedClassify}`
+        );
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${id}&product_classify_id=${selectedClassify}`
         );
-        if (res.data && Array.isArray(res.data.data)) {
-          // console.log(res.data.data[0]);
+        if (res.data.success && Array.isArray(res.data.data)) {
           setSizes(res.data.data);
           const firstInStock = res.data.data.find(
             (varient) => varient.stock > 0
           );
-          setCurrentVarient(firstInStock);
+          if (firstInStock) {
+            setCurrentVarient(firstInStock);
+          } else {
+            setCurrentVarient(res.data.data[0]);
+          }
         }
         // setSelectedSize(res.data.data[0]?.product_size_id);
         // setSelectedClassify(res.data.data[0]?.product_classify_id);
@@ -258,6 +265,7 @@ const DetailsProduct = () => {
   // useEffect(() => {
   //   setCurrentThumbnail(details.product_varients[0].thumbnail);
   // }, [currentThumbnail]);
+  console.log("Details Product: ", currentVarient);
   return (
     <>
       {success ? (
@@ -296,17 +304,13 @@ const DetailsProduct = () => {
           <div className=" bg-white grid grid-flow-col lg:grid-cols-12 rounded">
             {/***Ảnh sản phẩm */}
             <section className="col-span-5 p-[15px]">
-              <Suspense fallback={<Skeleton.Image className="size-[470px]" />}>
-                {isGalleryReady && (
-                  <ReactImageGallery
-                    lazyLoad={true}
-                    items={updatedImgs}
-                    showThumbnails={true}
-                    onSlide={handleSlide}
-                    startIndex={currentImageIndex}
-                  />
-                )}
-              </Suspense>
+              <ReactImageGallery
+                lazyLoad={true}
+                items={updatedImgs}
+                showThumbnails={true}
+                onSlide={handleSlide}
+                startIndex={currentImageIndex}
+              />
             </section>
             {/***Lựa chọn sản phẩm */}
             <section className="col-span-7 pl-5 pt-5 pr-9">
@@ -507,36 +511,51 @@ const DetailsProduct = () => {
                 </section>
                 {/***Button */}
                 <div className="flex gap-5 mt-2">
-                  <Button
-                    size="large"
-                    className={`${
-                      detailsProduct?.stock > 0 || currentVarient?.stock > 0
-                        ? `hover:bg-primary hover:text-white  cursor-pointer`
-                        : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
-                    } h-14 px-5  text-lg`}
-                    icon={<TiShoppingCart />}
-                    onClick={async () => await handleAddToCart(currentVarient)}
-                  >
-                    Thêm vào giỏ hàng
-                  </Button>
-                  <Button
-                    className={`${
-                      detailsProduct?.stock > 0 || currentVarient?.stock > 0
-                        ? "hover:bg-opacity-80 cursor-pointer"
-                        : "opacity-60 cursor-not-allowed"
-                    } bg-primary text-white px-8 h-14 text-lg`}
-                    size="large"
-                    onClick={() => {
-                      if (
-                        detailsProduct?.stock > 0 ||
-                        currentVarient?.stock > 0
-                      ) {
-                        console.log("Mua Ngay", currentVarient);
-                      }
-                    }}
-                  >
-                    Mua Ngay
-                  </Button>
+                  {currentVarient?.stock > 0 && detailsProduct?.stock > 0 && (
+                    <>
+                      <Button
+                        size="large"
+                        className={`${
+                          detailsProduct?.stock > 0 || currentVarient?.stock > 0
+                            ? `hover:bg-primary hover:text-white  cursor-pointer`
+                            : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
+                        } h-14 px-5  text-lg`}
+                        icon={<TiShoppingCart />}
+                        onClick={async () =>
+                          await handleAddToCart(currentVarient)
+                        }
+                      >
+                        Thêm vào giỏ hàng
+                      </Button>
+                      <Button
+                        className={`${
+                          detailsProduct?.stock > 0 || currentVarient?.stock > 0
+                            ? "hover:bg-opacity-80 cursor-pointer"
+                            : "opacity-60 cursor-not-allowed"
+                        } bg-primary text-white px-8 h-14 text-lg`}
+                        size="large"
+                        onClick={() => {
+                          if (
+                            detailsProduct?.stock > 0 ||
+                            currentVarient?.stock > 0
+                          ) {
+                            console.log("Mua Ngay", currentVarient);
+                          }
+                        }}
+                      >
+                        Mua Ngay
+                      </Button>
+                    </>
+                  )}
+                  {currentVarient?.stock <= 0 && (
+                    <Button
+                      disabled
+                      className="h-14 px-5 w-[200px]  text-lg"
+                      size="large"
+                    >
+                      Hết Hàng
+                    </Button>
+                  )}
                 </div>
               </div>
             </section>
@@ -665,7 +684,7 @@ const DetailsProduct = () => {
           {/***Review Container */}
           <section className="bg-white rounded mt-[15px] p-[25px]">
             <p className="text-lg">ĐÁNH GIÁ SẢN PHẨM</p>
-            <div className="mt-4 p-[30px] justify-between border-primary bg-secondary border-[1px] border-solid flex flex-row gap-14">
+            <div className="mt-4 p-[30px] justify-between border-primary bg-third border-[1px] border-solid flex flex-row gap-14">
               {/***Rating */}
               <div className="flex flex-row gap-3 w-fit">
                 <span className="text-primary text-lg text-center">

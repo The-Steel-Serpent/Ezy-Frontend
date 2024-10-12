@@ -425,7 +425,7 @@ const PrimaryHeader = () => {
         </div>
       </header>
       <Suspense>
-        <FloatButton.BackTop />
+        <FloatButton.BackTop className="go-first" />
         <ChatBox />
       </Suspense>
     </>

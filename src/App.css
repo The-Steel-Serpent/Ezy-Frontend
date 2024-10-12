@@ -337,7 +337,7 @@
 .ant-float-btn {
   @apply bottom-20 text-primary;
 }
-.anticon {
+.go-first .anticon {
   @apply text-primary;
 }
 
@@ -349,4 +349,10 @@
 }
 .checkbox-cart .ant-checkbox .ant-checkbox-inner:after {
   inset-inline-start: 30%;
+}
+.ant-rate-star-full .anticon {
+  @apply text-primary;
+}
+.ant-rate-star-half .ant-rate-star-first .anticon {
+  @apply text-primary;
 }

@@ -49,7 +49,8 @@ const ProductCard = ({ value, loading, itemsPerRow = 6 }) => {
           <div className="flex lg:flex-row flex-col w-100  items-start lg:items-center">
             <Rate
               disabled
-              value={value?.avgRating}
+              allowHalf
+              value={value?.avgRating || 0}
               className="text-[11px] mr-1"
             />
 

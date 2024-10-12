@@ -39,7 +39,10 @@ const CartHeader = () => {
             </a>
           </span>
           {!user.user_id && (
-            <a href="/buyer/login" className="divider nav-link-hoverable">
+            <a
+              href="/buyer/login"
+              className="divider nav-link-hoverable text-white"
+            >
               Đăng nhập
             </a>
           )}
@@ -53,7 +56,7 @@ const CartHeader = () => {
         </div>
       </div>
       <Suspense>
-        <FloatButton.BackTop />
+        <FloatButton.BackTop className="go-first" />
         <ChatBox />
       </Suspense>
     </>

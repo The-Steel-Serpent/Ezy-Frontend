@@ -1,14 +1,13 @@
 import { Button } from "antd";
 import React, { memo } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const OrderCartSummary = () => {
-  const cart = useSelector((state) => state.cart.cart);
   const totalPrice = useSelector((state) => state.cart.totalPrice);
   const totalItems = useSelector((state) => state.cart.totalItems);
   const discountPrice = useSelector((state) => state.cart.discountPrice);
-  console.log(cart);
-  console.log(totalPrice);
+  const navigate = useNavigate();
   return (
     <div className="w-full bg-white rounded flex flex-col gap-4 p-7">
       <h1 className="text-2xl flex flex-col">
@@ -48,7 +47,13 @@ const OrderCartSummary = () => {
           </div>
         </div>
       </div>
-      <Button size="large" className="bg-primary text-white hover:opacity-80">
+      <Button
+        size="large"
+        className="bg-primary text-white hover:opacity-80"
+        onClick={() => {
+          navigate("/cart/checkout");
+        }}
+      >
         Đặt Hàng
       </Button>
     </div>

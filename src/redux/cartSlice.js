@@ -4,6 +4,7 @@ import {
   getLimitCartItems,
   updateVarients,
 } from "../services/cartService";
+import { invalid } from "moment/moment";
 
 export const fetchMiniCartData = createAsyncThunk(
   "cart/fetchMiniCartData",
@@ -29,6 +30,7 @@ export const fetchCartData = createAsyncThunk(
 
 const initialState = {
   cart: [],
+  invalidItems: [],
   miniCart: [],
   quantity: 0,
   totalPrice: 0,
@@ -129,6 +131,7 @@ const cartSlice = createSlice({
       .addCase(fetchCartData.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.cart = action.payload.cartShop;
+        state.invalidItems = action.payload.invalidItems;
         const totalItems = action.payload?.cartShop?.reduce(
           (total, shop) =>
             shop.selected === 1 ? total + shop.total_quantity : total,
