@@ -52,3 +52,15 @@ export const addProductClassify = async (payload) => {
         return { error: true, message: error.message || error };
     }
 }
+
+export const findClassifiesID = async (payload) => {
+    try {
+        const url = URL + "get-classifies-id";
+        const res = await axios.get(url, { params: payload });
+        if (res.status === 200) {
+            return res.data;
+        }
+    } catch (error) {
+        return { error: true, message: error.message || error };
+    }
+}

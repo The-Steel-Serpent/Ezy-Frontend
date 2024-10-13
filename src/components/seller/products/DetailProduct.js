@@ -5,7 +5,7 @@ import SaleInformation from './SaleInformation';
 import ShippingProductInformation from './ShippingProductInformation';
 import uploadFile from '../../../helpers/uploadFile';
 import { useSelector } from 'react-redux';
-import { addProduct, addProductClassify, addProductVarient, saveProductImages } from '../../../services/productService';
+import { addProduct, addProductClassify, addProductVarient, findClassifiesID, saveProductImages } from '../../../services/productService';
 import LoadingModal from '../../loading/LoadingModal';
 import { useNavigate } from 'react-router-dom';
 
@@ -224,6 +224,7 @@ const DetailProduct = () => {
                 const product_id = res.data.product_id;
                 await handleSaveProductImages(product_id);
                 const promises = [];
+                // add classify
                 for (let i = 0; i < state.saleInfo.classifyTypeName.length; i++) {
                     const payload = {
                         product_id: product_id,
@@ -238,15 +239,52 @@ const DetailProduct = () => {
                         results.forEach(res => {
                             console.log("Add Product Classify: ", res);
                         });
+                        // find classify id and add product varient for each classify
+                        findClassifiesID({ product_id: product_id }).then(res => {
+                            console.log("Find Classify ID: ", res);
+                            if (res.success) {
+                                const classify_ids = res.data;
+                                const promises = [];
+                                for (let i = 0; i < classify_ids.length; i++) {
+                                    const payload = {
+                                        product_id: product_id,
+                                        product_classify_id: classify_ids[i].product_classify_id,
+                                        price: state.saleInfo.prices[i],
+                                        stock: state.saleInfo.stocks[i],
+                                        sale_percents: state.saleInfo.sale_percent[i],
+                                        height: state.shippingInfo.height,
+                                        lenght: state.shippingInfo.length,
+                                        width: state.shippingInfo.width,
+                                        weight: state.shippingInfo.weight,
+                                    }
+                                    promises.push(addProductVarient(payload));
+                                }
+                                Promise.all(promises)
+                                    .then(results => {
+                                        results.forEach(res => {
+                                            console.log("Add Product Varient: ", res);
+                                        });
+                                        dispatch({ type: 'SET_LOADING', payload: false });
+                                        message.success("Thêm sản phẩm thành công");
+                                    })
+                                    .catch(error => {
+                                        console.error("Error adding product varient: ", error);
+                                        dispatch({ type: 'SET_LOADING', payload: false });
+                                        message.error("Thêm sản phẩm thất bại");
+                                    });
+                            }
+                        })
+                            .catch(error => {
+                                console.error("Error adding product classify: ", error);
+                                dispatch({ type: 'SET_LOADING', payload: false });
+                                message.error("Thêm sản phẩm thất bại");
+                            });
                     })
-                    .catch(error => {
-                        console.error("Error adding product classify: ", error);
-                    });
-                dispatch({ type: 'SET_LOADING', payload: false });
-                message.success("Thêm sản phẩm thành công");
+               
             }
         } catch (error) {
             console.error("Error adding product: ", error);
+            dispatch({ type: 'SET_LOADING', payload: false });
             message.error("Thêm sản phẩm thất bại");
         }
     }
