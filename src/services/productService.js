@@ -16,12 +16,12 @@ export const addProduct = async (payload) => {
 
 export const saveProductImages = async (payload) => {
     try {
-    
+
         const urlPost = URL + "add-product-image";
         const res = await axios.post(urlPost, payload);
         if (res.status === 200) {
             return res.data;
-        } 
+        }
     } catch (error) {
         return { error: true, message: error.message || error };
     }
@@ -30,14 +30,21 @@ export const saveProductImages = async (payload) => {
 export const addProductVarient = async (payload) => {
     try {
         // check payload
-        console.log("check payload:", payload);
+        console.log("check payload product vairent:", payload);
         const url = URL + "add-product-varient";
         const res = await axios.post(url, payload);
         if (res.status === 200) {
             return res.data;
         }
     } catch (error) {
-        return { error: true, message: error.message || error };
+        switch (error.status) {
+            case 500:
+                return { error: true, message: "Lỗi server" };
+            default:
+                return {
+                    error: true, message: error.message || error
+                };
+        }
     }
 }
 
