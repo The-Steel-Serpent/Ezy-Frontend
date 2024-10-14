@@ -376,8 +376,8 @@ const SellerAuthLayout = ({ children }) => {
                             >
                                 <a onClick={(e) => e.preventDefault()}>
                                     <Space className='bg-transparent'>
-                                        {state.user ? <Avatar src={state.user.avt_url} size={20} /> : <Avatar size={20} icon={<FaUserCircle />} />}
-                                        <span className='text-white text-[15px]'>{state.user ? state.user.email.split('@gmail.com') : ''}</span>
+                                        {shop.logo_url != '' ? <Avatar src={shop.logo_url} size={20} /> : <Avatar src={state?.user?.avt_url} size={20} icon={<FaUserCircle />} />}
+                                        <span className='text-white text-[15px]'>{shop.shop_name != '' ? shop.shop_name: state?.user?.email}</span>
                                         <DownOutlined size={20} className='text-white' />
                                     </Space>
                                 </a>

@@ -208,86 +208,159 @@ const DetailProduct = () => {
                 });
                 dispatch({ type: 'SET_LOADING', payload: false });
                 message.success("Thêm sản phẩm thành công");
+                navigate('/seller/product-management/all');
             }
 
         } catch (err) {
             console.log("Error Add Product: ", err);
             message.error("Thêm sản phẩm thất bại");
+            dispatch({ type: 'SET_LOADING', payload: false });
+            navigate('/seller/product-management/all');
         }
     };
 
+    // const addProductLevel2 = async (payload) => {
+    //     try {
+    //         const res = await addProduct(payload);
+    //         console.log("Add Product: ", res);
+    //         if (res.success) {
+    //             const product_id = res.data.product_id;
+    //             await handleSaveProductImages(product_id);
+    //             const promises = [];
+    //             // add classify
+    //             for (let i = 0; i < state.saleInfo.allClassifyName.length; i++) {
+    //                 const payload = {
+    //                     product_id: product_id,
+    //                     product_classify_name: state.saleInfo.allClassifyName[i],
+    //                     type_name: state.saleInfo.classifyTypeName,
+    //                     thumbnail: state.classify_thumnail[i],
+    //                 };
+    //                 promises.push(addProductClassify(payload));
+    //             }
+    //             Promise.all(promises)
+    //                 .then(results => {
+    //                     results.forEach(res => {
+    //                         console.log("Add Product Classify: ", res);
+    //                     });
+    //                     // find classify id and add product varient for each classify
+    //                     findClassifiesID({ product_id: product_id }).then(res => {
+    //                         console.log("Find Classify ID: ", res);
+    //                         if (res.success) {
+    //                             const classify_ids = res.data;
+    //                             for (let i = 0; i < classify_ids.length; i++) {
+    //                                 const payload = {
+    //                                     product_id: product_id,
+    //                                     product_classify_id: classify_ids[i].product_classify_id,
+    //                                     price: state.saleInfo.prices[i],
+    //                                     stock: state.saleInfo.stocks[i],
+    //                                     sale_percents: state.saleInfo.sale_percent[i],
+    //                                     height: state.shippingInfo.height,
+    //                                     lenght: state.shippingInfo.length,
+    //                                     width: state.shippingInfo.width,
+    //                                     weight: state.shippingInfo.weight,
+    //                                 }
+    //                                 promises.push(addProductVarient(payload));
+    //                             }
+    //                             console.log("Checkkk promises varients: ", promises);
+    //                             Promise.all(promises)
+    //                                 .then(results => {
+    //                                     results.forEach(res => {
+    //                                         console.log("Add Product Varient: ", res);
+    //                                     });
+    //                                     dispatch({ type: 'SET_LOADING', payload: false });
+    //                                     message.success("Thêm sản phẩm thành công");
+    //                                     navigate('/seller/product-management/all');
+    //                                 })
+    //                                 .catch(error => {
+    //                                     console.error("Error adding product varient: ", error);
+    //                                     dispatch({ type: 'SET_LOADING', payload: false });
+    //                                     message.error("Thêm sản phẩm thất bại");
+    //                                     navigate('/seller/product-management/all');
+    //                                 });
+    //                         }
+    //                     })
+    //                         .catch(error => {
+    //                             console.error("Error adding product classify: ", error);
+    //                             dispatch({ type: 'SET_LOADING', payload: false });
+    //                             message.error("Thêm sản phẩm thất bại");
+    //                             navigate('/seller/product-management/all');
+    //                         });
+    //                 })
+
+    //         }
+    //     } catch (error) {
+    //         console.error("Error adding product: ", error);
+    //         dispatch({ type: 'SET_LOADING', payload: false });
+    //         message.error("Thêm sản phẩm thất bại");
+    //         navigate('/seller/product-management/all');
+    //     }
+    // }
     const addProductLevel2 = async (payload) => {
         try {
             const res = await addProduct(payload);
             console.log("Add Product: ", res);
+
             if (res.success) {
                 const product_id = res.data.product_id;
+
+                // Save product images
                 await handleSaveProductImages(product_id);
-                const promises = [];
-                // add classify
-                for (let i = 0; i < state.saleInfo.classifyTypeName.length; i++) {
-                    const payload = {
+
+                // Prepare to add classifications
+                const classifyPromises = state.saleInfo.allClassifyName.map((classifyName, i) => {
+                    const classifyPayload = {
                         product_id: product_id,
-                        product_classify_name: state.saleInfo.allClassifyName[i],
+                        product_classify_name: classifyName,
                         type_name: state.saleInfo.classifyTypeName,
                         thumbnail: state.classify_thumnail[i],
                     };
-                    promises.push(addProductClassify(payload));
+                    return addProductClassify(classifyPayload);
+                });
+
+                // Add classifications
+                const classifyResults = await Promise.all(classifyPromises);
+                classifyResults.forEach(res => console.log("Add Product Classify: ", res));
+
+                // Find classify IDs and add variants
+                const classifyRes = await findClassifiesID({ product_id: product_id });
+                console.log("Find Classify ID: ", classifyRes);
+
+                if (classifyRes.success) {
+                    const classify_ids = classifyRes.data;
+
+                    // Prepare to add product variants
+                    const variantPromises = classify_ids.map((classify, i) => {
+                        const variantPayload = {
+                            product_id: product_id,
+                            product_classify_id: classify.product_classify_id,
+                            price: state.saleInfo.prices[i],
+                            stock: state.saleInfo.stocks[i],
+                            sale_percents: state.saleInfo.sale_percent[i],
+                            height: state.shippingInfo.height,
+                            length: state.shippingInfo.length,
+                            width: state.shippingInfo.width,
+                            weight: state.shippingInfo.weight,
+                        };
+                        return addProductVarient(variantPayload);
+                    });
+
+                    // Add variants
+                    const variantResults = await Promise.all(variantPromises);
+                    variantResults.forEach(res => console.log("Add Product Variant: ", res));
+
+                    dispatch({ type: 'SET_LOADING', payload: false });
+                    message.success("Thêm sản phẩm thành công");
+                    navigate('/seller/product-management/all');
                 }
-                Promise.all(promises)
-                    .then(results => {
-                        results.forEach(res => {
-                            console.log("Add Product Classify: ", res);
-                        });
-                        // find classify id and add product varient for each classify
-                        findClassifiesID({ product_id: product_id }).then(res => {
-                            console.log("Find Classify ID: ", res);
-                            if (res.success) {
-                                const classify_ids = res.data;
-                                const promises = [];
-                                for (let i = 0; i < classify_ids.length; i++) {
-                                    const payload = {
-                                        product_id: product_id,
-                                        product_classify_id: classify_ids[i].product_classify_id,
-                                        price: state.saleInfo.prices[i],
-                                        stock: state.saleInfo.stocks[i],
-                                        sale_percents: state.saleInfo.sale_percent[i],
-                                        height: state.shippingInfo.height,
-                                        lenght: state.shippingInfo.length,
-                                        width: state.shippingInfo.width,
-                                        weight: state.shippingInfo.weight,
-                                    }
-                                    promises.push(addProductVarient(payload));
-                                }
-                                Promise.all(promises)
-                                    .then(results => {
-                                        results.forEach(res => {
-                                            console.log("Add Product Varient: ", res);
-                                        });
-                                        dispatch({ type: 'SET_LOADING', payload: false });
-                                        message.success("Thêm sản phẩm thành công");
-                                    })
-                                    .catch(error => {
-                                        console.error("Error adding product varient: ", error);
-                                        dispatch({ type: 'SET_LOADING', payload: false });
-                                        message.error("Thêm sản phẩm thất bại");
-                                    });
-                            }
-                        })
-                            .catch(error => {
-                                console.error("Error adding product classify: ", error);
-                                dispatch({ type: 'SET_LOADING', payload: false });
-                                message.error("Thêm sản phẩm thất bại");
-                            });
-                    })
-               
             }
         } catch (error) {
             console.error("Error adding product: ", error);
             dispatch({ type: 'SET_LOADING', payload: false });
             message.error("Thêm sản phẩm thất bại");
+            navigate('/seller/product-management/all');
         }
-    }
+    };
+
 
     useEffect(() => {
         let payload = {}
