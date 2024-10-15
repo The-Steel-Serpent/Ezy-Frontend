@@ -45,16 +45,21 @@ export const addToCart = async (
     return response.data;
   } catch (error) {
     console.error("Lỗi khi thêm vào giỏ hàng: ", error);
-    switch (error.status) {
+    let errorMessage;
+    switch (error.response.status) {
       case 404:
-        return { error: true, message: "Không tìm thấy sản phẩm" };
+        errorMessage = "Không tìm thấy sản phẩm";
+        break;
       case 500:
-        return { error: true, message: "Lỗi server" };
+        errorMessage = "Lỗi server";
+        break;
       case 400:
-        return { error: true, message: "Số lượng sản phẩm không đủ" };
+        errorMessage = "Số lượng sản phẩm không đủ";
+        break;
       default:
-        return { error: true, message: error.message || error };
+        errorMessage = error.message || error;
     }
+    throw new Error(errorMessage);
   }
 };
 
@@ -70,16 +75,21 @@ export const updateVarients = async (cartItemID, productVarientsID) => {
     return response.data;
   } catch (error) {
     console.error("Lỗi khi cập nhật sản phẩm: ", error);
-    switch (error?.response?.status) {
+    let errorMessage;
+    switch (error.response.status) {
       case 404:
-        return { error: true, message: "Không tìm thấy sản phẩm" };
+        errorMessage = "Không tìm thấy sản phẩm";
+        break;
       case 500:
-        return { error: true, message: "Lỗi server" };
+        errorMessage = "Lỗi server";
+        break;
       case 400:
-        return { error: true, message: "Số lượng sản phẩm không đủ" };
+        errorMessage = "Số lượng sản phẩm không đủ";
+        break;
       default:
-        return { error: true, message: error.response.message || error };
+        errorMessage = error.message || error;
     }
+    throw new Error(errorMessage);
   }
 };
 
@@ -95,19 +105,21 @@ export const updateItemQuantity = async (cartItemID, quantity) => {
     return response.data;
   } catch (error) {
     console.log("Lỗi khi cập nhật số lượng sản phẩm trong giỏ hàng: ", error);
-    switch (error?.resposne?.status) {
+    let errorMessage;
+    switch (error.response.status) {
       case 404:
-        return {
-          error: true,
-          message: "Không tìm thấy sản phẩm trong giỏ hàng",
-        };
+        errorMessage = "Không tìm thấy sản phẩm trong giỏ hàng";
+        break;
       case 500:
-        return { error: true, message: "Lỗi server" };
+        errorMessage = "Lỗi server";
+        break;
       case 400:
-        return { error: true, message: "Số lượng sản phẩm không đủ" };
+        errorMessage = "Số lượng sản phẩm không đủ";
+        break;
       default:
-        return { error: true, message: error.message || error };
+        errorMessage = error.message || error;
     }
+    throw new Error(errorMessage);
   }
 };
 
@@ -123,10 +135,13 @@ export const updateSelectedAll = async (cart_id, selected) => {
     return response.data;
   } catch (error) {
     console.log("Lỗi khi cập nhật select all: ", error);
+    let errorMessage;
     switch (error?.response?.status) {
       default:
-        return { error: true, message: error.message || error };
+        errorMessage = error.message || error;
+        break;
     }
+    throw new Error(errorMessage);
   }
 };
 
@@ -142,10 +157,13 @@ export const updateAllItemsOfShop = async (cart_shop_id, selected) => {
     return response.data;
   } catch (error) {
     console.log("Lỗi khi cập nhật select all: ", error);
+    let errorMessage;
     switch (error?.response?.status) {
       default:
-        return { error: true, message: error.message || error };
+        errorMessage = error.message || error;
+        break;
     }
+    throw new Error(errorMessage);
   }
 };
 
@@ -161,10 +179,13 @@ export const updateSelected = async (cart_item_id, selected) => {
     return response.data;
   } catch (error) {
     console.log("Lỗi khi cập nhật select: ", error);
+    let errorMessage;
     switch (error?.response?.status) {
       default:
-        return { error: true, message: error.message || error };
+        errorMessage = error.message || error;
+        break;
     }
+    throw new Error(errorMessage);
   }
 };
 
@@ -180,10 +201,13 @@ export const removeAllItems = async (cart_id) => {
     return response.data;
   } catch (error) {
     console.log("Lỗi khi xóa giỏ hàng: ", error);
+    let errorMessage;
     switch (error?.response?.status) {
       default:
-        return { error: true, message: error.message || error };
+        errorMessage = error.message || error;
+        break;
     }
+    throw new Error(errorMessage);
   }
 };
 
@@ -199,9 +223,12 @@ export const removeItem = async (cart_item_id) => {
     return response.data;
   } catch (error) {
     console.log("Lỗi khi xóa sản phẩm: ", error);
+    let errorMessage;
     switch (error?.response?.status) {
       default:
-        return { error: true, message: error.message || error };
+        errorMessage = error.message || error;
+        break;
     }
+    throw new Error(errorMessage);
   }
 };

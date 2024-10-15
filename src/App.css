@@ -356,3 +356,7 @@
 .ant-rate-star-half .ant-rate-star-first .anticon {
   @apply text-primary;
 }
+
+.ant-tree .ant-tree-node-content-wrapper {
+  @apply flex gap-2 items-center;
+}

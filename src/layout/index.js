@@ -67,6 +67,7 @@ const AuthLayout = ({ children }) => {
                 username: user.username,
                 full_name: user.full_name,
                 email: user.email,
+                security_password: user.security_password,
                 phone_number: user.phone_number,
                 gender: user.gender,
                 dob: user.dob,

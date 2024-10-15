@@ -167,6 +167,7 @@ const BuyerLogin = () => {
       }
     } catch (error) {
       console.error("Error:", error.response || error.message);
+      console.log("error ", error.response.status);
       if (error.response.status === 404) {
         const rs = await saveUserAccount({
           user_id,

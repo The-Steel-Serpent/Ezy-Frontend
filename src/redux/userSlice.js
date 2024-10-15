@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   user_id: "",
   username: "",
+  security_password: "",
   full_name: "",
   email: "",
   phone_number: "",
@@ -23,6 +24,7 @@ export const userSlice = createSlice({
     setUser: (state, action) => {
       state.user_id = action.payload.user_id;
       state.username = action.payload.username;
+      state.security_password = action.payload.security_password;
       state.full_name = action.payload.full_name;
       state.email = action.payload.email;
       state.phone_number = action.payload.phone_number;
@@ -39,6 +41,7 @@ export const userSlice = createSlice({
     logout: (state) => {
       state.user_id = "";
       state.username = "";
+      state.security_password = "";
       state.full_name = "";
       state.email = "";
       state.phone_number = "";
@@ -60,7 +63,13 @@ export const userSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { setUser, setToken, logout, setOnlineUser, setSocketConnection, setUpDone } =
-  userSlice.actions;
+export const {
+  setUser,
+  setToken,
+  logout,
+  setOnlineUser,
+  setSocketConnection,
+  setUpDone,
+} = userSlice.actions;
 
 export default userSlice.reducer;

@@ -41,11 +41,7 @@ const AvatarWithPopover = (props) => {
     {
       key: "1",
       label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://www.antgroup.com"
-        >
+        <a target="_blank" rel="noopener noreferrer" href="/user/account">
           Tài Khoản Của Tôi
         </a>
       ),
@@ -53,11 +49,7 @@ const AvatarWithPopover = (props) => {
     {
       key: "2",
       label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://www.aliyun.com"
-        >
+        <a target="_blank" rel="noopener noreferrer" href="/user/purchase">
           Đơn Mua
         </a>
       ),
@@ -70,7 +62,12 @@ const AvatarWithPopover = (props) => {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-wrap">
+      <div
+        className="flex flex-wrap cursor-pointer"
+        onClick={() => {
+          navigate("/user/account");
+        }}
+      >
         <Dropdown
           menu={{
             items,

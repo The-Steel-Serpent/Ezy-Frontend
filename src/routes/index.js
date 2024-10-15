@@ -7,6 +7,9 @@ import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
+const AccountSetting = withSuspense(
+  lazy(() => import("../pages/buyer/user-pages/my-account/AccountSetting"))
+);
 const CartPage = withSuspense(
   lazy(() => import("../pages/buyer/cart-pages/CartPage"))
 );
@@ -99,6 +102,33 @@ const router = createBrowserRouter([
         ),
       },
       //Buyer
+      //AccountSettings
+      {
+        path: "user",
+        element: (
+          <AuthLayout>
+            <AccountSetting />
+          </AuthLayout>
+        ),
+        children: [
+          {
+            path: "account",
+            element: (
+              <AuthLayout>
+                <AccountSetting />
+              </AuthLayout>
+            ),
+          },
+          {
+            path: "purchase",
+            element: (
+              <AuthLayout>
+                <AccountSetting />
+              </AuthLayout>
+            ),
+          },
+        ],
+      },
       //login && register
       {
         path: "buyer/login",

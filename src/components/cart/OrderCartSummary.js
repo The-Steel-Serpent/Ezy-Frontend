@@ -1,4 +1,4 @@
-import { Button } from "antd";
+import { Button, notification } from "antd";
 import React, { memo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -51,6 +51,14 @@ const OrderCartSummary = () => {
         size="large"
         className="bg-primary text-white hover:opacity-80"
         onClick={() => {
+          if (totalPrice <= 0) {
+            notification.warning({
+              message: "Vui Lòng Chọn Sản Phẩm",
+              showProgress: true,
+              pauseOnHover: false,
+            });
+            return;
+          }
           navigate("/cart/checkout");
         }}
       >
