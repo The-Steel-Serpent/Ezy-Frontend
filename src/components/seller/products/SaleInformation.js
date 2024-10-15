@@ -216,6 +216,7 @@ const SaleInformation = ({ onData }) => {
         dispatch({ type: 'SET_PRICE_DEFAULT', payload: '' });
         dispatch({ type: 'SET_STOCK_DEFAULT', payload: '' });
         dispatch({ type: 'SET_SALE_PERCENT_DEFAULT', payload: 0 });
+        dispatch({ type: 'SET_ALL_IMG_CLASSIFICATION', payload: [] });
         if (state.add_product_level === 1)
             dispatch({ type: 'SET_ADD_PRODUCT_LEVEL', payload: 2 });
         else
@@ -229,8 +230,8 @@ const SaleInformation = ({ onData }) => {
         }
         dispatch({ type: 'SET_SHOW_BUTTON_LIST2', payload: false });
         dispatch({ type: 'SET_ADD_PRODUCT_LEVEL', payload: 3 });
-        dispatch({ type: 'SET_ALL_CLASSIFY_NAME', payload: [] });
-        dispatch({ type: 'SET_ALL_VARIANT_NAME', payload: [] });
+        // dispatch({ type: 'SET_ALL_CLASSIFY_NAME', payload: [] });
+        // dispatch({ type: 'SET_ALL_VARIANT_NAME', payload: [] });
     };
 
     const toggleVisibility3 = () => {
@@ -478,6 +479,7 @@ const SaleInformation = ({ onData }) => {
     const validateAddProductLevel3 = () => {
         let valid = true;
         const count_classification = state.allClassifyName.length;
+        const count_varient = state.allVarientName.length;
         const count_img_classification = state.allImgClassification.length;
         const count_stock = state.allStock.length;
         const count_price = state.allPrice.length;
@@ -486,24 +488,14 @@ const SaleInformation = ({ onData }) => {
             count_classification !== count_img_classification ||
             state.classifyTypeName === '' ||
             state.allClassifyName.length === 0 ||
-            count_stock !== count_classification ||
-            count_price !== count_classification ||
-            count_sale_percent !== count_classification ||
+            state.variantName === '' ||
             state.allVarientName.length === 0 ||
-            state.variantName === '') {
+            count_stock !== count_classification * count_varient ||
+            count_price !== count_classification * count_varient ||
+            count_sale_percent !== count_classification * count_varient) {
             valid = false;
         }
-        for (let i = 0; i < count_classification; i++) {
-            if (
-                state.allClassifyName[i] === '' ||
-                state.allImgClassification[i] === null ||
-                state.allPrice[i] === null ||
-                state.allStock[i] === null ||
-                state.allSalePercent[i] === null) {
-                valid = false;
-                break;
-            }
-        }
+        return valid;
     }
 
     useEffect(() => {
@@ -562,21 +554,29 @@ const SaleInformation = ({ onData }) => {
                     sale_percent: state.allSalePercent
                 });
             }
-
         }
         else if (state.add_product_level === 3) {
-            onData({
-                noErrorSaleInfo: true,
-                classifyTypeName: state.classifyTypeName,
-                allClassifyName: state.allClassifyName,
-                add_product_level: state.add_product_level,
-                classifyImage: state.allImgClassification,
-                stock: state.allStock,
-                price: state.allPrice,
-                sale_percent: state.allSalePercent,
-                allVarientName: state.allVarientName,
-                variantName: state.variantName
-            });
+            const check = validateAddProductLevel3();
+            if (!check) {
+                onData({
+                    add_product_level: state.add_product_level,
+                    noErrorSaleInfo: false
+                });
+            }
+            else {
+                onData({
+                    noErrorSaleInfo: true,
+                    classifyTypeName: state.classifyTypeName,
+                    allClassifyName: state.allClassifyName,
+                    add_product_level: state.add_product_level,
+                    classifyImage: state.allImgClassification,
+                    stock: state.allStock,
+                    price: state.allPrice,
+                    sale_percent: state.allSalePercent,
+                    allVarientName: state.allVarientName,
+                    variantName: state.variantName
+                });
+            }
         }
 
     }, [

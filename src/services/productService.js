@@ -71,3 +71,27 @@ export const findClassifiesID = async (payload) => {
         return { error: true, message: error.message || error };
     }
 }
+
+export const addProductSize = async (payload) => {
+    try {
+        const url = URL + "add-product-size";
+        const res = await axios.post(url, payload);
+        if (res.status === 200) {
+            return res.data;
+        }
+    } catch (error) {
+        return { error: true, message: error.message || error };
+    }
+}
+
+export const getProductSize = async (payload) => {
+    try {
+        const url = URL + "get-product-size";
+        const res = await axios.get(url, { params: payload });
+        if (res.status === 200) {
+            return res.data;
+        }
+    } catch (error) {
+        return { error: true, message: error.message || error };
+    }
+}

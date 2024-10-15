@@ -5,7 +5,7 @@ import SaleInformation from './SaleInformation';
 import ShippingProductInformation from './ShippingProductInformation';
 import uploadFile from '../../../helpers/uploadFile';
 import { useSelector } from 'react-redux';
-import { addProduct, addProductClassify, addProductVarient, findClassifiesID, saveProductImages } from '../../../services/productService';
+import { addProduct, addProductClassify, addProductSize, addProductVarient, findClassifiesID, getProductSize, saveProductImages } from '../../../services/productService';
 import LoadingModal from '../../loading/LoadingModal';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,6 +38,11 @@ const initialState = {
     uploadComplete: false,
     uploadThumbnailComplete: false,
     enable_submit: false,
+    ready_add_product_level2: [],
+    ready_add_product_level3: [],
+    product_id: null,
+    id_classifyLevel3: [],
+    id_productSize: [],
     loading: false
 };
 
@@ -71,6 +76,16 @@ const reducer = (state, action) => {
             return { ...state, classify_thumnail: action.payload };
         case 'SET_LOADING':
             return { ...state, loading: action.payload };
+        case 'SET_READY_ADD_PRODUCT_LEVEL2':
+            return { ...state, ready_add_product_level2: action.payload };
+        case 'SET_READY_ADD_PRODUCT_LEVEL3':
+            return { ...state, ready_add_product_level3: action.payload };
+        case 'SET_PRODUCT_ID':
+            return { ...state, product_id: action.payload };
+        case 'SET_ID_CLASSIFY_LEVEL3':
+            return { ...state, id_classifyLevel3: action.payload };
+        case 'SET_ID_PRODUCT_SIZE':
+            return { ...state, id_productSize: action.payload };
         default:
             return state;
     }
@@ -139,7 +154,7 @@ const DetailProduct = () => {
     }
 
     const handleUploadClassifyThumnail = async (thumnails) => {
-        console.log("Classify Thumnail: ", thumnails);
+        console.log("Classify Thumn: ", thumnails);
         const uploadPromises = thumnails.map(file => uploadFile(file.file.originFileObj, 'seller-img'));
         try {
             const uploadResults = await Promise.all(uploadPromises);
@@ -179,7 +194,7 @@ const DetailProduct = () => {
     const handleSubmit = async () => {
         await handleUploadProductImages();
         await handleUploadThumnail();
-        if (state.saleInfo.add_product_level === 2) {
+        if (state.saleInfo.add_product_level === 2 || state.saleInfo.add_product_level === 3) {
             await handleUploadClassifyThumnail(state.saleInfo.classifyImage);
         }
     }
@@ -219,82 +234,7 @@ const DetailProduct = () => {
         }
     };
 
-    // const addProductLevel2 = async (payload) => {
-    //     try {
-    //         const res = await addProduct(payload);
-    //         console.log("Add Product: ", res);
-    //         if (res.success) {
-    //             const product_id = res.data.product_id;
-    //             await handleSaveProductImages(product_id);
-    //             const promises = [];
-    //             // add classify
-    //             for (let i = 0; i < state.saleInfo.allClassifyName.length; i++) {
-    //                 const payload = {
-    //                     product_id: product_id,
-    //                     product_classify_name: state.saleInfo.allClassifyName[i],
-    //                     type_name: state.saleInfo.classifyTypeName,
-    //                     thumbnail: state.classify_thumnail[i],
-    //                 };
-    //                 promises.push(addProductClassify(payload));
-    //             }
-    //             Promise.all(promises)
-    //                 .then(results => {
-    //                     results.forEach(res => {
-    //                         console.log("Add Product Classify: ", res);
-    //                     });
-    //                     // find classify id and add product varient for each classify
-    //                     findClassifiesID({ product_id: product_id }).then(res => {
-    //                         console.log("Find Classify ID: ", res);
-    //                         if (res.success) {
-    //                             const classify_ids = res.data;
-    //                             for (let i = 0; i < classify_ids.length; i++) {
-    //                                 const payload = {
-    //                                     product_id: product_id,
-    //                                     product_classify_id: classify_ids[i].product_classify_id,
-    //                                     price: state.saleInfo.prices[i],
-    //                                     stock: state.saleInfo.stocks[i],
-    //                                     sale_percents: state.saleInfo.sale_percent[i],
-    //                                     height: state.shippingInfo.height,
-    //                                     lenght: state.shippingInfo.length,
-    //                                     width: state.shippingInfo.width,
-    //                                     weight: state.shippingInfo.weight,
-    //                                 }
-    //                                 promises.push(addProductVarient(payload));
-    //                             }
-    //                             console.log("Checkkk promises varients: ", promises);
-    //                             Promise.all(promises)
-    //                                 .then(results => {
-    //                                     results.forEach(res => {
-    //                                         console.log("Add Product Varient: ", res);
-    //                                     });
-    //                                     dispatch({ type: 'SET_LOADING', payload: false });
-    //                                     message.success("Thêm sản phẩm thành công");
-    //                                     navigate('/seller/product-management/all');
-    //                                 })
-    //                                 .catch(error => {
-    //                                     console.error("Error adding product varient: ", error);
-    //                                     dispatch({ type: 'SET_LOADING', payload: false });
-    //                                     message.error("Thêm sản phẩm thất bại");
-    //                                     navigate('/seller/product-management/all');
-    //                                 });
-    //                         }
-    //                     })
-    //                         .catch(error => {
-    //                             console.error("Error adding product classify: ", error);
-    //                             dispatch({ type: 'SET_LOADING', payload: false });
-    //                             message.error("Thêm sản phẩm thất bại");
-    //                             navigate('/seller/product-management/all');
-    //                         });
-    //                 })
-
-    //         }
-    //     } catch (error) {
-    //         console.error("Error adding product: ", error);
-    //         dispatch({ type: 'SET_LOADING', payload: false });
-    //         message.error("Thêm sản phẩm thất bại");
-    //         navigate('/seller/product-management/all');
-    //     }
-    // }
+    // add product level 2
     const addProductLevel2 = async (payload) => {
         try {
             const res = await addProduct(payload);
@@ -327,30 +267,9 @@ const DetailProduct = () => {
 
                 if (classifyRes.success) {
                     const classify_ids = classifyRes.data;
-
-                    // Prepare to add product variants
-                    const variantPromises = classify_ids.map((classify, i) => {
-                        const variantPayload = {
-                            product_id: product_id,
-                            product_classify_id: classify.product_classify_id,
-                            price: state.saleInfo.prices[i],
-                            stock: state.saleInfo.stocks[i],
-                            sale_percents: state.saleInfo.sale_percent[i],
-                            height: state.shippingInfo.height,
-                            length: state.shippingInfo.length,
-                            width: state.shippingInfo.width,
-                            weight: state.shippingInfo.weight,
-                        };
-                        return addProductVarient(variantPayload);
-                    });
-
-                    // Add variants
-                    const variantResults = await Promise.all(variantPromises);
-                    variantResults.forEach(res => console.log("Add Product Variant: ", res));
-
-                    dispatch({ type: 'SET_LOADING', payload: false });
-                    message.success("Thêm sản phẩm thành công");
-                    navigate('/seller/product-management/all');
+                    dispatch({ type: 'SET_READY_ADD_PRODUCT_LEVEL2', payload: classify_ids });
+                    dispatch({ type: 'SET_PRODUCT_ID', payload: product_id });
+                    // countinue to add product variants with useEffect
                 }
             }
         } catch (error) {
@@ -361,6 +280,175 @@ const DetailProduct = () => {
         }
     };
 
+    const retryAddProductVariant = async (variantPayload, retries = 3) => {
+        for (let attempt = 0; attempt < retries; attempt++) {
+            try {
+                return await addProductVarient(variantPayload);
+            } catch (error) {
+                if (error.message.includes("Deadlock found")) {
+                    console.warn("Deadlock occurred, retrying... attempt: ", attempt + 1);
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                } else {
+                    throw error;
+                }
+            }
+        }
+        throw new Error("Failed after multiple retries due to deadlock");
+    };
+
+    useEffect(() => {
+        const addProductVariants = async () => {
+            for (let i = 0; i < state.ready_add_product_level2.length; i++) {
+                const classify = state.ready_add_product_level2[i];
+                const variantPayload = {
+                    product_id: state.product_id,
+                    product_classify_id: classify.product_classify_id,
+                    price: state.saleInfo.prices[i],
+                    stock: state.saleInfo.stocks[i],
+                    sale_percents: state.saleInfo.sale_percent[i],
+                    height: state.shippingInfo.height,
+                    length: state.shippingInfo.length,
+                    width: state.shippingInfo.width,
+                    weight: state.shippingInfo.weight,
+                };
+                try {
+                    const result = await retryAddProductVariant(variantPayload);
+                    console.log("Success for Payload: ", variantPayload);
+                } catch (error) {
+                    console.error("Failed Payload: ", variantPayload, error);
+                    message.error("Thêm sản phẩm thất bại");
+                    break;
+                }
+            }
+            dispatch({ type: 'SET_LOADING', payload: false });
+            message.success("Thêm sản phẩm thành công");
+            navigate('/seller/product-management/all');
+        }
+
+        if (state.ready_add_product_level2.length > 0 && state.product_id != null) {
+            addProductVariants();
+        }
+    }, [state.ready_add_product_level2]);
+
+    // add product level 2
+
+    // add product level 3
+    const addProductLevel3 = async (payload) => {
+        try {
+            const res = await addProduct(payload);
+            console.log("Add Product: ", res);
+            if (res.success) {
+                const product_id = res.data.product_id;
+                // Save product images
+                await handleSaveProductImages(product_id);
+
+                // Prepare to add classifications
+                const classifyPromises = state.saleInfo.allClassifyName.map((classifyName, i) => {
+                    const classifyPayload = {
+                        product_id: product_id,
+                        product_classify_name: classifyName,
+                        type_name: state.saleInfo.classifyTypeName,
+                        thumbnail: state.classify_thumnail[i],
+                    };
+                    return addProductClassify(classifyPayload);
+                });
+
+                // Add classifications
+                const classifyResults = await Promise.all(classifyPromises);
+                classifyResults.forEach(res => console.log("Add Product Classify: ", res));
+                // add product size
+                const sizePromises = state.saleInfo.allVarientName.map(size => {
+                    const sizePayload = {
+                        product_id: product_id,
+                        product_size_name: size,
+                        type_of_size: state.saleInfo.variantName,
+                    };
+                    return addProductSize(sizePayload);
+                });
+
+                const sizeResults = await Promise.all(sizePromises);
+                sizeResults.forEach(res => console.log("Add Product Size: ", res));
+
+                const classifyRes = await findClassifiesID({ product_id: product_id });
+                const sizeRes = await getProductSize({ product_id: product_id });
+                if (classifyRes.success && sizeRes.success) {
+                    dispatch({ type: 'SET_ID_CLASSIFY_LEVEL3', payload: classifyRes.data });
+                    dispatch({ type: 'SET_ID_PRODUCT_SIZE', payload: sizeRes.data });
+                    dispatch({ type: 'SET_PRODUCT_ID', payload: product_id });
+                    dispatch({ type: 'SET_READY_ADD_PRODUCT_LEVEL3', payload: classifyRes.data });
+                    console.log("Check ID Classify Level 3: ", classifyRes.data);
+                    console.log("Check ID Product Size: ", sizeRes.data);
+                    console.log("Check Product ID: ", product_id);
+                }
+
+            }
+        } catch (error) {
+            console.error("Error adding product: ", error);
+            dispatch({ type: 'SET_LOADING', payload: false });
+            message.error("Thêm sản phẩm thất bại");
+            navigate('/seller/product-management/all');
+        }
+    }
+
+    useEffect(() => {
+        let count = 0;
+        const maxRetries = 3; // Set how many times to retry
+
+        // Retry wrapper function
+        const retryAddProductVariant = async (payload, retriesLeft) => {
+            try {
+                const response = await addProductVarient(payload);
+                console.log("Add Product Variant: ", response);
+                return response; // Return response if successful
+            } catch (error) {
+                if (retriesLeft > 0) {
+                    console.warn(`Retrying... attempts left: ${retriesLeft}`);
+                    return retryAddProductVariant(payload, retriesLeft - 1); // Retry
+                } else {
+                    console.error("Failed after retries: ", error);
+                    throw error; // If out of retries, throw error
+                }
+            }
+        };
+
+        if (state.id_classifyLevel3.length > 0 && state.id_productSize.length > 0) {
+            const promises = [];
+            for (let i = 0; i < state.id_classifyLevel3.length; i++) {
+                for (let j = 0; j < state.id_productSize.length; j++) {
+                    const payload = {
+                        product_id: state.product_id,
+                        product_classify_id: state.id_classifyLevel3[i].product_classify_id,
+                        product_size_id: state.id_productSize[j].product_size_id,
+                        price: state.saleInfo.price[count],
+                        stock: state.saleInfo.stock[count],
+                        sale_percents: state.saleInfo.sale_percent[count],
+                        height: state.shippingInfo.height,
+                        length: state.shippingInfo.length,
+                        width: state.shippingInfo.width,
+                        weight: state.shippingInfo.weight,
+                    };
+                    count++;
+                    promises.push(retryAddProductVariant(payload, maxRetries));
+                }
+            }
+
+            Promise.all(promises)
+                .then(responses => {
+                    console.log("All product variants added successfully:", responses);
+                    dispatch({ type: 'SET_LOADING', payload: false });
+                    message.success("Thêm sản phẩm thành công");
+                    navigate('/seller/product-management/all');
+
+                })
+                .catch(error => {
+                    console.error("Error adding product variants after retries:", error);
+                    dispatch({ type: 'SET_LOADING', payload: false });
+                    message.error("Thêm sản phẩm thất bại");
+                    navigate('/seller/product-management/all');
+                });
+        }
+    }, [state.ready_add_product_level3]);
+    // add product level 3
 
     useEffect(() => {
         let payload = {}
@@ -386,28 +474,67 @@ const DetailProduct = () => {
                 })();
             }
         } else if (state.saleInfo != null && state.saleInfo.add_product_level === 2) {
-            payload = {
-                shop_id: shop.shop_id,
-                sub_category_id: state.basicInfo.sub_category_id,
-                product_name: state.basicInfo.product_name,
-                brand: state.basicInfo.brand,
-                description: state.basicInfo.description,
-                gender_object: state.basicInfo.gender,
-                origin: state.basicInfo.origin,
-                thumbnail: state.thumbail_upload,
-                base_price: Array.isArray(state.saleInfo.prices) ? Math.min(...state.saleInfo.prices) : 0,
-                // trigger update stock
-                stock: 0,
-                sale_percents: 0,
-            }
-            console.log("Check payload level 2: ", payload);
-            if (state.uploadComplete && state.uploadThumbnailComplete && state.upload_classify_thumbnails_complete) {
-                (async () => {
-                    await addProductLevel2(payload);
-                })();
+            const prices = state.saleInfo.prices;
+            if (Array.isArray(prices) && prices.length > 0) {
+                const minPriceIndex = prices.reduce((minIndex, currentPrice, currentIndex, arr) =>
+                    currentPrice < arr[minIndex] ? currentIndex : minIndex, 0);
+                payload = {
+                    shop_id: shop.shop_id,
+                    sub_category_id: state.basicInfo.sub_category_id,
+                    product_name: state.basicInfo.product_name,
+                    brand: state.basicInfo.brand,
+                    description: state.basicInfo.description,
+                    gender_object: state.basicInfo.gender,
+                    origin: state.basicInfo.origin,
+                    thumbnail: state.thumbail_upload,
+                    base_price: state.saleInfo.prices[minPriceIndex],
+                    // trigger update stock
+                    stock: 0,
+                    sale_percents: state.saleInfo.sale_percent[minPriceIndex],
+                }
+                console.log("Check payload level 2: ", payload);
+                if (state.uploadComplete && state.uploadThumbnailComplete && state.upload_classify_thumbnails_complete) {
+                    (async () => {
+                        await addProductLevel2(payload);
+                    })();
+                }
+            } else {
+                console.error("Prices is either not an array or is empty.");
             }
         }
-
+        else if (state.saleInfo != null && state.saleInfo.add_product_level === 3) {
+            const prices = state.saleInfo.price;
+            if (Array.isArray(prices) && prices.length > 0) {
+                const minPriceIndex = prices.reduce((minIndex, currentPrice, currentIndex, arr) =>
+                    currentPrice < arr[minIndex] ? currentIndex : minIndex, 0);
+                payload = {
+                    shop_id: shop.shop_id,
+                    sub_category_id: state.basicInfo.sub_category_id,
+                    product_name: state.basicInfo.product_name,
+                    brand: state.basicInfo.brand,
+                    description: state.basicInfo.description,
+                    gender_object: state.basicInfo.gender,
+                    origin: state.basicInfo.origin,
+                    thumbnail: state.thumbail_upload,
+                    base_price: state.saleInfo.price[minPriceIndex],
+                    stock: 0,
+                    sale_percents: state.saleInfo.sale_percent[minPriceIndex],
+                }
+                console.log("Check payload level 3: ", payload);
+                console.log("Check uploadComplete: ", state.uploadComplete);
+                console.log("Check uploadThumbnailComplete: ", state.uploadThumbnailComplete);
+                console.log("Check upload_classify_thumbnails_complete: ", state.upload_classify_thumbnails_complete);
+                if (state.uploadComplete && state.uploadThumbnailComplete && state.upload_classify_thumbnails_complete) {
+                    (
+                        async () => {
+                            await addProductLevel3(payload);
+                        }
+                    )();
+                }
+            } else {
+                console.error("Prices is either not an array or is empty.");
+            }
+        }
     }, [
         state.list_product_images,
         state.uploadComplete,
