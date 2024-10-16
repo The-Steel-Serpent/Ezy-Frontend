@@ -274,13 +274,7 @@ const PrimaryHeader = () => {
                 <AiOutlineQuestionCircle size={21} className="mr-1" /> Hỗ Trợ
               </a>
             </li>
-            <li className="p-1 mr-1">
-              <a href="#" className="flex items-center nav-link-hoverable">
-                <TfiWorld size={16} className="mr-1" />
-                Tiếng Việt
-                <FaAngleDown size={16} className="ml-1" />
-              </a>
-            </li>
+
             <li className="p-1 flex gap-2 ">
               {!user.user_id && (
                 <>

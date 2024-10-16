@@ -203,8 +203,9 @@ const BuyerRegister = () => {
       const res = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/check-email?email=${email}`
       );
-      if (res.status === 200) return true;
-      if (res.status === 400) return false;
+      console.log("res:", res);
+      if (res.data.success) return true;
+      else return false;
     } catch (error) {
       console.log("Error check email:", error.message);
       return false;
@@ -215,8 +216,8 @@ const BuyerRegister = () => {
       const res = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/check-username?username=${username}`
       );
-      if (res.status === 200) return true;
-      if (res.status === 400) return false;
+      if (res.data.success) return true;
+      else return false;
     } catch (error) {
       console.log("Error check email:", error.message);
       return false;

@@ -9,9 +9,17 @@ import {
   browserSessionPersistence,
   browserLocalPersistence,
   sendPasswordResetEmail,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
+  updateEmail,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  fetchSignInMethodsForEmail,
 } from "firebase/auth";
 
 import { authFirebase } from "./firebase";
+import { TrophyFilled } from "@ant-design/icons";
 
 const auth = getAuth();
 auth.useDeviceLanguage();
@@ -155,5 +163,88 @@ export const resetPassword = async (email) => {
         break;
     }
     throw new Error(errorMessage);
+  }
+};
+
+export const handleSendSignInLinkToEmail = async (email) => {
+  const actionCodeSettings = {
+    url: `http://localhost:3000/user/account?type=email&step=2`,
+    handleCodeInApp: true,
+  };
+
+  try {
+    const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+    if (signInMethods.length > 0) {
+      throw new Error("Email đã được sử dụng");
+    }
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    return true;
+  } catch (error) {
+    console.error(error);
+    let errorMessage;
+    switch (error.code) {
+      case "auth/quota-exceeded":
+        errorMessage = "Quá nhiều yêu cầu. Vui lòng thử lại sau một thời gian.";
+        break;
+      case "auth/invalid-email":
+        errorMessage = "Email không hợp lệ";
+        break;
+      case "auth/operation-not-allowed":
+        errorMessage =
+          "Hành động không được phép. Vui lòng kiểm tra cấu hình xác thực trong Firebase Console.";
+        break;
+      case "auth/too-many-requests":
+        errorMessage =
+          "Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn. Vui lòng thử lại sau.";
+        break;
+      default:
+        errorMessage = "An unknown error occurred";
+        break;
+    }
+    throw new Error(errorMessage);
+  }
+};
+
+export const updateNewEmail = async (email, href, password) => {
+  const user = auth.currentUser;
+  if (email === "") {
+    throw new Error("Vui lòng nhập email mới");
+  }
+  let errorMessage;
+  if (!user) {
+    errorMessage = "Bạn cần đăng nhập trước khi thay đổi email.";
+    throw new Error(errorMessage);
+  }
+  const checkHref = await isSignInWithEmailLink(auth, href);
+  if (!checkHref) {
+    errorMessage = "Liên kết không hợp lệ";
+    throw new Error(errorMessage);
+  }
+
+  try {
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+    await updateEmail(user, email);
+    return true;
+  } catch (error) {
+    switch (error.code) {
+      case "auth/quota-exceeded":
+        errorMessage = "Quá nhiều yêu cầu. Vui lòng thử lại sau một thời gian.";
+        break;
+      case "auth/invalid-email":
+        errorMessage = "Email không hợp lệ";
+        break;
+      case "auth/operation-not-allowed":
+        errorMessage = "Vui lòng xác thực trước khi thực hiện hành động.";
+        break;
+      case "auth/too-many-requests":
+        errorMessage =
+          "Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn. Vui lòng thử lại sau.";
+        break;
+      default:
+        errorMessage = "An unknown error occurred";
+        break;
+    }
+    throw new Error(error.message);
   }
 };

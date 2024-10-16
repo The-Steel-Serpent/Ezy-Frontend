@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Form, Input, Button, Modal, Table, Upload } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { RiImageAddFill } from "react-icons/ri";
+
+
 function ProductCategory() {
     const [categories, setCategories] = useState([]);
     const [thumbnail, setThumbnail] = useState([]);
@@ -57,6 +59,7 @@ function ProductCategory() {
         try {
             const values = await form.validateFields();
             const newCategory = await addCategory(values);
+            console.log('Added category:', newCategory);
             form.resetFields();
             setCategories([...categories, newCategory]);
             setIsModalVisible(false);
@@ -80,6 +83,7 @@ function ProductCategory() {
     };
 
     const handleCancel = () => {
+        setThumbnail([]);
         setIsModalVisible(false);
     };
 
@@ -97,7 +101,6 @@ function ProductCategory() {
                         <Upload
                             listType="picture-card"
                             fileList={thumbnail}
-                            onChange={handleUploadThumbnail}
                             maxCount={1}>
                             {thumbnail.length < 1 && (
                                 <div className='flex flex-col items-center '>
