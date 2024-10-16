@@ -7,7 +7,12 @@ import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
-import SetUpOnboarding from "../pages/seller/SetUpOnboarding";
+const AccountSetting = withSuspense(
+  lazy(() => import("../pages/buyer/user-pages/my-account/AccountSetting"))
+);
+const CartPage = withSuspense(
+  lazy(() => import("../pages/buyer/cart-pages/CartPage"))
+);
 
 const AuthLayout = withSuspenseNonFallback(lazy(() => import("../layout")));
 const Categories = withSuspense(
@@ -87,6 +92,9 @@ const ShopDetails = withSuspense(
 const ShopRecommendations = withSuspense(
   lazy(() => import("../pages/buyer/shop-pages/ShopRecommendations"))
 );
+const CheckoutPage = withSuspense(
+  lazy(() => import("../pages/buyer/cart-pages/CheckoutPage"))
+);
 const router = createBrowserRouter([
   {
     path: "/",
@@ -101,6 +109,33 @@ const router = createBrowserRouter([
         ),
       },
       //Buyer
+      //AccountSettings
+      {
+        path: "user",
+        element: (
+          <AuthLayout>
+            <AccountSetting />
+          </AuthLayout>
+        ),
+        children: [
+          {
+            path: "account",
+            element: (
+              <AuthLayout>
+                <AccountSetting />
+              </AuthLayout>
+            ),
+          },
+          {
+            path: "purchase",
+            element: (
+              <AuthLayout>
+                <AccountSetting />
+              </AuthLayout>
+            ),
+          },
+        ],
+      },
       //login && register
       {
         path: "buyer/login",
@@ -177,37 +212,40 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
+      //Cart
+      {
+        path: "/cart",
+        element: (
+          <AuthLayout>
+            <CartPage />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "/cart/checkout",
+        element: (
+          <AuthLayout>
+            <CheckoutPage />
+          </AuthLayout>
+        ),
+      },
 
       //Seller
       //login && register
       {
         path: "seller",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <SellerHome />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
-        ),
-      },
-      {
-        path: "seller/seller-setup-onboarding",
-        element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <SetUpOnboarding />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <SellerHome />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/seller-setup",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <SellerSetup />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <SellerSetup />
+          </SellerAuthLayout>
         ),
       },
       {
@@ -230,72 +268,58 @@ const router = createBrowserRouter([
       {
         path: "seller/order/all",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <AllOrders />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <AllOrders />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/order/ordercancelled",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <OrderCancelled />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <OrderCancelled />
+          </SellerAuthLayout>
         ),
       },
       //seller/order
       {
         path: "seller/product-management/all",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <AllProduct />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <AllProduct />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/product-management/working-products",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <WorkingProducts />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <WorkingProducts />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/product-management/infringing-products",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <InfringingProduct />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <InfringingProduct />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/product-management/pending-products",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <PendingProducts />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <PendingProducts />
+          </SellerAuthLayout>
         ),
       },
       {
         path: "seller/product-management/add-product",
         element: (
-          <PrivateRouteSeller>
-            <SellerAuthLayout>
-              <AddProduct />
-            </SellerAuthLayout>
-          </PrivateRouteSeller>
+          <SellerAuthLayout>
+            <AddProduct />
+          </SellerAuthLayout>
         ),
       },
       //Admin

@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Card, Rate } from "antd";
 import Meta from "antd/es/card/Meta";
 import React from "react";
@@ -10,22 +11,27 @@ function formatNumber(num) {
     return num.toString(); // Dưới 1000 không cần format
   }
 }
-const ProductCard = ({ value, key, itemsPerRow = 6 }) => {
+const ProductCard = ({ value, loading, itemsPerRow = 6 }) => {
   const price =
     value?.base_price - (value?.base_price * value?.sale_percents) / 100;
   return (
     <>
-      <a
+      <motion.a
         href={"/product-details/" + { value }.value?.product_id}
         className={`animation-pulse relative w-32 lg:w-48 ${
           itemsPerRow === 6 ? "lg:col-span-2" : "lg:col-span-2"
         } col-span-4  mt-3`}
       >
         <Card
-          key={key}
-          loading={false}
+          loading={loading}
           hoverable
-          cover={<img src={value.thumbnail} />}
+          cover={
+            <img
+              className="size-[190px]"
+              loading="lazy"
+              src={value.thumbnail}
+            />
+          }
         >
           <Meta style={{ fontSize: 14 }} title={value?.product_name} />
           <div className="flex lg:flex-row flex-col w-100 items-start lg:items-center mt-4 text-ellipsis text-nowrap line-clamp-1">
@@ -43,7 +49,8 @@ const ProductCard = ({ value, key, itemsPerRow = 6 }) => {
           <div className="flex lg:flex-row flex-col w-100  items-start lg:items-center">
             <Rate
               disabled
-              value={value?.avgRating}
+              allowHalf
+              value={value?.avgRating || 0}
               className="text-[11px] mr-1"
             />
 
@@ -56,7 +63,7 @@ const ProductCard = ({ value, key, itemsPerRow = 6 }) => {
             {value?.sale_percents > 0 && "-" + value?.sale_percents + "%"}
           </div>
         </Card>
-      </a>
+      </motion.a>
     </>
   );
 };

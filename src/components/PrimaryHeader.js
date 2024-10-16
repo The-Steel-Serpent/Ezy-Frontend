@@ -23,13 +23,21 @@ import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
-import { Button, Dropdown, Input, Skeleton, Space, Typography } from "antd";
+import {
+  Button,
+  Dropdown,
+  FloatButton,
+  Input,
+  Skeleton,
+  Space,
+  Typography,
+} from "antd";
 import { AiTwotoneShop } from "react-icons/ai";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { el } from "date-fns/locale";
 import { DownOutlined } from "@ant-design/icons";
-
+const CartComponent = lazy(() => import("./cart/CartComponent"));
 // import FullLogo from "./FullLogo";
 const ChatBox = lazy(() => import("./chatbox/ChatBox"));
 
@@ -37,12 +45,19 @@ const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
+  const currentPath = location.pathname;
+  const { cat_id, shop_username } = useParams();
   const keyword = queryParams.get("keyword");
   const [state, dispatch] = useReducer(
     (state, action) => {
       switch (action.type) {
         case "SET_SEARCH":
           return { ...state, search: action.payload };
+        case "SET_CURRENT_CATEGORY": {
+          return { ...state, currentCategory: action.payload };
+        }
+        case "SET_SELECTED_DROPDOWN":
+          return { ...state, selectedDropdown: action.payload };
         case "SET_SEARCH_ITEM":
           return { ...state, searchItem: action.payload };
         case "SET_IS_FOCUSED":
@@ -53,54 +68,68 @@ const PrimaryHeader = () => {
     },
     {
       search: "",
+      currentCategory: null,
       searchItem: [],
       isFocused: false,
+      selectedDropdown: {
+        key: "1",
+        label: "Trong Ezy",
+      },
     }
   );
-  const { search, searchItem, isFocused } = state;
-  const items = [
+  const { search, searchItem, isFocused, currentCategory, selectedDropdown } =
+    state;
+
+  const catIdExists =
+    queryParams.has("cat_id") && queryParams.get("cat_id") !== "";
+
+  const shopUsernameExists =
+    queryParams.has("shop_username") && queryParams.get("shop_username") !== "";
+
+  const catID = cat_id || (catIdExists && queryParams.get("cat_id"));
+  const shopUsername = shop_username || queryParams.get("shop_username");
+
+  const shouldShowDropdown =
+    currentPath.startsWith("/categories") ||
+    currentPath.startsWith("/shop") ||
+    catIdExists ||
+    shopUsernameExists;
+
+  let dropdownItems = [
     {
       key: "1",
-      label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://www.antgroup.com"
-        >
-          1st menu item
-        </a>
-      ),
-    },
-    {
-      key: "2",
-      label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://www.aliyun.com"
-        >
-          2nd menu item
-        </a>
-      ),
-    },
-    {
-      key: "3",
-      label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://www.luohanacademy.com"
-        >
-          3rd menu item
-        </a>
-      ),
+      label: "Trong Ezy",
     },
   ];
+
+  if (
+    currentPath.startsWith("/categories") ||
+    (catIdExists && !shopUsernameExists)
+  ) {
+    dropdownItems.push({
+      key: "2",
+      label: "Trong " + currentCategory?.category_name,
+    });
+  } else if (
+    currentPath.startsWith("/shop") ||
+    (!catIdExists && shopUsernameExists)
+  ) {
+    dropdownItems.push({
+      key: "2",
+      label: "Trong Shop này",
+    });
+  }
+
   //Side Effect
+
   useEffect(() => {
     const fetchSuggestProductName = async () => {
       try {
-        const url = `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products-name?search=${search}`;
+        const url = `${
+          process.env.REACT_APP_BACKEND_URL
+        }/api/suggest-products-name?search=${search}&cat_id=${
+          catID ? catID : ""
+        }&shop_username=${shopUsername ? shopUsername : ""}`;
         const res = await axios.get(url);
         console.log("res", res.data);
         if (res.data.success) {
@@ -118,7 +147,49 @@ const PrimaryHeader = () => {
       dispatch({ type: "SET_SEARCH", payload: keyword });
     }
   }, [keyword]);
+
+  useEffect(() => {
+    const fetchCategoryName = async () => {
+      try {
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/categories_name/${
+          cat_id || (catIdExists && queryParams.get("cat_id"))
+        }`;
+        const res = await axios.get(url);
+        console.log("res", res.data);
+        if (res.data.success) {
+          dispatch({
+            type: "SET_CURRENT_CATEGORY",
+            payload: res.data.categories[0],
+          });
+        }
+      } catch (error) {
+        console.log("Lỗi khi fetch tên danh mục", error);
+      }
+    };
+    if (cat_id != null || catIdExists) {
+      fetchCategoryName();
+      dispatch({
+        type: "SET_SELECTED_DROPDOWN",
+        payload: dropdownItems.find((item) => item.key === "2"),
+      });
+    } else if (shop_username != null || shopUsernameExists) {
+      dispatch({
+        type: "SET_SELECTED_DROPDOWN",
+        payload: dropdownItems.find((item) => item.key === "2"),
+      });
+    }
+  }, [cat_id, shop_username]);
   //Handle Function
+  const handleOnSelectDropdownSearch = useCallback(
+    ({ key }) => {
+      dispatch({
+        type: "SET_SELECTED_DROPDOWN",
+        payload: dropdownItems.find((item) => item.key === key),
+      });
+    },
+    [dispatch, selectedDropdown]
+  );
+
   const handleOnSearch = useCallback(
     (e) => {
       dispatch({ type: "SET_SEARCH", payload: e.target.value });
@@ -129,15 +200,45 @@ const PrimaryHeader = () => {
   const handleOnSubmitSearch = useCallback(
     (e) => {
       e.preventDefault();
-      if (search === "") window.location.href = "/categories/1";
-      else window.location.href = `/search?keyword=${search}`;
+      if (search === "") {
+        if (selectedDropdown?.key === "1") {
+          window.location.href = "/categories/1";
+        } else if (selectedDropdown?.key === "2") {
+          e.preventDefault();
+        }
+      } else {
+        if (selectedDropdown?.key === "1") {
+          window.location.href = `/search?keyword=${search}`;
+        } else {
+          window.location.href = `/search?keyword=${search}&cat_id=${
+            catID ? catID : ""
+          }&shop_username=${shopUsername ? shopUsername : ""}`;
+        }
+      }
     },
-    [search]
+    [search, selectedDropdown]
   );
+  const placeholderText = useMemo(() => {
+    if (selectedDropdown?.key === "1") {
+      return "Bạn muốn tìm gì đó có Ezy lo...";
+    } else if ((catIdExists || cat_id) && !shopUsernameExists) {
+      return `Tìm trong ${currentCategory?.category_name}`;
+    } else if (shopUsernameExists) {
+      return "Tìm trong Shop này";
+    } else {
+      return "Tìm kiếm";
+    }
+  }, [
+    selectedDropdown,
+    catIdExists,
+    shopUsernameExists,
+    currentCategory,
+    cat_id,
+  ]);
 
   return (
     <>
-      <header className="w-full h-fit bg-custom-gradient pt-1 sticky top-0 z-[100] left-0 right-0">
+      <header className="w-full h-fit bg-custom-gradient pt-1 sticky top-0 z-[100] left-0 right-0 shadow">
         <div className="text-white text-sm max-w-[1200px] hidden lg:flex m-auto h-[34px]">
           <ul className="flex ">
             <li className="p-1 nav-link nav-link-hoverable">
@@ -181,7 +282,7 @@ const PrimaryHeader = () => {
               </a>
             </li>
             <li className="p-1 flex gap-2 ">
-              {!user._id && (
+              {!user.user_id && (
                 <>
                   <a href="/buyer/register" className="nav-link-hoverable">
                     Đăng ký
@@ -192,10 +293,10 @@ const PrimaryHeader = () => {
                   </a>
                 </>
               )}
-              {user._id && (
+              {user.user_id && (
                 <AvatarWithPopover
                   name={user.username}
-                  img={user.profile_pic}
+                  img={user.avt_url}
                   size={23}
                 />
               )}
@@ -219,7 +320,7 @@ const PrimaryHeader = () => {
                 <Input
                   type="text"
                   className="p-2 border-none border-r-2  text-sm rounded  focus:after:border lg:mr-1 lg:ml-0 ml-1 text-ellipsis line-clamp-1"
-                  placeholder="Bạn muốn tìm gì đó có Ezy lo..."
+                  placeholder={placeholderText}
                   value={search}
                   onChange={(e) => handleOnSearch(e)}
                   onFocus={() => {
@@ -239,7 +340,7 @@ const PrimaryHeader = () => {
                     isFocused ? "flex" : "hidden"
                   } z-[99999] rounded  h-fit flex-col absolute bg-white w-full gap-2 p-2 `}
                 >
-                  {search && (
+                  {search && selectedDropdown?.key === "1" && (
                     <a
                       href={`/search_shop?keyword=${search}`}
                       className="flex gap-2"
@@ -252,7 +353,15 @@ const PrimaryHeader = () => {
                     searchItem.map((value, key) => {
                       return (
                         <a
-                          href={`/search?keyword=${value?.product_name}`}
+                          href={
+                            selectedDropdown?.key === "1"
+                              ? `/search?keyword=${value?.product_name}`
+                              : `/search?keyword=${
+                                  value?.product_name
+                                }&cat_id=${catID ? catID : ""}&shop_username=${
+                                  shopUsername ? shopUsername : ""
+                                }`
+                          }
                           className="block cursor-pointer text-slate-600 text-sm hover:text-white hover:bg-primary"
                         >
                           {value.product_name}
@@ -261,23 +370,27 @@ const PrimaryHeader = () => {
                     })}
                 </div>
               </div>
-              <Dropdown
-                menu={{
-                  items,
-                  selectable: true,
-                  defaultSelectedKeys: ["3"],
-                }}
-              >
-                <Typography.Link className="flex items-center px-2 border-l-2">
-                  <div className="flex  gap-3 text-slate-500">
-                    <span className="line-clamp-1 text-ellipsis w-[90px]">
-                      Trong Shopee
-                    </span>
+              {shouldShowDropdown && (
+                <Dropdown
+                  menu={{
+                    items: dropdownItems,
+                    selectable: true,
+                    defaultSelectedKeys: [selectedDropdown?.key],
+                    onClick: handleOnSelectDropdownSearch,
+                  }}
+                >
+                  <Typography.Link className="flex items-center px-2 border-l-2">
+                    <div className="flex  gap-3 text-slate-500">
+                      <span className="line-clamp-1 text-ellipsis w-[90px]">
+                        {selectedDropdown?.label}
+                      </span>
 
-                    <DownOutlined className="text-slate-700" />
-                  </div>
-                </Typography.Link>
-              </Dropdown>
+                      <DownOutlined className="text-slate-700" />
+                    </div>
+                  </Typography.Link>
+                </Dropdown>
+              )}
+
               <button
                 onSubmit={handleOnSubmitSearch}
                 className="lg:bg-custom-gradient lg:text-white w-16 rounded flex justify-center items-center text-slate-400"
@@ -287,32 +400,32 @@ const PrimaryHeader = () => {
                 </span>
               </button>
             </form>
-            {/* <ul className="text-xs text-white hidden justify-between items-center mt-2 gap-1 lg:flex">
-              {searchItem.map((value, key) => {
-                return (
-                  <li key={key}>
-                    <a href="#">{value}</a>
-                  </li>
-                );
-              })}
-            </ul> */}
           </div>
           <div className="col-span-2 text-white flex justify-center items-center">
-            <a href="#">
-              <PiShoppingCartSimpleBold size={27} />
-            </a>
+            <Suspense
+              fallback={
+                <div className="w-fit">
+                  <Skeleton avatar className="size-[35px]" />
+                </div>
+              }
+            >
+              <CartComponent />
+            </Suspense>
           </div>
           <div className="col-span-2 lg:hidden flex text-white text-sm items-center">
-            {!user._id && (
+            {!user.user_id && (
               <a href="/buyer/login" className="divider nav-link-hoverable">
                 Đăng nhập
               </a>
             )}
-            {user._id && <AvatarWithPopover img={user.profile_pic} size={30} />}
+            {user.user_id && (
+              <AvatarWithPopover img={user.profile_pic} size={30} />
+            )}
           </div>
         </div>
       </header>
       <Suspense>
+        <FloatButton.BackTop className="go-first" />
         <ChatBox />
       </Suspense>
     </>

@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
+import { clearCart } from "../redux/cartSlice";
 
 const AvatarWithPopover = (props) => {
   const dispatch = useDispatch();
@@ -13,26 +14,34 @@ const AvatarWithPopover = (props) => {
   const handleLogout = async () => {
     try {
       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
-      const res = await axios.get(URL);
-      toast.success(res.data.message);
+      const res = await axios.post(
+        URL,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      toast.success("Đăng xuất thành công");
       if (res.data.success) {
         dispatch(logout());
+        dispatch(clearCart());
         navigate("/");
         localStorage.clear();
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      if (error.response.data.code === "auth/id-token-expired") {
+        toast.error("Phiên Đăng nhập đã hết hạn");
+      }
     }
   };
   const items = [
     {
       key: "1",
       label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://www.antgroup.com"
-        >
+        <a target="_blank" rel="noopener noreferrer" href="/user/account">
           Tài Khoản Của Tôi
         </a>
       ),
@@ -40,11 +49,7 @@ const AvatarWithPopover = (props) => {
     {
       key: "2",
       label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://www.aliyun.com"
-        >
+        <a target="_blank" rel="noopener noreferrer" href="/user/purchase">
           Đơn Mua
         </a>
       ),
@@ -56,8 +61,13 @@ const AvatarWithPopover = (props) => {
   ];
 
   return (
-    <Space direction="vertical">
-      <Space wrap>
+    <div className="flex flex-col">
+      <div
+        className="flex flex-wrap cursor-pointer"
+        onClick={() => {
+          navigate("/user/account");
+        }}
+      >
         <Dropdown
           menu={{
             items,
@@ -67,22 +77,22 @@ const AvatarWithPopover = (props) => {
             pointAtCenter: true,
           }}
         >
-          <Space wrap>
+          <div className="flex gap-2">
             {props.img && <Avatar src={props.img} size={props.size} />}
             {!props.img && (
               <Avatar
-                style={{ backgroundColor: "#87d068" }}
+                className="bg-primary"
                 size={props.size}
-                icon={<UserOutlined />}
+                icon={<UserOutlined className="text-white" />}
               />
             )}
             <button className="text-white lg:block hidden hover:text-slate-300">
               {props.name}
             </button>
-          </Space>
+          </div>
         </Dropdown>
-      </Space>
-    </Space>
+      </div>
+    </div>
   );
 };
 

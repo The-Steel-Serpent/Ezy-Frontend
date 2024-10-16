@@ -1,11 +1,19 @@
 import { Col, Form, Input, Row } from 'antd';
-import React, { useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
+import { handleBeforeInput } from '../../../helpers/handleInput';
 
 const initialState = {
     length: '',
     width: '',
     height: '',
-    weight: ''
+    weight: '',
+    errors:
+    {
+        length: '',
+        width: '',
+        height: '',
+        weight: ''
+    }
 };
 
 const reducer = (state, action) => {
@@ -18,12 +26,14 @@ const reducer = (state, action) => {
             return { ...state, height: action.value };
         case 'set_weight':
             return { ...state, weight: action.value };
+        case 'set_errors':
+            return { ...state, errors: action.value };
         default:
             return state;
     }
 };
 
-const ShippingProductInformation = () => {
+const ShippingProductInformation = ({ onData }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const handleInputChange = (e, type) => {
@@ -34,13 +44,69 @@ const ShippingProductInformation = () => {
         }
     };
 
+    const validate = () => {
+        let valid = true;
+        let errors = {
+            length: '',
+            width: '',
+            height: '',
+            weight: ''
+        };
 
-    const handleBeforeInput = (e) => {
-        const char = e.data;
-        if (!char.match(/[0-9]/)) {
-            e.preventDefault();
+        if (state.length === '') {
+            errors.length = 'Vui lòng nhập chiều dài';
+            valid = false;
         }
+        if (state.width === '') {
+
+            errors.width = 'Vui lòng nhập chiều rộng';
+            valid = false;
+        }
+
+        if (state.height === '') {
+            errors.height = 'Vui lòng nhập chiều cao';
+            valid = false;
+        }
+
+        if (state.weight === '') {
+            errors.weight = 'Vui lòng nhập cân nặng';
+            valid = false;
+        }
+        dispatch({ type: 'set_errors', value: errors });
+        return valid;
     };
+
+    useEffect(() => {
+        validate();
+    }, []);
+
+    useEffect(() => {
+        validate();
+    }, [state.length, state.width, state.height, state.weight]);
+
+    useEffect(() => {
+        onData({ noErrorShippingInfo: false });
+        const errors = state.errors;
+        if (errors.length === '' && errors.width === '' && errors.height === '' && errors.weight === '') {
+            const data = {
+                length: state.length,
+                width: state.width,
+                height: state.height,
+                weight: state.weight,
+                noErrorShippingInfo: true
+            };
+            onData(data);
+            console.log("No Error:", errors);
+        }
+        else {
+            console.log("Error shipping info:", errors);
+            onData({ noErrorShippingInfo: false });
+        }
+
+    }, [state.errors]);
+
+
+
     return (
         <div>
             <h3 className='text-lg'>Vận chuyển</h3>
@@ -60,7 +126,9 @@ const ShippingProductInformation = () => {
                             <Input
                                 value={state.length}
                                 onChange={(e) => handleInputChange(e, 'set_length')}
-                                onBeforeInput={handleBeforeInput} />
+                                onBeforeInput={handleBeforeInput}
+                                addonAfter='cm'
+                            />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -77,7 +145,9 @@ const ShippingProductInformation = () => {
                             <Input
                                 value={state.width}
                                 onChange={(e) => handleInputChange(e, 'set_width')}
-                                onBeforeInput={handleBeforeInput} />
+                                onBeforeInput={handleBeforeInput}
+                                addonAfter='cm'
+                            />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -94,7 +164,9 @@ const ShippingProductInformation = () => {
                             <Input
                                 value={state.height}
                                 onChange={(e) => handleInputChange(e, 'set_height')}
-                                onBeforeInput={handleBeforeInput} />
+                                onBeforeInput={handleBeforeInput}
+                                addonAfter='cm'
+                            />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -111,7 +183,9 @@ const ShippingProductInformation = () => {
                             <Input
                                 value={state.weight}
                                 onChange={(e) => handleInputChange(e, 'set_weight')}
-                                onBeforeInput={handleBeforeInput} />
+                                onBeforeInput={handleBeforeInput}
+                                addonAfter='gram'
+                            />
                         </Form.Item>
                     </Col>
                 </Row>

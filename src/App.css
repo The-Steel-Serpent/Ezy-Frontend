@@ -326,3 +326,37 @@
   @apply size-5 top-[35%];
   inset-inline-start: 12px;
 }
+
+.ant-input-outlined:hover {
+  border-color: #66cce6 !important;
+}
+
+.ant-input-outlined:focus {
+  border-color: #66cce6 !important;
+}
+.ant-float-btn {
+  @apply bottom-20 text-primary;
+}
+.go-first .anticon {
+  @apply text-primary;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  @apply bg-primary border-primary;
+}
+.checkbox-cart .ant-checkbox-inner {
+  @apply size-6;
+}
+.checkbox-cart .ant-checkbox .ant-checkbox-inner:after {
+  inset-inline-start: 30%;
+}
+.ant-rate-star-full .anticon {
+  @apply text-primary;
+}
+.ant-rate-star-half .ant-rate-star-first .anticon {
+  @apply text-primary;
+}
+
+.ant-tree .ant-tree-node-content-wrapper {
+  @apply flex gap-2 items-center;
+}

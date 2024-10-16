@@ -25,7 +25,11 @@ const ReviewCard = ({ value }) => {
           />
         ) : (
           <>
-            <Avatar size={40} className="bg-primary" icon={<UserOutlined />} />
+            <Avatar
+              size={40}
+              className="bg-primary"
+              icon={<UserOutlined className="text-white" />}
+            />
           </>
         )}
       </div>

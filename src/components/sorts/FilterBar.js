@@ -111,7 +111,7 @@ const Filter = (props) => {
         console.log("Lỗi khi fetch dữ liệu SubCategories: ", error);
       }
     };
-    fetchSubCategories();
+    if (cat_id) fetchSubCategories();
   }, [cat_id]);
 
   //Handle

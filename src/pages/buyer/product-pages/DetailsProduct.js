@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text */
 import {
   Breadcrumb,
   Button,
@@ -5,6 +6,7 @@ import {
   Divider,
   Dropdown,
   InputNumber,
+  notification,
   Pagination,
   Skeleton,
   Space,
@@ -15,7 +17,7 @@ import "react-multi-carousel/lib/styles.css";
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import ReactStars from "react-rating-star-with-type";
 import formatNumber from "../../../helpers/formatNumber";
-import { useParams } from "react-router-dom";
+import { useNavigate, useNavigation, useParams } from "react-router-dom";
 import axios from "axios";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { TiShoppingCart } from "react-icons/ti";
@@ -26,10 +28,10 @@ import { DownOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
 import ProductNotFounded from "../../../components/product/ProductNotFounded";
 import withChildSuspense from "../../../hooks/HOC/withChildSuspense";
-import { de } from "date-fns/locale";
+import { useDispatch, useSelector } from "react-redux";
+import ReactImageGallery from "react-image-gallery";
 
 const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
-const ReactImageGallery = lazy(() => import("react-image-gallery"));
 const ShopInformationSection = lazy(() =>
   import("../../../components/shop/ShopInformationSection")
 );
@@ -39,9 +41,16 @@ const CarouselProduct = withChildSuspense(
 const ProductSuggestions = withChildSuspense(
   lazy(() => import("../../../components/product/ProductSuggestions"))
 );
+
+const { addToCart } = require("../../../services/cartService");
+const { fetchMiniCartData } = require("../../../redux/cartSlice");
 const DetailsProduct = () => {
+  const user = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { id } = useParams();
   const [success, setSuccess] = useState(true);
+  const [isGalleryReady, setIsGalleryReady] = useState(false);
   const [sizes, setSizes] = useState([]);
   const [currentVarient, setCurrentVarient] = useState({});
   const [selectedClassify, setSelectedClassify] = useState("");
@@ -52,10 +61,12 @@ const DetailsProduct = () => {
   const [avgRating, setAvgRating] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
-  // const [currentThumbnail, setCurrentThumbnail] = useState("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageUrl, setCurrentImageUrl] = useState(null);
   const [detailsProduct, setDetailsProduct] = useState({});
   const [reviews, setReviews] = useState([]);
   const [shopProducts, setShopProducts] = useState([]);
+
   //Side Effect
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -73,6 +84,7 @@ const DetailsProduct = () => {
             (classify) => classify.total_stock > 0
           );
           setSelectedClassify(firstClassify?.product_classify_id);
+          setCurrentImageUrl(firstClassify?.thumbnail);
         }
         setAvgRating(res.data.avgRating);
         setTotalReviews(res.data.totalReviews);
@@ -83,7 +95,6 @@ const DetailsProduct = () => {
     };
     fetchProductDetails();
   }, [id]);
-
   useEffect(() => {
     const fetchProductReviews = async () => {
       try {
@@ -103,16 +114,23 @@ const DetailsProduct = () => {
   useEffect(() => {
     const fetchProductVarient = async () => {
       try {
+        console.log(
+          "url: ",
+          `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${id}&product_classify_id=${selectedClassify}`
+        );
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${id}&product_classify_id=${selectedClassify}`
         );
-        if (res.data && Array.isArray(res.data.data)) {
-          // console.log(res.data.data[0]);
+        if (res.data.success && Array.isArray(res.data.data)) {
           setSizes(res.data.data);
           const firstInStock = res.data.data.find(
             (varient) => varient.stock > 0
           );
-          setCurrentVarient(firstInStock);
+          if (firstInStock) {
+            setCurrentVarient(firstInStock);
+          } else {
+            setCurrentVarient(res.data.data[0]);
+          }
         }
         // setSelectedSize(res.data.data[0]?.product_size_id);
         // setSelectedClassify(res.data.data[0]?.product_classify_id);
@@ -140,6 +158,14 @@ const DetailsProduct = () => {
     }
   }, [detailsProduct?.Shop?.shop_id]);
   //Handle
+  const handleMouseEnter = (thumbnail) => {
+    setCurrentImageUrl(thumbnail);
+  };
+
+  const handleSlide = (currentIndex) => {
+    setCurrentImageIndex(currentIndex);
+    setCurrentImageUrl(null);
+  };
 
   const handleSizeClick = useCallback(
     (size) => {
@@ -168,12 +194,58 @@ const DetailsProduct = () => {
     },
     [ratingFilter]
   );
+
+  //Cart
+  const handleAddToCart = async (productVarient) => {
+    try {
+      if (detailsProduct?.stock <= 0 || currentVarient?.stock <= 0) {
+        return;
+      }
+      if (!user?.user_id) {
+        navigate("/buyer/login");
+      }
+      // console.log("Quantity: ", quantity);
+      const res = await addToCart(
+        user.user_id,
+        detailsProduct?.Shop?.shop_id,
+        productVarient.product_varients_id,
+        quantity
+      );
+      if (res.success) {
+        notification.success({
+          message: res.message,
+          showProgress: true,
+          pauseOnHover: false,
+        });
+        dispatch(fetchMiniCartData(user.user_id));
+      }
+    } catch (error) {
+      notification.error({
+        message: error?.response?.data?.message,
+        showProgress: true,
+        pauseOnHover: false,
+      });
+    }
+  };
   //Product Details
   const imgs =
     detailsProduct?.ProductImgs?.map((img) => ({
       original: img?.url,
       thumbnail: img?.url,
     })) || [];
+
+  const updatedImgs = imgs.map((img, index) => ({
+    ...img,
+    original:
+      index === currentImageIndex && currentImageUrl
+        ? currentImageUrl
+        : img.original,
+  }));
+  useEffect(() => {
+    if (updatedImgs && updatedImgs.length > 0) {
+      setIsGalleryReady(true);
+    }
+  }, [updatedImgs]);
 
   const price =
     currentVarient != null ? currentVarient?.price : detailsProduct?.base_price;
@@ -193,6 +265,7 @@ const DetailsProduct = () => {
   // useEffect(() => {
   //   setCurrentThumbnail(details.product_varients[0].thumbnail);
   // }, [currentThumbnail]);
+  console.log("Details Product: ", currentVarient);
   return (
     <>
       {success ? (
@@ -231,13 +304,13 @@ const DetailsProduct = () => {
           <div className=" bg-white grid grid-flow-col lg:grid-cols-12 rounded">
             {/***Ảnh sản phẩm */}
             <section className="col-span-5 p-[15px]">
-              <Suspense fallback={<Skeleton.Image className="size-[470px]" />}>
-                <ReactImageGallery
-                  lazyLoad={true}
-                  items={imgs}
-                  showThumbnails={true}
-                />
-              </Suspense>
+              <ReactImageGallery
+                lazyLoad={true}
+                items={updatedImgs}
+                showThumbnails={true}
+                onSlide={handleSlide}
+                startIndex={currentImageIndex}
+              />
             </section>
             {/***Lựa chọn sản phẩm */}
             <section className="col-span-7 pl-5 pt-5 pr-9">
@@ -324,12 +397,15 @@ const DetailsProduct = () => {
                         {detailsProduct?.ProductClassifies?.map(
                           (classify, key) => (
                             <button
-                              onClick={() =>
-                                classify?.total_stock > 0 &&
-                                handleClassifyClick(
-                                  classify?.product_classify_id
-                                )
-                              }
+                              onClick={() => {
+                                if (classify?.total_stock > 0) {
+                                  handleClassifyClick(
+                                    classify?.product_classify_id
+                                  );
+                                  classify?.thumbnail &&
+                                    handleMouseEnter(classify?.thumbnail);
+                                }
+                              }}
                               className={`
                                 ${
                                   classify?.total_stock > 0
@@ -435,35 +511,51 @@ const DetailsProduct = () => {
                 </section>
                 {/***Button */}
                 <div className="flex gap-5 mt-2">
-                  <Button
-                    size="large"
-                    className={`${
-                      detailsProduct?.stock > 0
-                        ? `hover:bg-primary hover:text-white  cursor-pointer`
-                        : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
-                    } h-14 px-5  text-lg`}
-                    icon={<TiShoppingCart />}
-                    onClick={() => {
-                      detailsProduct?.stock > 0 &&
-                        console.log("Thêm vào giỏ hàng", currentVarient);
-                    }}
-                  >
-                    Thêm vào giỏ hàng
-                  </Button>
-                  <Button
-                    className={`${
-                      detailsProduct?.stock > 0
-                        ? "hover:bg-opacity-80 cursor-pointer"
-                        : "opacity-60 cursor-not-allowed"
-                    } bg-primary text-white px-8 h-14 text-lg`}
-                    size="large"
-                    onClick={() => {
-                      detailsProduct?.stock > 0 &&
-                        console.log("Mua Ngay", currentVarient);
-                    }}
-                  >
-                    Mua Ngay
-                  </Button>
+                  {currentVarient?.stock > 0 && detailsProduct?.stock > 0 && (
+                    <>
+                      <Button
+                        size="large"
+                        className={`${
+                          detailsProduct?.stock > 0 || currentVarient?.stock > 0
+                            ? `hover:bg-primary hover:text-white  cursor-pointer`
+                            : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
+                        } h-14 px-5  text-lg`}
+                        icon={<TiShoppingCart />}
+                        onClick={async () =>
+                          await handleAddToCart(currentVarient)
+                        }
+                      >
+                        Thêm vào giỏ hàng
+                      </Button>
+                      <Button
+                        className={`${
+                          detailsProduct?.stock > 0 || currentVarient?.stock > 0
+                            ? "hover:bg-opacity-80 cursor-pointer"
+                            : "opacity-60 cursor-not-allowed"
+                        } bg-primary text-white px-8 h-14 text-lg`}
+                        size="large"
+                        onClick={() => {
+                          if (
+                            detailsProduct?.stock > 0 ||
+                            currentVarient?.stock > 0
+                          ) {
+                            console.log("Mua Ngay", currentVarient);
+                          }
+                        }}
+                      >
+                        Mua Ngay
+                      </Button>
+                    </>
+                  )}
+                  {currentVarient?.stock <= 0 && (
+                    <Button
+                      disabled
+                      className="h-14 px-5 w-[200px]  text-lg"
+                      size="large"
+                    >
+                      Hết Hàng
+                    </Button>
+                  )}
                 </div>
               </div>
             </section>
@@ -592,7 +684,7 @@ const DetailsProduct = () => {
           {/***Review Container */}
           <section className="bg-white rounded mt-[15px] p-[25px]">
             <p className="text-lg">ĐÁNH GIÁ SẢN PHẨM</p>
-            <div className="mt-4 p-[30px] justify-between border-primary bg-secondary border-[1px] border-solid flex flex-row gap-14">
+            <div className="mt-4 p-[30px] justify-between border-primary bg-third border-[1px] border-solid flex flex-row gap-14">
               {/***Rating */}
               <div className="flex flex-row gap-3 w-fit">
                 <span className="text-primary text-lg text-center">
@@ -684,7 +776,10 @@ const DetailsProduct = () => {
                   <span className="text-lg font-normal">
                     CÁC SẢN PHẨM KHÁC CỦA SHOP
                   </span>
-                  <a href="#" className="text-primary flex items-center gap-1">
+                  <a
+                    href={`/shop/${detailsProduct?.Shop?.UserAccount?.username}?sub_category_id=-1#productList`}
+                    className="text-primary flex items-center gap-1"
+                  >
                     Xem Tất Cả <MdArrowForwardIos size={16} />
                   </a>
                 </div>

@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useReducer, useState } from 'react'
 import logo from '../../assets/logo_ezy.png'
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { GoBook } from "react-icons/go";
 import { VscBell } from "react-icons/vsc";
-import { Divider, Menu, Button, theme, Layout, Dropdown, Space, message } from 'antd';
+import { Divider, Menu, Button, theme, Layout, Dropdown, Space, message, Avatar } from 'antd';
 import { TfiWallet } from "react-icons/tfi";
 import { BsShopWindow } from "react-icons/bs";
 import { FaUserCircle } from "react-icons/fa";
-import { authFirebase } from '../../firebase/firebase';
 import { CiShop } from "react-icons/ci";
-import { SlLogout } from "react-icons/sl"; 
+import { SlLogout } from "react-icons/sl";
 import { AiOutlineProfile } from "react-icons/ai";
+import { logoutShop, setShop } from "../../redux/shopSlice";
+import { logout, setUser, setToken } from "../../redux/userSlice";
+
 import "../../styles/seller.css"
 
 import {
@@ -21,7 +23,8 @@ import {
     DownOutlined
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
 
 
 const { Header, Content, Sider } = Layout;
@@ -114,12 +117,39 @@ const items_info = [
         icon: <SlLogout size={18} className='mr-3' />,
     }
 ];
-const SellerAuthLayout = ({ children }) => {
-    const [current, setCurrent] = useState('1');
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
+const initialState = () => {
+    return {
+        user: {
+            user_id: "",
+            username: "",
+            full_name: "",
+            email: "",
+            phone_number: "",
+            setup: 0,
+            avt_url: "",
+        },
+        authenticate: false,
+    }
+}
+
+const reducer = (state, action) => {
+    switch (action.type) {
+        case 'SET_USER':
+            return { ...state, user: action.payload }
+        case 'SET_AUTHENTICATE':
+            return { ...state, authenticate: action.payload }
+        default:
+            return state;
+    }
+}
+
+const SellerAuthLayout = ({ children }) => {
+    document.title = "Ezy - Seller";
+    const [current, setCurrent] = useState('1');
+    const [state, dispatchMain] = useReducer(reducer, initialState);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const location = useLocation();
-    const [user, setUser] = useState(null);
     const navigate = useNavigate();
 
     const handleNavigate = (e) => {
@@ -130,22 +160,45 @@ const SellerAuthLayout = ({ children }) => {
     };
 
 
+    const dispatch = useDispatch();
+    const dispatchShop = useDispatch();
+    const user = useSelector((state) => state.user);
+    const shop = useSelector((state) => state.shop);
+    const token = localStorage.getItem("token");
+    //
+    const logOut = async () => {
+        try {
+            const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
+            const res = await axios.post(
+                URL,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    withCredentials: true,
+                }
+            );
 
-    const handleLogout = () => {
-        signOut(authFirebase)
-        .then(() => {
-            setUser(null);
-            message.success("Đăng xuất thành công");
-        })
-        .catch((error) => {
-            message.error('Error signing out:',error)
-        })
-    }
+            if (res.data.success) {
+                dispatch(logout());
+                dispatch(logoutShop());
+                localStorage.clear();
+            }
+        } catch (error) {
+            if (error.response.data.code === "auth/id-token-expired") {
+                message.error("Phiên Đăng nhập đã hết hạn");
+            }
+        }
+    };
 
     const handleDropDownProfileClick = (e) => {
         console.log("key", e.key);
-        if (e.key == 'logout')
-            handleLogout();
+        if (e.key == 'logout') {
+            logOut();
+            message.success("Đăng xuất thành công");
+            navigate("/seller/login");
+        }
     }
 
 
@@ -171,16 +224,108 @@ const SellerAuthLayout = ({ children }) => {
     }, [windowWidth])
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(authFirebase, (currentUser) => {
-            if (currentUser) {
-                setUser(currentUser);
-                console.log(currentUser);
-            } else {
-                setUser(null);
+        // console.log("Token: ", token);
+        // console.log("User: ", user);
+        // console.log("Shop: ", shop);
+
+        const fetchUserData = async () => {
+            try {
+                const url = `${process.env.REACT_APP_BACKEND_URL}/api/fetch_user_data`;
+                const res = await axios.post(
+                    url,
+                    {},
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                        withCredentials: true,
+                    }
+                );
+
+                if (res.status === 200) {
+                    const user = res.data.user;
+                    if (user.role_id === 2) {
+                        dispatch(
+                            setUser({
+                                user_id: user.user_id,
+                                username: user.username,
+                                full_name: user.full_name,
+                                email: user.email,
+                                phone_number: user.phone_number,
+                                gender: user.gender,
+                                dob: user.dob,
+                                avt_url: user.avt_url,
+                                role_id: user.role_id,
+                                setup: user.setup,
+                                isVerified: user.isVerified,
+                            })
+                        );
+                        dispatchMain({ type: 'SET_USER', payload: user });
+                        dispatchMain({ type: 'SET_AUTHENTICATE', payload: true });
+                        dispatch(setToken(token));
+                    } else {
+                        message.error("Tài khoản của bạn không phải là tài khoản cửa hàng");
+                        await logOut();
+                    }
+                } else {
+                    console.log("Lỗi khi Fetch dữ liệu người dùng: ", res);
+                }
+            } catch (error) {
+                console.log(
+                    "Lỗi khi Fetch dữ liệu người dùng: ",
+                    error.response.status
+                );
+                switch (error.response.status) {
+                    case 500:
+                        message.error("Phiên Đăng nhập đã hết hạn");
+                        navigate("/seller/login");
+                        break;
+                    default:
+                        break;
+                }
+                console.log("Lỗi khi Fetch dữ liệu người dùng: ", error);
             }
-        });
-        return () => unsubscribe();
-    }, []);
+        };
+        if (token && !user?.user_id) {
+            fetchUserData();
+            console.log("Fetch dữ liệu người dùng thành", user);
+
+        } else {
+            console.log("Token không tồn tại hoặc đã có dữ liệu");
+            if (user.user_id == '') {
+                navigate("/seller/login");
+            }
+        }
+    }, [token]);
+
+    useEffect(() => {
+        const fetchShopData = async () => {
+            try {
+                const url = `${process.env.REACT_APP_BACKEND_URL}/api/get-shop`;
+                const res = await axios.get(url, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { user_id: user.user_id },
+                    withCredentials: true,
+                });
+
+                if (res.status === 200 && res.data.success) {
+                    const shop = res.data.data;
+                    console.log("Dữ liệu Shop: ", shop);
+                    dispatchShop(setShop(shop));
+                } else {
+                    console.log("Lỗi khi Fetch dữ liệu Shop: ", res);
+                }
+            } catch (error) {
+                console.log("Lỗi khi Fetch dữ liệu Shop: ", error);
+            }
+        };
+
+        if (state.authenticate) {
+            if (state.user.setup === 0) {
+                navigate("/seller/seller-setup");
+            } else {
+                fetchShopData();
+            }
+        }
+    }, [state.authenticate]);
 
     const isSellerSetupPath = location.pathname === '/seller/seller-setup';
     const isSellerSetupOnBoardingPath = location.pathname === '/seller/seller-setup-onboarding';
@@ -219,7 +364,7 @@ const SellerAuthLayout = ({ children }) => {
                             />
                         </div>
                         <Divider type="vertical" variant="dotted" style={{ height: 30 }} />
-                        <div className='flex h-full items-center text-slate-600 gap-3 hover:bg-[#8ad3e5] py-4 px-3'>
+                        <div className='flex h-full items-center text-slate-600 gap-3 hover:bg-[#8ad3e5] py-4'>
                             <Dropdown
                                 menu={
                                     {
@@ -231,8 +376,8 @@ const SellerAuthLayout = ({ children }) => {
                             >
                                 <a onClick={(e) => e.preventDefault()}>
                                     <Space className='bg-transparent'>
-                                        <FaUserCircle size={20} className='text-white' />
-                                        <span className='text-white text-[15px]'>{user ? user.email.split("@gmail.com") : "dit me m"}</span>
+                                        {shop.logo_url != '' ? <Avatar src={shop.logo_url} size={20} /> : <Avatar src={state?.user?.avt_url} size={20} icon={<FaUserCircle />} />}
+                                        <span className='text-white text-[15px]'>{shop.shop_name != '' ? shop.shop_name: state?.user?.email}</span>
                                         <DownOutlined size={20} className='text-white' />
                                     </Space>
                                 </a>
