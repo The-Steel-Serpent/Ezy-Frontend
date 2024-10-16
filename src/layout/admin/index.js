@@ -8,7 +8,6 @@ import AdminSidebar from '../../components/AdminSidebar';
 import logo from '../../assets/image (1) (2).png'
 import "../../styles/admin.css"
 import AdminHeader from '../../components/AdminHeader';
-import ProductCategory from '../../components/admin/category/ProductCategory';
 const { Header, Sider, Content } = Layout;
 
 const AdminAuthLayout = ({children}) => {
@@ -33,9 +32,7 @@ const AdminAuthLayout = ({children}) => {
           <AdminHeader />
         </Header>
         <Content className='content'>
-            {/* {children} */}
-            <ProductCategory />
-            
+            {children}
         </Content>
       </Layout>
     </Layout>

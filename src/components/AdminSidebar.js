@@ -1,22 +1,32 @@
-import { Flex, Menu } from 'antd'
+import { Menu } from 'antd'
 import React from 'react'
+import { useNavigate } from 'react-router-dom';
 import { HomeOutlined, 
-        OrderedListOutlined, 
         ProductOutlined, 
-        UserOutlined, 
-        LogoutOutlined, } 
+        LogoutOutlined,
+        ShopOutlined,
+        BarChartOutlined,
+        GiftOutlined,  } 
 from '@ant-design/icons';
 const AdminSidebar = () => {
+    const navigate = useNavigate();
   return (
     <>
         
         <Menu 
             mode='inline' 
-            defaultSelectedKeys={['1']} 
+            onClick={({ key }) =>{
+                if(key === 'signout'){
+                    // signout
+                }
+                else{
+                    navigate(key);
+                }
+            }}
             className='menu-bar'
             items={[
                 {
-                    key: '1',
+                    key: '/admin',
                     icon: <HomeOutlined />,
                     label: 'Trang chủ',
                 },
@@ -33,11 +43,6 @@ const AdminSidebar = () => {
                         {
                             key: '2.2',
                             icon: <ProductOutlined />,
-                            label: 'Nhóm người dùng',
-                        },
-                        {
-                            key: '2.3',
-                            icon: <ProductOutlined />,
                             label: 'Phân quyền',
                         },
                         {
@@ -46,12 +51,12 @@ const AdminSidebar = () => {
                             label: 'Danh mục sản phẩm',
                             children: [
                                 {
-                                    key: '2.4.1',
+                                    key: '/admin/category-management/product-category/main-category',
                                     icon: <ProductOutlined />,
                                     label: 'Danh mục chính',
                                 },
                                 {
-                                    key: '2.4.2',
+                                    key: '/admin/category-management/product-category/sub-category',
                                     icon: <ProductOutlined />, 
                                     label: 'Danh mục phụ',
                                 },
@@ -61,30 +66,30 @@ const AdminSidebar = () => {
                 },
                 {
                     key: '3',
-                    icon: <OrderedListOutlined />,
-                    label: 'Đơn hàng',
+                    icon: <ShopOutlined />,
+                    label: 'Quản lý cửa hàng hàng',
                     children: [
                         {
                             key: '3.1',
-                            icon: <ProductOutlined />,
+                            icon: <ShopOutlined />,
                             label: 'option 4',
                         },
                         {
                             key: '3.2',
-                            icon: <ProductOutlined />,
+                            icon: <ShopOutlined />,
                             label: 'option 5',
                         },
                         {
                             key: '3.3',
-                            icon: <ProductOutlined />,
+                            icon: <ShopOutlined />,
                             label: 'option 6',
                         },
                     ],
                 },
                 {
                     key: '4',
-                    icon: <UserOutlined />,
-                    label: 'Tài khoản',
+                    icon: <GiftOutlined />,
+                    label: 'Quản lý sự kiện',
                     children: [
                         {
                             key: '4.1',
@@ -105,6 +110,11 @@ const AdminSidebar = () => {
                 },
                 {
                     key: '5',
+                    icon: <BarChartOutlined />,
+                    label: 'Thống kê',
+                },
+                {
+                    key: '6',
                     icon: <LogoutOutlined />,
                     label: 'Đăng xuất',
                 },

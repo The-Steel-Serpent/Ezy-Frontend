@@ -3,8 +3,6 @@ import wallpaper from "../../assets/wallpaper-seller1.png"
 import { Divider } from "antd";
 import { IoMdEye } from "react-icons/io";
 import { RiEyeCloseLine } from "react-icons/ri";
-import { FaFacebook } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 
 const AdminLogin = () => {
     const [hidePassword, setHidePassword] = useState(false);
@@ -17,7 +15,7 @@ const AdminLogin = () => {
     <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32">
       <div className="max-w-96 px-3 my-24 hidden lg:block">
         <div className="text-primary text-3xl font-[490]">Bán hàng chuyên nghiệp</div>
-        <div className="text-slate-600 text-[21px] py-2">Quản lý shop một cách hiệu quả hơn trên Shopee với Shopee - Kênh Quản Trị</div>
+        <div className="text-slate-600 text-[21px] py-2">Kênh Quản Trị</div>
         <img
           src={wallpaper}
           width={500}
@@ -53,13 +51,6 @@ const AdminLogin = () => {
           <button className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
             Đăng nhập
           </button>
-          <div className="w-full py-3 flex justify-between">
-            <a className="text-[15px] text-[#05a]" href="#">Quên mật khẩu</a>
-            <a className="text-[15px] text-[#05a]" href="#">Đăng nhập bằng SMS</a>
-          </div>
-          <Divider>
-            <span className="text-slate-400 text-xs">HOẶC</span>
-          </Divider>
         </form>
       </div>
     </div>

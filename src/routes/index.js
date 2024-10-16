@@ -45,6 +45,13 @@ const AdminLogin = withSuspense(
 const AdminDashboard = withSuspense(
   lazy(() => import("../pages/admin/AdminDashboard"))
 );
+const AddProductCategory = withSuspense(
+  lazy(() => import("../pages/admin/category_management/AddProductCategory"))
+);
+const AddProductSubCategory = withSuspense(
+  lazy(() => import("../pages/admin/category_management/AddProductSubCategory")
+  )
+);
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
@@ -302,13 +309,29 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "admin/dashboard",
+        path: "admin",
         element: (
           <AdminAuthLayout>
             <AdminDashboard />
           </AdminAuthLayout>
         ),
       },
+      {
+        path: "admin/category-management/product-category/main-category",
+        element: (
+          <AdminAuthLayout>
+            <AddProductCategory />
+          </AdminAuthLayout>
+        ),
+      },
+      {
+        path: "admin/category-management/product-category/sub-category",
+        element: (
+          <AdminAuthLayout>
+            <AddProductSubCategory />
+          </AdminAuthLayout>
+        ),
+      }
     ],
   },
 ]);
