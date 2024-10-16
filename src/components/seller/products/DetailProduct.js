@@ -411,41 +411,40 @@ const DetailProduct = () => {
             }
         };
 
-        if (state.id_classifyLevel3.length > 0 && state.id_productSize.length > 0) {
-            const promises = [];
-            for (let i = 0; i < state.id_classifyLevel3.length; i++) {
-                for (let j = 0; j < state.id_productSize.length; j++) {
-                    const payload = {
-                        product_id: state.product_id,
-                        product_classify_id: state.id_classifyLevel3[i].product_classify_id,
-                        product_size_id: state.id_productSize[j].product_size_id,
-                        price: state.saleInfo.price[count],
-                        stock: state.saleInfo.stock[count],
-                        sale_percents: state.saleInfo.sale_percent[count],
-                        height: state.shippingInfo.height,
-                        length: state.shippingInfo.length,
-                        width: state.shippingInfo.width,
-                        weight: state.shippingInfo.weight,
-                    };
-                    count++;
-                    promises.push(retryAddProductVariant(payload, maxRetries));
+        const addProductVariantsSequentially = async () => {
+            try {
+                for (let i = 0; i < state.id_classifyLevel3.length; i++) {
+                    for (let j = 0; j < state.id_productSize.length; j++) {
+                        const payload = {
+                            product_id: state.product_id,
+                            product_classify_id: state.id_classifyLevel3[i].product_classify_id,
+                            product_size_id: state.id_productSize[j].product_size_id,
+                            price: state.saleInfo.prices[count],
+                            stock: state.saleInfo.stocks[count],
+                            sale_percents: state.saleInfo.sale_percent[count],
+                            height: state.shippingInfo.height,
+                            length: state.shippingInfo.length,
+                            width: state.shippingInfo.width,
+                            weight: state.shippingInfo.weight,
+                        };
+                        count++;
+                        await retryAddProductVariant(payload, maxRetries); // Add product variant sequentially
+                    }
                 }
+                console.log("All product variants added successfully.");
+                dispatch({ type: 'SET_LOADING', payload: false });
+                message.success("Thêm sản phẩm thành công");
+                navigate('/seller/product-management/all');
+            } catch (error) {
+                console.error("Error adding product variants after retries:", error);
+                dispatch({ type: 'SET_LOADING', payload: false });
+                message.error("Thêm sản phẩm thất bại");
+                navigate('/seller/product-management/all');
             }
+        };
 
-            Promise.all(promises)
-                .then(responses => {
-                    console.log("All product variants added successfully:", responses);
-                    dispatch({ type: 'SET_LOADING', payload: false });
-                    message.success("Thêm sản phẩm thành công");
-                    navigate('/seller/product-management/all');
-
-                })
-                .catch(error => {
-                    console.error("Error adding product variants after retries:", error);
-                    dispatch({ type: 'SET_LOADING', payload: false });
-                    message.error("Thêm sản phẩm thất bại");
-                    navigate('/seller/product-management/all');
-                });
+        if (state.id_classifyLevel3.length > 0 && state.id_productSize.length > 0) {
+            addProductVariantsSequentially();
         }
     }, [state.ready_add_product_level3]);
     // add product level 3
@@ -503,7 +502,7 @@ const DetailProduct = () => {
             }
         }
         else if (state.saleInfo != null && state.saleInfo.add_product_level === 3) {
-            const prices = state.saleInfo.price;
+            const prices = state.saleInfo.prices;
             if (Array.isArray(prices) && prices.length > 0) {
                 const minPriceIndex = prices.reduce((minIndex, currentPrice, currentIndex, arr) =>
                     currentPrice < arr[minIndex] ? currentIndex : minIndex, 0);
@@ -516,7 +515,7 @@ const DetailProduct = () => {
                     gender_object: state.basicInfo.gender,
                     origin: state.basicInfo.origin,
                     thumbnail: state.thumbail_upload,
-                    base_price: state.saleInfo.price[minPriceIndex],
+                    base_price: state.saleInfo.prices[minPriceIndex],
                     stock: 0,
                     sale_percents: state.saleInfo.sale_percent[minPriceIndex],
                 }
