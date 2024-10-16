@@ -134,7 +134,7 @@ const EditProfile = () => {
             {formatEmail(value)}{" "}
             <span
               className="text-blue-500 underline cursor-pointer"
-              onClick={() => navigate("/user/account?type=email")}
+              onClick={() => navigate("/user/account?type=email&step=1")}
             >
               Thay Đổi
             </span>
@@ -239,7 +239,7 @@ const EditProfile = () => {
       localErrors.fullName = "Tên không được để trống";
     }
     //Validate
-    if (!phoneNumber) {
+    if (!phoneNumber && isEditing["phoneNumber"]) {
       localErrors.phoneNumber = "Số điện thoại không được để trống";
     } else if (phoneNumber.length < 10 || phoneNumber.length > 10) {
       localErrors.phoneNumber = "Số điện thoại không hợp lệ";
@@ -248,7 +248,7 @@ const EditProfile = () => {
     }
 
     // Validate dob
-    if (!dob) {
+    if (!dob && isEditing["dob"]) {
       localErrors.dob = "Ngày sinh không được để trống";
     } else if (dayjs(dob).isAfter(dayjs())) {
       localErrors.dob = "Ngày sinh không hợp lệ";
@@ -306,8 +306,8 @@ const EditProfile = () => {
       });
     }
     if (
-      phoneNumber.length > 0 &&
-      phoneNumber.length === 10 &&
+      phoneNumber?.length > 0 &&
+      phoneNumber?.length === 10 &&
       phoneNumber.startsWith("0")
     ) {
       setState({

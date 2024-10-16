@@ -188,7 +188,6 @@ const BuyerLogin = () => {
   };
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
-
     try {
       const user = await signInWithGoogle();
       if (user) {
