@@ -25,9 +25,10 @@ const AddressChange = lazy(() =>
 );
 const AccountSetting = () => {
   const user = useSelector((state) => state.user);
-
   const navigate = useNavigate();
   const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const type = query.get("type");
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -120,10 +121,12 @@ const AccountSetting = () => {
     }
     setState({ type: "SELECTED_KEYS", payload: keys });
   };
-
-  const renderContent = () => {
+  useEffect(() => {
     const query = new URLSearchParams(location.search);
     const type = query.get("type");
+    setState({ type: "SELECTED_KEYS", payload: type });
+  }, [location.search]);
+  const renderContent = () => {
     switch (type) {
       case "profile":
         return (
@@ -191,6 +194,7 @@ const AccountSetting = () => {
               showIcon
               onSelect={onSelect}
               expandedKeys={expandedKeys}
+              selectedKeys={[selectedKeys]}
               onExpand={(keys) =>
                 setState({ type: "EXPANDED_KEYS", payload: keys })
               }

@@ -178,7 +178,7 @@ const ModalOTP = ({ user, onVerify }) => {
         className="flex flex-col p-5 "
         closable={false}
       >
-        {user?.security_password !== "" ? (
+        {user?.security_password ? (
           <form
             className="w-full flex flex-col items-center justify-center gap-4"
             onSubmit={handleVerifyOTP}
@@ -243,7 +243,7 @@ const ModalOTP = ({ user, onVerify }) => {
                   (Mật khẩu cấp 2 sẽ được sử dụng để xác thực các giao dịch, vui
                   lòng ghi nhớ và không chia sẻ cho người khác)
                 </span>
-                <div className="w-full items-center justify-between">
+                <div className="w-full flex items-center justify-between">
                   <Button
                     className="border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
                     onClick={handleNavigateToForgotSecurityPassword}

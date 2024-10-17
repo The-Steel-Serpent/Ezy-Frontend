@@ -237,22 +237,31 @@ const EditProfile = () => {
     };
     if (!fullName) {
       localErrors.fullName = "Tên không được để trống";
+    } else if (fullName?.length > 100 && isEditing["fullName"]) {
+      localErrors.fullName = "Tên không được quá 100 ký tự";
     }
     //Validate
     if (!phoneNumber && isEditing["phoneNumber"]) {
       localErrors.phoneNumber = "Số điện thoại không được để trống";
-    } else if (phoneNumber.length < 10 || phoneNumber.length > 10) {
+    } else if (
+      (phoneNumber?.length < 10 || phoneNumber?.length > 10) &&
+      isEditing["phoneNumber"]
+    ) {
       localErrors.phoneNumber = "Số điện thoại không hợp lệ";
-    } else if (phoneNumber.length === 10 && !phoneNumber.startsWith("0")) {
+    } else if (
+      phoneNumber?.length === 10 &&
+      !phoneNumber.startsWith("0") &&
+      isEditing["phoneNumber"]
+    ) {
       localErrors.phoneNumber = "Số điện thoại không hợp lệ";
     }
 
     // Validate dob
     if (!dob && isEditing["dob"]) {
       localErrors.dob = "Ngày sinh không được để trống";
-    } else if (dayjs(dob).isAfter(dayjs())) {
+    } else if (dayjs(dob).isAfter(dayjs()) && isEditing["dob"]) {
       localErrors.dob = "Ngày sinh không hợp lệ";
-    } else if (dayjs().diff(dayjs(dob), "year") < 16) {
+    } else if (dayjs().diff(dayjs(dob), "year") < 16 && isEditing["dob"]) {
       localErrors.dob = "Bạn phải đủ 16 tuổi để sử dụng";
     }
 
