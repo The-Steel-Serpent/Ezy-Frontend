@@ -150,3 +150,27 @@ export const setDefaultAddress = async (user_id, user_address_id) => {
     throw new Error(errorMessage);
   }
 };
+
+export const getDefaultAddress = async (userID) => {
+  try {
+    const response = await axios.get(
+      `${url}/get-default-address?user_id=${userID}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy địa chỉ mặc định: ", error);
+    let errorMessage;
+    switch (error?.response?.status) {
+      case 500:
+        errorMessage = "Lỗi server";
+        break;
+      case 404:
+        errorMessage = "Không tìm thấy địa chỉ";
+        break;
+      default:
+        errorMessage = error.message || error;
+        break;
+    }
+    throw new Error(errorMessage);
+  }
+};

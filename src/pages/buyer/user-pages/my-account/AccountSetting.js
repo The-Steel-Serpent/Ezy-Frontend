@@ -23,6 +23,9 @@ const ChangeEmail = lazy(() =>
 const AddressChange = lazy(() =>
   import("../../../../components/user/AddressChange")
 );
+const ChangePassword = lazy(() =>
+  import("../../../../components/user/ChangePassword")
+);
 const AccountSetting = () => {
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
@@ -150,6 +153,14 @@ const AccountSetting = () => {
             fallback={<Skeleton.Node active={true} className="w-full" />}
           >
             <AddressChange />
+          </Suspense>
+        );
+      case "password":
+        return (
+          <Suspense
+            fallback={<Skeleton.Node active={true} className="w-full" />}
+          >
+            <ChangePassword />
           </Suspense>
         );
       default:

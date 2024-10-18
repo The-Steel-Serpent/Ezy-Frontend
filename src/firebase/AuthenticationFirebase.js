@@ -16,6 +16,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   fetchSignInMethodsForEmail,
+  updatePassword,
 } from "firebase/auth";
 
 import { authFirebase } from "./firebase";
@@ -246,5 +247,36 @@ export const updateNewEmail = async (email, href, password) => {
         break;
     }
     throw new Error(error.message);
+  }
+};
+
+export const changePassword = async (oldPassword, newPassword) => {
+  try {
+    const user = auth.currentUser;
+    const credential = EmailAuthProvider.credential(user.email, oldPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+    return true;
+  } catch (error) {
+    let errorMessage;
+    console.log(error);
+    switch (error.code) {
+      case "auth/weak-password":
+        errorMessage = "Mật khẩu mới quá yếu";
+        break;
+      case "auth/requires-recent-login":
+        errorMessage = "Vui lòng đăng nhập lại trước khi thay đổi mật khẩu";
+        break;
+      case "auth/invalid-credential":
+        errorMessage = "Mật khẩu cũ không chính xác";
+        break;
+      case "auth/too-many-requests":
+        errorMessage = "Quá nhiều yêu cầu. Vui lòng thử lại sau";
+        break;
+      default:
+        errorMessage = "An unknown error occurred";
+        break;
+    }
+    throw new Error(errorMessage);
   }
 };

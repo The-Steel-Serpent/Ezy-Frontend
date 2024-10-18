@@ -573,7 +573,7 @@ const AddressInforModal = (props) => {
         <Checkbox
           onChange={handleSetDefault}
           checked={data?.isDefault}
-          disabled={data?.isDefault === 1 ? true : false}
+          disabled={currentAddressItemSelected?.isDefault === 1 ? true : false}
         >
           Thiết lập làm địa chỉ mặc định
         </Checkbox>
