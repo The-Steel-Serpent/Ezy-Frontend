@@ -1,5 +1,5 @@
 import React from 'react'
-import { Input, Space } from 'antd';
+import { Button, Input, Space } from 'antd';
 import { CiSearch } from "react-icons/ci";
 import { BsPencil } from "react-icons/bs";
 
@@ -7,22 +7,23 @@ const FilterProduct = () => {
   return (
     <div className='flex items-center gap-3 w-full'>
       <Input
-        placeholder="Tìm tên sản phẩm, SKU sản phẩm, Mã sản phẩm"
+        placeholder="Tìm tên sản phẩm"
         prefix={<CiSearch />}
         className=''
       />
       <Input
-        placeholder="default size"
+        placeholder="Tìm theo ngành hàng"
         suffix={<BsPencil />}
         className=''
       />
-      <button
-        className='text-primary border rounded border-primary px-4 py-2 font-[500] hover:bg-orange-50'>
+      <Button
+        className='text-primary border rounded border-primary px-4 py-2 font-[500] hover:text-white'>
         Áp dụng
-      </button>
-      <button className='border rounded px-4 py-2 font-[500] hover:bg-slate-100'>
+      </Button>
+      <Button
+        className='text-primary border rounded border-primary px-4 py-2 font-[500] hover:text-white'>
         Đặt lại
-      </button>
+      </Button>
 
     </div>
   )
