@@ -21,8 +21,8 @@ const Categories = withSuspense(
 const WorkingProducts = withSuspense(
   lazy(() => import("../pages/seller/product_management/WorkingProducts"))
 );
-const InfringingProduct = withSuspense(
-  lazy(() => import("../pages/seller/product_management/InfringingProduct"))
+const NotWorkingProduct = withSuspense(
+  lazy(() => import("../pages/seller/product_management/NotWorkingProduct"))
 );
 const PendingProducts = withSuspense(
   lazy(() => import("../pages/seller/product_management/PendingProducts"))
@@ -299,10 +299,10 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "seller/product-management/infringing-products",
+        path: "seller/product-management/notworking-products",
         element: (
           <SellerAuthLayout>
-            <InfringingProduct />
+            <NotWorkingProduct />
           </SellerAuthLayout>
         ),
       },

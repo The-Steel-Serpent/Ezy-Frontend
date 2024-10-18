@@ -95,3 +95,23 @@ export const getProductSize = async (payload) => {
         return { error: true, message: error.message || error };
     }
 }
+
+
+export const getShopProducts = async (shop_id, product_status, page, limit ) => {
+    const payload = { shop_id, product_status, page, limit }; 
+    try {
+        const url = `${URL}shop-products-status`;
+        const response = await axios.get(url, {
+            params: payload // passing the payload as the query params
+        });
+        return response.data;
+    } catch (error) {
+        console.log("Lỗi khi lấy sản phẩm của shop: ", error);
+
+        const errorMessage = error?.response?.status ?
+            `Error ${error.response.status}: ${error.response.data}` :
+            error.message;
+
+        throw new Error(errorMessage);
+    }
+};
