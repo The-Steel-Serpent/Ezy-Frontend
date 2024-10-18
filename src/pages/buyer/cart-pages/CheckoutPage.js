@@ -1,20 +1,33 @@
 import { Steps } from "antd";
-import React, { useEffect, useReducer } from "react";
+import React, { lazy, Suspense, useEffect, useReducer } from "react";
 import { AiOutlineFileDone } from "react-icons/ai";
 import { LuShoppingBag } from "react-icons/lu";
 import { MdOutlinePayment } from "react-icons/md";
 import { FaLocationDot } from "react-icons/fa6";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getDefaultAddress } from "../../../services/addressService";
 import ModalAddressList from "../../../components/address/ModalAddressList";
-
+import { fetchCartData } from "../../../redux/cartSlice";
+const CheckoutItem = lazy(() =>
+  import("../../../components/cart/CheckoutItem")
+);
 const CheckoutPage = () => {
+  const cart = useSelector((state) => state.cart.cart);
   const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    if (user?.user_id !== "") {
+      const userID = user?.user_id;
+      dispatch(fetchCartData({ userID }));
+    }
+  }, [dispatch, user?.user_id]);
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
         case "setDefaultAddress":
           return { ...state, defaultAddress: action.payload };
+        case "cartListWithoutInvalidItems":
+          return { ...state, cartListWithoutInvalidItems: action.payload };
         case "openAddressModal":
           return { ...state, openAddressModal: action.payload };
         default:
@@ -23,11 +36,13 @@ const CheckoutPage = () => {
     },
     {
       defaultAddress: null,
+      cartListWithoutInvalidItems: [],
       openAddressModal: false,
     }
   );
 
-  const { defaultAddress, openAddressModal } = state;
+  const { defaultAddress, openAddressModal, cartListWithoutInvalidItems } =
+    state;
   const handleCloseAddressModal = () => {
     setState({ type: "openAddressModal", payload: false });
   };
@@ -52,8 +67,30 @@ const CheckoutPage = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log(defaultAddress);
-  }, [defaultAddress]);
+    console.log(cart);
+    if (cart.length > 0) {
+      const cartValid = cart
+        .filter((shop) => shop.selected === 1)
+        .map((shop) => {
+          if (shop.selected === 1) {
+            const filteredItems = shop.CartItems.filter(
+              (item) => item.selected === 1
+            );
+            return {
+              ...shop,
+              CartItems: filteredItems,
+            };
+          }
+          return shop;
+        })
+        .filter((shop) => shop.CartItems.length > 0);
+
+      setState({
+        type: "cartListWithoutInvalidItems",
+        payload: cartValid,
+      });
+    }
+  }, [cart]);
 
   return (
     <>
@@ -119,6 +156,18 @@ const CheckoutPage = () => {
               </span>
             </div>
           </section>
+          <div className="grid grid-cols-12 col-span-12">
+            <section className="col-span-12 px-[30px] py-6 bg-white">
+              <span className="font-bold text-lg">Sản Phẩm</span>
+            </section>
+            {cartListWithoutInvalidItems?.map((shop) => (
+              <Suspense>
+                <section className="col-span-12  pt-6 bg-white mb-5">
+                  <CheckoutItem item={shop} />
+                </section>
+              </Suspense>
+            ))}
+          </div>
         </div>
       </section>
       <ModalAddressList
