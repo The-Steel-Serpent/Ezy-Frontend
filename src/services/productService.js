@@ -97,12 +97,12 @@ export const getProductSize = async (payload) => {
 }
 
 
-export const getShopProducts = async (shop_id, product_status, page, limit ) => {
-    const payload = { shop_id, product_status, page, limit }; 
+export const getShopProducts = async (shop_id, product_status, page, limit) => {
+    const payload = { shop_id, product_status, page, limit };
     try {
         const url = `${URL}shop-products-status`;
         const response = await axios.get(url, {
-            params: payload // passing the payload as the query params
+            params: payload
         });
         return response.data;
     } catch (error) {
@@ -115,3 +115,26 @@ export const getShopProducts = async (shop_id, product_status, page, limit ) => 
         throw new Error(errorMessage);
     }
 };
+
+export const searchShopProducts = async (shop_id, product_status, product_name, sub_category_id, page, limit) => {
+    const payload = { shop_id, product_status, product_name, sub_category_id, page, limit };
+    try {
+        const url = `${URL}search-shop-products`;
+        const response = await axios.get(url, {
+            params: payload
+        });
+        return response.data;
+    } catch (error) {
+        console.log("Lỗi khi tìm kiếm sản phẩm của shop: ", error);
+        switch (error.response.status) {
+            case 404:
+                return { error: true, message: "No products found" };
+            case 500:
+                return { error: true, message: "Lỗi server" };
+            default:
+                return {
+                    error: true, message: error.message || error
+                };
+        }
+    }
+}

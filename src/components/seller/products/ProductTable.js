@@ -1,13 +1,14 @@
 import { Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
 import { useSelector } from 'react-redux'
-import { getShopProducts } from '../../../services/productService'
+import { getShopProducts, searchShopProducts } from '../../../services/productService'
 
 // reducer
 const initialState = {
     selectedRowKeys: [],
+    productsFetch: [],
     products_name: [],
-    product_thumbnail: [],
+    products_thumbnail: [],
     classifications_name: [],
     varients_name: [],
     prices: [],
@@ -24,10 +25,12 @@ const reducer = (state, action) => {
     switch (action.type) {
         case 'SELECT_ROW':
             return { ...state, selectedRowKeys: action.payload };
+        case 'SET_PRODUCTS_FETCH':
+            return { ...state, productsFetch: action.payload };
         case 'SET_PRODUCTS_NAME':
             return { ...state, products_name: action.payload };
-        case 'SET_PRODUCT_THUMBNAIL':
-            return { ...state, product_thumbnail: action.payload };
+        case 'SET_PRODUCTS_THUMBNAIL':
+            return { ...state, products_thumbnail: action.payload };
         case 'SET_CLASSIFICATIONS_NAME':
             return { ...state, classifications_name: action.payload };
         case 'SET_VARIENTS_NAME':
@@ -53,7 +56,7 @@ const reducer = (state, action) => {
     }
 }
 
-const ProductTable = ({ product_status }) => {
+const ProductTable = ({ product_status, handlePageChange, search_product_name, search_sub_category }) => {
     const [state, dispatch] = useReducer(reducer, initialState)
     const shop = useSelector(state => state.shop);
     // select row
@@ -70,101 +73,128 @@ const ProductTable = ({ product_status }) => {
     // table
     const columns = [
         {
-            title: 'Tên sản phẩm',
+            title:
+                <p className='text-center'>
+                    Tên sản phẩm
+                </p>,
             dataIndex: 'name',
             key: 'name',
             render: (text, record) => (
-                <div>
+                <div className='max-w-32 mx-auto'>
                     <img src={record.thumbnail} alt={text} style={{ width: 50, marginRight: 10 }} />
                     {text}
                 </div>
             )
         },
         {
-            title: 'Phân loại hàng',
+            title: <p className='text-center'>Phân loại hàng</p>,
             dataIndex: 'classification',
             key: 'classification',
         },
         {
-            title: 'Giá',
+            title: <p className='text-center'>Giá</p>,
             dataIndex: 'prices',
             key: 'prices',
         },
         {
-            title: 'Kho hàng',
+            title: <p className='text-center'>Kho hàng</p>,
             dataIndex: 'stocks',
             key: 'stocks',
         },
         {
-            title: 'Đã bán',
+            title: <p className='text-center'>Đã bán</p>,
             dataIndex: 'sold',
             key: 'sold',
         },
         {
-            title: 'Thao tác',
+            title: <p className='text-center'>Thao tác</p>,
             dataIndex: 'action',
             key: 'action',
         }
     ]
 
-    const createDataSource = (products) => {
-        return products.map((product, index) => ({
-            key: index,
-            name: product.product_name,
-            thumbnail: product.thumbnail,
-            classification: product.ProductVarients.map(varient => varient?.ProductClassify?.product_classify_name).join(', '),
-            prices: product.ProductVarients.map(varient => varient.price).join(', '),
-            stocks: product.ProductVarients.map(varient => varient.stock).join(', '),
-            sold: product.sold,
-            rating: product.avgRating,
-            action: '...' // Define actions as needed
-        }));
+    const createDataSource = () => {
+        const dataSource = state.products_name.map((product_name, index) => {
+            return {
+                key: index,
+                name: product_name,
+                thumbnail: state.products_thumbnail[index],
+                classification:
+                    <div className='flex flex-col'>
+                        {
+                            state?.varients_name[index].map((varient, pos) => (
+                                <div className='text-center'>
+                                    {
+                                        (state.classifications_name[index][pos] ?? '-') + (varient ? ',' + varient : '')
+                                    }
+                                </div>
+                            ))
+                        }
+                    </div >,
+                prices:
+                    state.prices[index].map((price, index) => (
+                        <div key={index} className='text-center'>{price}</div>
+                    )),
+                stocks:
+                    state.stocks[index].map((stock, index) => (
+                        <div key={index} className='text-center'>{stock}</div>
+                    )),
+                sold:
+                    <p className='text-center'>{state.sold[index]}</p>,
+                action:
+                    <div className='flex flex-col mx-auto'>
+                        <button className='btn btn-primary text-primary'>Sửa</button>
+                        <button className='btn btn-danger text-primary'>Xóa</button>
+                    </div>
+            }
+        });
+        return dataSource;
     }
     // table
 
+    const handleSetFetchProducts = (products) => {
+        const totalItems = products.totalItems || products.data.length;
+        dispatch({ type: 'SET_TOTAL_ITEMS', payload: totalItems });
+        dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
+        // get name of products
+        const products_name = products.data.map(product => product.product_name);
+        dispatch({ type: 'SET_PRODUCTS_NAME', payload: products_name });
+        // get thumbnail of products
+        const products_thumbnail = products.data.map(product => product.thumbnail);
+        dispatch({ type: 'SET_PRODUCTS_THUMBNAIL', payload: products_thumbnail });
+        // get rating of products
+        const rating = products.data.map(product => product.avgRating);
+        dispatch({ type: 'SET_RATING', payload: rating });
+        // get name of classifications and varients
+        const classifications_name = products.data.map(product => product.ProductVarients.map(varient => varient?.ProductClassify?.product_classify_name));
+        dispatch({ type: 'SET_CLASSIFICATIONS_NAME', payload: classifications_name });
+        // get vareints name
+        const varients_name = products.data.map(product => product.ProductVarients.map(varient => varient?.ProductSize?.product_size_name));
+        dispatch({ type: 'SET_VARIENTS_NAME', payload: varients_name });
+        // get prices
+        const prices = products.data.map(product => product.ProductVarients.map(varient => varient.price));
+        dispatch({ type: 'SET_PRICES', payload: prices });
+        // get stocks
+        const stocks = products.data.map(product => product.ProductVarients.map(varient => varient.stock));
+        dispatch({ type: 'SET_STOCKS', payload: stocks });
+        // get sold
+        const sold = products.data.map(product => product.sold);
+        dispatch({ type: 'SET_SOLD', payload: sold });
+    }
     // call api
     // fetch products
     useEffect(() => {
         let products;
+
         const fetchProducts = async () => {
             const shop_id = shop.shop_id;
             try {
                 products = await getShopProducts(shop_id, product_status, state.current_page, state.page_size);
                 console.log("Fetched products:", products);
-                const totalItems = products.totalItems || products.data.length;
-                dispatch({ type: 'SET_TOTAL_ITEMS', payload: totalItems }); 
-                // get name of products
-                const products_name = products.data.map(product => product.product_name);
-                dispatch({ type: 'SET_PRODUCTS_NAME', payload: products_name });
-                // get thumbnail of products
-                const product_thumbnail = products.data.map(product => product.thumbnail);
-                dispatch({ type: 'SET_PRODUCT_THUMBNAIL', payload: product_thumbnail });
-                // get rating of products
-                const rating = products.data.map(product => product.avgRating);
-                dispatch({ type: 'SET_RATING', payload: rating });
-                // get name of classifications and varients
-                const classifications_name = products.data.map(product => product.ProductVarients.map(varient => varient?.ProductClassify?.product_classify_name));
-                dispatch({ type: 'SET_CLASSIFICATIONS_NAME', payload: classifications_name });
-                const varients_name = products.data.map(product => product.ProductVarients.map(varient => varient?.ProductSize?.product_size_name));
-                dispatch({ type: 'SET_VARIENTS_NAME', payload: varients_name });
-                // get prices
-                const prices = products.data.map(product => product.ProductVarients.map(varient => varient.price));
-                dispatch({ type: 'SET_PRICES', payload: prices });
-                // get stocks
-                const stocks = products.data.map(product => product.ProductVarients.map(varient => varient.stock));
-                dispatch({ type: 'SET_STOCKS', payload: stocks });
-                // get sold
-                const sold = products.data.map(product => product.sold);
-                dispatch({ type: 'SET_SOLD', payload: sold });
+                dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
+                handleSetFetchProducts(products);
 
-                // set data source
-                if (products?.data) {
-                    const dataSource = createDataSource(products.data);
-                    console.log("Data source:", dataSource);
-                    dispatch({ type: 'SET_DATA_SOURCE', payload: dataSource });
-                } else {
-                    dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
-                }
+
 
             } catch (error) {
                 console.error("Error fetching shop products:", error);
@@ -172,15 +202,56 @@ const ProductTable = ({ product_status }) => {
             }
         };
         if (shop.shop_id != '') {
-            fetchProducts();
+            if (search_product_name != null || search_sub_category != null) {
+                handleSearchProducts(shop.shop_id, product_status, search_product_name, search_sub_category, state.current_page, state.page_size);
+            }
+            else {
+                fetchProducts();
+            }
         }
-    }, [shop.shop_id, product_status, state.current_page, state.page_size]);
-    
+
+    }, [
+        shop.shop_id,
+        product_status,
+        state.current_page,
+        state.page_size
+    ]);
+
+
+    // set data source
+    useEffect(() => {
+        if (state?.productsFetch?.length > 0) {
+            const dataSource = createDataSource();
+            console.log("Data source:", dataSource);
+            dispatch({ type: 'SET_DATA_SOURCE', payload: dataSource });
+        } else {
+            dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
+        }
+    }, [state.productsFetch]);
+
     // pagination change
     const onChangePage = (page, pageSize) => {
         dispatch({ type: 'SET_CURRENT_PAGE', payload: page });
         dispatch({ type: 'SET_PAGE_SIZE', payload: pageSize });
+        handlePageChange(page);
     };
+
+    const handleSearchProducts = async (shop_id, product_status, product_name, sub_category_id, page, limit) => {
+        try {
+            const products = await searchShopProducts(shop_id, product_status, product_name, sub_category_id, page, limit);
+            console.log("Search products:", products);
+            dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
+            handleSetFetchProducts(products);
+        }
+        catch (error) {
+            console.error("Error searching products:", error);
+        }
+    }
+
+    useEffect(() => {
+        console.log('Search Sub Category:', search_sub_category);
+        handleSearchProducts(shop.shop_id, product_status, search_product_name, search_sub_category);
+    }, [search_product_name, search_sub_category])
 
     return (
         <div className='mt-10'>
@@ -189,7 +260,7 @@ const ProductTable = ({ product_status }) => {
                 columns={columns}
                 dataSource={state.dataSource}
                 pagination={{
-                    total: state.totalItems, 
+                    total: state.totalItems,
                     current: state.current_page,
                     pageSize: state.page_size,
                     onChange: onChangePage,
