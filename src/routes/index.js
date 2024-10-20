@@ -24,9 +24,6 @@ const WorkingProducts = withSuspense(
 const NotWorkingProduct = withSuspense(
   lazy(() => import("../pages/seller/product_management/NotWorkingProduct"))
 );
-const PendingProducts = withSuspense(
-  lazy(() => import("../pages/seller/product_management/PendingProducts"))
-);
 
 const Home = withSuspense(lazy(() => import("../pages/Home")));
 const DetailsProduct = withSuspense(
@@ -303,14 +300,6 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <NotWorkingProduct />
-          </SellerAuthLayout>
-        ),
-      },
-      {
-        path: "seller/product-management/pending-products",
-        element: (
-          <SellerAuthLayout>
-            <PendingProducts />
           </SellerAuthLayout>
         ),
       },

@@ -46,7 +46,7 @@ const ProductSellerHeader = ({ status }) => {
           <Button
             type="primary"
             icon={<GoPlus />}
-            className='bg-primary px-3 py-4 text-sm'
+            className='bg-secondary px-3 py-4 text-sm'
           >
             Thêm 1 sản phẩm mới
           </Button>
