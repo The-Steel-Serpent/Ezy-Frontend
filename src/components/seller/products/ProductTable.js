@@ -1,8 +1,8 @@
-import { Table } from 'antd'
+import { Image, Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
 import { useSelector } from 'react-redux'
 import { getShopProducts, searchShopProducts } from '../../../services/productService'
-
+import { MdOutlineSell } from "react-icons/md";
 // reducer
 const initialState = {
     selectedRowKeys: [],
@@ -14,6 +14,7 @@ const initialState = {
     prices: [],
     stocks: [],
     sold: [],
+    products_status: [],
     rating: [],
     dataSource: [],
     current_page: 1,
@@ -43,6 +44,8 @@ const reducer = (state, action) => {
             return { ...state, sold: action.payload };
         case 'SET_RATING':
             return { ...state, rating: action.payload };
+        case 'SET_PRODUCTS_STATUS':
+            return { ...state, products_status: action.payload };
         case 'SET_DATA_SOURCE':
             return { ...state, dataSource: action.payload };
         case 'SET_CURRENT_PAGE':
@@ -56,7 +59,7 @@ const reducer = (state, action) => {
     }
 }
 
-const ProductTable = ({ product_status, handlePageChange, search_product_name, search_sub_category }) => {
+const ProductTable = ({ product_status, search_product_name, search_sub_category }) => {
     const [state, dispatch] = useReducer(reducer, initialState)
     const shop = useSelector(state => state.shop);
     // select row
@@ -80,9 +83,29 @@ const ProductTable = ({ product_status, handlePageChange, search_product_name, s
             dataIndex: 'name',
             key: 'name',
             render: (text, record) => (
-                <div className='max-w-32 mx-auto'>
-                    <img src={record.thumbnail} alt={text} style={{ width: 50, marginRight: 10 }} />
-                    {text}
+                <div className='flex items-center mx-auto max-w-52 h-36 gap-3'>
+                    <Image
+                        src={record.thumbnail}
+                        alt={text}
+                        width={50}
+                        className='cursor-pointer'
+                        preview={{
+                            mask: record.product_status === 0 ? (
+                                <span className='text-red-500 text-center'>Đã tạm dừng</span>
+                            ) : null
+                        }}
+                    />
+                    <div className='flex flex-col items-start'>
+                        <span className='font-semibold'>{text}</span>
+                        <div className='flex w-full h-full items-center gap-2'>
+                            <div>
+                                <MdOutlineSell className='text-slate-500' />
+                            </div>
+                            <div className='mt-[10px] text-slate-500'>
+                                {record.sold}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )
         },
@@ -119,6 +142,7 @@ const ProductTable = ({ product_status, handlePageChange, search_product_name, s
                 key: index,
                 name: product_name,
                 thumbnail: state.products_thumbnail[index],
+                product_status: state.products_status[index],
                 classification:
                     <div className='flex flex-col'>
                         {
@@ -180,6 +204,9 @@ const ProductTable = ({ product_status, handlePageChange, search_product_name, s
         // get sold
         const sold = products.data.map(product => product.sold);
         dispatch({ type: 'SET_SOLD', payload: sold });
+        // get status
+        const products_status = products.data.map(product => product.product_status);
+        dispatch({ type: 'SET_PRODUCTS_STATUS', payload: products_status });
     }
     // call api
     // fetch products
@@ -193,9 +220,6 @@ const ProductTable = ({ product_status, handlePageChange, search_product_name, s
                 console.log("Fetched products:", products);
                 dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
                 handleSetFetchProducts(products);
-
-
-
             } catch (error) {
                 console.error("Error fetching shop products:", error);
                 dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
@@ -233,7 +257,6 @@ const ProductTable = ({ product_status, handlePageChange, search_product_name, s
     const onChangePage = (page, pageSize) => {
         dispatch({ type: 'SET_CURRENT_PAGE', payload: page });
         dispatch({ type: 'SET_PAGE_SIZE', payload: pageSize });
-        handlePageChange(page);
     };
 
     const handleSearchProducts = async (shop_id, product_status, product_name, sub_category_id, page, limit) => {

@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { PlusOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import AddressModal from '../address/AddressModal';
+import { checkNumberPhone } from '../../helpers/formatPhoneNumber';
 
 const BasicShopInformation = ({ onData }) => {
     const location = useLocation();
@@ -27,18 +28,21 @@ const BasicShopInformation = ({ onData }) => {
         shop_description: '',
         full_name: '',
         cccd: '',
+        phone_number: '',
         address_full: '',
         touch: {
             shop_name: false,
             shop_description: false,
             full_name: false,
-            cccd: false
+            cccd: false,
+            phone_number: false
         },
         errors: {
             shop_name: '',
             shop_description: '',
             full_name: '',
-            cccd: ''
+            cccd: '',
+            phone_number: ''
         }
     };
 
@@ -76,6 +80,8 @@ const BasicShopInformation = ({ onData }) => {
                 return { ...state, cccd: action.payload };
             case 'SET_ADDRESS_FULL':
                 return { ...state, address_full: action.payload };
+            case 'SET_PHONE_NUMBER':
+                return { ...state, phone_number: action.payload };
             case 'SET_TOUCHED':
                 return {
                     ...state,
@@ -136,7 +142,7 @@ const BasicShopInformation = ({ onData }) => {
 
     const validate = () => {
         let valid = true;
-        let newErrors = { shop_name: '', shop_description: '', full_name: '', cccd: '' };
+        let newErrors = { shop_name: '', shop_description: '', full_name: '', cccd: '', phone_number: '' };
         // Validate shop name
         if (!state.shop_name.trim()) {
             newErrors.shop_name = 'Tên shop không được để trống';
@@ -172,6 +178,12 @@ const BasicShopInformation = ({ onData }) => {
             valid = false;
         }
 
+        // Validate phone number
+        const errorPhoneNumber = checkNumberPhone(state.phone_number);
+        if (errorPhoneNumber !== "") {
+            newErrors.phone_number = errorPhoneNumber;
+            valid = false;
+        }
         // Validate address
         if (state.detailAddress === '')
             valid = false;
@@ -192,6 +204,7 @@ const BasicShopInformation = ({ onData }) => {
                 district_id: state.districtSelected.DistrictID,
                 ward_code: state.wardSelected.WardCode,
                 shop_address: state.detailAddress,
+                phone_number: state.phone_number,
                 noErrorBasicInfo: true
             };
             onData(data);
@@ -206,6 +219,7 @@ const BasicShopInformation = ({ onData }) => {
         state.provinces, 
         state.district, 
         state.ward, 
+        state.phone_number,
         state.detailAddress, 
         state.imageUrl,
         state.provinceSelected,
@@ -419,6 +433,18 @@ const BasicShopInformation = ({ onData }) => {
                             name='cccd'
                             className='w-72' />
                         {state.touch.cccd && state.errors.cccd && <div className='text-red-500 ml-5'>{state.errors.cccd}</div>}
+                    </Col>
+                </Row>
+                <Row gutter={12} className='mt-10 flex items-center'>
+                    <Col span={4} className='flex justify-end font-semibold'>Số điện thoại</Col>
+                    <Col span={20} className='flex items-center'>
+                      <Input
+                        value={state.phone_number}
+                        onChange={handleInputChange}
+                        placeholder='Nhập vào'
+                        name='phone_number'
+                        className='w-72' />
+                        {state.touch.phone_number && state.errors.phone_number && <div className='text-red-500 ml-5'>{state.errors.phone_number}</div>}
                     </Col>
                 </Row>
                 <Row gutter={12} className='mt-10 flex items-center'>

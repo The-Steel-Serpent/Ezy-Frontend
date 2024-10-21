@@ -103,3 +103,28 @@ export const getShippingFee = async (shopID, data) => {
     throw new Error(error.message);
   }
 };
+
+
+export const createShopGHN = async(district_id, ward_code, name, phone, address) => {
+  const URL = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shop/register";
+  try {
+    const res = await axios({
+      method: "POST",
+      url: URL,
+      headers: {
+        token: `${process.env.REACT_APP_GHV_KEY_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      data: {
+        district_id,
+        ward_code,
+        name,
+        phone,
+        address
+      }
+    });
+    return res.data;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}

@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useState } from 'react'
 import { Button, message, Steps, theme, Result } from 'antd';
 import BasicShopInformation from '../../components/setup/BasicShopInformation';
 import TaxInformation from '../../components/setup/TaxInformation';
-import { CodeSandboxCircleFilled, SmileOutlined } from '@ant-design/icons';
+import { SmileOutlined } from '@ant-design/icons';
 import logo from '../../assets/onboarding-setup.png'
 import uploadFile from '../../helpers/uploadFile';
 import axios from 'axios';
@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import LoadingModal from '../../components/loading/LoadingModal';
 import { useNavigate } from 'react-router-dom';
 import { setUpDone } from '../../redux/userSlice';
+import { createShopGHN } from '../../services/ghnService';
 
 
 const steps = [
@@ -40,56 +41,32 @@ const initialState = {
     enableNextTaxInfo: false,
     loading: false,
     successfully: false,
-    logo_url: null
+    logo_url: null,
+    shop_id: null,
 }
 
 const reducer = (state, action) => {
     switch (action.type) {
         case 'SET_BASIC_SHOP_INFO':
-            return {
-                ...state,
-                basicShopInfo: action.payload
-            };
+            return { ...state, basicShopInfo: action.payload };
         case 'SET_TAX_INFO':
-            return {
-                ...state,
-                taxInfo: action.payload
-            };
+            return { ...state, taxInfo: action.payload };
         case 'SET_NO_ERROR_BASIC_INFO':
-            return {
-                ...state,
-                noErrorBasicInfo: action.payload
-            };
+            return { ...state, noErrorBasicInfo: action.payload };
         case 'SET_NO_ERROR_TAX_INFO':
-            return {
-                ...state,
-                noErrorTaxInfo: action.payload
-            };
+            return { ...state, noErrorTaxInfo: action.payload };
         case 'SET_ENABLE_NEXT_BASIC_INFO':
-            return {
-                ...state,
-                enableNextBasicInfo: action.payload
-            }
+            return { ...state, enableNextBasicInfo: action.payload }
         case 'SET_ENABLE_NEXT_TAX_INFO':
-            return {
-                ...state,
-                enableNextTaxInfo: action.payload
-            }
+            return { ...state, enableNextTaxInfo: action.payload }
         case 'SET_LOGO_IMAGE':
-            return {
-                ...state,
-                logo_url: action.payload
-            }
+            return { ...state, logo_url: action.payload }
         case 'SET_LOADING':
-            return {
-                ...state,
-                loading: action.payload
-            }
+            return { ...state, loading: action.payload }
         case 'SET_SUCCESSFULLY':
-            return {
-                ...state,
-                successfully: action.payload
-            }
+            return { ...state, successfully: action.payload }
+        case 'SET_SHOP_ID':
+            return { ...state, shop_id: action.payload }
         default:
             return state;
     }
@@ -150,6 +127,7 @@ const SellerSetup = () => {
             console.log("Error response data:", error.response ? error.response.data : "No response data");
         }
     }
+
     const handleSaveSeller = async () => {
         dispatch({ type: 'SET_LOADING', payload: true });
         const img = state.basicShopInfo ? state.basicShopInfo.imageUrl : null;
@@ -169,21 +147,37 @@ const SellerSetup = () => {
             shop_address: basicShopInfo.shop_address,
             full_name: basicShopInfo.full_name,
             citizen_number: basicShopInfo.citizen_number,
+            phone_number: basicShopInfo.phone_number,
             user_id: user.user_id
         };
 
         console.log("Payload being sent to server:", payload);
 
         try {
-            const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/create-shop`, payload);
-            console.log('Shop created successfully:', res.data);
-            dispatch({ type: 'SET_SUCCESSFULLY', payload: true });
-            return res.data;
+            const res_ghn = await createShopGHN(basicShopInfo.district_id, basicShopInfo.ward_code, basicShopInfo.full_name, basicShopInfo.phone_number, basicShopInfo.shop_address);
+            const shop_id = res_ghn.data.shop_id;
+            payload.shop_id = shop_id;
+            try {
+                const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/create-shop`, payload);
+                console.log('Shop created successfully:', res.data);
+                dispatch({ type: 'SET_SUCCESSFULLY', payload: true });
+                return res.data;
+            } catch (error) {
+                console.log("Create shop error:", error.message);
+                console.log("Error response data:", error.response ? error.response.data : "No response data");
+                dispatch({ type: 'SET_LOADING', payload: false });
+                message.error('Đăng kí cửa hàng thất bại');
+                return error.message;
+            }
         } catch (error) {
             console.log("Create shop error:", error.message);
             console.log("Error response data:", error.response ? error.response.data : "No response data");
+            dispatch({ type: 'SET_LOADING', payload: false });
+            message.error('Đăng kí cửa hàng thất bại');
             return error.message;
         }
+
+      
     };
 
     useEffect(() => {
@@ -202,9 +196,9 @@ const SellerSetup = () => {
 
         if (noErrorTaxInfo) {
             dispatch({ type: 'SET_ENABLE_NEXT_TAX_INFO', payload: true });
-            console.log("Tax info Truc oiiiiiiiiiiiiiii: ", state.taxInfo);
+            console.log("Tax info: ", state.taxInfo);
         } else
-            console.log("Tax info Truc oiiiiiiiiiiiiiii: ", state.taxInfo);
+            console.log("Tax info", state.taxInfo);
     }, [state.basicShopInfo, state.taxInfo])
 
     useEffect(() => {
