@@ -59,3 +59,47 @@ export const getWards = async (DistrictID) => {
     throw new Error(error.message);
   }
 };
+
+export const getServiceTypes = async (data) => {
+  const { shop_id, from_district, to_district } = data;
+  const URL =
+    "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/available-services";
+  try {
+    const res = await axios({
+      method: "POST",
+      url: URL,
+      headers: {
+        token: `${process.env.REACT_APP_GHV_KEY_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      data: {
+        shop_id,
+        from_district,
+        to_district,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+export const getShippingFee = async (shopID, data) => {
+  const URL =
+    "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/preview";
+
+  try {
+    const res = await axios({
+      method: "POST",
+      url: URL,
+      headers: {
+        Token: `${process.env.REACT_APP_GHV_KEY_TOKEN}`,
+        ShopId: shopID,
+      },
+      data,
+    });
+    return res.data;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};

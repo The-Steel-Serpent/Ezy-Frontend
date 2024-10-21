@@ -52,7 +52,6 @@ const ModalAddressList = (props) => {
     setState({ type: "openAddNewAddressModal", payload: false });
     setState({ type: "type", payload: "add" });
     setState({ type: "currentAddressItemSelected", payload: null });
-    setState({ type: "addressList", payload: [] });
   };
   const fetchAddress = async () => {
     try {
@@ -113,7 +112,10 @@ const ModalAddressList = (props) => {
       <Modal
         title="Địa Chỉ Của Tôi"
         open={openAddressModal}
-        onCancel={handleCloseAddressesModal}
+        onCancel={() => {
+          handleCloseAddressesModal();
+          setState({ type: "addressList", payload: [] });
+        }}
         footer={
           <div className="flex justify-between items-center">
             <Button
@@ -128,7 +130,10 @@ const ModalAddressList = (props) => {
               <Button
                 size="large"
                 className="border-secondary text-secondary hover:bg-secondary hover:text-white"
-                onClick={handleCloseAddressesModal}
+                onClick={() => {
+                  handleCloseAddressesModal();
+                  setState({ type: "addressList", payload: [] });
+                }}
               >
                 Hủy
               </Button>

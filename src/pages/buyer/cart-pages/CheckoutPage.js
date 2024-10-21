@@ -163,7 +163,7 @@ const CheckoutPage = () => {
             {cartListWithoutInvalidItems?.map((shop) => (
               <Suspense>
                 <section className="col-span-12  pt-6 bg-white mb-5">
-                  <CheckoutItem item={shop} />
+                  <CheckoutItem item={shop} defaultAddress={defaultAddress} />
                 </section>
               </Suspense>
             ))}

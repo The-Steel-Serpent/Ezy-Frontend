@@ -1,9 +1,135 @@
 import { Avatar, Input } from "antd";
-import React, { memo } from "react";
+import React, { memo, useEffect, useReducer } from "react";
 import CheckoutCartItem from "./CheckoutCartItem";
+import { getServiceTypes, getShippingFee } from "../../services/ghnService";
 
 const CheckoutItem = (props) => {
-  const { item } = props;
+  const { item, defaultAddress } = props;
+
+  const [state, setState] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "defaultService":
+          return { ...state, defaultService: action.payload };
+        case "serviceList":
+          return { ...state, serviceList: action.payload };
+        case "totalPriceWithShipping":
+          return { ...state, totalPriceWithShipping: action.payload };
+        default:
+          return state;
+      }
+    },
+    {
+      defaultService: null,
+      serviceList: [],
+      totalPriceWithShipping: 0,
+    }
+  );
+  const { defaultService, serviceList, totalPriceWithShipping } = state;
+
+  useEffect(() => {
+    console.log("item?.Shop?.shop_id: ", item?.Shop?.shop_id);
+    console.log("defaultAddress: ", defaultAddress);
+    const serviceData = {
+      shop_id: item?.Shop?.shop_id,
+      from_district: item?.Shop?.district_id,
+      to_district: defaultAddress?.district_id,
+    };
+    const fetchDefaultService = async () => {
+      try {
+        const transportService = await getServiceTypes(serviceData);
+        if (transportService.code === 200) {
+          const sumWeight = item?.CartItems?.reduce((sum, cartItem) => {
+            return cartItem?.selected === 1
+              ? sum + cartItem?.ProductVarient?.weight * cartItem?.quantity
+              : sum;
+          }, 0);
+          if (sumWeight >= 20000) {
+            transportService.data = transportService.data.filter(
+              (service) => service.service_id === 100039
+            );
+          } else {
+            transportService.data = transportService.data.filter(
+              (service) => service.service_id !== 100039
+            );
+          }
+          const fees = await Promise.all(
+            transportService.data.map(async (service) => {
+              const feeData = {
+                payment_type_id: 2,
+                note: "ĐƠN HÀNG TEST",
+                required_note: "KHONGCHOXEMHANG",
+                return_phone: item?.Shop?.UserAccount?.phone_number,
+                return_address: item?.Shop?.shop_address,
+                return_district_id: item?.Shop?.district_id,
+                return_ward_code: item?.Shop?.ward_code,
+                client_order_code: "",
+                to_name: defaultAddress?.full_name,
+                to_phone: defaultAddress?.phone_number,
+                to_address: defaultAddress?.address,
+                to_ward_code: defaultAddress?.ward_code,
+                to_district_id: defaultAddress?.district_id,
+                cod_amount: 0,
+                content: "ABCDEF",
+                weight: sumWeight,
+                length: 0,
+                width: 0,
+                insurance_value: item?.total_price,
+                service_id: service?.service_id,
+                service_type_id: service?.service_type_id,
+                pick_station_id: 0,
+                pick_shift: [2],
+                items: item?.CartItems?.map((cartItem) => ({
+                  name: cartItem?.ProductVarient?.Product?.product_name,
+                  code: cartItem?.ProductVarient?.Product?.product_id + "",
+                  quantity: cartItem?.quantity,
+                  price: cartItem?.ProductVarient?.price,
+                  length: 0,
+                  width: 0,
+                  height: 0,
+                  category: {
+                    level1:
+                      cartItem?.ProductVarient?.Product?.SubCategory?.Category
+                        ?.category_name,
+                    level2:
+                      cartItem?.ProductVarient?.Product?.SubCategory
+                        ?.sub_category_name,
+                  },
+                })),
+              };
+              console.log("feeData: ", feeData);
+              const fee = await getShippingFee(item?.Shop?.shop_id, feeData);
+              return {
+                ...service,
+                fee: fee.data,
+              };
+            })
+          );
+          setState({ type: "serviceList", payload: fees });
+        }
+      } catch (error) {
+        console.log("Lỗi khi lấy dịch vụ mặc định: ", error.message || error);
+      }
+    };
+
+    if (item?.Shop?.shop_id !== undefined && defaultAddress !== null) {
+      fetchDefaultService();
+    }
+  }, [item?.Shop?.shop_id, defaultAddress, item]);
+  useEffect(() => {
+    if (serviceList.length > 0) {
+      setState({ type: "defaultService", payload: serviceList[0] });
+      setState({
+        type: "totalPriceWithShipping",
+        payload: item?.total_price + serviceList[0]?.fee?.total_fee,
+      });
+    }
+  }, [serviceList]);
+
+  const formatDate = (dateString) => {
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString("vi-VN", options);
+  };
   return (
     <div className="w-full flex flex-col gap-5">
       <div className="flex gap-2 justify-start px-[30px] items-center">
@@ -28,7 +154,23 @@ const CheckoutItem = (props) => {
               <Input className="w-full" placeholder="Lưu ý cho Người bán..." />
             </div>
           </div>
-          <div className="col-span-5 p-6">hehehehehe</div>
+          <div className="col-span-5 p-6 flex flex-col gap-2">
+            <span>
+              {" "}
+              Phí Vận chuyển (
+              {defaultService?.service_id === 53321
+                ? "Tiêu Chuẩn"
+                : defaultService?.service_id === 53320
+                ? "Hỏa Tốc"
+                : "Hàng Cồng Kềnh"}
+              ): <sup>đ</sup>{" "}
+              {defaultService?.fee?.total_fee?.toLocaleString("vi-VN")}
+            </span>
+            <span className="">
+              Dự kiến giao hàng:{" "}
+              {formatDate(defaultService?.fee?.expected_delivery_time)}
+            </span>
+          </div>
         </div>
         <div className="grid grid-cols-12 bg-third">
           <div className="col-span-12">
@@ -38,7 +180,7 @@ const CheckoutItem = (props) => {
               </span>
               <span className="text-xl font-semibold text-primary">
                 <sup>₫</sup>
-                {item?.total_price?.toLocaleString("vi-VN")}
+                {totalPriceWithShipping?.toLocaleString("vi-VN")}
               </span>
             </div>
           </div>
