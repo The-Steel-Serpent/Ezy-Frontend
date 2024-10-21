@@ -159,6 +159,14 @@ const SellerAuthLayout = ({ children }) => {
             navigate(e.key)
     };
 
+    const navigateHome = () => {
+        navigate('/seller');
+        if (state.authenticate) {
+            if (state.user.setup === 0)
+                navigate("/seller/seller-setup");
+        }
+    }
+
 
     const dispatch = useDispatch();
     const dispatchShop = useDispatch();
@@ -339,6 +347,8 @@ const SellerAuthLayout = ({ children }) => {
                             src={logo}
                             alt='logo'
                             width={100}
+                            className='cursor-pointer'
+                            onClick={navigateHome}
                         />
                         <div className='text-lg mt-2 text-white'>
                             <a href='/seller' className='hover:text-slate-200'>Kênh người bán</a>
@@ -377,7 +387,7 @@ const SellerAuthLayout = ({ children }) => {
                                 <a onClick={(e) => e.preventDefault()}>
                                     <Space className='bg-transparent'>
                                         {shop.logo_url != '' ? <Avatar src={shop.logo_url} size={20} /> : <Avatar src={state?.user?.avt_url} size={20} icon={<FaUserCircle />} />}
-                                        <span className='text-white text-[15px]'>{shop.shop_name != '' ? shop.shop_name: state?.user?.email}</span>
+                                        <span className='text-white text-[15px]'>{shop.shop_name != '' ? shop.shop_name : state?.user?.email}</span>
                                         <DownOutlined size={20} className='text-white' />
                                     </Space>
                                 </a>

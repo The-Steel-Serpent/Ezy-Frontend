@@ -32,10 +32,6 @@ const AllProduct = () => {
     dispatch({ type: 'SET_SELECTED_PAGE', payload: page });
   }
 
-  const handleSearchProducts = (products) => {
-    dispatch({ type: 'SET_SEARCH_PRODUCTS', payload: products });
-  }
-
   const handleSetSearchInfo = (product_name, sub_category_id) => {
     dispatch({ type: 'SET_SEARCH_PRODUCT_NAME', payload: product_name });
     dispatch({ type: 'SET_SEARCH_SUB_CATEGORY', payload: sub_category_id });

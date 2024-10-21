@@ -27,9 +27,8 @@ const reducer = (state, action) => {
   }
 };
 
-const FilterProduct = ({ selected_page, product_status, handleSetSearchInfo }) => {
+const FilterProduct = ({ handleSetSearchInfo }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const shop = useSelector(state => state.shop);
 
   const showCatModal = () => {
     dispatch({ type: 'SET_CAT_MODAL_VISIBLE', payload: true });
@@ -48,6 +47,12 @@ const FilterProduct = ({ selected_page, product_status, handleSetSearchInfo }) =
     handleSetSearchInfo(state.search_product_name, state.selectedSubcat?.sub_category_id);
   }
 
+  const handleResetFilter = () => {
+    dispatch({ type: 'SET_SELECTED_SUBCAT', payload: null });
+    dispatch({ type: 'SET_SEARCH_PRODUCT_NAME', payload: '' });
+    handleSetSearchInfo(null, null);
+  }
+
 
   return (
     <div className='flex items-center gap-3 w-full'>
@@ -56,7 +61,6 @@ const FilterProduct = ({ selected_page, product_status, handleSetSearchInfo }) =
         onChange={(e) => dispatch({ type: 'SET_SEARCH_PRODUCT_NAME', payload: e.target.value })}
         placeholder="Tìm tên sản phẩm"
         prefix={<CiSearch />}
-        className=''
       />
       <Input
         value={state?.selectedSubcat?.sub_category_name ?? ''}
@@ -64,7 +68,6 @@ const FilterProduct = ({ selected_page, product_status, handleSetSearchInfo }) =
         readOnly
         onClick={showCatModal}
         suffix={<BsPencil />}
-        className=''
       />
       <Button
         className='text-primary border rounded border-primary px-4 py-2 font-[500] hover:text-white'
@@ -73,6 +76,7 @@ const FilterProduct = ({ selected_page, product_status, handleSetSearchInfo }) =
         Áp dụng
       </Button>
       <Button
+        onClick={handleResetFilter}
         className='text-primary border rounded border-primary px-4 py-2 font-[500] hover:text-white'>
         Đặt lại
       </Button>
