@@ -1,13 +1,20 @@
 import React, { memo, useEffect, useReducer } from "react";
 import ModalOTP from "./ModalOTP";
-import { useSelector } from "react-redux";
-import { Button, Divider, Input, message } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import { Button, Divider, Input, message, Modal } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { is } from "date-fns/locale";
 import { changePassword } from "../../firebase/AuthenticationFirebase";
+import { logOut } from "../../services/userService";
+import { useNavigate } from "react-router-dom";
+import { logout } from "../../redux/userSlice";
+import { clearCart } from "../../redux/cartSlice";
+import { IoCheckmarkDoneCircle } from "react-icons/io5";
 
 const ChangePassword = (props) => {
   const user = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -38,7 +45,7 @@ const ChangePassword = (props) => {
       },
     }
   );
-  const { isVerify, data, error, loading } = state;
+  const { isVerify, data, error, loading} = state;
   const onVerify = () => {
     setState({ type: "isVerify", payload: true });
   };
@@ -113,7 +120,6 @@ const ChangePassword = (props) => {
       setState({ type: "error", payload: { reNewPassword: "" } });
     }
   }, [data]);
-
   const handleSubmit = async () => {
     const isValid = validate();
     setState({ type: "loading", payload: true });
@@ -124,8 +130,14 @@ const ChangePassword = (props) => {
     try {
       const res = await changePassword(data.oldPassword, data.newPassword);
       if (res) {
-        message.success("Đổi mật khẩu thành công");
-        setState({ type: "loading", payload: false });
+        message.success("Đổi mật khẩu thành công, vui lòng đăng nhập lại");
+        const logoutRes = await logOut();
+        if (logoutRes) {
+          dispatch(logout());
+          dispatch(clearCart());
+          navigate("/buyer/login");
+          setState({ type: "loading", payload: false });
+        }
       }
     } catch (error) {
       console.log(error);
@@ -133,7 +145,6 @@ const ChangePassword = (props) => {
       message.error(error.message);
     }
   };
-
   return (
     <>
       <div className="w-full bg-white p-5">

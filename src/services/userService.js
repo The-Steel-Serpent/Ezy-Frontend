@@ -138,3 +138,36 @@ export const updateEmail = async (userID, email) => {
     throw new Error(errorMessage);
   }
 };
+
+
+
+export const logOut = async () => {
+  try {
+    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
+    const res = await axios.post(
+      URL,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        withCredentials: true,
+      }
+    );
+
+    if (res.data.success) {
+      return true;
+    }
+  } catch (error) {
+    let errorMessage;
+    switch (error.response.data.code) {
+      case "auth/id-token-expired":
+        errorMessage = "Phiên Đăng nhập đã hết hạn";
+        break;
+      default:
+        errorMessage = "Đã có lỗi xảy ra, Vui lòng thử lại sau";
+        break;
+    }
+    throw new Error(errorMessage);
+  }
+};

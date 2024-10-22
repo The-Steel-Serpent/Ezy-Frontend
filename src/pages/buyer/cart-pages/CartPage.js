@@ -7,6 +7,8 @@ import { AiOutlineFileDone } from "react-icons/ai";
 import ProductSuggestions from "../../../components/product/ProductSuggestions";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCartData } from "../../../redux/cartSlice";
+import { FrownFilled } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 const CartCarousel = lazy(() =>
   import("../../../components/cart/CartCarousel")
 );
@@ -17,6 +19,7 @@ const CartPage = () => {
   const cart = useSelector((state) => state.cart.cart);
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   useEffect(() => {
     if (user?.user_id !== "") {
       const userID = user?.user_id;
@@ -25,7 +28,20 @@ const CartPage = () => {
   }, [dispatch, user?.user_id]);
   return (
     <>
-      {cart?.length > 0 ? (
+      {user?.user_id === "" ? (
+        <div className="flex justify-center items-center h-[400px]">
+          <div className="flex flex-col items-center gap-2">
+            <FrownFilled className="text-6xl text-red-500" />
+            <span className="text-2xl">Bạn chưa đăng nhập</span>
+            <Button
+              className="bg-primary border-primary text-white hover:opacity-80"
+              onClick={() => navigate("/buyer/login")}
+            >
+              Đăng nhập ngay
+            </Button>
+          </div>
+        </div>
+      ) : cart?.length > 0 ? (
         <section className="max-w-[1200px] mx-auto py-5 ">
           <div className=" grid grid-cols-12    gap-7">
             <section className="col-span-12">
