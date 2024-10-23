@@ -139,41 +139,6 @@ const CheckoutPage = () => {
     }
   }, [cart]);
 
-  useEffect(() => {
-    if (total.length > 0) {
-      setState({
-        type: "updateTotalPayment",
-        payload: total.reduce(
-          (acc, cur) => {
-            return {
-              totalPrice: acc.totalPrice + cur.totalPrice,
-              shippingFee: acc.shippingFee + cur.shippingFee,
-              discountPrice: acc.discountPrice + cur.discountPrice,
-              discountShippingFee:
-                acc.discountShippingFee + cur.discountShippingFee,
-              final:
-                acc.final +
-                cur.totalPrice +
-                cur.shippingFee -
-                cur.discountPrice -
-                cur.discountShippingFee,
-            };
-          },
-          {
-            totalPrice: 0,
-            shippingFee: 0,
-            discountPrice: 0,
-            discountShippingFee: 0,
-            final: 0,
-          }
-        ),
-      });
-    }
-  }, [total]);
-
-  useEffect(() => {
-    console.log(totalPayment);
-  }, [totalPayment]);
   return (
     <>
       {user?.user_id === "" ? (

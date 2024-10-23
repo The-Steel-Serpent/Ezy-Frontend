@@ -48,7 +48,7 @@ const CartHeader = () => {
           )}
           {user.user_id && (
             <AvatarWithPopover
-              img={user.profile_pic}
+              img={user?.avt_url}
               name={user.username}
               size={30}
             />

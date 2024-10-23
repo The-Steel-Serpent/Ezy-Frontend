@@ -1,6 +1,14 @@
 import { message } from "antd";
 
-const { useReducer, createContext, useContext } = require("react");
+const {
+  useReducer,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} = require("react");
 const CheckoutContext = createContext();
 export const CheckoutProvider = ({ children }) => {
   const [state, setState] = useReducer(
@@ -79,6 +87,38 @@ export const CheckoutProvider = ({ children }) => {
     }
   );
 
+  const prevTotalRef = useRef([]);
+  const prevSelectedVoucherRef = useRef(state.selectedVoucher);
+  const handleUpdateTotalPayment = (total) => {
+    setState({
+      type: "updateTotalPayment",
+      payload: total.reduce(
+        (acc, cur) => {
+          return {
+            totalPrice: acc.totalPrice + cur.totalPrice,
+            shippingFee: acc.shippingFee + cur.shippingFee,
+            discountPrice: acc.discountPrice + cur.discountPrice,
+            discountShippingFee:
+              acc.discountShippingFee + cur.discountShippingFee,
+            final:
+              acc.final +
+              cur.totalPrice +
+              cur.shippingFee -
+              cur.discountPrice -
+              cur.discountShippingFee,
+          };
+        },
+        {
+          totalPrice: 0,
+          shippingFee: 0,
+          discountPrice: 0,
+          discountShippingFee: 0,
+          final: 0,
+        }
+      ),
+    });
+  };
+
   const handleCloseAddressModal = () => {
     setState({ type: "openAddressModal", payload: false });
   };
@@ -105,6 +145,64 @@ export const CheckoutProvider = ({ children }) => {
       },
     });
   };
+  const calculateVoucherDiscounts = useCallback((total, selectedVoucher) => {
+    const totalPriceAllShops = total.reduce(
+      (sum, shop) => sum + shop.totalPrice,
+      0
+    );
+    const totalShippingFeeAllShops = total.reduce(
+      (sum, shop) => sum + shop.shippingFee,
+      0
+    );
+    const { shippingVoucher, discountVoucher } = selectedVoucher;
+    let totalDiscountPrice = 0;
+    let totalDiscountShippingFee = 0;
+
+    if (discountVoucher) {
+      const {
+        discount_type,
+        discount_value,
+        discount_max_value,
+        min_order_value,
+      } = discountVoucher;
+      if (totalPriceAllShops >= min_order_value) {
+        if (discount_type === "THEO PHẦN TRĂM") {
+          totalDiscountPrice = Math.min(
+            (discount_value / 100) * totalPriceAllShops,
+            discount_max_value
+          );
+        } else if (discount_type === "KHÔNG THEO PHẦN TRĂM") {
+          totalDiscountPrice = Math.min(discount_value, totalPriceAllShops);
+        }
+      }
+    }
+
+    if (shippingVoucher) {
+      const { discount_value } = shippingVoucher;
+      totalDiscountShippingFee = Math.min(
+        discount_value,
+        totalShippingFeeAllShops
+      );
+    }
+
+    return total.map((shop) => {
+      const shopPriceRatio = shop.totalPrice / totalPriceAllShops;
+      const shopShippingFeeRatio = shop.shippingFee / totalShippingFeeAllShops;
+
+      const discountPrice = Math.round(totalDiscountPrice * shopPriceRatio);
+      const discountShippingFee = Math.round(
+        totalDiscountShippingFee * shopShippingFeeRatio
+      );
+
+      return {
+        shop_id: shop.shop_id,
+        totalPrice: shop.totalPrice,
+        shippingFee: shop.shippingFee,
+        discountPrice,
+        discountShippingFee,
+      };
+    });
+  }, []);
 
   const handleCancelModalVoucher = () => {
     setState({ type: "openModalVoucher", payload: false });
@@ -145,6 +243,36 @@ export const CheckoutProvider = ({ children }) => {
   const handleCheckoutClick = () => {
     //  handle checkout
   };
+
+  useEffect(() => {
+    if (state.total.length > 0) {
+      handleUpdateTotalPayment(state.total);
+    }
+  }, [state.total]);
+
+  useEffect(() => {
+    const updatedTotal = calculateVoucherDiscounts(
+      state.total,
+      state.selectedVoucher
+    );
+    if (JSON.stringify(prevTotalRef.current) !== JSON.stringify(updatedTotal)) {
+      updatedTotal.forEach((totalOfShop) => {
+        const existingShop = prevTotalRef.current.find(
+          (shop) => shop.shop_id === totalOfShop.shop_id
+        );
+        if (
+          !existingShop ||
+          existingShop.totalPrice !== totalOfShop.totalPrice ||
+          existingShop.discountPrice !== totalOfShop.discountPrice ||
+          existingShop.shippingFee !== totalOfShop.shippingFee
+        ) {
+          handleUpdateTotal(totalOfShop);
+        }
+      });
+      prevTotalRef.current = updatedTotal;
+      prevSelectedVoucherRef.current = state.selectedVoucher;
+    }
+  }, [state.total, state.selectedVoucher, calculateVoucherDiscounts]);
 
   return (
     <CheckoutContext.Provider
