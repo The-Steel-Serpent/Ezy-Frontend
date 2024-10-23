@@ -271,7 +271,7 @@ const BasicShopInformation = ({ onData }) => {
         }
         else
             dispatch({ type: 'SET_ENABLE_CONFIRM', payload: true });
-    }, [state.detailAddress]);
+    }, [state.detailAddress, state.provinceSelected, state.districtSelected, state.wardSelected]);
 
     useEffect(() => {
         const getDistricts = async () => {

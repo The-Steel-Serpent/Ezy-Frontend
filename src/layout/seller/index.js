@@ -159,12 +159,16 @@ const SellerAuthLayout = ({ children }) => {
             navigate(e.key)
     };
 
-    const navigateHome = () => {
-        navigate('/seller');
+    const setUpNavigate = () => {
         if (state.authenticate) {
             if (state.user.setup === 0)
                 navigate("/seller/seller-setup");
         }
+    }
+
+    const navigateHome = () => {
+        navigate('/seller');
+        setUpNavigate();
     }
 
 
@@ -206,6 +210,10 @@ const SellerAuthLayout = ({ children }) => {
             logOut();
             message.success("Đăng xuất thành công");
             navigate("/seller/login");
+        }
+        else if(e.key == 'profile_shop'){
+            navigate('/seller/seller-edit-profile');
+            setUpNavigate();
         }
     }
 
@@ -335,8 +343,8 @@ const SellerAuthLayout = ({ children }) => {
         }
     }, [state.authenticate]);
 
+
     const isSellerSetupPath = location.pathname === '/seller/seller-setup';
-    const isSellerSetupOnBoardingPath = location.pathname === '/seller/seller-setup-onboarding';
 
     return (
         <>
@@ -396,7 +404,7 @@ const SellerAuthLayout = ({ children }) => {
                     </div>
                 </header>
                 <Layout className='h-full'>
-                    {!isSellerSetupPath && !isSellerSetupOnBoardingPath && (
+                    {!isSellerSetupPath && (
                         <Sider trigger={null} collapsible collapsed={collapsed} className='bg-white w-fit h-full shadow-xl sticky-sider'>
                             <div className="demo-logo-vertical" />
                             <Menu
