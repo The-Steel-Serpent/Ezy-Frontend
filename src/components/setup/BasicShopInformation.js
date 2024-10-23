@@ -1,10 +1,10 @@
 import { Button, Col, Row, message, Upload, Input, Select, Table, Modal } from 'antd';
 import React, { useEffect, useReducer, useState } from 'react'
 import { useLocation } from 'react-router-dom';
-import { PlusOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import AddressModal from '../address/AddressModal';
 import { checkNumberPhone } from '../../helpers/formatPhoneNumber';
+import { RiImageAddFill } from 'react-icons/ri';
 
 const BasicShopInformation = ({ onData }) => {
     const location = useLocation();
@@ -212,15 +212,15 @@ const BasicShopInformation = ({ onData }) => {
             onData({ noErrorBasicInfo: false });
         }
     }, [
-        state.shop_name, 
-        state.shop_description, 
-        state.full_name, 
-        state.cccd, 
-        state.provinces, 
-        state.district, 
-        state.ward, 
+        state.shop_name,
+        state.shop_description,
+        state.full_name,
+        state.cccd,
+        state.provinces,
+        state.district,
+        state.ward,
         state.phone_number,
-        state.detailAddress, 
+        state.detailAddress,
         state.imageUrl,
         state.provinceSelected,
         state.districtSelected,
@@ -235,10 +235,7 @@ const BasicShopInformation = ({ onData }) => {
             }}
             type="button"
         >
-            {<PlusOutlined />}
-            <div className='mt-2'>
-                Upload
-            </div>
+            {<RiImageAddFill size={25} />}
         </button>
     );
 
@@ -271,7 +268,7 @@ const BasicShopInformation = ({ onData }) => {
         }
         else
             dispatch({ type: 'SET_ENABLE_CONFIRM', payload: true });
-    }, [state.detailAddress]);
+    }, [state.detailAddress, state.provinceSelected, state.districtSelected, state.wardSelected]);
 
     useEffect(() => {
         const getDistricts = async () => {
@@ -350,19 +347,7 @@ const BasicShopInformation = ({ onData }) => {
 
     return (
         <div>
-            <div className='flex justify-between'>
-                <h3 className='text-lg font-semibold'>Thông tin cơ bản</h3>
-                {!isSellerSetupPath && (
-                    <div className='flex gap-2'>
-                        <Button>
-                            Xem Shop của tôi
-                        </Button>
-                        <Button>
-                            Chỉnh sửa
-                        </Button>
-                    </div>
-                )}
-            </div>
+            <h3 className='text-lg font-semibold'>Thông tin cơ bản</h3>
             <div className='mt-3 ml-10'>
                 <Row gutter={12} className='flex items-center'>
                     <Col span={4} className='flex justify-end font-semibold'>
@@ -438,12 +423,12 @@ const BasicShopInformation = ({ onData }) => {
                 <Row gutter={12} className='mt-10 flex items-center'>
                     <Col span={4} className='flex justify-end font-semibold'>Số điện thoại</Col>
                     <Col span={20} className='flex items-center'>
-                      <Input
-                        value={state.phone_number}
-                        onChange={handleInputChange}
-                        placeholder='Nhập vào'
-                        name='phone_number'
-                        className='w-72' />
+                        <Input
+                            value={state.phone_number}
+                            onChange={handleInputChange}
+                            placeholder='Nhập vào'
+                            name='phone_number'
+                            className='w-72' />
                         {state.touch.phone_number && state.errors.phone_number && <div className='text-red-500 ml-5'>{state.errors.phone_number}</div>}
                     </Col>
                 </Row>

@@ -3,10 +3,6 @@ import { Button, Input } from 'antd';
 import { CiSearch } from "react-icons/ci";
 import { BsPencil } from "react-icons/bs";
 import ModalCategory from '../category/ModalCategory';
-import { searchShopProducts } from '../../../services/productService';
-import { useSelector } from 'react-redux';
-
-
 
 const initialState = {
   isCatModalVisible: false,

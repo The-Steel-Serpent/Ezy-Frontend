@@ -139,14 +139,7 @@ const TaxInformation = ({ onData }) => {
 
   return (
     <div>
-      <div className='flex justify-between'>
-        <h3 className='text-lg font-semibold'>Thông tin thuế</h3>
-        {!isSellerSetupPath && (
-          <div className='flex gap-2'>
-            <Button>Chỉnh sửa</Button>
-          </div>
-        )}
-      </div>
+      <h3 className='text-lg font-semibold'>Thông tin thuế</h3>
       <div className='mt-5 ml-10 mb-10'>
         <Row gutter={12} className='flex items-center'>
           <Col span={4} className='flex justify-end font-semibold text-sm'>
