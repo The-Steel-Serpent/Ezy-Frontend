@@ -466,12 +466,12 @@ const CartItem = (props) => {
                   />
                 )}
 
-                <Button
+                {/* <Button
                   className="border-0 hover:bg-secondary"
                   shape="circle"
                   onClick={() => {}}
                   icon={<SearchOutlined />}
-                />
+                /> */}
                 <Button
                   className="border-0 hover:bg-secondary text-primary"
                   shape="circle"

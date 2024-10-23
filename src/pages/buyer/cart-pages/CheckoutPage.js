@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Button, Steps } from "antd";
 import React, { lazy, Suspense, useEffect, useReducer } from "react";
 import { AiOutlineFileDone } from "react-icons/ai";
@@ -10,6 +11,8 @@ import ModalAddressList from "../../../components/address/ModalAddressList";
 import { fetchCartData } from "../../../redux/cartSlice";
 import { FrownFilled } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useCheckout } from "../../../providers/CheckoutProvider";
+import { getVoucherList } from "../../../services/voucherService";
 const CheckoutItem = lazy(() =>
   import("../../../components/cart/CheckoutItem")
 );
@@ -21,6 +24,14 @@ const PaymentMethodSection = lazy(() =>
   import("../../../components/cart/PaymentMethodSection")
 );
 const CheckoutPage = () => {
+  const {
+    state,
+    setState,
+    handleCloseAddressModal,
+    handleOpenAddressModal,
+    handleUpdateTotal,
+  } = useCheckout();
+
   const cart = useSelector((state) => state.cart.cart);
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -31,84 +42,17 @@ const CheckoutPage = () => {
       dispatch(fetchCartData({ userID }));
     }
   }, [dispatch, user?.user_id]);
-  const [state, setState] = useReducer(
-    (state, action) => {
-      switch (action.type) {
-        case "setDefaultAddress":
-          return { ...state, defaultAddress: action.payload };
-        case "cartListWithoutInvalidItems":
-          return { ...state, cartListWithoutInvalidItems: action.payload };
-        case "openAddressModal":
-          return { ...state, openAddressModal: action.payload };
-        case "updateTotal":
-          const existingShopIndex = state.total.findIndex(
-            (total) => total.shop_id === action.payload.shop_id
-          );
-          let updatedTotal;
-          if (existingShopIndex !== -1) {
-            updatedTotal = [...state.total];
-            updatedTotal[existingShopIndex] = action.payload;
-          } else {
-            updatedTotal = [...state.total, action.payload];
-          }
-
-          return { ...state, total: updatedTotal };
-
-        case "updateTotalPayment": {
-          return { ...state, totalPayment: action.payload };
-        }
-        default:
-          return state;
-      }
-    },
-    {
-      defaultAddress: null,
-      cartListWithoutInvalidItems: [],
-      openAddressModal: false,
-      total: [],
-      totalPayment: {
-        totalPrice: 0,
-        shippingFee: 0,
-        discountPrice: 0,
-        discountShippingFee: 0,
-        final: 0,
-      },
-    }
-  );
 
   const {
+    shippingVourcher,
+    discountVoucher,
     defaultAddress,
     openAddressModal,
     cartListWithoutInvalidItems,
     total,
     totalPayment,
+    selectedVoucher,
   } = state;
-  const handleCloseAddressModal = () => {
-    setState({ type: "openAddressModal", payload: false });
-  };
-  const handleOpenAddressModal = () => {
-    setState({ type: "openAddressModal", payload: true });
-  };
-
-  const handleUpdateTotal = (total) => {
-    const {
-      shop_id,
-      totalPrice,
-      shippingFee,
-      discountPrice,
-      discountShippingFee,
-    } = total;
-    setState({
-      type: "updateTotal",
-      payload: {
-        shop_id,
-        totalPrice,
-        shippingFee,
-        discountPrice,
-        discountShippingFee,
-      },
-    });
-  };
 
   const fetchDefaultAddress = async () => {
     try {
@@ -121,11 +65,53 @@ const CheckoutPage = () => {
       console.log("Lỗi khi lấy địa chỉ mặc định: ", error.message || error);
     }
   };
+
   useEffect(() => {
-    if (user?.user_id !== "") {
+    const fetchVoucher = async () => {
+      try {
+        const reqData = {
+          user_id: user.user_id,
+          totalPayment: totalPayment,
+          cart: cart,
+        };
+        const res = await getVoucherList(reqData);
+        if (res.success) {
+          const { voucherDiscount, voucherFreeShip } = res.data;
+
+          const findFirstValidShippingVoucher = voucherFreeShip?.find(
+            (item) => item.isVoucherValid === true
+          );
+          const findFirstValidDiscountVoucher = voucherDiscount?.find(
+            (item) => item.isVoucherValid === true
+          );
+
+          setState({
+            type: "updateSelectedVoucher",
+            payload: {
+              discountVoucher: findFirstValidDiscountVoucher,
+              shippingVoucher: findFirstValidShippingVoucher,
+            },
+          });
+        }
+      } catch (error) {
+        setState({
+          type: "shippingVoucher",
+          payload: [],
+        });
+        setState({
+          type: "discountVoucher",
+          payload: [],
+        });
+      }
+    };
+    fetchVoucher();
+  }, [user?.user_id, totalPayment, cart]);
+
+  useEffect(() => {
+    if (user?.user_id && user?.user_id !== "") {
       fetchDefaultAddress();
     }
-  }, [user]);
+  }, [user?.user_id]);
 
   useEffect(() => {
     console.log(cart);
@@ -289,7 +275,7 @@ const CheckoutPage = () => {
             <div className="grid grid-cols-12 col-span-12">
               <section className="col-span-12 px-[30px] py-6 bg-white">
                 <Suspense>
-                  <VoucherSection cart={cart} />
+                  <VoucherSection total={totalPayment} cart={cart} />
                 </Suspense>
               </section>
             </div>

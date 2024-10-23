@@ -4,6 +4,10 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      clipPath: {
+        "vertical-sawtooth":
+          "polygon(0% 0%, 10% 10%, 0% 20%, 10% 30%, 0% 40%, 10% 50%, 0% 60%, 10% 70%, 0% 80%, 10% 90%, 0% 100%, 100% 100%, 100% 0%)",
+      },
       fontFamily: {
         garibato: ["Garibato", "sans-serif"], // thêm phông chữ "Garibato"
       },
@@ -32,5 +36,18 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  variants: {
+    clipPath: ["responsive"],
+  },
+  plugins: [
+    function ({ addUtilities }) {
+      const newUtilities = {
+        ".clip-vertical-sawtooth": {
+          "clip-path":
+            "polygon(0% 0%, 10% 10%, 0% 20%, 10% 30%, 0% 40%, 10% 50%, 0% 60%, 10% 70%, 0% 80%, 10% 90%, 0% 100%, 100% 100%, 100% 0%)",
+        },
+      };
+      addUtilities(newUtilities, ["responsive"]);
+    },
+  ],
 };

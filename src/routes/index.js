@@ -6,6 +6,8 @@ import AuthenticationLayout from "../layout/AuthenticationLayout";
 import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
+import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
+import { CheckoutProvider } from "../providers/CheckoutProvider";
 const AccountSetting = withSuspense(
   lazy(() => import("../pages/buyer/user-pages/my-account/AccountSetting"))
 );
@@ -50,8 +52,7 @@ const AddProductCategory = withSuspense(
   lazy(() => import("../pages/admin/category_management/AddProductCategory"))
 );
 const AddProductSubCategory = withSuspense(
-  lazy(() => import("../pages/admin/category_management/AddProductSubCategory")
-  )
+  lazy(() => import("../pages/admin/category_management/AddProductSubCategory"))
 );
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
@@ -97,6 +98,7 @@ const ShopRecommendations = withSuspense(
 const CheckoutPage = withSuspense(
   lazy(() => import("../pages/buyer/cart-pages/CheckoutPage"))
 );
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -227,7 +229,9 @@ const router = createBrowserRouter([
         path: "/cart/checkout",
         element: (
           <AuthLayout>
-            <CheckoutPage />
+            <CheckoutProvider>
+              <CheckoutPage />
+            </CheckoutProvider>
           </AuthLayout>
         ),
       },
@@ -365,7 +369,7 @@ const router = createBrowserRouter([
             <AddProductSubCategory />
           </AdminAuthLayout>
         ),
-      }
+      },
     ],
   },
 ]);

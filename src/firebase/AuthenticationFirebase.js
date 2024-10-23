@@ -255,6 +255,9 @@ export const changePassword = async (oldPassword, newPassword) => {
     const user = auth.currentUser;
     const credential = EmailAuthProvider.credential(user.email, oldPassword);
     await reauthenticateWithCredential(user, credential);
+    if (oldPassword === newPassword) {
+      throw new Error("Mật khẩu mới không được giống mật khẩu cũ");
+    }
     await updatePassword(user, newPassword);
     return true;
   } catch (error) {
