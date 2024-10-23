@@ -1,9 +1,8 @@
 import React, { memo, useReducer } from "react";
 import { TbTicket } from "react-icons/tb";
 import ModalVoucher from "./ModalVoucher";
-
 const VoucherSection = (props) => {
-  const { cart } = props;
+  const { cart, total } = props;
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -42,6 +41,7 @@ const VoucherSection = (props) => {
       </div>
       <ModalVoucher
         cart={cart}
+        total={total}
         openModalVoucher={openModalVoucher}
         handleCancelModalVoucher={handleCancelModalVoucher}
       />

@@ -360,3 +360,7 @@
 .ant-tree .ant-tree-node-content-wrapper {
   @apply flex gap-2 items-center;
 }
+
+.disabled {
+  @apply cursor-not-allowed opacity-50;
+}

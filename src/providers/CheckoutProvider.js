@@ -1,0 +1,1 @@
+const CheckoutProvider = ({ children }) => {};

@@ -45,7 +45,6 @@ const CheckoutItem = (props) => {
     const fetchDefaultService = async () => {
       try {
         const transportService = await getServiceTypes(serviceData);
-
         if (transportService.code === 200) {
           const sumWeight = item?.CartItems?.reduce((sum, cartItem) => {
             return cartItem?.selected === 1

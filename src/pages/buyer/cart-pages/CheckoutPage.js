@@ -289,7 +289,7 @@ const CheckoutPage = () => {
             <div className="grid grid-cols-12 col-span-12">
               <section className="col-span-12 px-[30px] py-6 bg-white">
                 <Suspense>
-                  <VoucherSection cart={cart} />
+                  <VoucherSection total={totalPayment} cart={cart} />
                 </Suspense>
               </section>
             </div>
