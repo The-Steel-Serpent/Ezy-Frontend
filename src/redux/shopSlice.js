@@ -17,6 +17,7 @@ const initialState = {
     citizen_number: "",
     full_name: "",
     user_id: "",
+    phone_number: "",
 };
 
 export const shopSlice = createSlice({
@@ -40,6 +41,7 @@ export const shopSlice = createSlice({
             state.citizen_number = action.payload.citizen_number;
             state.full_name = action.payload.full_name;
             state.user_id = action.payload.user_id;
+            state.phone_number = action.payload.phone_number;
         },
         logoutShop: (state) => {
             state.shop_id = "";
@@ -58,6 +60,7 @@ export const shopSlice = createSlice({
             state.citizen_number = "";
             state.full_name = "";
             state.user_id = "";
+            state.phone_number = "";
         },
     
     },

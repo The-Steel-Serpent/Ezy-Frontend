@@ -61,6 +61,12 @@ const SellerHome = withSuspense(
 const SellerSetup = withSuspense(
   lazy(() => import("../pages/seller/SellerSetup"))
 );
+const SellerEditProfileBasic = withSuspense(
+  lazy(() => import("../pages/profile/SellerEditProfileBasic"))
+);
+const SellerEditProfileTax = withSuspense(
+  lazy(() => import("../pages/profile/SellerEditProfileTax")) 
+);
 const SuggestProduct = withSuspense(
   lazy(() => import("../pages/buyer/product-pages/SuggestProduct"))
 );
@@ -247,6 +253,22 @@ const router = createBrowserRouter([
             <SellerSetup />
           </SellerAuthLayout>
         ),
+      },
+      {
+        path: "seller/seller-edit-profile",
+        element: (
+          <SellerAuthLayout>
+            <SellerEditProfileBasic />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/seller-edit-profile/tax-info",
+        element:(
+          <SellerAuthLayout>
+            <SellerEditProfileTax />
+          </SellerAuthLayout>  
+        )
       },
       {
         path: "seller/login",
