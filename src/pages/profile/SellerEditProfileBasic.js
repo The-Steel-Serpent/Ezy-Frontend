@@ -6,7 +6,6 @@ import { getDistricts, getProvinces, getWards } from '../../services/ghnService'
 import AddressModal from '../../components/address/AddressModal';
 import { RiImageAddFill } from 'react-icons/ri';
 import { checkNumberPhone } from '../../helpers/formatPhoneNumber';
-import LoadingModal from '../../components/loading/LoadingModal';
 import uploadFile from '../../helpers/uploadFile';
 import { updateShopProfile } from '../../services/shopService';
 import { setShop } from '../../redux/shopSlice';
@@ -310,6 +309,21 @@ const SellerEditProfileBasic = () => {
                     { uid: '-1', name: 'image.png', status: 'done', url: shop.logo_url }
                 ]
             });
+            // get provinces
+            (async () => {
+                try {
+                    const res = await getProvinces();
+                    if (res.data) {
+                        dispatch({ type: 'SET_PROVINCES', payload: res.data });
+                        console.log("Provinces", res.data);
+                        // set address full
+                        setAddressFull(res.data, shop.province_id, shop.district_id, shop.ward_code, shop.shop_address);
+                    }
+                } catch (error) {
+                    console.log("Error get provinces", error);
+                }
+
+            })()
         }
     }, [shop])
 
@@ -355,18 +369,30 @@ const SellerEditProfileBasic = () => {
         if (province_id) {
             const shop_province = provinces.find(province => province.ProvinceID === province_id);
             dispatch({ type: 'SET_SELECTED_PROVINCE', payload: shop_province });
+            // console.log("Provincessssssssssss", provinces);
             ProvinceName = shop_province.ProvinceName;
             if (district_id) {
-                const districts = await getDistricts(province_id);
-                const shop_district = districts.data.find(district => district.DistrictID === district_id);
-                dispatch({ type: 'SET_SELECTED_DISTRICT', payload: shop_district });
-                DistrictName = shop_district.DistrictName;
-                if (ward_id) {
-                    const wards = await getWards(district_id);
-                    const shop_ward = wards.data.find(ward => ward.WardCode === ward_id);
-                    dispatch({ type: 'SET_SELECTED_WARD', payload: shop_ward });
-                    WardName = shop_ward.WardName;
+                try {
+                    const districts = await getDistricts(province_id);
+                    const shop_district = districts.data.find(district => district.DistrictID === district_id);
+                    dispatch({ type: 'SET_SELECTED_DISTRICT', payload: shop_district });
+                    // console.log("Districtssssssssssss", districts);
+                    DistrictName = shop_district.DistrictName;
+                    try {
+                        if (ward_id) {
+                            const wards = await getWards(district_id);
+                            const shop_ward = wards.data.find(ward => ward.WardCode === ward_id);
+                            // console.log("Wardssssssssssss", wards);
+                            dispatch({ type: 'SET_SELECTED_WARD', payload: shop_ward });
+                            WardName = shop_ward.WardName;
+                        }
+                    } catch (error) {
+                        console.log("Error get wards", error);
+                    }
+                } catch (error) {
+                    console.log("Error get districts", error);
                 }
+
             }
             dispatch({ type: 'SET_DETAIL_ADDRESS', payload: shop_address });
             dispatch({ type: 'SET_ADDRESS_FULL', payload: `${shop_address}, ${WardName}, ${DistrictName}, ${ProvinceName}` });
@@ -374,26 +400,13 @@ const SellerEditProfileBasic = () => {
     }
 
     // get provinces
-    useEffect(() => {
-        (async () => {
-            const res = await getProvinces();
-            if (res.data) {
-                dispatch({ type: 'SET_PROVINCES', payload: res.data });
-                // set address full
-                if (shop) {
-                    setAddressFull(res.data, shop.province_id, shop.district_id, shop.ward_code, shop.shop_address);
-                }
-            }
-        })()
-    }, [])
-    // get districts
+
     useEffect(() => {
         (async () => {
             if (state.provinceSelected) {
                 const res = await getDistricts(state.provinceSelected.ProvinceID);
                 if (res.data) {
                     dispatch({ type: 'SET_DISTRICT', payload: res.data });
-                    console.log(res.data);
                 }
             }
         })()
@@ -407,7 +420,6 @@ const SellerEditProfileBasic = () => {
                 const res = await getWards(state.districtSelected.DistrictID);
                 if (res.data) {
                     dispatch({ type: 'SET_WARD', payload: res.data });
-                    console.log(res.data);
                 }
             }
         })()
@@ -428,8 +440,8 @@ const SellerEditProfileBasic = () => {
 
     const handleSave = async () => {
         let payload;
-        dispatch({ type: 'SET_SUBMIT_LOADING', payload: true });
         if (state.payload_save) {
+            dispatch({ type: 'SET_SUBMIT_LOADING', payload: true });
             payload = state.payload_save;
             if (state.image_has_changed) {
                 const upload = await uploadFile(state.payload_save.fileList[0].originFileObj, 'seller-img');
@@ -442,10 +454,12 @@ const SellerEditProfileBasic = () => {
                 message.success('Cập nhật thông tin thành công');
                 dispatchShop(setShop(res.data));
                 dispatch({ type: 'SET_SUBMIT_LOADING', payload: false });
+                handleEditButton();
             } catch (error) {
                 console.log("Error update shop profile", error);
                 dispatch({ type: 'SET_SUBMIT_LOADING', payload: false });
                 message.error('Cập nhật thông tin thất bại');
+                handleEditButton();
             }
         }
 
@@ -454,11 +468,12 @@ const SellerEditProfileBasic = () => {
     return (
         <div>
             <SellerEditProfileHeader status={'/seller/seller-edit-profile'} />
-            <div className='mt-3 ml-10 bg-white py-5 my-10 rounded'>
+            <div className='mt-3 bg-white py-5 my-10 rounded'>
                 <div className='flex justify-between px-8 mb-5'>
                     <h3 className='text-lg'>Thông tin cơ bản</h3>
                     <Button
                         onClick={handleEditButton}
+                        loading={state.submit_loading}
                     >Chỉnh sửa</Button>
                 </div>
                 <Row gutter={12} className='flex items-center'>
@@ -572,11 +587,13 @@ const SellerEditProfileBasic = () => {
                         <Button
                             disabled={state.enableConfirm}
                             onClick={async () => await handleSave()}
+                            loading={state.submit_loading}
                         >
                             Lưu
                         </Button>
                         <Button
                             onClick={handleCancelEdit}
+                            loading={state.submit_loading}
                         >
                             Hủy
                         </Button>
@@ -595,8 +612,6 @@ const SellerEditProfileBasic = () => {
                 handleDetailAddressChange={handleDetailAddressChange}
                 state={state}
             />
-            {/* Loading Modal */}
-            <LoadingModal visible={state.submit_loading} />
         </div>
     )
 }
