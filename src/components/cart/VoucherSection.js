@@ -1,30 +1,14 @@
 import React, { memo, useReducer } from "react";
 import { TbTicket } from "react-icons/tb";
 import ModalVoucher from "./ModalVoucher";
+import { Tag } from "antd";
+import { useCheckout } from "../../providers/CheckoutProvider";
 const VoucherSection = (props) => {
   const { cart, total } = props;
-  const [state, setState] = useReducer(
-    (state, action) => {
-      switch (action.type) {
-        case "openModalVoucher":
-          return { ...state, openModalVoucher: action.payload };
-        default:
-          return state;
-      }
-    },
-    {
-      openModalVoucher: true,
-    }
-  );
+  const { state, setState, handleOpenModalVoucher, handleCancelModalVoucher } =
+    useCheckout();
 
-  const { openModalVoucher } = state;
-
-  const handleCancelModalVoucher = () => {
-    setState({ type: "openModalVoucher", payload: false });
-  };
-  const handleOpenModalVoucher = () => {
-    setState({ type: "openModalVoucher", payload: true });
-  };
+  const { selectedVoucher, openModalVoucher } = state;
   return (
     <>
       <div className="w-full flex justify-between items-center">
@@ -32,12 +16,20 @@ const VoucherSection = (props) => {
           <TbTicket className="text-[30px] text-primary" />
           <span className="text-lg">Ezy Voucher</span>
         </div>
-        <span
-          className="text-blue-500 cursor-pointer"
-          onClick={handleOpenModalVoucher}
-        >
-          Chọn Voucher
-        </span>
+        <div className="flex gap-1">
+          {selectedVoucher?.discountVoucher && (
+            <Tag color="red">Giảm Giá Đơn Hàng</Tag>
+          )}
+          {selectedVoucher?.shippingVoucher && (
+            <Tag color="green">Miễn phí vận chuyển</Tag>
+          )}
+          <span
+            className="text-blue-500 cursor-pointer"
+            onClick={handleOpenModalVoucher}
+          >
+            Chọn Voucher
+          </span>
+        </div>
       </div>
       <ModalVoucher
         cart={cart}

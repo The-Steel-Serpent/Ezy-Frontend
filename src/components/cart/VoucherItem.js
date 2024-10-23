@@ -1,11 +1,11 @@
-import { Image, Radio } from "antd";
+import { Checkbox, Image, Radio } from "antd";
 import React, { memo } from "react";
 import logoFreeShip from "../../assets/logo-free-ship.png";
 import { IoBagHandle } from "react-icons/io5";
 import formatNumber from "../../helpers/formatNumber";
 
 const VoucherItem = (props) => {
-  const { item } = props;
+  const { item, isSelected, onCheckboxChange } = props;
   const formatDate = (dateString) => {
     const options = {
       day: "2-digit",
@@ -22,6 +22,7 @@ const VoucherItem = (props) => {
     });
     return `${formattedDate} ${formattedTime}`;
   };
+
   return (
     <div
       className={`flex items-center w-full mb-2 h-[121px] ${
@@ -55,7 +56,14 @@ const VoucherItem = (props) => {
           <div className="flex flex-col">
             <span
               className="text-lg line-clamp-1 text-ellipsis"
-              title={item?.discount_voucher_name}
+              title={
+                "Tên Voucher: " +
+                item?.discount_voucher_name +
+                " \n- Đơn tối thiểu: đ" +
+                formatNumber(item?.min_order_value) +
+                "\n - Mã: " +
+                item?.discount_voucher_code
+              }
             >
               {item?.discount_voucher_name}
             </span>
@@ -72,7 +80,13 @@ const VoucherItem = (props) => {
           </div>
         </div>
         <div className="col-span-2 flex justify-center">
-          <Radio />
+          <Checkbox
+            className={
+              item?.isVoucherValid ? "cursor-pointer" : "pointer-events-none"
+            }
+            checked={isSelected}
+            onChange={onCheckboxChange}
+          />
         </div>
       </div>
     </div>
