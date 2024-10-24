@@ -147,13 +147,14 @@ export const CheckoutProvider = ({ children }) => {
   };
   const calculateVoucherDiscounts = useCallback((total, selectedVoucher) => {
     const totalPriceAllShops = total.reduce(
-      (sum, shop) => sum + shop.totalPrice,
+      (sum, shop) => sum + (shop.totalPrice || 0),
       0
     );
     const totalShippingFeeAllShops = total.reduce(
-      (sum, shop) => sum + shop.shippingFee,
+      (sum, shop) => sum + (shop.shippingFee || 0),
       0
     );
+
     const { shippingVoucher, discountVoucher } = selectedVoucher;
     let totalDiscountPrice = 0;
     let totalDiscountShippingFee = 0;
@@ -177,6 +178,8 @@ export const CheckoutProvider = ({ children }) => {
       }
     }
 
+    console.log("Shipping Voucher", shippingVoucher);
+
     if (shippingVoucher) {
       const { discount_value } = shippingVoucher;
       totalDiscountShippingFee = Math.min(
@@ -193,6 +196,7 @@ export const CheckoutProvider = ({ children }) => {
       const discountShippingFee = Math.round(
         totalDiscountShippingFee * shopShippingFeeRatio
       );
+      console.log("Discount Shipping Fee: ", discountShippingFee);
 
       return {
         shop_id: shop.shop_id,
@@ -251,6 +255,7 @@ export const CheckoutProvider = ({ children }) => {
   }, [state.total]);
 
   useEffect(() => {
+    console.log("state.selectedVoucher", state.selectedVoucher);
     const updatedTotal = calculateVoucherDiscounts(
       state.total,
       state.selectedVoucher
@@ -272,7 +277,7 @@ export const CheckoutProvider = ({ children }) => {
       prevTotalRef.current = updatedTotal;
       prevSelectedVoucherRef.current = state.selectedVoucher;
     }
-  }, [state.total, state.selectedVoucher, calculateVoucherDiscounts]);
+  }, [calculateVoucherDiscounts, state.total, state.selectedVoucher]);
 
   return (
     <CheckoutContext.Provider

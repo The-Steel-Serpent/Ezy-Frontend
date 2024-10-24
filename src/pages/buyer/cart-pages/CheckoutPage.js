@@ -105,7 +105,7 @@ const CheckoutPage = () => {
       }
     };
     fetchVoucher();
-  }, [user?.user_id, totalPayment, cart]);
+  }, [user?.user_id, cart]);
 
   useEffect(() => {
     if (user?.user_id && user?.user_id !== "") {
