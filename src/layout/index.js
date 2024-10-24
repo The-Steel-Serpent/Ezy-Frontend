@@ -1,6 +1,6 @@
 import React, { lazy, useEffect } from "react";
 import PrimaryHeader from "../components/PrimaryHeader";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { setUser, setToken } from "../redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
@@ -11,6 +11,7 @@ import { logoutShop } from "../redux/shopSlice";
 import CartHeader from "../components/CartHeader";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const user = useSelector((state) => state.user);
   const shop = useSelector((state) => state.shop);
   const token = localStorage.getItem("token");

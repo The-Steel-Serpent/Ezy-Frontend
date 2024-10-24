@@ -5,7 +5,7 @@ import { VscClose } from "react-icons/vsc";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { RiImageAddFill } from "react-icons/ri";
 import { handleBeforeInput } from '../../../helpers/handleInput';
-import { all } from 'axios';
+import FormItem from 'antd/es/form/FormItem';
 
 const initialState = {
     add_product_level: 1, // 1: only product, 2: have classify, 3: have classify and varient
@@ -25,6 +25,13 @@ const initialState = {
     stockDefault: '',
     errorMessage: '',
     errorVisible: false,
+    enable_apply_all: false,
+    apply_all_price: '',
+    apply_all_stock: '',
+    apply_all_sale_percent: '',
+    errorPriceTable: [],
+    errorStockTable: [],
+    errorSalePercentTable: [], 
     errorsDefault: {
         priceDefault: '',
         stockDefault: '',
@@ -70,6 +77,20 @@ const reducer = (state, action) => {
             return { ...state, sale_percent_default: action.payload };
         case 'SET_ERRORS_DEFAULT':
             return { ...state, errorsDefault: action.payload };
+        case 'SET_APPLY_ALL_PRICE':
+            return { ...state, apply_all_price: action.payload };
+        case 'SET_APPLY_ALL_STOCK':
+            return { ...state, apply_all_stock: action.payload };
+        case 'SET_APPLY_ALL_SALE_PERCENT':
+            return { ...state, apply_all_sale_percent: action.payload };
+        case 'SET_ENABLE_APPLY_ALL':
+            return { ...state, enable_apply_all: action.payload };
+        case 'SET_ERROR_PRICE_TABLE':
+            return { ...state, errorPriceTable: action.payload };
+        case 'SET_ERROR_STOCK_TABLE':
+            return { ...state, errorStockTable: action.payload };
+        case 'SET_ERROR_SALE_PERCENT_TABLE':
+            return { ...state, errorSalePercentTable: action.payload };
         default:
             return state;
     }
@@ -131,28 +152,6 @@ const SaleInformation = ({ onData }) => {
 
 
     const handleErrorCancel = () => dispatch({ type: 'SET_ERROR_VISIBLE', payload: false });
-
-    const handleInputPrice = (index) => (e) => {
-        // remove all price at index before set new price
-        const removePrice = [...state.allPrice];
-        removePrice[index] = null;
-        dispatch({ type: 'SET_ALL_PRICE', payload: removePrice });
-
-        if (isNaN(e.target.value)) {
-            message.error('Giá tiền phải là số!');
-        }
-        else if (e.target.value === '') {
-            message.error('Giá tiền không được để trống!');
-        }
-        else if (e.target.value < 1000) {
-            message.error('Giá phải tối thiểu là 1000!');
-        } else {
-            const newPrice = [...state.allPrice];
-            newPrice[index] = e.target.value;
-            dispatch({ type: 'SET_ALL_PRICE', payload: newPrice });
-        }
-    };
-
     const handleNumberInputChange = (e, type) => {
         const value = e.target.value;
         if (!isNaN(value)) {
@@ -160,44 +159,72 @@ const SaleInformation = ({ onData }) => {
         }
     };
 
-    const handleInputStock = (index) => (e) => {
-        const removeStock = [...state.allStock];
-        removeStock[index] = null;
-        dispatch({ type: 'SET_ALL_STOCK', payload: removeStock });
+    const handleInputPrice = (index) => (e) => {
+        const inputValue = e.target.value;
 
-        if (isNaN(e.target.value)) {
-            message.error('Số lượng hàng phải là số!');
-        }
-        else if (e.target.value === '') {
-            message.error('Số lượng hàng không được để trống!');
-        }
-        else if (e.target.value <= 0) {
-            message.error('Số lượng hàng phải lớn hơn 0 !');
+        const newPrice = [...state.allPrice];
+        newPrice[index] = inputValue;
+        dispatch({ type: 'SET_ALL_PRICE', payload: newPrice });
+
+        const newErrorPrice = [...state.errorPriceTable];
+
+        if (isNaN(inputValue)) {
+            newErrorPrice[index] = 'Giá tiền phải là số';
+        } else if (inputValue === '') {
+            newErrorPrice[index] = 'Giá tiền không được để trống';
+        } else if (parseInt(inputValue) < 1000) {
+            newErrorPrice[index] = 'Giá phải tối thiểu là 1000';
         } else {
-            const newStock = [...state.allStock];
-            newStock[index] = e.target.value;
-            dispatch({ type: 'SET_ALL_STOCK', payload: newStock });
+            newErrorPrice[index] = '';
         }
+
+        dispatch({ type: 'SET_ERROR_PRICE_TABLE', payload: newErrorPrice });
     };
 
-    const handleSalePercent = (index) => (e) => {
-        const removeSalePercent = [...state.allSalePercent];
-        removeSalePercent[index] = null;
-        dispatch({ type: 'SET_ALL_SALE_PERCENT', payload: removeSalePercent });
 
-        if (isNaN(e.target.value)) {
-            message.error('Số lượng hàng phải là số!');
-        }
-        else if (e.target.value === '') {
-            message.error('Phần trăm giảm giá không được để trống!');
-        }
-        else if (e.target.value < 0 || e.target.value > 60) {
-            message.error('Phần trăm giảm giá phải từ 0 đến 60!');
+    const handleInputStock = (index) => (e) => {
+        const inputValue = e.target.value;
+
+        const newStock = [...state.allStock];
+        newStock[index] = inputValue;
+        dispatch({ type: 'SET_ALL_STOCK', payload: newStock });
+
+        const newErrorStock = [...state.errorStockTable];
+
+        if (isNaN(inputValue)) {
+            newErrorStock[index] = 'Số lượng hàng phải là số';
+        } else if (inputValue === '') {
+            newErrorStock[index] = 'Số lượng hàng không được để trống';
+        } else if (parseInt(inputValue) <= 0) {
+            newErrorStock[index] = 'Số lượng hàng phải lớn hơn 0';
         } else {
-            const newSalePercent = [...state.allSalePercent];
-            newSalePercent[index] = e.target.value;
-            dispatch({ type: 'SET_ALL_SALE_PERCENT', payload: newSalePercent });
+            newErrorStock[index] = '';
         }
+        dispatch({ type: 'SET_ERROR_STOCK_TABLE', payload: newErrorStock });
+    };
+
+
+    const handleSalePercent = (index) => (e) => {
+        const inputValue = e.target.value;
+
+        const newSalePercent = [...state.allSalePercent];
+        newSalePercent[index] = inputValue;
+        dispatch({ type: 'SET_ALL_SALE_PERCENT', payload: newSalePercent });
+
+        const newErrorSalePercent = [...state.errorSalePercentTable];
+
+        if (isNaN(inputValue)) {
+            newErrorSalePercent[index] = 'Phần trăm giảm giá phải là số!';
+        } else if (inputValue === '') {
+            newErrorSalePercent[index] = 'Phần trăm giảm giá không được để trống!';
+        } else if (parseInt(inputValue) < 0 || parseInt(inputValue) > 60) {
+            newErrorSalePercent[index] = 'Phần trăm giảm giá phải từ 0 đến 60%';
+        } else {
+            newErrorSalePercent[index] = '';
+        }
+
+        // Cập nhật lại lỗi cho tất cả phần tử
+        dispatch({ type: 'SET_ERROR_SALE_PERCENT_TABLE', payload: newErrorSalePercent });
     };
 
     const toggleVisibility = () => {
@@ -243,6 +270,122 @@ const SaleInformation = ({ onData }) => {
         dispatch({ type: 'SET_ALL_STOCK', payload: [] });
         dispatch({ type: 'SET_ADD_PRODUCT_LEVEL', payload: 2 });
     };
+
+    // apply all
+    const disableApplyAll = () => {
+        dispatch({ type: 'SET_ENABLE_APPLY_ALL', payload: false });
+    }
+    const handleChangeApplyAll = async (e, type) => {
+        const value = e.target.value;
+        const parsedValue = parseFloat(value);
+        let errorMessage = '';
+
+        // Check for NaN
+        if (isNaN(parsedValue)) {
+            switch (type) {
+                case 'apply-all-price':
+                    errorMessage = 'Giá tiền phải là số!';
+                    dispatch({ type: 'SET_APPLY_ALL_PRICE', payload: '' });
+                    break;
+                case 'apply-all-stock':
+                    errorMessage = 'Số lượng hàng phải là số!';
+                    dispatch({ type: 'SET_APPLY_ALL_STOCK', payload: '' });
+                    break;
+                case 'apply-all-sale-percent':
+                    errorMessage = 'Phần trăm giảm giá phải là số!';
+                    dispatch({ type: 'SET_APPLY_ALL_SALE_PERCENT', payload: '' });
+                    break;
+            }
+            message.error(errorMessage);
+            dispatch({ type: 'SET_ENABLE_APPLY_ALL', payload: false });
+            return;
+        }
+
+        // Check for empty value
+        if (value === '') {
+            switch (type) {
+                case 'apply-all-price':
+                    errorMessage = 'Giá tiền không được để trống!';
+                    break;
+                case 'apply-all-stock':
+                    errorMessage = 'Số lượng hàng không được để trống!';
+                    break;
+                case 'apply-all-sale-percent':
+                    errorMessage = 'Phần trăm giảm giá không được để trống!';
+                    break;
+            }
+            message.error(errorMessage);
+            return;
+        }
+
+        // Check for minimum value conditions
+        if (
+            (type === 'apply-all-price' && parsedValue < 1000) ||
+            (type === 'apply-all-stock' && parsedValue <= 0) ||
+            (type === 'apply-all-sale-percent' && (parsedValue < 0 || parsedValue > 60))
+        ) {
+            switch (type) {
+                case 'apply-all-price':
+                    errorMessage = 'Giá phải tối thiểu là 1000!';
+                    break;
+                case 'apply-all-stock':
+                    errorMessage = 'Số lượng hàng phải lớn hơn 0!';
+                    break;
+                case 'apply-all-sale-percent':
+                    errorMessage = 'Phần trăm giảm giá phải từ 0 đến 60!';
+                    break;
+            }
+            message.error(errorMessage);
+            return;
+        }
+
+        // Dispatch the value to the relevant state
+        switch (type) {
+            case 'apply-all-price':
+                dispatch({ type: 'SET_APPLY_ALL_PRICE', payload: value });
+                break;
+            case 'apply-all-stock':
+                dispatch({ type: 'SET_APPLY_ALL_STOCK', payload: value });
+                break;
+            case 'apply-all-sale-percent':
+                dispatch({ type: 'SET_APPLY_ALL_SALE_PERCENT', payload: value });
+                break;
+        }
+        disableApplyAll();
+    };
+
+    useEffect(() => {
+        if (state.apply_all_price !== '' && state.apply_all_stock !== '' && state.apply_all_sale_percent !== '')
+            dispatch({ type: 'SET_ENABLE_APPLY_ALL', payload: true });
+    }, [state.apply_all_price, state.apply_all_stock, state.apply_all_sale_percent])
+
+    const handleApplyAllSubmit = () => {
+        let quantity = 0;
+
+        if (state.add_product_level === 2) {
+            quantity = state.allClassifyName.length;
+            console.log('Quantity', quantity);
+        }
+        else if (state.add_product_level === 3) {
+            const classifyQuantity = state.allClassifyName.length;
+            const variantQuantity = state.allVarientName.length;
+            quantity = classifyQuantity * variantQuantity;
+            console.log('Quantity', quantity);
+        }
+        let allPrice = [];
+        let allStock = [];
+        let allSalePercent = [];
+        for (let i = 0; i < quantity; i++) {
+            allPrice.push(state.apply_all_price);
+            allStock.push(state.apply_all_stock);
+            allSalePercent.push(state.apply_all_sale_percent);
+        }
+        dispatch({ type: 'SET_ALL_PRICE', payload: allPrice });
+        dispatch({ type: 'SET_ALL_STOCK', payload: allStock });
+        dispatch({ type: 'SET_ALL_SALE_PERCENT', payload: allSalePercent });
+
+    }
+    // apply all
 
     const handleRemoveClassification = (index, remove) => {
         const fields = form.getFieldValue('classifications');
@@ -373,42 +516,55 @@ const SaleInformation = ({ onData }) => {
             key: 'allVarientName',
         }] : []),
         {
-            title: 'Kho hàng',
+            title: <span>Kho hàng</span>,
             dataIndex: 'stock',
             key: 'stock',
             render: (text, record, index) => (
-                <Input
-                    defaultValue={state.allStock[index]}
-                    onBlur={handleInputStock(index)}
-                    placeholder='Nhập số lượng hàng'
-                    addonAfter='Cái'
-                />
+                <div>
+                    <Input
+                        value={state.allStock[index]}
+                        onChange={handleInputStock(index)}
+                        placeholder='Nhập số lượng hàng'
+                        addonAfter='Cái'
+                    />
+                    {/* error */}
+                    <div className='text-red-500 text-sm'>{state.errorStockTable[index]}</div>
+                </div>
+
             ),
         },
         {
-            title: 'Giá',
+            title: <span>Giá</span>,
             dataIndex: 'price',
             key: 'price',
             render: (text, record, index) => (
-                <Input
-                    defaultValue={state.allPrice[index]}
-                    onBlur={handleInputPrice(index)}
-                    placeholder='Nhập giá'
-                    addonAfter='VND'
-                />
+                <div>
+                    <Input
+                        value={state.allPrice[index]}
+                        onChange={handleInputPrice(index)}
+                        placeholder='Nhập giá'
+                        addonAfter='VND'
+                    />
+                    {/* error */}
+                    <div className='text-red-500 text-sm'>{state.errorPriceTable[index]}</div>
+                </div>
             ),
         },
         {
-            title: 'Giảm giá',
+            title: <span>Giảm giá</span>,
             dataIndex: 'sale_percent',
             key: 'sale_percent',
             render: (text, record, index) => (
-                <Input
-                    defaultValue={state.allSalePercent[index]}
-                    onBlur={handleSalePercent(index)}
-                    placeholder='Phần trăm giảm giá'
-                    addonAfter='%'
-                />
+                <div>
+                    <Input
+                        value={state.allSalePercent[index]}
+                        onChange={handleSalePercent(index)}
+                        placeholder='Phần trăm giảm giá'
+                        addonAfter='%'
+                    />
+                    {/* error */}
+                    <div className='text-red-500 text-sm'>{state?.errorSalePercentTable[index]}</div>
+                </div>
             ),
         },
     ];
@@ -473,6 +629,17 @@ const SaleInformation = ({ onData }) => {
                 break;
             }
         }
+        // check errorPriceTable, errorStockTable, errorSalePercentTable
+        for (let i = 0; i < state.errorPriceTable.length; i++) {
+            if (
+                state.errorPriceTable[i] !== '' ||
+                state.errorStockTable[i] !== '' ||
+                state.errorSalePercentTable[i] !== ''
+            ) {
+                valid = false;
+                break;
+            }
+        }
         return valid;
     }
 
@@ -495,6 +662,32 @@ const SaleInformation = ({ onData }) => {
             count_sale_percent !== count_classification * count_varient) {
             valid = false;
         }
+        for (let i = 0; i < state.errorPriceTable.length; i++) {
+            if (
+                state.allClassifyName[i] === '' ||
+                state.allImgClassification[i] === null
+            ) {
+                valid = false;
+                break;
+            }
+        }
+        for (let i = 0; i < count_varient; i++) {
+
+            if (
+                state.allVarientName[i] === ''
+            ) {
+                valid = false;
+                break;
+            }
+        }
+
+        console.log("Count classification: ", count_classification);
+        console.log("Count varient: ", count_varient);
+        console.log("Count img classification: ", count_img_classification);
+        console.log("Count stock: ", count_stock);
+        console.log("Count price: ", count_price);
+        console.log("Count sale percent: ", count_sale_percent);
+
         return valid;
     }
 
@@ -570,8 +763,8 @@ const SaleInformation = ({ onData }) => {
                     allClassifyName: state.allClassifyName,
                     add_product_level: state.add_product_level,
                     classifyImage: state.allImgClassification,
-                    stock: state.allStock,
-                    price: state.allPrice,
+                    stocks: state.allStock,
+                    prices: state.allPrice,
                     sale_percent: state.allSalePercent,
                     allVarientName: state.allVarientName,
                     variantName: state.variantName
@@ -592,6 +785,9 @@ const SaleInformation = ({ onData }) => {
         state.allPrice,
         state.priceDefault,
         state.allSalePercent,
+        state.errorPriceTable,
+        state.errorStockTable,
+        state.errorSalePercentTable
     ])
 
     return (
@@ -847,13 +1043,70 @@ const SaleInformation = ({ onData }) => {
                     </Row>
                 )}
                 {state.showFormList && (
-                    <Table
-                        columns={columns}
-                        dataSource={dataSource}
-                        pagination={false}
-                        bordered
-                        className='mt-5'
-                    />
+                    <div className='mt-5'>
+                        <Row gutter={12} className='flex mb-5'>
+                            <Col span={3}>
+                                <span className='font-semibold'>Danh sách phân loại hàng </span>
+                            </Col>
+                            <Col span={6}>
+                                <FormItem
+                                    name='apply-all-stock'
+                                    rules={[
+                                        { required: true, message: 'Nhập số lượng hàng' }
+                                    ]}
+                                >
+                                    <Input
+                                        placeholder='Số lượng hàng'
+                                        value={state.apply_all_stock}
+                                        onBlur={(e) => handleChangeApplyAll(e, 'apply-all-stock')}
+                                    />
+
+                                </FormItem>
+                            </Col>
+                            <Col span={6}>
+                                <FormItem
+                                    name='apply-all-price'
+                                    rules={[
+                                        { required: true, message: 'Hãy Nhập giá' }
+                                    ]}
+                                >
+                                    <Input
+                                        placeholder='Giá'
+                                        value={state.apply_all_price}
+                                        onBlur={(e) => handleChangeApplyAll(e, 'apply-all-price')}
+                                    />
+                                </FormItem>
+
+                            </Col>
+
+                            <Col span={6}>
+                                <FormItem
+                                    name='apply-all-sale-percent'
+                                    value={state.apply_all_sale_percent}
+                                    rules={[
+                                        { required: true, message: 'Nhập phần trăm giảm giá' }
+                                    ]}
+                                >
+                                    <Input
+                                        placeholder='Giảm giá (%)'
+                                        value={state.apply_all_sale_percent}
+                                        onBlur={(e) => handleChangeApplyAll(e, 'apply-all-sale-percent')}
+                                    />
+                                </FormItem>
+                            </Col>
+                            <Button
+                                onClick={handleApplyAllSubmit}
+                                disabled={!state.enable_apply_all}
+                                span={3}>Áp dụng hàng loạt</Button>
+
+                        </Row>
+                        <Table
+                            columns={columns}
+                            dataSource={dataSource}
+                            pagination={false}
+                            bordered
+                        />
+                    </div>
                 )}
             </Form>
             <Modal

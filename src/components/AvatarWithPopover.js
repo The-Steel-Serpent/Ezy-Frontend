@@ -41,7 +41,11 @@ const AvatarWithPopover = (props) => {
     {
       key: "1",
       label: (
-        <a target="_blank" rel="noopener noreferrer" href="/user/account">
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          href="/user/account?type=profile"
+        >
           Tài Khoản Của Tôi
         </a>
       ),
@@ -65,7 +69,7 @@ const AvatarWithPopover = (props) => {
       <div
         className="flex flex-wrap cursor-pointer"
         onClick={() => {
-          navigate("/user/account");
+          navigate("/user/account?type=profile");
         }}
       >
         <Dropdown

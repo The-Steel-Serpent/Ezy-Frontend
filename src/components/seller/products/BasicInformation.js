@@ -424,7 +424,7 @@ export const BasicInformation = ({ onData }) => {
                 >
                     <Input
                         showCount
-                        maxLength={120}
+                        maxLength={100}
                         onChange={(e) => dispatch({ type: 'SET_PRODUCT_NAME', payload: e.target.value })}
                         className='border rounded-md' />
                 </Form.Item>

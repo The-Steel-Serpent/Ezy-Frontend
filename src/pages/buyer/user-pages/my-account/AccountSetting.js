@@ -6,24 +6,37 @@ import {
   SmileOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Avatar, Divider, Tree } from "antd";
-import React, { useReducer, useState } from "react";
+import { Avatar, Button, Divider, Skeleton, Tree } from "antd";
+import React, { lazy, Suspense, useEffect, useReducer, useState } from "react";
 import { FaUserAstronaut } from "react-icons/fa";
 import { PiNotepadBold } from "react-icons/pi";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ImPencil2 } from "react-icons/im";
-import EditProfile from "../../../../components/user/EditProfile";
-import ChangeEmail from "../../../../components/user/ChangeEmail";
-
+const EditProfile = lazy(() =>
+  import("../../../../components/user/EditProfile")
+);
+const ChangeEmail = lazy(() =>
+  import("../../../../components/user/ChangeEmail")
+);
+const AddressChange = lazy(() =>
+  import("../../../../components/user/AddressChange")
+);
+const ChangePassword = lazy(() =>
+  import("../../../../components/user/ChangePassword")
+);
 const AccountSetting = () => {
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const type = query.get("type");
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
+        case "SET_LOADING":
+          return { ...state, loading: action.payload };
         case "SELECTED_KEYS":
           return { ...state, selectedKeys: action.payload };
         case "EXPANDED_KEYS":
@@ -33,11 +46,12 @@ const AccountSetting = () => {
       }
     },
     {
+      loading: true,
       selectedKeys: ["account"],
       expandedKeys: ["account"],
     }
   );
-  const { selectedKeys, expandedKeys } = state;
+  const { selectedKeys, expandedKeys, loading } = state;
   const treeData = [
     {
       title: <span className="">Tài Khoản Của Tôi</span>,
@@ -58,6 +72,11 @@ const AccountSetting = () => {
         {
           title: <span className="pl-2">Đổi Mật Khẩu</span>,
           key: "password",
+          parenKey: "account",
+        },
+        {
+          title: <span className="pl-2">Mật Khẩu Cấp 2</span>,
+          key: "security-password",
           parenKey: "account",
         },
       ],
@@ -105,65 +124,114 @@ const AccountSetting = () => {
     }
     setState({ type: "SELECTED_KEYS", payload: keys });
   };
-
-  const renderContent = () => {
+  useEffect(() => {
     const query = new URLSearchParams(location.search);
     const type = query.get("type");
+    setState({ type: "SELECTED_KEYS", payload: type });
+  }, [location.search]);
+  const renderContent = () => {
     switch (type) {
       case "profile":
-        return <EditProfile />;
+        return (
+          <Suspense
+            fallback={<Skeleton.Node active={true} className="w-full" />}
+          >
+            <EditProfile />
+          </Suspense>
+        );
       case "email":
-        return <ChangeEmail />;
+        return (
+          <Suspense
+            fallback={<Skeleton.Node active={true} className="w-full" />}
+          >
+            <ChangeEmail />
+          </Suspense>
+        );
+      case "address":
+        return (
+          <Suspense
+            fallback={<Skeleton.Node active={true} className="w-full" />}
+          >
+            <AddressChange />
+          </Suspense>
+        );
+      case "password":
+        return (
+          <Suspense
+            fallback={<Skeleton.Node active={true} className="w-full" />}
+          >
+            <ChangePassword />
+          </Suspense>
+        );
       default:
         return <EditProfile />;
     }
   };
 
   return (
-    <main className="max-w-[1200px] mx-auto my-9 grid grid-cols-12 gap-2">
-      <section className="col-span-3">
-        <div className="flex items-center gap-2 px-3">
-          {user?.avt_url ? (
-            <Avatar
-              className="cursor-pointer"
-              src={user?.avt_url}
-              size={50}
-              onClick={() => navigate("/user/account?type=profile")}
+    <>
+      {user?.user_id !== "" && (
+        <main className="max-w-[1200px] mx-auto my-9 grid grid-cols-12 gap-2">
+          <section className="col-span-3">
+            <div className="flex items-center gap-2 px-3">
+              {user?.avt_url ? (
+                <Avatar
+                  className="cursor-pointer"
+                  src={user?.avt_url}
+                  size={50}
+                  onClick={() => navigate("/user/account?type=profile")}
+                />
+              ) : (
+                <Avatar
+                  className="cursor-pointer"
+                  icon={<UserOutlined />}
+                  size={50}
+                  onClick={() => navigate("/user/account?type=profile")}
+                />
+              )}
+              <div className="flex flex-col gap-1">
+                <span className="font-semibold">{user?.username}</span>
+                <span
+                  className="text-sm text-gray-400 flex items-center gap-2 cursor-pointer"
+                  onClick={() => navigate("/user/account?type=profile")}
+                >
+                  <ImPencil2 /> Chỉnh sửa hồ sơ
+                </span>
+              </div>
+            </div>
+            <Divider className="my-3" />
+            <Tree
+              className="w-full bg-transparent text-lg "
+              showIcon
+              onSelect={onSelect}
+              expandedKeys={expandedKeys}
+              selectedKeys={[selectedKeys]}
+              onExpand={(keys) =>
+                setState({ type: "EXPANDED_KEYS", payload: keys })
+              }
+              defaultSelectedKeys={["profile"]}
+              switcherIcon={<DownOutlined />}
+              treeData={treeData}
             />
-          ) : (
-            <Avatar
-              className="cursor-pointer"
-              icon={<UserOutlined />}
-              size={50}
-              onClick={() => navigate("/user/account?type=profile")}
-            />
-          )}
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold">{user?.username}</span>
-            <span
-              className="text-sm text-gray-400 flex items-center gap-2 cursor-pointer"
-              onClick={() => navigate("/user/account?type=profile")}
+          </section>
+          <section className="col-span-9">{renderContent()}</section>
+        </main>
+      )}
+      {user?.user_id === "" && (
+        <div className="flex justify-center items-center h-[400px]">
+          <div className="flex flex-col items-center gap-2">
+            <FrownFilled className="text-6xl text-red-500" />
+            <span className="text-2xl">Bạn chưa đăng nhập</span>
+            <Button
+              className="bg-primary border-primary text-white hover:opacity-80"
+              onClick={() => navigate("/buyer/login")}
             >
-              <ImPencil2 /> Chỉnh sửa hồ sơ
-            </span>
+              Đăng nhập ngay
+            </Button>
           </div>
         </div>
-        <Divider className="my-3" />
-        <Tree
-          className="w-full bg-transparent text-lg "
-          showIcon
-          onSelect={onSelect}
-          expandedKeys={expandedKeys}
-          onExpand={(keys) =>
-            setState({ type: "EXPANDED_KEYS", payload: keys })
-          }
-          defaultSelectedKeys={["profile"]}
-          switcherIcon={<DownOutlined />}
-          treeData={treeData}
-        />
-      </section>
-      <section className="col-span-9">{renderContent()}</section>
-    </main>
+      )}
+    </>
   );
 };
 

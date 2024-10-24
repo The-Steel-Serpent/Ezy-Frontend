@@ -90,7 +90,9 @@ body,
 }
 
 .custom-menu-seller-product .ant-menu-item-selected {
-    border-bottom: 3px solid #66cce6;
+    border-bottom: 3px solid #327bb3;
+    background-color: transparent !important;
+    color: #327bb3 !important; 
     font-size: 15px;
 }
 

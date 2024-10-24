@@ -4,7 +4,6 @@ import {
   getLimitCartItems,
   updateVarients,
 } from "../services/cartService";
-import { invalid } from "moment/moment";
 
 export const fetchMiniCartData = createAsyncThunk(
   "cart/fetchMiniCartData",

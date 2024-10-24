@@ -166,6 +166,10 @@ const ModalOTP = ({ user, onVerify }) => {
     }
   };
 
+  const handleNavigateToForgotSecurityPassword = () => {
+    navigate("/user/account?type=forgot-security-password");
+  };
+
   return (
     <>
       <Modal
@@ -174,7 +178,7 @@ const ModalOTP = ({ user, onVerify }) => {
         className="flex flex-col p-5 "
         closable={false}
       >
-        {user?.security_password !== "" ? (
+        {user?.security_password ? (
           <form
             className="w-full flex flex-col items-center justify-center gap-4"
             onSubmit={handleVerifyOTP}
@@ -189,19 +193,34 @@ const ModalOTP = ({ user, onVerify }) => {
               onChange={onConfirmOTPChange}
             />
             <span className="text-red-500">{error?.confirmOTP}</span>
-            <div className="flex w-full items-center justify-end gap-2">
+            <span className="text-xs text-neutral-700 mt-1">
+              (Mật khẩu cấp 2 sẽ được sử dụng để xác thực các giao dịch, vui
+              lòng ghi nhớ và không chia sẻ cho người khác)
+            </span>
+            <div className="flex w-full items-center justify-between">
               <Button
-                className="border-secondary text-secondary hover:bg-secondary hover:text-white"
-                onClick={handleBack}
+                className="border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
+                onClick={handleNavigateToForgotSecurityPassword}
               >
-                Trở Lại
+                Quên Mật Khẩu
               </Button>
-              <Button
-                className="bg-primary text-white hover:opacity-80"
-                htmlType="submit"
-              >
-                Xác Nhận
-              </Button>
+
+              <div className="w-full flex items-center justify-between">
+                <div className="flex w-full items-center justify-end gap-2">
+                  <Button
+                    className="border-secondary text-secondary hover:bg-secondary hover:text-white"
+                    onClick={handleBack}
+                  >
+                    Trở Lại
+                  </Button>
+                  <Button
+                    className="bg-primary text-white hover:opacity-80"
+                    htmlType="submit"
+                  >
+                    Xác Nhận
+                  </Button>
+                </div>
+              </div>
             </div>
           </form>
         ) : (
@@ -220,19 +239,32 @@ const ModalOTP = ({ user, onVerify }) => {
                   onChange={onNewOTPChange}
                 />
                 <span className="text-red-500">{error?.newOTP}</span>
-                <div className="flex w-full items-center justify-end gap-2">
+                <span className="text-xs text-neutral-700 mt-1">
+                  (Mật khẩu cấp 2 sẽ được sử dụng để xác thực các giao dịch, vui
+                  lòng ghi nhớ và không chia sẻ cho người khác)
+                </span>
+                <div className="w-full flex items-center justify-between">
                   <Button
-                    className="border-secondary text-secondary hover:bg-secondary hover:text-white"
-                    onClick={handleBack}
+                    className="border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
+                    onClick={handleNavigateToForgotSecurityPassword}
                   >
-                    Trở Lại
+                    Quên Mật Khẩu
                   </Button>
-                  <Button
-                    className="bg-primary text-white hover:opacity-80"
-                    onClick={handleNextStep}
-                  >
-                    Tiếp Theo
-                  </Button>
+
+                  <div className="flex w-full items-center justify-end gap-2">
+                    <Button
+                      className="border-secondary text-secondary hover:bg-secondary hover:text-white"
+                      onClick={handleBack}
+                    >
+                      Trở Lại
+                    </Button>
+                    <Button
+                      className="bg-primary text-white hover:opacity-80"
+                      onClick={handleNextStep}
+                    >
+                      Tiếp Theo
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (
@@ -253,20 +285,32 @@ const ModalOTP = ({ user, onVerify }) => {
                     onChange={onConfirmOTPChange}
                   />
                   <span className="text-red-500">{error?.confirmOTP}</span>
-                  <div className="flex w-full items-center justify-end gap-2">
+                  <span className="text-xs text-neutral-700 mt-1">
+                    (Mật khẩu cấp 2 sẽ được sử dụng để xác thực các giao dịch,
+                    vui lòng ghi nhớ và không chia sẻ cho người khác)
+                  </span>
+                  <div className="w-full flex justify-between items-center">
                     <Button
-                      className="border-secondary text-secondary hover:bg-secondary hover:text-white"
-                      onClick={handleBackToStep1}
+                      className="border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
+                      onClick={handleNavigateToForgotSecurityPassword}
                     >
-                      Trở Lại
+                      Quên Mật Khẩu
                     </Button>
-                    <Button
-                      className="bg-primary text-white hover:opacity-80"
-                      htmlType="submit"
-                      loading={loading}
-                    >
-                      Xác Nhận
-                    </Button>
+                    <div className="flex w-full items-center justify-end gap-2">
+                      <Button
+                        className="border-secondary text-secondary hover:bg-secondary hover:text-white"
+                        onClick={handleBackToStep1}
+                      >
+                        Trở Lại
+                      </Button>
+                      <Button
+                        className="bg-primary text-white hover:opacity-80"
+                        htmlType="submit"
+                        loading={loading}
+                      >
+                        Xác Nhận
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </>

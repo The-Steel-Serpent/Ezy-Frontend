@@ -7,6 +7,7 @@ import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
+import { CheckoutProvider } from "../providers/CheckoutProvider";
 const AccountSetting = withSuspense(
   lazy(() => import("../pages/buyer/user-pages/my-account/AccountSetting"))
 );
@@ -21,11 +22,8 @@ const Categories = withSuspense(
 const WorkingProducts = withSuspense(
   lazy(() => import("../pages/seller/product_management/WorkingProducts"))
 );
-const InfringingProduct = withSuspense(
-  lazy(() => import("../pages/seller/product_management/InfringingProduct"))
-);
-const PendingProducts = withSuspense(
-  lazy(() => import("../pages/seller/product_management/PendingProducts"))
+const NotWorkingProduct = withSuspense(
+  lazy(() => import("../pages/seller/product_management/NotWorkingProduct"))
 );
 
 const Home = withSuspense(lazy(() => import("../pages/Home")));
@@ -54,8 +52,7 @@ const AddProductCategory = withSuspense(
   lazy(() => import("../pages/admin/category_management/AddProductCategory"))
 );
 const AddProductSubCategory = withSuspense(
-  lazy(() => import("../pages/admin/category_management/AddProductSubCategory")
-  )
+  lazy(() => import("../pages/admin/category_management/AddProductSubCategory"))
 );
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
@@ -63,6 +60,12 @@ const SellerHome = withSuspense(
 
 const SellerSetup = withSuspense(
   lazy(() => import("../pages/seller/SellerSetup"))
+);
+const SellerEditProfileBasic = withSuspense(
+  lazy(() => import("../pages/profile/SellerEditProfileBasic"))
+);
+const SellerEditProfileTax = withSuspense(
+  lazy(() => import("../pages/profile/SellerEditProfileTax")) 
 );
 const SuggestProduct = withSuspense(
   lazy(() => import("../pages/buyer/product-pages/SuggestProduct"))
@@ -95,6 +98,7 @@ const ShopRecommendations = withSuspense(
 const CheckoutPage = withSuspense(
   lazy(() => import("../pages/buyer/cart-pages/CheckoutPage"))
 );
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -225,7 +229,9 @@ const router = createBrowserRouter([
         path: "/cart/checkout",
         element: (
           <AuthLayout>
-            <CheckoutPage />
+            <CheckoutProvider>
+              <CheckoutPage />
+            </CheckoutProvider>
           </AuthLayout>
         ),
       },
@@ -247,6 +253,22 @@ const router = createBrowserRouter([
             <SellerSetup />
           </SellerAuthLayout>
         ),
+      },
+      {
+        path: "seller/seller-edit-profile",
+        element: (
+          <SellerAuthLayout>
+            <SellerEditProfileBasic />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/seller-edit-profile/tax-info",
+        element:(
+          <SellerAuthLayout>
+            <SellerEditProfileTax />
+          </SellerAuthLayout>  
+        )
       },
       {
         path: "seller/login",
@@ -299,18 +321,10 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "seller/product-management/infringing-products",
+        path: "seller/product-management/notworking-products",
         element: (
           <SellerAuthLayout>
-            <InfringingProduct />
-          </SellerAuthLayout>
-        ),
-      },
-      {
-        path: "seller/product-management/pending-products",
-        element: (
-          <SellerAuthLayout>
-            <PendingProducts />
+            <NotWorkingProduct />
           </SellerAuthLayout>
         ),
       },
@@ -355,7 +369,7 @@ const router = createBrowserRouter([
             <AddProductSubCategory />
           </AdminAuthLayout>
         ),
-      }
+      },
     ],
   },
 ]);

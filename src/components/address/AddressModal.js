@@ -14,7 +14,7 @@ const AddressModal = ({
 }) => {
     return (
         <Modal
-            title="Thêm địa chỉ mới"
+            title="Địa chỉ"
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={[
@@ -61,6 +61,7 @@ const AddressModal = ({
                 </Select>
                 <Input
                     placeholder='Nhập vào địa chỉ chi tiết'
+                    value={state.detailAddress}
                     onChange={handleDetailAddressChange}
                 />
             </div>

@@ -16,15 +16,19 @@ export const updateProfile = async (userID, updateData) => {
     return response.data;
   } catch (error) {
     console.log(error);
+    let errorMessage;
     switch (error?.response?.status) {
       case 404:
-        return { error: true, message: "Không tìm thấy người dùng" };
+        errorMessage = "Không tìm thấy người dùng";
+        break;
       case 500:
-        return { error: true, message: "Lỗi server" };
-
+        errorMessage = "Lỗi server";
+        break;
       default:
-        return { error: true, message: error.message || error };
+        errorMessage = error.message || error;
+        break;
     }
+    throw new Error(errorMessage);
   }
 };
 
@@ -77,6 +81,91 @@ export const verifyOTP = async (userID, otp) => {
         break;
       default:
         errorMessage = error.message || error;
+        break;
+    }
+    throw new Error(errorMessage);
+  }
+};
+
+export const checkEmailExists = async (email) => {
+  try {
+    const url = `${process.env.REACT_APP_BACKEND_URL}/api/check-email?email=${email}`;
+    const response = await axios.get(url);
+    if (response.data.success) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.log(error);
+    let errorMessage;
+    switch (error?.response?.status) {
+      case 404:
+        errorMessage = "Không tìm thấy email";
+        break;
+      case 500:
+        errorMessage = "Lỗi server";
+        break;
+      default:
+        errorMessage = error.message || error;
+        break;
+    }
+    return false;
+  }
+};
+
+export const updateEmail = async (userID, email) => {
+  try {
+    const url = `${process.env.REACT_APP_BACKEND_URL}/api/update-email`;
+    const response = await axios.post(url, {
+      user_id: userID,
+      email,
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    let errorMessage;
+    switch (error?.response?.status) {
+      case 404:
+        errorMessage = "Không tìm thấy người dùng";
+        break;
+      case 500:
+        errorMessage = "Lỗi server";
+        break;
+      default:
+        errorMessage = error.message || error;
+        break;
+    }
+    throw new Error(errorMessage);
+  }
+};
+
+
+
+export const logOut = async () => {
+  try {
+    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
+    const res = await axios.post(
+      URL,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        withCredentials: true,
+      }
+    );
+
+    if (res.data.success) {
+      return true;
+    }
+  } catch (error) {
+    let errorMessage;
+    switch (error.response.data.code) {
+      case "auth/id-token-expired":
+        errorMessage = "Phiên Đăng nhập đã hết hạn";
+        break;
+      default:
+        errorMessage = "Đã có lỗi xảy ra, Vui lòng thử lại sau";
         break;
     }
     throw new Error(errorMessage);

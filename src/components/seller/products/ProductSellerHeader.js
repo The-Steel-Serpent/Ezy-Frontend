@@ -11,16 +11,12 @@ const items = [
   },
   {
     key: '/seller/product-management/working-products',
-    label: 'Đăng hoạt động (0)'
+    label: 'Đang hoạt động'
   },
   {
-    key: '/seller/product-management/infringing-products',
-    label: 'Vi phạm (0)'
+    key: '/seller/product-management/notworking-products',
+    label: 'Dừng hoạt động'
   },
-  {
-    key: '/seller/product-management/pending-products',
-    label: 'Chờ duyệt bởi Ezy (0)'
-  }
 ];
 
 const ProductSellerHeader = ({ status }) => {
@@ -50,7 +46,7 @@ const ProductSellerHeader = ({ status }) => {
           <Button
             type="primary"
             icon={<GoPlus />}
-            className='bg-primary px-3 py-4 text-sm'
+            className='bg-secondary px-3 py-4 text-sm'
           >
             Thêm 1 sản phẩm mới
           </Button>

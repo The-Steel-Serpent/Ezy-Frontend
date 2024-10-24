@@ -159,6 +159,18 @@ const SellerAuthLayout = ({ children }) => {
             navigate(e.key)
     };
 
+    const setUpNavigate = () => {
+        if (state.authenticate) {
+            if (state.user.setup === 0)
+                navigate("/seller/seller-setup");
+        }
+    }
+
+    const navigateHome = () => {
+        navigate('/seller');
+        setUpNavigate();
+    }
+
 
     const dispatch = useDispatch();
     const dispatchShop = useDispatch();
@@ -198,6 +210,10 @@ const SellerAuthLayout = ({ children }) => {
             logOut();
             message.success("Đăng xuất thành công");
             navigate("/seller/login");
+        }
+        else if(e.key == 'profile_shop'){
+            navigate('/seller/seller-edit-profile');
+            setUpNavigate();
         }
     }
 
@@ -327,8 +343,8 @@ const SellerAuthLayout = ({ children }) => {
         }
     }, [state.authenticate]);
 
+
     const isSellerSetupPath = location.pathname === '/seller/seller-setup';
-    const isSellerSetupOnBoardingPath = location.pathname === '/seller/seller-setup-onboarding';
 
     return (
         <>
@@ -339,6 +355,8 @@ const SellerAuthLayout = ({ children }) => {
                             src={logo}
                             alt='logo'
                             width={100}
+                            className='cursor-pointer'
+                            onClick={navigateHome}
                         />
                         <div className='text-lg mt-2 text-white'>
                             <a href='/seller' className='hover:text-slate-200'>Kênh người bán</a>
@@ -377,7 +395,7 @@ const SellerAuthLayout = ({ children }) => {
                                 <a onClick={(e) => e.preventDefault()}>
                                     <Space className='bg-transparent'>
                                         {shop.logo_url != '' ? <Avatar src={shop.logo_url} size={20} /> : <Avatar src={state?.user?.avt_url} size={20} icon={<FaUserCircle />} />}
-                                        <span className='text-white text-[15px]'>{shop.shop_name != '' ? shop.shop_name: state?.user?.email}</span>
+                                        <span className='text-white text-[15px]'>{shop.shop_name != '' ? shop.shop_name : state?.user?.email}</span>
                                         <DownOutlined size={20} className='text-white' />
                                     </Space>
                                 </a>
@@ -386,7 +404,7 @@ const SellerAuthLayout = ({ children }) => {
                     </div>
                 </header>
                 <Layout className='h-full'>
-                    {!isSellerSetupPath && !isSellerSetupOnBoardingPath && (
+                    {!isSellerSetupPath && (
                         <Sider trigger={null} collapsible collapsed={collapsed} className='bg-white w-fit h-full shadow-xl sticky-sider'>
                             <div className="demo-logo-vertical" />
                             <Menu

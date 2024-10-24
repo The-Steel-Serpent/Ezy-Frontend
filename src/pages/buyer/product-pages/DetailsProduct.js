@@ -258,9 +258,9 @@ const DetailsProduct = () => {
   const sale_price =
     currentVarient != null && currentVarient?.sale_percents > 0
       ? currentVarient?.price -
-        (currentVarient?.price * currentVarient?.sale_percents) / 100
+      (currentVarient?.price * currentVarient?.sale_percents) / 100
       : detailsProduct?.base_price -
-        (detailsProduct?.base_price * detailsProduct?.sale_percents) / 100;
+      (detailsProduct?.base_price * detailsProduct?.sale_percents) / 100;
 
   // useEffect(() => {
   //   setCurrentThumbnail(details.product_varients[0].thumbnail);
@@ -269,9 +269,10 @@ const DetailsProduct = () => {
   return (
     <>
       {success ? (
-        <div className="max-w-[1200px] mx-auto">
+        <div className="max-w-[1200px]  mx-auto">
           <div className=" flex justify-center lg:justify-start my-4">
             <Breadcrumb
+              className="max-w-[1200px] w-full"
               items={[
                 {
                   title: (
@@ -295,7 +296,7 @@ const DetailsProduct = () => {
                   ),
                 },
                 {
-                  title: <span>{detailsProduct.product_name}</span>,
+                  title: <span className="line-clamp-1 text-ellipsis">{detailsProduct.product_name}</span>,
                 },
               ]}
             />
@@ -315,7 +316,7 @@ const DetailsProduct = () => {
             {/***Lựa chọn sản phẩm */}
             <section className="col-span-7 pl-5 pt-5 pr-9">
               {/***Tên sản phẩm */}
-              <span className="text-xl font-semibold">
+              <span className="text-xl font-semibold break-words">
                 {detailsProduct?.product_name}
               </span>
               {/***Đánh giá sản phẩm*/}
@@ -390,7 +391,7 @@ const DetailsProduct = () => {
                 {detailsProduct?.ProductClassifies?.[0] && (
                   <>
                     <section className="flex flex-row mb-6">
-                      <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
+                      <div className="text-slate-500 flex-shrink-0 w-[100px] font-[400] text-base break-words">
                         {detailsProduct?.ProductClassifies?.[0]?.type_name}
                       </div>
                       <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap">
@@ -407,17 +408,15 @@ const DetailsProduct = () => {
                                 }
                               }}
                               className={`
-                                ${
-                                  classify?.total_stock > 0
-                                    ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
-                                    : "cursor-not-allowed bg-[#fafafa] text-gray-400"
+                                ${classify?.total_stock > 0
+                                  ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
+                                  : "cursor-not-allowed bg-[#fafafa] text-gray-400"
                                 }
-                                 ${
-                                   selectedClassify ===
-                                   classify?.product_classify_id
-                                     ? "border-primary text-primary"
-                                     : ""
-                                 }  items-center  border-[1px] border-solid  rounded box-border inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
+                                 ${selectedClassify ===
+                                  classify?.product_classify_id
+                                  ? "border-primary text-primary"
+                                  : ""
+                                }  items-center  border-[1px] border-solid  rounded box-border inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
                             >
                               <img
                                 loading="lazy"
@@ -429,12 +428,12 @@ const DetailsProduct = () => {
                               </span>
                               {selectedClassify ===
                                 classify?.product_classify_id && (
-                                <>
-                                  <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
-                                    <IoCheckmarkDone />
-                                  </div>
-                                </>
-                              )}
+                                  <>
+                                    <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
+                                      <IoCheckmarkDone />
+                                    </div>
+                                  </>
+                                )}
                             </button>
                           )
                         )}
@@ -447,7 +446,7 @@ const DetailsProduct = () => {
                 {detailsProduct?.ProductSizes?.[0] && (
                   <>
                     <section className="flex flex-row mb-6">
-                      <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base">
+                      <div className="text-slate-500 flex-shrink-0 w-[110px] font-[400] text-base break-words">
                         {detailsProduct?.ProductSizes?.[0]?.type_of_size}
                       </div>
                       <div className="flex items-center overflow-y-auto max-h-[220px] max-w-[515px] flex-wrap">
@@ -456,24 +455,22 @@ const DetailsProduct = () => {
                             onClick={() => {
                               size?.stock > 0 && handleSizeClick(size);
                             }}
-                            className={`${
-                              size?.stock > 0
-                                ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
-                                : "cursor-not-allowed bg-[#fafafa] text-gray-400"
-                            } ${
-                              size?.stock > 0 &&
-                              currentVarient?.ProductSize?.product_size_id ===
+                            className={`${size?.stock > 0
+                              ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
+                              : "cursor-not-allowed bg-[#fafafa] text-gray-400"
+                              } ${size?.stock > 0 &&
+                                currentVarient?.ProductSize?.product_size_id ===
                                 size?.product_size_id
                                 ? "border-primary text-primary"
                                 : ""
-                            } items-center  border-[1px] border-solid rounded box-border  inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
+                              } items-center  border-[1px] border-solid rounded box-border  inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
                           >
                             <span className="ml-2">
                               {size?.ProductSize?.product_size_name}
                             </span>
                             {size?.stock > 0 &&
                               currentVarient?.ProductSize?.product_size_id ===
-                                size?.product_size_id && (
+                              size?.product_size_id && (
                                 <>
                                   <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
                                     <IoCheckmarkDone />
@@ -515,11 +512,10 @@ const DetailsProduct = () => {
                     <>
                       <Button
                         size="large"
-                        className={`${
-                          detailsProduct?.stock > 0 || currentVarient?.stock > 0
-                            ? `hover:bg-primary hover:text-white  cursor-pointer`
-                            : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
-                        } h-14 px-5  text-lg`}
+                        className={`${detailsProduct?.stock > 0 || currentVarient?.stock > 0
+                          ? `hover:bg-primary hover:text-white  cursor-pointer`
+                          : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
+                          } h-14 px-5  text-lg`}
                         icon={<TiShoppingCart />}
                         onClick={async () =>
                           await handleAddToCart(currentVarient)
@@ -528,11 +524,10 @@ const DetailsProduct = () => {
                         Thêm vào giỏ hàng
                       </Button>
                       <Button
-                        className={`${
-                          detailsProduct?.stock > 0 || currentVarient?.stock > 0
-                            ? "hover:bg-opacity-80 cursor-pointer"
-                            : "opacity-60 cursor-not-allowed"
-                        } bg-primary text-white px-8 h-14 text-lg`}
+                        className={`${detailsProduct?.stock > 0 || currentVarient?.stock > 0
+                          ? "hover:bg-opacity-80 cursor-pointer"
+                          : "opacity-60 cursor-not-allowed"
+                          } bg-primary text-white px-8 h-14 text-lg`}
                         size="large"
                         onClick={() => {
                           if (
@@ -668,7 +663,7 @@ const DetailsProduct = () => {
                     dangerouslySetInnerHTML={{
                       __html: detailsProduct?.description,
                     }}
-                    className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4"
+                    className="mt-[30px] mx-[15px] mb-[15px] flex flex-col gap-4 break-words"
                   ></div>
                 </>
               ) : (
