@@ -1,5 +1,5 @@
 import { Button, Input, List, Modal } from "antd";
-import React, { memo, useEffect, useReducer } from "react";
+import React, { memo, useEffect, useReducer, useState } from "react";
 
 import { useSelector } from "react-redux";
 import { getVoucherList } from "../../services/voucherService";
@@ -9,10 +9,30 @@ import { useCheckout } from "../../providers/CheckoutProvider";
 
 const ModalVoucher = (props) => {
   const user = useSelector((state) => state.user);
-  const { openModalVoucher, handleCancelModalVoucher, cart } = props;
 
-  const { state, setState, handleSelectVoucher, handleConfirmVoucher } =
-    useCheckout();
+  const [localState, setLocalState] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "couponCode":
+          return { ...state, couponCode: action.payload };
+        default:
+          return state;
+      }
+    },
+    {
+      couponCode: "",
+    }
+  );
+
+  const { openModalVoucher, handleCancelModalVoucher, cart } = props;
+  const { couponCode } = localState;
+  const {
+    state,
+    setState,
+    handleSelectVoucher,
+    handleConfirmVoucher,
+    handleApplyVoucher,
+  } = useCheckout();
 
   const {
     shippingVoucher,
@@ -21,6 +41,14 @@ const ModalVoucher = (props) => {
     selectedVoucher,
     selectingVoucher,
   } = state;
+
+  const onCouponCodeChange = (e) => {
+    const coupon = e.target.value;
+    setLocalState({
+      type: "couponCode",
+      payload: coupon,
+    });
+  };
 
   useEffect(() => {
     const fetchVoucher = async () => {
@@ -101,10 +129,17 @@ const ModalVoucher = (props) => {
         <div className="w-full grid grid-cols-12 items-center p-3 bg-third gap-3">
           <div className="col-span-3 text-center">Mã Voucher</div>
           <div className="col-span-6">
-            <Input placeholder="Mã Ezy Voucher" />
+            <Input
+              placeholder="Mã Ezy Voucher"
+              name="couponCode"
+              onChange={onCouponCodeChange}
+            />
           </div>
           <div className="col-span-3">
-            <Button className="w-full bg-primary text-white hover:opacity-80">
+            <Button
+              className="w-full bg-primary text-white hover:opacity-80"
+              onClick={() => handleApplyVoucher(couponCode)}
+            >
               Áp Dụng
             </Button>
           </div>
@@ -122,7 +157,7 @@ const ModalVoucher = (props) => {
               <List>
                 <VirtualList
                   data={shippingVoucher}
-                  height={shippingVoucher?.length > 2 ? 129 * 2 : 129}
+                  height={shippingVoucher?.length > 1 ? 129 * 2 : 129}
                   itemHeight={129}
                 >
                   {(item) => (

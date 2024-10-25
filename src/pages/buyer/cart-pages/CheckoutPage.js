@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Button, Steps } from "antd";
-import React, { lazy, Suspense, useEffect, useReducer } from "react";
+import React, { lazy, Suspense, useEffect, useReducer, useRef } from "react";
 import { AiOutlineFileDone } from "react-icons/ai";
 import { LuShoppingBag } from "react-icons/lu";
 import { MdOutlinePayment } from "react-icons/md";
@@ -30,10 +30,13 @@ const CheckoutPage = () => {
     handleCloseAddressModal,
     handleOpenAddressModal,
     handleUpdateTotal,
+    handleUpdateTotalPayment,
+    calculateVoucherDiscounts,
   } = useCheckout();
 
   const cart = useSelector((state) => state.cart.cart);
   const user = useSelector((state) => state.user);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   useEffect(() => {
@@ -54,9 +57,8 @@ const CheckoutPage = () => {
     selectedVoucher,
   } = state;
 
-  const fetchDefaultAddress = async () => {
+  const fetchDefaultAddress = async (userID) => {
     try {
-      const userID = user?.user_id;
       const res = await getDefaultAddress(userID);
       if (res.success) {
         setState({ type: "setDefaultAddress", payload: res.data });
@@ -109,12 +111,13 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     if (user?.user_id && user?.user_id !== "") {
-      fetchDefaultAddress();
+      const userID = user?.user_id;
+
+      fetchDefaultAddress(userID);
     }
   }, [user?.user_id]);
 
   useEffect(() => {
-    console.log(cart);
     if (cart.length > 0) {
       const cartValid = cart
         .filter((shop) => shop.selected === 1)
@@ -260,7 +263,7 @@ const CheckoutPage = () => {
         openAddressModal={openAddressModal}
         handleCloseAddressModal={handleCloseAddressModal}
         currentAddress={defaultAddress}
-        fetchDefaultAddress={fetchDefaultAddress}
+        fetchDefaultAddress={() => fetchDefaultAddress(user?.user_id)}
       />
     </>
   );

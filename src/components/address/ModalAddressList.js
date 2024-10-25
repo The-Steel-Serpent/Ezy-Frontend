@@ -70,6 +70,7 @@ const ModalAddressList = (props) => {
       message.error("Vui lòng chọn địa chỉ mặc định");
       return;
     }
+
     try {
       const response = await setDefaultAddress(
         user?.user_id,

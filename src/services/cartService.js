@@ -232,3 +232,31 @@ export const removeItem = async (cart_item_id) => {
     throw new Error(errorMessage);
   }
 };
+
+export const checkOut = async (data) => {
+  try {
+    const { user_id, paymentMethodID, totalPayment, validCart } = data;
+    const urlCheckout = `${process.env.REACT_APP_BACKEND_URL}/api/checkout`;
+    const res = await axios.post(urlCheckout, {
+      user_id,
+      paymentMethodID,
+      totalPayment,
+      validCart,
+    });
+    return res.data;
+  } catch (error) {
+    console.log("Lỗi khi thực hiện thanh toán: ", error);
+    let errorMessage;
+    switch (error?.response?.status) {
+      case 500:
+        errorMessage = "Lỗi server";
+        break;
+      case 400:
+        errorMessage = "Số lượng sản phẩm không đủ";
+        break;
+      default:
+        errorMessage = error.message || error;
+    }
+    throw new Error(errorMessage);
+  }
+};

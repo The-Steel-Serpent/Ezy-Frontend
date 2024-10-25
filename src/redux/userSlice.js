@@ -14,6 +14,7 @@ const initialState = {
   setup: 0,
   isVerified: false,
   token: "",
+  wallet: {},
   onlineUser: [],
 };
 
@@ -34,6 +35,7 @@ export const userSlice = createSlice({
       state.role_id = action.payload.role_id;
       state.setup = action.payload.setup;
       state.isVerified = action.payload.isVerified;
+      state.wallet = action.payload.wallet;
     },
     setToken: (state, action) => {
       state.token = action.payload;
@@ -52,6 +54,10 @@ export const userSlice = createSlice({
       state.setup = false;
       state.isVerified = false;
       state.token = "";
+      state.wallet = {};
+    },
+    setWallet: (state, action) => {
+      state.wallet = action.payload;
     },
     setUpDone: (state) => {
       state.setup = 1;
@@ -70,6 +76,7 @@ export const {
   setOnlineUser,
   setSocketConnection,
   setUpDone,
+  setWallet,
 } = userSlice.actions;
 
 export default userSlice.reducer;
