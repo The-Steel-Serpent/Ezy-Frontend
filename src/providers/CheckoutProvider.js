@@ -1,6 +1,15 @@
 import { message } from "antd";
+import { checkOut } from "../services/cartService";
 
-const { useReducer, createContext, useContext } = require("react");
+const {
+  useReducer,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} = require("react");
 const CheckoutContext = createContext();
 export const CheckoutProvider = ({ children }) => {
   const [state, setState] = useReducer(
@@ -14,6 +23,10 @@ export const CheckoutProvider = ({ children }) => {
           return { ...state, openAddressModal: action.payload };
         case "openModalVoucher":
           return { ...state, openModalVoucher: action.payload };
+        case "openModalCheckoutError":
+          return { ...state, openModalCheckoutError: action.payload };
+        case "checkoutMessage":
+          return { ...state, checkoutMessage: action.payload };
         case "updateTotal":
           const existingShopIndex = state.total.findIndex(
             (total) => total.shop_id === action.payload.shop_id
@@ -48,7 +61,8 @@ export const CheckoutProvider = ({ children }) => {
           return { ...state, shippingVoucher: action.payload };
         case "discountVoucher":
           return { ...state, discountVoucher: action.payload };
-
+        case "selectedPaymentMethod":
+          return { ...state, selectedPaymentMethod: action.payload };
         default:
           return state;
       }
@@ -58,6 +72,8 @@ export const CheckoutProvider = ({ children }) => {
       cartListWithoutInvalidItems: [],
       openAddressModal: false,
       openModalVoucher: false,
+      checkoutMessage: "",
+      openModalCheckoutError: false,
       total: [],
       shippingVoucher: [],
       discountVoucher: [],
@@ -76,8 +92,39 @@ export const CheckoutProvider = ({ children }) => {
         discountShippingFee: 0,
         final: 0,
       },
+      selectedPaymentMethod: 1,
     }
   );
+
+  const handleUpdateTotalPayment = useCallback((total) => {
+    setState({
+      type: "updateTotalPayment",
+      payload: total.reduce(
+        (acc, cur) => {
+          return {
+            totalPrice: acc.totalPrice + cur.totalPrice,
+            shippingFee: acc.shippingFee + cur.shippingFee,
+            discountPrice: acc.discountPrice + cur.discountPrice,
+            discountShippingFee:
+              acc.discountShippingFee + cur.discountShippingFee,
+            final:
+              acc.final +
+              cur.totalPrice +
+              cur.shippingFee -
+              cur.discountPrice -
+              cur.discountShippingFee,
+          };
+        },
+        {
+          totalPrice: 0,
+          shippingFee: 0,
+          discountPrice: 0,
+          discountShippingFee: 0,
+          final: 0,
+        }
+      ),
+    });
+  }, []);
 
   const handleCloseAddressModal = () => {
     setState({ type: "openAddressModal", payload: false });
@@ -86,7 +133,7 @@ export const CheckoutProvider = ({ children }) => {
     setState({ type: "openAddressModal", payload: true });
   };
 
-  const handleUpdateTotal = (total) => {
+  const handleUpdateTotal = useCallback((total) => {
     const {
       shop_id,
       totalPrice,
@@ -104,7 +151,7 @@ export const CheckoutProvider = ({ children }) => {
         discountShippingFee,
       },
     });
-  };
+  }, []);
 
   const handleCancelModalVoucher = () => {
     setState({ type: "openModalVoucher", payload: false });
@@ -113,6 +160,64 @@ export const CheckoutProvider = ({ children }) => {
     setState({ type: "openModalVoucher", payload: true });
   };
 
+  const calculateVoucherDiscounts = useCallback((total, selectedVoucher) => {
+    const totalPriceAllShops = total.reduce(
+      (sum, shop) => sum + (shop.totalPrice || 0),
+      0
+    );
+    const totalShippingFeeAllShops = total.reduce(
+      (sum, shop) => sum + (shop.shippingFee || 0),
+      0
+    );
+
+    const { shippingVoucher, discountVoucher } = selectedVoucher;
+    let totalDiscountPrice = 0;
+    let totalDiscountShippingFee = 0;
+
+    if (discountVoucher) {
+      const {
+        discount_type,
+        discount_value,
+        discount_max_value,
+        min_order_value,
+      } = discountVoucher;
+      if (totalPriceAllShops >= min_order_value) {
+        if (discount_type === "THEO PHẦN TRĂM") {
+          totalDiscountPrice = Math.min(
+            (discount_value / 100) * totalPriceAllShops,
+            discount_max_value
+          );
+        } else if (discount_type === "KHÔNG THEO PHẦN TRĂM") {
+          totalDiscountPrice = Math.min(discount_value, totalPriceAllShops);
+        }
+      }
+    }
+
+    if (shippingVoucher) {
+      const { discount_value } = shippingVoucher;
+      totalDiscountShippingFee = Math.min(
+        discount_value || 0,
+        totalShippingFeeAllShops
+      );
+    }
+
+    return total.map((shop) => {
+      const shopPriceRatio = shop.totalPrice / totalPriceAllShops;
+      const shopShippingFeeRatio = shop.shippingFee / totalShippingFeeAllShops;
+
+      const discountPrice = Math.round(totalDiscountPrice * shopPriceRatio);
+      const discountShippingFee = Math.round(
+        totalDiscountShippingFee * shopShippingFeeRatio
+      );
+      return {
+        shop_id: shop.shop_id,
+        totalPrice: shop.totalPrice,
+        shippingFee: shop.shippingFee,
+        discountPrice,
+        discountShippingFee,
+      };
+    });
+  }, []);
   const handleSelectVoucher = (type, voucher) => {
     setState({
       type: "selectingVoucher",
@@ -142,8 +247,67 @@ export const CheckoutProvider = ({ children }) => {
     handleCancelModalVoucher();
   };
 
-  const handleCheckoutClick = () => {
-    //  handle checkout
+  const handleApplyVoucher = (couponCode) => {
+    const { discountVoucher, shippingVoucher } = state;
+    let isFounded = false;
+    if (couponCode.length === 0) {
+      message.error("Vui lòng nhập mã giảm giá");
+      return;
+    }
+
+    if (discountVoucher.length > 0 && !isFounded) {
+      const selectedDiscountVoucher = discountVoucher.find(
+        (voucher) =>
+          voucher.discount_voucher_code === couponCode &&
+          voucher.isVoucherValid === true
+      );
+      if (selectedDiscountVoucher) {
+        handleSelectVoucher(2, selectedDiscountVoucher);
+        isFounded = true;
+      }
+    }
+    if (shippingVoucher.length > 0 && !isFounded) {
+      const selectedShippingVoucher = shippingVoucher.find(
+        (voucher) =>
+          voucher.discount_voucher_code === couponCode &&
+          voucher.isVoucherValid === true
+      );
+      if (selectedShippingVoucher) {
+        handleSelectVoucher(1, selectedShippingVoucher);
+        isFounded = true;
+      }
+    }
+    if (!isFounded) {
+      message.error("Mã giảm giá không hợp lệ");
+    } else {
+      message.success("Áp dụng mã giảm giá thành công");
+    }
+  };
+
+  const onPaymentMethodChange = (e) => {
+    setState({ type: "selectedPaymentMethod", payload: e.target.value });
+  };
+  const handleCheckoutClick = async (userID) => {
+    console.log("User ID: ", userID);
+    console.log("Payment Method: ", state.selectedPaymentMethod);
+    console.log("Cart List: ", state.cartListWithoutInvalidItems);
+    console.log("Total Payment: ", state.totalPayment);
+
+    const data = {
+      user_id: userID,
+      paymentMethodID: state.selectedPaymentMethod,
+      totalPayment: state.totalPayment,
+      validCart: state.cartListWithoutInvalidItems,
+    };
+
+    try {
+      const res = await checkOut(data);
+      console.log("Response: ", res);
+    } catch (error) {
+      console.log("Error: ", error);
+      setState({ type: "openModalCheckoutError", payload: true });
+      setState({ type: "checkoutMessage", payload: error.message || error });
+    }
   };
 
   return (
@@ -156,9 +320,13 @@ export const CheckoutProvider = ({ children }) => {
         handleCancelModalVoucher,
         handleOpenModalVoucher,
         handleUpdateTotal,
+        handleUpdateTotalPayment,
         handleCheckoutClick,
         handleSelectVoucher,
         handleConfirmVoucher,
+        calculateVoucherDiscounts,
+        handleApplyVoucher,
+        onPaymentMethodChange,
       }}
     >
       {children}

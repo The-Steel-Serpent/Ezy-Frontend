@@ -1,15 +1,26 @@
 import { Avatar, Input } from "antd";
-import React, { memo, useEffect, useReducer } from "react";
+import React, { memo, useEffect, useReducer, useRef } from "react";
 import CheckoutCartItem from "./CheckoutCartItem";
 import { getServiceTypes, getShippingFee } from "../../services/ghnService";
 import ModalShippingFees from "./ModalShippingFees";
+import { useCheckout } from "../../providers/CheckoutProvider";
 
 const CheckoutItem = (props) => {
   const { item, defaultAddress, handleUpdateTotal } = props;
-
-  const [state, setState] = useReducer(
+  const {
+    state,
+    setState,
+    handleUpdateTotalPayment,
+    calculateVoucherDiscounts,
+  } = useCheckout();
+  const prevSelectedVoucherRef = useRef(state.selectedVoucher);
+  const prevTotalRef = useRef(state.total);
+  const [localState, setLocalState] = useReducer(
     (state, action) => {
       switch (action.type) {
+        case "loading": {
+          return { ...state, loading: action.payload };
+        }
         case "defaultService":
           return { ...state, defaultService: action.payload };
         case "serviceList":
@@ -18,31 +29,43 @@ const CheckoutItem = (props) => {
           return { ...state, totalPriceWithShipping: action.payload };
         case "openModalShippingFees":
           return { ...state, openModalShippingFees: action.payload };
+        case "computedTotal":
+          return { ...state, computedTotal: action.payload };
+        case "discountShippingFee":
+          return { ...state, discountShippingFee: action.payload };
         default:
           return state;
       }
     },
     {
+      loading: false,
       defaultService: null,
       serviceList: [],
       totalPriceWithShipping: 0,
       openModalShippingFees: false,
+      computedTotal: null,
+      discountShippingFee: 0,
     }
   );
   const {
+    loading,
     defaultService,
     serviceList,
     totalPriceWithShipping,
     openModalShippingFees,
-  } = state;
+    computedTotal,
+    discountShippingFee,
+  } = localState;
+
+  const { total, selectedVoucher } = state;
 
   useEffect(() => {
-    const serviceData = {
-      shop_id: item?.Shop?.shop_id,
-      from_district: item?.Shop?.district_id,
-      to_district: defaultAddress?.district_id,
-    };
     const fetchDefaultService = async () => {
+      const serviceData = {
+        shop_id: item?.Shop?.shop_id,
+        from_district: item?.Shop?.district_id,
+        to_district: defaultAddress?.district_id,
+      };
       try {
         const transportService = await getServiceTypes(serviceData);
         if (transportService.code === 200) {
@@ -116,7 +139,7 @@ const CheckoutItem = (props) => {
           const totalFees = fees.sort(
             (a, b) => b.fee.total_fee - a.fee.total_fee
           );
-          setState({ type: "serviceList", payload: totalFees });
+          setLocalState({ type: "serviceList", payload: totalFees });
         }
       } catch (error) {
         console.log("Lỗi khi lấy dịch vụ mặc định: ", error.message || error);
@@ -130,8 +153,8 @@ const CheckoutItem = (props) => {
 
   useEffect(() => {
     if (serviceList.length > 0) {
-      setState({ type: "defaultService", payload: serviceList[0] });
-      setState({
+      setLocalState({ type: "defaultService", payload: serviceList[0] });
+      setLocalState({
         type: "totalPriceWithShipping",
         payload: item?.total_price + serviceList[0]?.fee?.total_fee,
       });
@@ -140,24 +163,66 @@ const CheckoutItem = (props) => {
 
   useEffect(() => {
     if (defaultService !== null) {
-      setState({
+      setLocalState({
         type: "totalPriceWithShipping",
         payload: item?.total_price + defaultService?.fee?.total_fee,
       });
-      const shippingFee = defaultService?.fee?.total_fee || 0;
-      const totalPrice = item?.total_price || 0;
-      const discountPrice = 0;
-      const discountShippingFee = 0;
-
-      handleUpdateTotal({
+      const computedTotal = {
         shop_id: item?.Shop?.shop_id,
-        totalPrice,
-        shippingFee,
-        discountPrice,
-        discountShippingFee,
+        totalPrice: item?.total_price,
+        shippingFee: defaultService?.fee?.total_fee,
+        discountPrice: 0,
+        discountShippingFee: 0,
+      };
+      setLocalState({ type: "computedTotal", payload: computedTotal });
+      handleUpdateTotal(computedTotal);
+    }
+  }, [
+    defaultService,
+    handleUpdateTotal,
+    item?.Shop?.shop_id,
+    item?.total_price,
+  ]);
+
+  useEffect(() => {
+    if (computedTotal !== null) {
+      const updatedTotal = calculateVoucherDiscounts(
+        state.total,
+        state.selectedVoucher
+      );
+
+      if (
+        JSON.stringify(prevSelectedVoucherRef.current) !==
+          JSON.stringify(state.selectedVoucher) ||
+        JSON.stringify(prevTotalRef.current) !== JSON.stringify(updatedTotal)
+      ) {
+        updatedTotal.forEach((totalOfShop) => {
+          handleUpdateTotal(totalOfShop);
+        });
+        prevSelectedVoucherRef.current = state.selectedVoucher;
+        prevTotalRef.current = updatedTotal;
+      }
+      // Update total payment only when total has been finalized
+      if (updatedTotal.length > 0) {
+        handleUpdateTotalPayment(updatedTotal);
+      }
+    }
+    if (prevTotalRef.current.length > 0) {
+      const discountShippingFeeItem = prevTotalRef.current.find(
+        (total) => total.shop_id === item?.Shop?.shop_id
+      )?.discountShippingFee;
+      setLocalState({
+        type: "discountShippingFee",
+        payload: discountShippingFeeItem,
       });
     }
-  }, [defaultService]);
+  }, [
+    computedTotal,
+    selectedVoucher,
+    calculateVoucherDiscounts,
+    handleUpdateTotal,
+    handleUpdateTotalPayment,
+  ]);
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
@@ -165,19 +230,20 @@ const CheckoutItem = (props) => {
   };
 
   const handleOpenModalShippingFees = () => {
-    setState({ type: "openModalShippingFees", payload: true });
+    setLocalState({ type: "openModalShippingFees", payload: true });
   };
   const handleCancelModalShippingFees = () => {
-    setState({ type: "openModalShippingFees", payload: false });
+    setLocalState({ type: "openModalShippingFees", payload: false });
   };
   const handleSelectService = (service) => {
-    setState({ type: "defaultService", payload: service });
-    setState({
+    setLocalState({ type: "defaultService", payload: service });
+    setLocalState({
       type: "totalPriceWithShipping",
       payload: item?.total_price + service?.fee?.total_fee,
     });
     handleCancelModalShippingFees();
   };
+
   return (
     <>
       <div className="w-full flex flex-col gap-5">
@@ -209,7 +275,6 @@ const CheckoutItem = (props) => {
             <div className="col-span-7 p-6 flex flex-col gap-2">
               <div className=" w-full flex justify-between">
                 <span className="text-neutral-800 font-bold">
-                  {" "}
                   Phí Vận chuyển (
                   {defaultService?.service_id === 53321
                     ? "Tiêu Chuẩn"
@@ -224,10 +289,30 @@ const CheckoutItem = (props) => {
                     Thay Đổi
                   </span>
                 </span>
-                <span className="text-lg text-secondary font-bold">
-                  <sup>đ</sup>{" "}
-                  {defaultService?.fee?.total_fee?.toLocaleString("vi-VN")}
-                </span>
+                <div className="flex gap-3 items-center">
+                  {discountShippingFee > 0 && (
+                    <>
+                      <span className="text-lg text-neutral-400 line-through">
+                        <sup>đ</sup>
+                        {defaultService?.fee?.total_fee?.toLocaleString(
+                          "vi-VN"
+                        )}
+                      </span>
+                      <span className="text-lg text-secondary font-bold">
+                        <sup>đ</sup>
+                        {(
+                          defaultService?.fee?.total_fee - discountShippingFee
+                        ).toLocaleString("vi-VN")}
+                      </span>
+                    </>
+                  )}
+                  {discountShippingFee === 0 && (
+                    <span className="text-lg  text-secondary font-bold">
+                      <sup>đ</sup>
+                      {defaultService?.fee?.total_fee?.toLocaleString("vi-VN")}
+                    </span>
+                  )}
+                </div>
               </div>
               <span className="text-neutral-500 font-semibold">
                 Dự kiến giao hàng:{" "}

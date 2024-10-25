@@ -76,6 +76,7 @@ const AuthLayout = ({ children }) => {
                 role_id: user.role_id,
                 setup: user.setup,
                 isVerified: user.isVerified,
+                wallet: user.UserWallet,
               })
             );
             dispatch(setToken(token));

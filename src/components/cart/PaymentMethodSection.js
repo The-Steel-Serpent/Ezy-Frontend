@@ -1,35 +1,44 @@
-import { Button, Radio } from "antd";
+import { Button, Modal, Radio } from "antd";
 import React, { memo, useReducer, useState } from "react";
-import ModalVoucher from "./ModalVoucher";
+import { useCheckout } from "../../providers/CheckoutProvider";
+import { useSelector } from "react-redux";
+import { VscError } from "react-icons/vsc";
+import { useNavigate } from "react-router-dom";
+
 const momo = require("../../assets/momo.png");
 const vnpay = require("../../assets/vnpay.png");
 const cod = require("../../assets/cod.png");
 const wallet = require("../../assets/wallet.png");
-const PaymentMethodArray = [
-  {
-    name: "Thanh Toán Khi Nhận Hàng",
-    value: "Thanh Toán Khi Nhận Hàng",
-    image: cod,
-  },
-  {
-    name: "Ví Momo",
-    value: "Ví Momo",
-    image: momo,
-  },
-  {
-    name: "Ví VNPay",
-    value: "Ví VNPay",
-    image: vnpay,
-  },
-  {
-    name: "Ví EzyPay",
-    value: "Ví EzyPay",
-    image: wallet,
-  },
-];
 
 const PaymentMethodSection = (props) => {
   const { total } = props;
+  const { state, onPaymentMethodChange, handleCheckoutClick } = useCheckout();
+  const user = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const { totalPayment, openModalCheckoutError, checkoutMessage } = state;
+  const PaymentMethodArray = [
+    {
+      name: "Thanh Toán Khi Nhận Hàng",
+      value: 1,
+      image: cod,
+    },
+    {
+      name: "Ví Momo",
+      value: 2,
+      image: momo,
+    },
+    {
+      name: "Ví VNPay",
+      value: 3,
+      image: vnpay,
+    },
+    {
+      name: "Ví EzyPay ",
+      value: 4,
+      image: wallet,
+      balance: user?.wallet?.balance,
+    },
+  ];
 
   return (
     <>
@@ -40,13 +49,22 @@ const PaymentMethodSection = (props) => {
             <div className="w-full">
               <Radio.Group
                 className="flex flex-col gap-3"
-                defaultValue={"Ví Momo"}
+                defaultValue={1}
+                onChange={onPaymentMethodChange}
               >
                 {PaymentMethodArray.map((item) => (
-                  <Radio value={item.value}>
+                  <Radio
+                    value={item.value}
+                    disabled={item?.balance < totalPayment?.final && true}
+                  >
                     <div className="w-full flex items-center gap-2">
                       <img src={item.image} alt="" className="w-11" />
-                      <span>{item.name}</span>
+                      <div className="flex flex-col">
+                        <span>{item.name}</span>
+                        {item?.balance !== undefined && (
+                          <span>Số dư: ({item?.balance}đ)</span>
+                        )}
+                      </div>
                     </div>
                   </Radio>
                 ))}
@@ -102,11 +120,37 @@ const PaymentMethodSection = (props) => {
           </div>
         </div>
         <div className="w-full flex justify-end items-center">
-          <Button className="w-[160px] h-[45px] text-lg bg-primary text-white hover:opacity-80">
+          <Button
+            className="w-[160px] h-[45px] text-lg bg-primary text-white hover:opacity-80"
+            onClick={() => handleCheckoutClick(user?.user_id)}
+          >
             Đặt Hàng
           </Button>
         </div>
       </div>
+      <Modal
+        title={
+          <span className="flex text-2xl text-red-500 items-center gap-3">
+            <VscError size={30} />
+            Lỗi
+          </span>
+        }
+        closable={false}
+        open={openModalCheckoutError}
+        footer={
+          <div className="w-full flex justify-center items-center">
+            <Button
+              size="large"
+              className="bg-primary text-white hover:opacity-80"
+              onClick={() => navigate("/cart")}
+            >
+              Trở về giỏ hàng
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-lg font-semibold">{checkoutMessage}</p>
+      </Modal>
     </>
   );
 };
