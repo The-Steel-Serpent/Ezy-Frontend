@@ -57,6 +57,9 @@ const AddProductCategory = withSuspense(
 const AddProductSubCategory = withSuspense(
   lazy(() => import("../pages/admin/category_management/AddProductSubCategory"))
 );
+const AddSaleEvent = withSuspense(
+  lazy(() => import("../pages/admin/event_management/AddSaleEvent"))
+);
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
@@ -381,6 +384,14 @@ const router = createBrowserRouter([
           </AdminAuthLayout>
         ),
       },
+      {
+        path: "/admin/event-management/sale-event/event",
+        element: (
+          <AdminAuthLayout>
+            <AddSaleEvent />
+          </AdminAuthLayout>
+        ),
+      }
     ],
   },
 ]);

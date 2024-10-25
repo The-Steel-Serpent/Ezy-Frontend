@@ -92,19 +92,14 @@ const AdminSidebar = () => {
                     label: 'Quản lý sự kiện',
                     children: [
                         {
-                            key: '4.1',
+                            key: '/admin/event-management/sale-event/event',
                             icon: <ProductOutlined />,
-                            label: 'option 7',
+                            label: 'Sự kiện',
                         },
                         {
                             key: '4.2',
                             icon: <ProductOutlined />,
-                            label: 'option 8',
-                        },
-                        {
-                            key: '4.3',
-                            icon: <ProductOutlined />,
-                            label: 'option 9',
+                            label: 'Voucher',
                         },
                     ],
                 },
