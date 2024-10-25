@@ -233,15 +233,15 @@ export const removeItem = async (cart_item_id) => {
   }
 };
 
-export const checkOut = async (data) => {
+export const checkOut = async (data, type) => {
   try {
-    const { user_id, paymentMethodID, totalPayment, validCart } = data;
-    const urlCheckout = `${process.env.REACT_APP_BACKEND_URL}/api/checkout`;
+    const { user_id, totalPayment, address, validCart } = data;
+    const urlCheckout = `${process.env.REACT_APP_BACKEND_URL}/api/checkout/${type}`;
     const res = await axios.post(urlCheckout, {
       user_id,
-      paymentMethodID,
       totalPayment,
       validCart,
+      address,
     });
     return res.data;
   } catch (error) {
