@@ -105,7 +105,7 @@ const CheckoutItem = (props) => {
                 weight: sumWeight,
                 length: 0,
                 width: 0,
-                insurance_value: item?.total_price,
+                insurance_value: 0,
                 service_id: service?.service_id,
                 service_type_id: service?.service_type_id,
                 pick_station_id: 0,

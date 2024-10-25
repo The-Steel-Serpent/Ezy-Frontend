@@ -1,17 +1,17 @@
 import { message } from "antd";
-import { checkOut } from "../services/cartService";
+import {
+  checkOut,
+  checkOutCOD,
+  checkOutEzyWallet,
+  checkOutMomo,
+  checkOutVNPay,
+} from "../services/cartService";
+import { useNavigate } from "react-router-dom";
 
-const {
-  useReducer,
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} = require("react");
+const { useReducer, createContext, useContext, useCallback } = require("react");
 const CheckoutContext = createContext();
 export const CheckoutProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -295,14 +295,25 @@ export const CheckoutProvider = ({ children }) => {
 
     const data = {
       user_id: userID,
-      paymentMethodID: state.selectedPaymentMethod,
       totalPayment: state.totalPayment,
       validCart: state.cartListWithoutInvalidItems,
+      address: state.defaultAddress,
     };
+    console.log("Data: ", data);
 
     try {
-      const res = await checkOut(data);
-      console.log("Response: ", res);
+      const type =
+        state.selectedPaymentMethod === 1
+          ? "cod"
+          : state.selectedPaymentMethod === 2
+          ? "momo"
+          : state.selectedPaymentMethod === 3
+          ? "vnpay"
+          : "ezywallet";
+      const res = await checkOut(data, type);
+      if (res.success) {
+        navigate("/cart/checkout/result");
+      }
     } catch (error) {
       console.log("Error: ", error);
       setState({ type: "openModalCheckoutError", payload: true });

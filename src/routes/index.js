@@ -8,6 +8,9 @@ import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
 import { CheckoutProvider } from "../providers/CheckoutProvider";
+const CheckoutResult = withSuspense(
+  lazy(() => import("../pages/buyer/cart-pages/CheckoutResult"))
+);
 const AccountSetting = withSuspense(
   lazy(() => import("../pages/buyer/user-pages/my-account/AccountSetting"))
 );
@@ -65,7 +68,7 @@ const SellerEditProfileBasic = withSuspense(
   lazy(() => import("../pages/profile/SellerEditProfileBasic"))
 );
 const SellerEditProfileTax = withSuspense(
-  lazy(() => import("../pages/profile/SellerEditProfileTax")) 
+  lazy(() => import("../pages/profile/SellerEditProfileTax"))
 );
 const SuggestProduct = withSuspense(
   lazy(() => import("../pages/buyer/product-pages/SuggestProduct"))
@@ -235,6 +238,14 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
+      {
+        path: "/cart/checkout/result",
+        element: (
+          <AuthLayout>
+            <CheckoutResult />
+          </AuthLayout>
+        ),
+      },
 
       //Seller
       //login && register
@@ -264,11 +275,11 @@ const router = createBrowserRouter([
       },
       {
         path: "seller/seller-edit-profile/tax-info",
-        element:(
+        element: (
           <SellerAuthLayout>
             <SellerEditProfileTax />
-          </SellerAuthLayout>  
-        )
+          </SellerAuthLayout>
+        ),
       },
       {
         path: "seller/login",
