@@ -1,7 +1,7 @@
-import { Button, Checkbox, Image, Modal, Table } from 'antd'
+import { Button, Checkbox, Image, message, Modal, Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
 import { useSelector } from 'react-redux'
-import { getShopProducts, searchShopProducts } from '../../../services/productService'
+import { getShopProducts, searchShopProducts, updateProductStatus } from '../../../services/productService'
 import { MdOutlineSell } from "react-icons/md";
 // reducer
 const initialState = {
@@ -21,13 +21,16 @@ const initialState = {
     totalItems: 0,
     is_checked_all: false,
     open_bottom: false,
+    seletedRows: [],
     selectedRowKeys: [],
     selected_products_id: [],
     count_hide_products: 0,
     count_active_products: 0,
     title_modal: '',
     content_modal: '',
-    visible_modal: false
+    visible_modal: false,
+    status_modal: null,
+    loading_update_product_status: false,
 }
 
 const reducer = (state, action) => {
@@ -60,6 +63,8 @@ const reducer = (state, action) => {
             return { ...state, page_size: action.payload };
         case 'SET_TOTAL_ITEMS':
             return { ...state, totalItems: action.payload };
+        case 'SET_SELECTED_ROWS':
+            return { ...state, selectedRows: action.payload };
         case 'SET_SELECTED_ROW_KEYS':
             return { ...state, selectedRowKeys: action.payload };
         case 'SET_IS_CHECKED_ALL':
@@ -78,6 +83,10 @@ const reducer = (state, action) => {
             return { ...state, content_modal: action.payload };
         case 'SET_VISIBLE_MODAL':
             return { ...state, visible_modal: action.payload }
+        case 'SET_STATUS_MODAL':
+            return { ...state, status_modal: action.payload }
+        case 'SET_LOADING_UPDATE_PRODUCT_STATUS':
+            return { ...state, loading_update_product_status: action.payload }
         default:
             return state;
     }
@@ -125,6 +134,7 @@ const ProductTable =
             const selectedProductIds = selectedRows ? selectedRows.map(row => row.product_id) : [];
             dispatch({ type: 'SET_SELECTED_ROW_KEYS', payload: newSelectedRowKeys });
             dispatch({ type: 'SET_SELECTED_PRODUCTS_ID', payload: selectedProductIds });
+            dispatch({ type: 'SET_SELECTED_ROWS', payload: selectedRows });
             setCountStatucProducts(selectedRows);
             console.log('selectedRowKeys changed: ', newSelectedRowKeys);
             console.log('selectedRows changed: ', selectedRows);
@@ -374,12 +384,6 @@ const ProductTable =
             return messages;
         }
 
-        const handleHideProduct = () => {
-            const { title, content } = hideProductModalMessage();
-            dispatch({ type: 'SET_VISIBLE_MODAL', payload: true });
-            dispatch({ type: 'SET_TITLE_MODAL', payload: title })
-            dispatch({ type: 'SET_CONTENT_MODAL', payload: content })
-        }
 
         const activeProductModalMessage = () => {
             const messages = {
@@ -403,12 +407,66 @@ const ProductTable =
             return messages;
         }
 
-        const handleActiveProduct = () => {
+        const handleModalHideProduct = () => {
+            // show modal
+            const { title, content } = hideProductModalMessage();
+            dispatch({ type: 'SET_VISIBLE_MODAL', payload: true });
+            dispatch({ type: 'SET_TITLE_MODAL', payload: title })
+            dispatch({ type: 'SET_CONTENT_MODAL', payload: content })
+            dispatch({ type: 'SET_STATUS_MODAL', payload: 0 });
+
+
+        }
+
+
+        const handleModalActiveProduct = () => {
+            // show modal
             const { title, content } = activeProductModalMessage();
             dispatch({ type: 'SET_VISIBLE_MODAL', payload: true });
             dispatch({ type: 'SET_TITLE_MODAL', payload: title })
             dispatch({ type: 'SET_CONTENT_MODAL', payload: content })
+            dispatch({ type: 'SET_STATUS_MODAL', payload: 1 });
         }
+
+        const handleSubmitUpdateProductStatus = async () => {
+            const update_status = state.status_modal;
+            const selectedRows = state.selectedRows;
+
+            dispatch({ type: 'SET_LOADING_UPDATE_PRODUCT_STATUS', payload: true });
+
+            const handle_products = selectedRows
+                .map(product => ({ product_id: product.product_id, product_status: product.product_status }))
+                .filter(product => product.product_status != update_status);
+
+            try {
+                const updatePromises = handle_products.map(product =>
+                    updateProductStatus(product.product_id, update_status)
+                );
+                await Promise.all(updatePromises).then(() => {
+                    message.success('Cập nhật trạng thái sản phẩm thành công');
+                    // reset data source
+                    dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
+                    // fetch products
+                    const shop_id = shop.shop_id;
+                    getShopProducts(shop_id, product_status, state.current_page, state.page_size)
+                        .then(products => {
+                            console.log("Fetched products:", products);
+                            dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
+                            handleSetFetchProducts(products);
+                        });
+                    // clear selected row
+                    dispatch({ type: 'SET_SELECTED_ROW_KEYS', payload: [] });
+                });
+            } catch (error) {
+                console.error('Error updating product status:', error);
+                message.error('Cập nhật trạng thái sản phẩm thất bại');
+            } finally {
+                dispatch({ type: 'SET_LOADING_UPDATE_PRODUCT_STATUS', payload: false });
+                dispatch({ type: 'SET_VISIBLE_MODAL', payload: false });
+            }
+        };
+
+
 
         useEffect(() => {
             console.log('Search Sub Category:', search_sub_category);
@@ -444,7 +502,7 @@ const ProductTable =
                         <div>{state.selected_products_id.length} sản phẩm đã được chọn</div>
                         {state.count_active_products > 0 && (
                             <Button
-                                onClick={handleHideProduct}
+                                onClick={handleModalHideProduct}
                             >
                                 Ẩn
                             </Button>
@@ -452,7 +510,7 @@ const ProductTable =
                         {state.count_hide_products > 0 && (
                             <Button
                                 className='bg-primary text-white'
-                                onClick={handleActiveProduct}
+                                onClick={handleModalActiveProduct}
                             >
                                 Hiển thị
                             </Button>
@@ -464,25 +522,25 @@ const ProductTable =
                     title={state.title_modal}
                     open={state.visible_modal}
                     centered={true}
-                    // onOk={handleOk}
                     onCancel={() => dispatch({ type: 'SET_VISIBLE_MODAL', payload: false })}
                     footer={[
                         <Button
                             key="cancel"
                             onClick={() => dispatch({ type: 'SET_VISIBLE_MODAL', payload: false })}
+                            loading={state.loading_update_product_status}
                         >
                             Cancel
                         </Button>,
                         <Button
                             key="confirm"
                             type="primary"
-                        // onClick={handleSubmit}
+                            loading={state.loading_update_product_status}
+                            onClick={handleSubmitUpdateProductStatus}
                         >
                             Confirm
                         </Button>
                     ]}
                 >
-
                     <p>{state.content_modal}</p>
                 </Modal>
             </div>
