@@ -29,7 +29,7 @@ const SellerEditProfileHeader = ({ status }) => {
                 mode="horizontal"
                 theme="light"
                 items={items}
-                className="custom-menu-seller-product font-[500] mt-6 bg-transparent"
+                className="custom-menu-seller-product font-[500] mt-6 bg-transparent bg-white"
                 onClick={handleNavigate}
             />
         </div>

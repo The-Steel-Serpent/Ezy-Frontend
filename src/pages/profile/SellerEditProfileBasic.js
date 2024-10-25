@@ -584,18 +584,19 @@ const SellerEditProfileBasic = () => {
                 </Row>
                 {!state.disable_fields && (
                     <div className='flex gap-3 justify-end mr-10 mt-10'>
+                      
+                        <Button
+                            onClick={handleCancelEdit}
+                            loading={state.submit_loading}
+                        >
+                            Hủy
+                        </Button>
                         <Button
                             disabled={state.enableConfirm}
                             onClick={async () => await handleSave()}
                             loading={state.submit_loading}
                         >
                             Lưu
-                        </Button>
-                        <Button
-                            onClick={handleCancelEdit}
-                            loading={state.submit_loading}
-                        >
-                            Hủy
                         </Button>
                     </div>
                 )}

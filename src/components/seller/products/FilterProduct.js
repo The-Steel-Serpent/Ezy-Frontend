@@ -51,7 +51,7 @@ const FilterProduct = ({ handleSetSearchInfo }) => {
 
 
   return (
-    <div className='flex items-center gap-3 w-full'>
+    <div className='flex items-center gap-3 w-full bg-white p-5 rounded'>
       <Input
         value={state?.search_product_name ?? ''}
         onChange={(e) => dispatch({ type: 'SET_SEARCH_PRODUCT_NAME', payload: e.target.value })}
