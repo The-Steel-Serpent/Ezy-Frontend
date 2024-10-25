@@ -37,7 +37,7 @@ const WorkingProducts = () => {
     return (
         <div>
             <ProductSellerHeader status={'/seller/product-management/working-products'} />
-            <div className='bg-white rounded p-5 mt-5'>
+            <div>
                 <FilterProduct handleSetSearchInfo={handleSetSearchInfo} />
                 <ProductTable
                     handlePageChange={handlePageChange}

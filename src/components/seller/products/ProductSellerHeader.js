@@ -21,14 +21,14 @@ const items = [
 
 const ProductSellerHeader = ({ status }) => {
   const navigate = useNavigate();
-  
+
   const handleNavigate = (e) => {
-    if(e.key)
+    if (e.key)
       navigate(e.key);
   }
   return (
     <div>
-      <div className='flex justify-between'>
+      <div className='flex justify-between rounded-lg'>
         <div className='text-lg'>Sản phẩm</div>
         <div className='flex gap-3 items-center'>
           <Dropdown
@@ -44,6 +44,7 @@ const ProductSellerHeader = ({ status }) => {
             </a>
           </Dropdown>
           <Button
+            onClick={() => navigate('/seller/product-management/add-product')}
             type="primary"
             icon={<GoPlus />}
             className='bg-secondary px-3 py-4 text-sm'
@@ -58,7 +59,7 @@ const ProductSellerHeader = ({ status }) => {
         mode="horizontal"
         theme="light"
         items={items}
-        className="custom-menu-seller-product font-[500] mt-6 bg-transparent"
+        className="custom-menu-seller-product font-[500] mt-6 bg-transparent bg-white"
         onClick={handleNavigate}
       />
     </div>

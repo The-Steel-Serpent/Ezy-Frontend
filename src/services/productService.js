@@ -138,3 +138,24 @@ export const searchShopProducts = async (shop_id, product_status, product_name, 
         }
     }
 }
+
+export const updateProductStatus = async (product_id, update_status) => {
+    const payload = {
+        product_id,
+        product_status: update_status
+    };
+    console.log("payload update status", payload);
+
+    try {
+        const url = `${URL}update-product-status`;
+        const response = await axios.post(url, payload);  
+        return response.data;
+    } catch (error) {
+        console.log("Lỗi khi cập nhật trạng thái sản phẩm: ", error);
+        const errorMessage = error?.response?.status ?
+            `Error ${error.response.status}: ${error.response.data}` :
+            error.message;
+
+        throw new Error(errorMessage);
+    }
+};

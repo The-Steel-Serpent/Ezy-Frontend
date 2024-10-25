@@ -23,7 +23,6 @@ body,
 
 .custom-menu-order-status .ant-menu-item::after {
     border-bottom: none !important;
-    /* Loại bỏ đường kẻ màu xanh mặc định */
 }
 
 .custom-menu-order-status .ant-menu-item-selected {

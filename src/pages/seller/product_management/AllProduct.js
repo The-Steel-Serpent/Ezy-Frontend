@@ -2,6 +2,7 @@ import React, { useEffect, useReducer } from 'react'
 import ProductSellerHeader from '../../../components/seller/products/ProductSellerHeader'
 import FilterProduct from '../../../components/seller/products/FilterProduct'
 import ProductTable from '../../../components/seller/products/ProductTable'
+import { Button, Checkbox } from 'antd';
 
 const initialState = {
   selected_page: 1,
@@ -38,7 +39,6 @@ const AllProduct = () => {
   }
 
 
-
   useEffect(() => {
     console.log('Selected Page:', state.selected_page);
     console.log('Search Products:', state.search_products);
@@ -46,9 +46,9 @@ const AllProduct = () => {
 
 
   return (
-    <div>
+    <div className='mb-5'>
       <ProductSellerHeader status={'/seller/product-management/all'} />
-      <div className='bg-white rounded p-5 mt-5'>
+      <div>
         <FilterProduct handleSetSearchInfo={handleSetSearchInfo} />
         <ProductTable
           handlePageChange={handlePageChange}
@@ -57,6 +57,7 @@ const AllProduct = () => {
           search_sub_category={state.search_sub_category}
         />
       </div>
+   
     </div>
   )
 }
