@@ -40,7 +40,7 @@ const NotWorkingProduct = () => {
   return (
     <div>
       <ProductSellerHeader status={'/seller/product-management/notworking-products'} />
-      <div className='bg-white rounded p-5 mt-5'>
+      <div>
         <FilterProduct handleSetSearchInfo={handleSetSearchInfo} />
         <ProductTable
           handlePageChange={handlePageChange}
