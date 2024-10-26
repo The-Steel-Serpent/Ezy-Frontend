@@ -15,40 +15,21 @@ function ProductCategory() {
     const [form] = Form.useForm();
 
     const columns = [
+        { key: '1', title: 'ID', dataIndex: 'category_id' },
+        { key: '2', title: 'Tên danh mục', dataIndex: 'category_name' },
         {
-            key: '1',
-            title: 'ID',
-            dataIndex: 'category_id',
-        },
-        {
-            key: '2',
-            title: 'Tên danh mục',
-            dataIndex: 'category_name',
-        },
-        {
-            key: '3',
-            title: 'Thumbnail',
-            dataIndex: 'thumbnail',
-            render: (text, record) => (
+            key: '3', title: 'Thumbnail', dataIndex: 'thumbnail', render: (text, record) => (
                 <img src={record.thumbnail} alt={record.category_name} style={{ width: '100px', height: '100px' }} />
-            ),
+            )
         },
         {
-            key: '4',
-            title: 'Thao tác',
-            render: (text, record) => (
+            key: '4', title: 'Thao tác', render: (text, record) => (
                 <div>
-                    <EditOutlined
-                        style={{ marginRight: 12 }}
-                        onClick={() => handleEdit(record)}
-                    />
-                    <DeleteOutlined
-                        style={{ color: "red" }}
-                        onClick={() => handleDelete(record.category_id)}
-                    />
+                    <EditOutlined style={{ marginRight: 12 }} onClick={() => handleEdit(record)} />
+                    <DeleteOutlined style={{ color: "red" }} onClick={() => handleDelete(record.category_id)} />
                 </div>
-            ),
-        },
+            )
+        }
     ];
 
     const fetchCategories = async () => {
@@ -85,16 +66,12 @@ function ProductCategory() {
     const handleUpdateCategory = async (values) => {
         try {
             const existingCategory = categories.find(cat => cat.category_id === currentCategoryId);
-            if (!existingCategory) {
-                throw new Error('Danh mục không tồn tại.');
-            }
+            if (!existingCategory) throw new Error('Danh mục không tồn tại.');
 
-            // Check if a new thumbnail is uploaded
-            if (thumbnail && thumbnail.status === 'done') {
+            if (thumbnail && thumbnail.originFileObj) {
                 const uploadResponse = await handleThumbnailUpload();
                 values.thumbnail = uploadResponse ? uploadResponse.secure_url : existingCategory.thumbnail;
             } else {
-                // Retain the existing thumbnail if no new thumbnail is provided
                 values.thumbnail = existingCategory.thumbnail;
             }
 
@@ -109,15 +86,23 @@ function ProductCategory() {
     };
 
     const handleThumbnailUpload = async () => {
-        if (thumbnail) {
+        if (thumbnail && thumbnail.originFileObj) {
             const file = thumbnail.originFileObj;
             const uploadPath = 'ezy-app-file';
-            const uploadResponse = await uploadFile(file, uploadPath);
-            if (uploadResponse.secure_url) {
-                return uploadResponse;
-            } else {
-                throw new Error('Failed to upload image');
+
+            try {
+                const uploadResponse = await uploadFile(file, uploadPath);
+                if (uploadResponse && uploadResponse.secure_url) {
+                    return uploadResponse;
+                } else {
+                    throw new Error('Không nhận được URL.');
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải lên ảnh:', error);
+                throw new Error('Tải ảnh lên không thành công. Vui lòng thử lại.');
             }
+        } else {
+            console.warn('Không có tệp ảnh để tải lên.');
         }
         return null;
     };
@@ -172,7 +157,7 @@ function ProductCategory() {
             return response.data;
         } catch (error) {
             if (error.response) {
-                throw new Error(error.response.data.message || 'Error updating category');
+                throw new Error(error.response.data.message || 'Lổi cập nhật danh mục.');
             } else if (error.request) {
                 console.error('No response received:', error.request);
                 throw new Error('No response received from the server.');
@@ -184,11 +169,8 @@ function ProductCategory() {
     };
 
     const handleEdit = (record) => {
-        console.log('Current editing category:', record); // Log the current category being edited
         setCurrentCategoryId(record.category_id);
-        form.setFieldsValue({
-            category_name: record.category_name,
-        });
+        form.setFieldsValue({ category_name: record.category_name });
         setThumbnail({ url: record.thumbnail });
         setIsEditModalVisible(true);
     };
@@ -253,85 +235,59 @@ function ProductCategory() {
     };
 
     const handleChange = ({ file }) => {
-        setThumbnail(file);
+        if (file.status === 'removed') {
+            setThumbnail(null);
+        } else {
+            setThumbnail(file);
+        }
     };
 
     return (
         <div>
-            {/* Add Category Modal */}
             <Modal title="Thêm danh mục" visible={isAddModalVisible} onOk={handleAddOk} onCancel={handleAddCancel}>
                 <Form form={form} layout="vertical">
                     <Form.Item name="category_name" label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục!' }]}>
                         <Input />
                     </Form.Item>
-                    <Form.Item
-                        name="thumbnail"
-                        label="Thumbnail"
-                        rules={[{ required: true, message: 'Vui lòng tải thumbnail!' }]}
-                    >
+                    <Form.Item name="thumbnail" label="Thumbnail" rules={[{ required: true, message: 'Vui lòng tải thumbnail!' }]}>
                         <Upload
                             listType="picture-card"
                             fileList={thumbnail ? [thumbnail] : []}
                             maxCount={1}
                             beforeUpload={beforeUpload}
                             onChange={handleChange}
-                            customRequest={({ file, onSuccess }) => {
-                                setTimeout(() => {
-                                    onSuccess("ok");
-                                }, 0);
-                            }}
                         >
-                            {!thumbnail && (
-                                <div className='flex flex-col items-center'>
-                                    <RiImageAddFill size={20} color='#66cce6' />
-                                    <div>Chọn ảnh</div>
-                                </div>
-                            )}
+                            {!thumbnail && <div><RiImageAddFill size={25} /><p>Tải ảnh lên</p></div>}
                         </Upload>
                     </Form.Item>
                 </Form>
             </Modal>
 
-            {/* Edit Category Modal */}
             <Modal title="Cập nhật danh mục" visible={isEditModalVisible} onOk={handleEditOk} onCancel={handleEditCancel}>
                 <Form form={form} layout="vertical">
                     <Form.Item name="category_name" label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục!' }]}>
                         <Input />
                     </Form.Item>
-                    <Form.Item
-                        name="thumbnail"
-                        label="Thumbnail"
-                    >
+                    <Form.Item name="thumbnail" label="Thumbnail">
                         <Upload
                             listType="picture-card"
                             fileList={thumbnail ? [thumbnail] : []}
                             maxCount={1}
                             beforeUpload={beforeUpload}
                             onChange={handleChange}
-                            customRequest={({ file, onSuccess }) => {
-                                setTimeout(() => {
-                                    onSuccess("ok");
-                                }, 0);
-                            }}
                         >
-                            {!thumbnail && (
-                                <div className='flex flex-col items-center'>
-                                    <RiImageAddFill size={20} color='#66cce6' />
-                                    <div>Chọn ảnh</div>
-                                </div>
-                            )}
+                            {!thumbnail && <div><RiImageAddFill size={25} /><p>Tải ảnh lên</p></div>}
                         </Upload>
                     </Form.Item>
                 </Form>
             </Modal>
 
-            <Button type="primary" onClick={() => setIsAddModalVisible(true)}>Thêm danh mục</Button>
-            <Table
-                columns={columns}
-                dataSource={categories}
-                loading={loading}
-                rowKey="category_id"
-            />
+            <div style={{ marginBottom: 16 }}>
+                <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
+                    Thêm danh mục
+                </Button>
+            </div>
+            <Table columns={columns} dataSource={categories} rowKey="category_id" loading={loading} />
         </div>
     );
 }
