@@ -59,10 +59,12 @@ const VoucherItem = (props) => {
               title={
                 "Tên Voucher: " +
                 item?.discount_voucher_name +
-                " \n- Đơn tối thiểu: đ" +
+                "\n- Đơn tối thiểu: đ" +
                 formatNumber(item?.min_order_value) +
                 "\n - Mã: " +
-                item?.discount_voucher_code
+                item?.discount_voucher_code +
+                "\n - Điều kiện: " +
+                item?.description
               }
             >
               {item?.discount_voucher_name}

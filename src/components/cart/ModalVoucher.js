@@ -187,7 +187,7 @@ const ModalVoucher = (props) => {
               <List>
                 <VirtualList
                   data={discountVoucher}
-                  height={discountVoucher?.length > 2 ? 129 * 2 : 129}
+                  height={discountVoucher?.length > 1 ? 129 * 2 : 129}
                   itemHeight={129}
                 >
                   {(item) => (

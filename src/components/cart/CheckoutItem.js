@@ -13,8 +13,10 @@ const CheckoutItem = (props) => {
     handleUpdateTotalPayment,
     calculateVoucherDiscounts,
   } = useCheckout();
+  console.log("item: ", item);
   const prevSelectedVoucherRef = useRef(state.selectedVoucher);
   const prevTotalRef = useRef(state.total);
+  const prevTotalPerShopRef = useRef({});
   const [localState, setLocalState] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -128,7 +130,7 @@ const CheckoutItem = (props) => {
                   },
                 })),
               };
-              // console.log("feeData: ", feeData);
+              console.log("feeData: ", feeData);
               const fee = await getShippingFee(item?.Shop?.shop_id, feeData);
               return {
                 ...service,
@@ -175,7 +177,13 @@ const CheckoutItem = (props) => {
         discountShippingFee: 0,
       };
       setLocalState({ type: "computedTotal", payload: computedTotal });
-      handleUpdateTotal(computedTotal);
+      if (
+        JSON.stringify(prevTotalPerShopRef.current) !==
+        JSON.stringify(computedTotal)
+      ) {
+        handleUpdateTotal(computedTotal);
+        prevTotalPerShopRef.current = computedTotal;
+      }
     }
   }, [
     defaultService,
@@ -185,26 +193,23 @@ const CheckoutItem = (props) => {
   ]);
 
   useEffect(() => {
-    if (computedTotal !== null) {
-      const updatedTotal = calculateVoucherDiscounts(
-        state.total,
-        state.selectedVoucher
-      );
+    if (total.length > 0) {
+      const updatedTotal = calculateVoucherDiscounts(total, selectedVoucher);
 
       if (
         JSON.stringify(prevSelectedVoucherRef.current) !==
-          JSON.stringify(state.selectedVoucher) ||
+          JSON.stringify(selectedVoucher) ||
         JSON.stringify(prevTotalRef.current) !== JSON.stringify(updatedTotal)
       ) {
         updatedTotal.forEach((totalOfShop) => {
           handleUpdateTotal(totalOfShop);
         });
-        prevSelectedVoucherRef.current = state.selectedVoucher;
-        prevTotalRef.current = updatedTotal;
+        prevSelectedVoucherRef.current = selectedVoucher;
       }
       // Update total payment only when total has been finalized
       if (updatedTotal.length > 0) {
         handleUpdateTotalPayment(updatedTotal);
+        prevTotalRef.current = updatedTotal;
       }
     }
     if (prevTotalRef.current.length > 0) {
@@ -222,6 +227,8 @@ const CheckoutItem = (props) => {
     calculateVoucherDiscounts,
     handleUpdateTotal,
     handleUpdateTotalPayment,
+    total,
+    item?.Shop?.shop_id,
   ]);
 
   const formatDate = (dateString) => {

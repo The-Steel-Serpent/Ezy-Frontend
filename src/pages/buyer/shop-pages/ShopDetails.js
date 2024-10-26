@@ -133,7 +133,7 @@ const ShopDetails = () => {
 
       try {
         const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/product-by-sub-category/${sub_category_id}?pageNumbers=${state.currentPage}&sortBy=${state.filter.sortBy}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/product-by-sub-category/${sub_category_id}?shop_id=${shop.shop_id}&pageNumbers=${state.currentPage}&sortBy=${state.filter.sortBy}`
         );
         if (res.data.success) {
           console.log("res.data", res.data);
@@ -157,8 +157,10 @@ const ShopDetails = () => {
         localStorage.setItem("isFetchedProduct", "true");
       }
     };
-    fetchProductBySubCategory();
-  }, [sub_category_id, currentPage, filter.sortBy]);
+    if (shop || sub_category_id || currentPage || filter.sortBy) {
+      fetchProductBySubCategory();
+    }
+  }, [sub_category_id, currentPage, filter.sortBy, shop]);
 
   useEffect(() => {
     const scrollToProductList = () => {

@@ -47,17 +47,8 @@ export const addToCart = async (
     console.error("Lỗi khi thêm vào giỏ hàng: ", error);
     let errorMessage;
     switch (error.response.status) {
-      case 404:
-        errorMessage = "Không tìm thấy sản phẩm";
-        break;
-      case 500:
-        errorMessage = "Lỗi server";
-        break;
-      case 400:
-        errorMessage = "Số lượng sản phẩm không đủ";
-        break;
       default:
-        errorMessage = error.message || error;
+        errorMessage = error.response.data.message || error;
     }
     throw new Error(errorMessage);
   }
@@ -235,13 +226,16 @@ export const removeItem = async (cart_item_id) => {
 
 export const checkOut = async (data, type) => {
   try {
-    const { user_id, totalPayment, address, validCart } = data;
+    const { user_id, totalPayment, address, validCart, voucher, totalPerItem } =
+      data;
     const urlCheckout = `${process.env.REACT_APP_BACKEND_URL}/api/checkout/${type}`;
     const res = await axios.post(urlCheckout, {
       user_id,
       totalPayment,
       validCart,
       address,
+      voucher,
+      totalPerItem,
     });
     return res.data;
   } catch (error) {

@@ -1,4 +1,3 @@
-import { RedditSquareFilled } from "@ant-design/icons";
 import axios from "axios";
 
 export const getProvinces = async () => {
@@ -104,9 +103,15 @@ export const getShippingFee = async (shopID, data) => {
   }
 };
 
-
-export const createShopGHN = async(district_id, ward_code, name, phone, address) => {
-  const URL = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shop/register";
+export const createShopGHN = async (
+  district_id,
+  ward_code,
+  name,
+  phone,
+  address
+) => {
+  const URL =
+    "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shop/register";
   try {
     const res = await axios({
       method: "POST",
@@ -120,11 +125,11 @@ export const createShopGHN = async(district_id, ward_code, name, phone, address)
         ward_code,
         name,
         phone,
-        address
-      }
+        address,
+      },
     });
     return res.data;
   } catch (error) {
     throw new Error(error.message);
   }
-}
+};

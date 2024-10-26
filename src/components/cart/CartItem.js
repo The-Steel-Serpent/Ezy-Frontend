@@ -230,6 +230,7 @@ const CartItem = (props) => {
     [onCartItemSelectedChange, item.cart_item_id]
   );
   const handleRemoveCartItem = async () => {
+    console.log("item", item);
     try {
       const res = await removeItem(item?.cart_item_id);
       if (res.success) {

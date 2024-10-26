@@ -21,9 +21,12 @@ const CartPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   useEffect(() => {
-    if (user?.user_id !== "") {
+    const fetchCart = async () => {
       const userID = user?.user_id;
-      dispatch(fetchCartData({ userID }));
+      dispatch(await fetchCartData({ userID }));
+    };
+    if (user?.user_id !== "") {
+      fetchCart();
     }
   }, [dispatch, user?.user_id]);
   return (

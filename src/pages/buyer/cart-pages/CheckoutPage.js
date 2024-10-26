@@ -40,9 +40,12 @@ const CheckoutPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   useEffect(() => {
-    if (user?.user_id !== "") {
+    const fetchCart = async () => {
       const userID = user?.user_id;
-      dispatch(fetchCartData({ userID }));
+      dispatch(await fetchCartData({ userID }));
+    };
+    if (user?.user_id !== "") {
+      fetchCart();
     }
   }, [dispatch, user?.user_id]);
 
@@ -243,7 +246,10 @@ const CheckoutPage = () => {
             <div className="grid grid-cols-12 col-span-12">
               <section className="col-span-12 px-[30px] py-6 bg-white">
                 <Suspense>
-                  <VoucherSection total={totalPayment} cart={cart} />
+                  <VoucherSection
+                    total={totalPayment}
+                    cart={cartListWithoutInvalidItems}
+                  />
                 </Suspense>
               </section>
             </div>

@@ -121,8 +121,13 @@ const PaymentMethodSection = (props) => {
         </div>
         <div className="w-full flex justify-end items-center">
           <Button
-            className="w-[160px] h-[45px] text-lg bg-primary text-white hover:opacity-80"
-            onClick={() => handleCheckoutClick(user?.user_id)}
+            disabled={total?.final === 0}
+            className={`w-[160px] h-[45px] text-lg bg-primary text-white hover:opacity-80 ${
+              total?.final === 0 && "disabled"
+            }`}
+            onClick={() =>
+              total?.final !== 0 && handleCheckoutClick(user?.user_id)
+            }
           >
             Đặt Hàng
           </Button>

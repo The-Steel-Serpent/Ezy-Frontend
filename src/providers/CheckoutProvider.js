@@ -218,6 +218,7 @@ export const CheckoutProvider = ({ children }) => {
       };
     });
   }, []);
+
   const handleSelectVoucher = (type, voucher) => {
     setState({
       type: "selectingVoucher",
@@ -292,12 +293,15 @@ export const CheckoutProvider = ({ children }) => {
     console.log("Payment Method: ", state.selectedPaymentMethod);
     console.log("Cart List: ", state.cartListWithoutInvalidItems);
     console.log("Total Payment: ", state.totalPayment);
-
+    console.log("selectedVoucher: ", state.selectedVoucher);
+    console.log("totalPerItem: ", state.total);
     const data = {
       user_id: userID,
       totalPayment: state.totalPayment,
+      totalPerItem: state.total,
       validCart: state.cartListWithoutInvalidItems,
       address: state.defaultAddress,
+      voucher: state.selectedVoucher || {},
     };
     console.log("Data: ", data);
 

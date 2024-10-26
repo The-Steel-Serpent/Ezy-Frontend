@@ -217,7 +217,40 @@ const DetailsProduct = () => {
           showProgress: true,
           pauseOnHover: false,
         });
-        dispatch(fetchMiniCartData(user.user_id));
+        dispatch(await fetchMiniCartData(user.user_id));
+      }
+    } catch (error) {
+      notification.error({
+        message: error.message,
+        showProgress: true,
+        pauseOnHover: false,
+      });
+    }
+  };
+
+  const handleBuyNow = async (productVarient) => {
+    try {
+      if (detailsProduct?.stock <= 0 || currentVarient?.stock <= 0) {
+        return;
+      }
+      if (!user?.user_id) {
+        navigate("/buyer/login");
+      }
+      // console.log("Quantity: ", quantity);
+      const res = await addToCart(
+        user.user_id,
+        detailsProduct?.Shop?.shop_id,
+        productVarient.product_varients_id,
+        quantity
+      );
+      if (res.success) {
+        notification.success({
+          message: res.message,
+          showProgress: true,
+          pauseOnHover: false,
+        });
+        dispatch(await fetchMiniCartData(user.user_id));
+        navigate("/cart");
       }
     } catch (error) {
       notification.error({
@@ -258,9 +291,9 @@ const DetailsProduct = () => {
   const sale_price =
     currentVarient != null && currentVarient?.sale_percents > 0
       ? currentVarient?.price -
-      (currentVarient?.price * currentVarient?.sale_percents) / 100
+        (currentVarient?.price * currentVarient?.sale_percents) / 100
       : detailsProduct?.base_price -
-      (detailsProduct?.base_price * detailsProduct?.sale_percents) / 100;
+        (detailsProduct?.base_price * detailsProduct?.sale_percents) / 100;
 
   // useEffect(() => {
   //   setCurrentThumbnail(details.product_varients[0].thumbnail);
@@ -296,7 +329,11 @@ const DetailsProduct = () => {
                   ),
                 },
                 {
-                  title: <span className="line-clamp-1 text-ellipsis">{detailsProduct.product_name}</span>,
+                  title: (
+                    <span className="line-clamp-1 text-ellipsis">
+                      {detailsProduct.product_name}
+                    </span>
+                  ),
                 },
               ]}
             />
@@ -408,15 +445,17 @@ const DetailsProduct = () => {
                                 }
                               }}
                               className={`
-                                ${classify?.total_stock > 0
-                                  ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
-                                  : "cursor-not-allowed bg-[#fafafa] text-gray-400"
+                                ${
+                                  classify?.total_stock > 0
+                                    ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
+                                    : "cursor-not-allowed bg-[#fafafa] text-gray-400"
                                 }
-                                 ${selectedClassify ===
-                                  classify?.product_classify_id
-                                  ? "border-primary text-primary"
-                                  : ""
-                                }  items-center  border-[1px] border-solid  rounded box-border inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
+                                 ${
+                                   selectedClassify ===
+                                   classify?.product_classify_id
+                                     ? "border-primary text-primary"
+                                     : ""
+                                 }  items-center  border-[1px] border-solid  rounded box-border inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
                             >
                               <img
                                 loading="lazy"
@@ -428,12 +467,12 @@ const DetailsProduct = () => {
                               </span>
                               {selectedClassify ===
                                 classify?.product_classify_id && (
-                                  <>
-                                    <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
-                                      <IoCheckmarkDone />
-                                    </div>
-                                  </>
-                                )}
+                                <>
+                                  <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
+                                    <IoCheckmarkDone />
+                                  </div>
+                                </>
+                              )}
                             </button>
                           )
                         )}
@@ -455,22 +494,24 @@ const DetailsProduct = () => {
                             onClick={() => {
                               size?.stock > 0 && handleSizeClick(size);
                             }}
-                            className={`${size?.stock > 0
-                              ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
-                              : "cursor-not-allowed bg-[#fafafa] text-gray-400"
-                              } ${size?.stock > 0 &&
-                                currentVarient?.ProductSize?.product_size_id ===
+                            className={`${
+                              size?.stock > 0
+                                ? "hover:border-primary hover:text-primary cursor-pointer bg-white"
+                                : "cursor-not-allowed bg-[#fafafa] text-gray-400"
+                            } ${
+                              size?.stock > 0 &&
+                              currentVarient?.ProductSize?.product_size_id ===
                                 size?.product_size_id
                                 ? "border-primary text-primary"
                                 : ""
-                              } items-center  border-[1px] border-solid rounded box-border  inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
+                            } items-center  border-[1px] border-solid rounded box-border  inline-flex justify-center mt-2 mr-2 min-h-10 min-w-20 overflow-visible p-2 relative text-left break-words`}
                           >
                             <span className="ml-2">
                               {size?.ProductSize?.product_size_name}
                             </span>
                             {size?.stock > 0 &&
                               currentVarient?.ProductSize?.product_size_id ===
-                              size?.product_size_id && (
+                                size?.product_size_id && (
                                 <>
                                   <div className="absolute bottom-0 right-0 size-[15px] overflow-hidden">
                                     <IoCheckmarkDone />
@@ -512,10 +553,11 @@ const DetailsProduct = () => {
                     <>
                       <Button
                         size="large"
-                        className={`${detailsProduct?.stock > 0 || currentVarient?.stock > 0
-                          ? `hover:bg-primary hover:text-white  cursor-pointer`
-                          : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
-                          } h-14 px-5  text-lg`}
+                        className={`${
+                          detailsProduct?.stock > 0 || currentVarient?.stock > 0
+                            ? `hover:bg-primary hover:text-white  cursor-pointer`
+                            : `hover:bg-white hover:text-primary cursor-not-allowed opacity-60`
+                        } h-14 px-5  text-lg`}
                         icon={<TiShoppingCart />}
                         onClick={async () =>
                           await handleAddToCart(currentVarient)
@@ -524,17 +566,18 @@ const DetailsProduct = () => {
                         Thêm vào giỏ hàng
                       </Button>
                       <Button
-                        className={`${detailsProduct?.stock > 0 || currentVarient?.stock > 0
-                          ? "hover:bg-opacity-80 cursor-pointer"
-                          : "opacity-60 cursor-not-allowed"
-                          } bg-primary text-white px-8 h-14 text-lg`}
+                        className={`${
+                          detailsProduct?.stock > 0 || currentVarient?.stock > 0
+                            ? "hover:bg-opacity-80 cursor-pointer"
+                            : "opacity-60 cursor-not-allowed"
+                        } bg-primary text-white px-8 h-14 text-lg`}
                         size="large"
-                        onClick={() => {
+                        onClick={async () => {
                           if (
                             detailsProduct?.stock > 0 ||
                             currentVarient?.stock > 0
                           ) {
-                            console.log("Mua Ngay", currentVarient);
+                            await handleBuyNow(currentVarient);
                           }
                         }}
                       >
