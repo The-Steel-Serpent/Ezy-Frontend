@@ -6,7 +6,7 @@ import { registerOTP, verifyOTP } from "../../services/userService";
 import { setUser } from "../../redux/userSlice";
 import { useDispatch } from "react-redux";
 
-const ModalOTP = ({ user, onVerify }) => {
+const ModalOTP = ({ user, onVerify, openOTPModal = null, handleCancelOTP }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [state, setState] = useReducer(
@@ -102,10 +102,6 @@ const ModalOTP = ({ user, onVerify }) => {
     setState({ type: "CHANGE_STEP", payload: 1 });
   };
 
-  useEffect(() => {
-    console.log("error: ", error);
-  }, [error]);
-
   const handleRegisterOTP = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -158,7 +154,11 @@ const ModalOTP = ({ user, onVerify }) => {
         message.success("Xác Thực Mật Khẩu Cấp 2 thành công");
         dispatch(setUser(res.data));
         await onVerify();
-        setState({ type: "setOpenModal", payload: false });
+        if (openOTPModal != null) {
+          handleCancelOTP();
+        } else {
+          setState({ type: "setOpenModal", payload: false });
+        }
       }
     } catch (error) {
       console.log("Xác Thực Mật Khẩu Cấp 2 Thất Bại: ", error);
@@ -174,7 +174,7 @@ const ModalOTP = ({ user, onVerify }) => {
     <>
       <Modal
         footer={null}
-        open={openModal}
+        open={openOTPModal != null ? openOTPModal : openModal}
         className="flex flex-col p-5 "
         closable={false}
       >

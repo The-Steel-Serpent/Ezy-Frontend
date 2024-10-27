@@ -7,14 +7,27 @@ import {
   checkOutVNPay,
 } from "../services/cartService";
 import { useNavigate } from "react-router-dom";
+import { verifyOTP } from "../services/userService";
 
-const { useReducer, createContext, useContext, useCallback } = require("react");
+const {
+  useReducer,
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useRef,
+} = require("react");
 const CheckoutContext = createContext();
 export const CheckoutProvider = ({ children }) => {
   const navigate = useNavigate();
+
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
+        case "loading":
+          return { ...state, loading: action.payload };
+        case "setUID":
+          return { ...state, uid: action.payload };
         case "setDefaultAddress":
           return { ...state, defaultAddress: action.payload };
         case "cartListWithoutInvalidItems":
@@ -25,6 +38,10 @@ export const CheckoutProvider = ({ children }) => {
           return { ...state, openModalVoucher: action.payload };
         case "openModalCheckoutError":
           return { ...state, openModalCheckoutError: action.payload };
+        case "openModalOTP":
+          return { ...state, openModalOTP: action.payload };
+        case "verifyOTP":
+          return { ...state, verifyOTP: action.payload };
         case "checkoutMessage":
           return { ...state, checkoutMessage: action.payload };
         case "updateTotal":
@@ -63,18 +80,26 @@ export const CheckoutProvider = ({ children }) => {
           return { ...state, discountVoucher: action.payload };
         case "selectedPaymentMethod":
           return { ...state, selectedPaymentMethod: action.payload };
+
+        case "isUpdatedTotalPayment":
+          return { ...state, isUpdatedTotalPayment: action.payload };
         default:
           return state;
       }
     },
     {
+      uid: null,
+      loading: false,
       defaultAddress: null,
+      verifyOTP: false,
       cartListWithoutInvalidItems: [],
       openAddressModal: false,
       openModalVoucher: false,
+      openModalOTP: false,
       checkoutMessage: "",
       openModalCheckoutError: false,
       total: [],
+
       shippingVoucher: [],
       discountVoucher: [],
       selectingVoucher: {
@@ -92,6 +117,7 @@ export const CheckoutProvider = ({ children }) => {
         discountShippingFee: 0,
         final: 0,
       },
+      isUpdatedTotalPayment: false,
       selectedPaymentMethod: 1,
     }
   );
@@ -125,7 +151,9 @@ export const CheckoutProvider = ({ children }) => {
       ),
     });
   }, []);
-
+  const handleCloseModalOTP = () => {
+    setState({ type: "openModalOTP", payload: false });
+  };
   const handleCloseAddressModal = () => {
     setState({ type: "openAddressModal", payload: false });
   };
@@ -285,50 +313,65 @@ export const CheckoutProvider = ({ children }) => {
     }
   };
 
+  const handleOnVerifyOTP = () => {
+    setState({ type: "verifyOTP", payload: true });
+  };
+
   const onPaymentMethodChange = (e) => {
     setState({ type: "selectedPaymentMethod", payload: e.target.value });
   };
-  const handleCheckoutClick = async (userID) => {
-    console.log("User ID: ", userID);
-    console.log("Payment Method: ", state.selectedPaymentMethod);
-    console.log("Cart List: ", state.cartListWithoutInvalidItems);
-    console.log("Total Payment: ", state.totalPayment);
-    console.log("selectedVoucher: ", state.selectedVoucher);
-    console.log("totalPerItem: ", state.total);
-    const data = {
-      user_id: userID,
-      totalPayment: state.totalPayment,
-      totalPerItem: state.total,
-      validCart: state.cartListWithoutInvalidItems,
-      address: state.defaultAddress,
-      voucher: state.selectedVoucher || {},
-    };
-    console.log("Data: ", data);
-
-    try {
-      const type =
-        state.selectedPaymentMethod === 1
-          ? "cod"
-          : state.selectedPaymentMethod === 2
-          ? "momo"
-          : state.selectedPaymentMethod === 3
-          ? "vnpay"
-          : "ezywallet";
-      const res = await checkOut(data, type);
-      if (res.success) {
-        console.log("Checkout Success: ", res);
-        if (res.paymentUrl) {
-          window.location.href = res.paymentUrl;
-        } else {
-          navigate("/cart/checkout/result");
-        }
-      }
-    } catch (error) {
-      console.log("Error: ", error);
-      setState({ type: "openModalCheckoutError", payload: true });
-      setState({ type: "checkoutMessage", payload: error.message || error });
-    }
+  const handleCheckoutClick = (userID) => {
+    // console.log("User ID: ", userID);
+    // console.log("Payment Method: ", state.selectedPaymentMethod);
+    // console.log("Cart List: ", state.cartListWithoutInvalidItems);
+    // console.log("Total Payment: ", state.totalPayment);
+    // console.log("selectedVoucher: ", state.selectedVoucher);
+    // console.log("totalPerItem: ", state.total);
+    console.log("click: ", true);
+    setState({ type: "loading", payload: true });
+    setState({ type: "setUID", payload: userID });
+    setState({ type: "openModalOTP", payload: true });
   };
+
+  useEffect(() => {
+    const checkoutMethod = async () => {
+      const data = {
+        user_id: state.uid,
+        totalPayment: state.totalPayment,
+        totalPerItem: state.total,
+        validCart: state.cartListWithoutInvalidItems,
+        address: state.defaultAddress,
+        voucher: state.selectedVoucher || {},
+      };
+      // console.log("Data: ", data);
+      try {
+        const type =
+          state.selectedPaymentMethod === 1
+            ? "cod"
+            : state.selectedPaymentMethod === 2
+            ? "momo"
+            : state.selectedPaymentMethod === 3
+            ? "vnpay"
+            : "ezywallet";
+        const res = await checkOut(data, type);
+        if (res.success) {
+          console.log("Checkout Success: ", res);
+          if (res.paymentUrl) {
+            window.location.href = res.paymentUrl;
+          } else {
+            navigate("/cart/checkout/result");
+          }
+        }
+      } catch (error) {
+        console.log("Error: ", error);
+        setState({ type: "openModalCheckoutError", payload: true });
+        setState({ type: "checkoutMessage", payload: error.message || error });
+      }
+    };
+    if (state.verifyOTP === true) {
+      checkoutMethod();
+    }
+  }, [state.verifyOTP]);
 
   return (
     <CheckoutContext.Provider
@@ -347,6 +390,8 @@ export const CheckoutProvider = ({ children }) => {
         calculateVoucherDiscounts,
         handleApplyVoucher,
         onPaymentMethodChange,
+        handleCloseModalOTP,
+        handleOnVerifyOTP,
       }}
     >
       {children}

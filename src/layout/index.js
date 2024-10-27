@@ -9,6 +9,8 @@ import { logout } from "../redux/userSlice";
 import { clearCart } from "../redux/cartSlice";
 import { logoutShop } from "../redux/shopSlice";
 import CartHeader from "../components/CartHeader";
+import { startTokenRefreshListener } from "../firebase/AuthenticationFirebase";
+import { io } from "socket.io-client";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -107,6 +109,27 @@ const AuthLayout = ({ children }) => {
       console.log("Token không tồn tại hoặc đã có dữ liệu");
     }
   }, [token]);
+
+  useEffect(() => {
+    startTokenRefreshListener();
+  }, []);
+
+  useEffect(() => {
+    if (!user.user_id || user.user_id === "" || user.role_id !== 1) {
+      return;
+    }
+    const socket = io.connect(process.env.REACT_APP_BACKEND_URL);
+
+    socket.on("newOrder", (data) => {
+      const { orderID, selectedVoucher, timestamp } = data;
+      console.log("new order", data);
+      socket.emit("cancelOrder", data);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
 
   return (
     <>

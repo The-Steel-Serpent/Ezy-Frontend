@@ -4,6 +4,7 @@ import { useCheckout } from "../../providers/CheckoutProvider";
 import { useSelector } from "react-redux";
 import { VscError } from "react-icons/vsc";
 import { useNavigate } from "react-router-dom";
+import ModalOTP from "../user/ModalOTP";
 
 const momo = require("../../assets/momo.png");
 const vnpay = require("../../assets/vnpay.png");
@@ -11,21 +12,27 @@ const cod = require("../../assets/cod.png");
 const wallet = require("../../assets/wallet.png");
 
 const PaymentMethodSection = (props) => {
-  const { total } = props;
-  const { state, onPaymentMethodChange, handleCheckoutClick } = useCheckout();
+  const { total, loading } = props;
+  const {
+    state,
+    onPaymentMethodChange,
+    handleCheckoutClick,
+    handleCloseModalOTP,
+    handleOnVerifyOTP,
+  } = useCheckout();
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const { totalPayment, openModalCheckoutError, checkoutMessage } = state;
+  const {
+    totalPayment,
+    openModalCheckoutError,
+    checkoutMessage,
+    openModalOTP,
+  } = state;
   const PaymentMethodArray = [
     {
       name: "Thanh Toán Khi Nhận Hàng",
       value: 1,
       image: cod,
-    },
-    {
-      name: "Ví Momo",
-      value: 2,
-      image: momo,
     },
     {
       name: "Ví VNPay",
@@ -119,15 +126,19 @@ const PaymentMethodSection = (props) => {
             </div>
           </div>
         </div>
-        <div className="w-full flex justify-end items-center">
+        <div className="w-full flex justify-end items-center gap-3">
           <Button
-            disabled={total?.final === 0}
+            className="w-[160px] h-[45px] text-lg bg-white text-primary border-primary hover:bg-primary hover:text-white"
+            onClick={() => navigate("/cart")}
+          >
+            Trở Lại
+          </Button>
+          <Button
+            disabled={loading}
             className={`w-[160px] h-[45px] text-lg bg-primary text-white hover:opacity-80 ${
               total?.final === 0 && "disabled"
             }`}
-            onClick={() =>
-              total?.final !== 0 && handleCheckoutClick(user?.user_id)
-            }
+            onClick={() => !loading && handleCheckoutClick(user?.user_id)}
           >
             Đặt Hàng
           </Button>
@@ -156,6 +167,12 @@ const PaymentMethodSection = (props) => {
       >
         <p className="text-lg font-semibold">{checkoutMessage}</p>
       </Modal>
+      <ModalOTP
+        onVerify={handleOnVerifyOTP}
+        user={user}
+        openOTPModal={openModalOTP}
+        handleCancelOTP={handleCloseModalOTP}
+      />
     </>
   );
 };

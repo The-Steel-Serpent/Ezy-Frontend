@@ -8,12 +8,12 @@ import { useCheckout } from "../../providers/CheckoutProvider";
 const CheckoutItem = (props) => {
   const { item, defaultAddress, handleUpdateTotal } = props;
   const {
+    prevTotalPayment,
     state,
     setState,
     handleUpdateTotalPayment,
     calculateVoucherDiscounts,
   } = useCheckout();
-  console.log("item: ", item);
   const prevSelectedVoucherRef = useRef(state.selectedVoucher);
   const prevTotalRef = useRef(state.total);
   const prevTotalPerShopRef = useRef({});
@@ -130,7 +130,6 @@ const CheckoutItem = (props) => {
                   },
                 })),
               };
-              console.log("feeData: ", feeData);
               const fee = await getShippingFee(item?.Shop?.shop_id, feeData);
               return {
                 ...service,
@@ -210,6 +209,7 @@ const CheckoutItem = (props) => {
       if (updatedTotal.length > 0) {
         handleUpdateTotalPayment(updatedTotal);
         prevTotalRef.current = updatedTotal;
+        setState({ type: "isUpdatedTotalPayment", payload: true });
       }
     }
     if (prevTotalRef.current.length > 0) {
@@ -230,6 +230,21 @@ const CheckoutItem = (props) => {
     total,
     item?.Shop?.shop_id,
   ]);
+
+  // useEffect(() => {
+  //   const hasTotalPaymentChanged = (prev, curr) => {
+  //     return (
+  //       prev.totalPrice !== curr.totalPrice ||
+  //       prev.shippingFee !== curr.shippingFee ||
+  //       prev.discountPrice !== curr.discountPrice ||
+  //       prev.discountShippingFee !== curr.discountShippingFee ||
+  //       prev.final !== curr.final
+  //     );
+  //   };
+  //   if (hasTotalPaymentChanged(prevTotalPayment.current, state.totalPayment)) {
+  //     prevTotalPayment.current = state.totalPayment;
+  //   }
+  // }, [prevTotalPayment, state.totalPayment]);
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" };

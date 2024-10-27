@@ -13,6 +13,8 @@ import { FrownFilled } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useCheckout } from "../../../providers/CheckoutProvider";
 import { getVoucherList } from "../../../services/voucherService";
+import ModalOTP from "../../../components/user/ModalOTP";
+
 const CheckoutItem = lazy(() =>
   import("../../../components/cart/CheckoutItem")
 );
@@ -23,6 +25,7 @@ const VoucherSection = lazy(() =>
 const PaymentMethodSection = lazy(() =>
   import("../../../components/cart/PaymentMethodSection")
 );
+
 const CheckoutPage = () => {
   const {
     state,
@@ -39,10 +42,13 @@ const CheckoutPage = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchCart = async () => {
       const userID = user?.user_id;
-      dispatch(await fetchCartData({ userID }));
+      setState({ type: "loading", payload: true });
+      dispatch(fetchCartData({ userID }));
+      setState({ type: "loading", payload: false });
     };
     if (user?.user_id !== "") {
       fetchCart();
@@ -59,7 +65,6 @@ const CheckoutPage = () => {
     totalPayment,
     selectedVoucher,
   } = state;
-
   const fetchDefaultAddress = async (userID) => {
     try {
       const res = await getDefaultAddress(userID);
@@ -73,10 +78,12 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     const fetchVoucher = async () => {
+      setState({ type: "loading", payload: true });
+      console.log("prevTotalPayment.current: ", state.totalPayment);
       try {
         const reqData = {
           user_id: user.user_id,
-          totalPayment: totalPayment,
+          totalPayment: state.totalPayment,
           cart: cart,
         };
         const res = await getVoucherList(reqData);
@@ -90,6 +97,9 @@ const CheckoutPage = () => {
             (item) => item.isVoucherValid === true
           );
 
+          console.log("voucherDiscount", voucherDiscount);
+          console.log("voucherFreeShip", voucherFreeShip);
+
           setState({
             type: "updateSelectedVoucher",
             payload: {
@@ -97,6 +107,7 @@ const CheckoutPage = () => {
               shippingVoucher: findFirstValidShippingVoucher,
             },
           });
+          setState({ type: "loading", payload: false });
         }
       } catch (error) {
         setState({
@@ -107,21 +118,31 @@ const CheckoutPage = () => {
           type: "discountVoucher",
           payload: [],
         });
+        setState({ type: "loading", payload: false });
       }
     };
-    fetchVoucher();
-  }, [user?.user_id, cart]);
+    if (
+      user?.user_id &&
+      user?.user_id !== "" &&
+      cart.length > 0 &&
+      state.isUpdatedTotalPayment
+    ) {
+      fetchVoucher();
+    }
+  }, [user?.user_id, cart, state.isUpdatedTotalPayment]);
 
   useEffect(() => {
     if (user?.user_id && user?.user_id !== "") {
       const userID = user?.user_id;
-
+      setState({ type: "loading", payload: true });
       fetchDefaultAddress(userID);
+      setState({ type: "loading", payload: false });
     }
   }, [user?.user_id]);
 
   useEffect(() => {
     if (cart.length > 0) {
+      setState({ type: "loading", payload: true });
       const cartValid = cart
         .filter((shop) => shop.selected === 1)
         .map((shop) => {
@@ -142,6 +163,7 @@ const CheckoutPage = () => {
         type: "cartListWithoutInvalidItems",
         payload: cartValid,
       });
+      setState({ type: "loading", payload: true });
     }
   }, [cart]);
 
@@ -258,13 +280,17 @@ const CheckoutPage = () => {
             <div className="grid grid-cols-12 col-span-12">
               <section className="col-span-12 px-[30px] py-6 bg-white">
                 <Suspense>
-                  <PaymentMethodSection total={totalPayment} />
+                  <PaymentMethodSection
+                    loading={state.loading}
+                    total={totalPayment}
+                  />
                 </Suspense>
               </section>
             </div>
           </div>
         </section>
       )}
+
       <ModalAddressList
         openAddressModal={openAddressModal}
         handleCloseAddressModal={handleCloseAddressModal}

@@ -17,6 +17,7 @@ import {
   reauthenticateWithCredential,
   fetchSignInMethodsForEmail,
   updatePassword,
+  onIdTokenChanged,
 } from "firebase/auth";
 
 import { authFirebase } from "./firebase";
@@ -24,6 +25,15 @@ import { TrophyFilled } from "@ant-design/icons";
 
 const auth = getAuth();
 auth.useDeviceLanguage();
+
+export const startTokenRefreshListener = () => {
+  onIdTokenChanged(auth, async (user) => {
+    if (user) {
+      const token = await user.getIdToken(true); // Bắt buộc cấp token mới
+      localStorage.setItem("token", token);
+    }
+  });
+};
 
 export const signUpWithEmailPassword = async (email, password) => {
   try {
