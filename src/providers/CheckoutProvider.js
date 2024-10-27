@@ -316,7 +316,12 @@ export const CheckoutProvider = ({ children }) => {
           : "ezywallet";
       const res = await checkOut(data, type);
       if (res.success) {
-        navigate("/cart/checkout/result");
+        console.log("Checkout Success: ", res);
+        if (res.paymentUrl) {
+          window.location.href = res.paymentUrl;
+        } else {
+          navigate("/cart/checkout/result");
+        }
       }
     } catch (error) {
       console.log("Error: ", error);
