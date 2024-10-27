@@ -47,7 +47,7 @@ const ProductSellerHeader = ({ status }) => {
             onClick={() => navigate('/seller/product-management/add-product')}
             type="primary"
             icon={<GoPlus />}
-            className='bg-secondary px-3 py-4 text-sm'
+            className='bg-[#3188CA] px-3 py-4 text-sm'
           >
             Thêm 1 sản phẩm mới
           </Button>

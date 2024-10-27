@@ -15,3 +15,30 @@ export const getCategoriesByShop = async (shop_id) => {
     }
 }
 
+export const getSubCategoriesByID = async (sub_category_id) => {
+    try {
+        const url = URL + `get-sub-categories/${sub_category_id}`;
+        const res = await axios.get(url);
+        return res.data;
+    } catch (error) {
+        const errorMessage = error?.response?.status ?
+            `Error ${error.response.status}: ${error.response.data}` :
+            error.message;
+
+        throw new Error(errorMessage);
+    }
+}
+
+export const getAllCategoriesWithSubCategories = async () => {
+    try {
+        const url = URL + "categories-sub";
+        const res = await axios.get(url);
+        return res.data;
+    } catch (error) {
+        const errorMessage = error?.response?.status ?
+            `Error ${error.response.status}: ${error.response.data}` :
+            error.message;
+        throw new Error(errorMessage);
+    }
+}
+

@@ -159,3 +159,25 @@ export const updateProductStatus = async (product_id, update_status) => {
         throw new Error(errorMessage);
     }
 };
+
+export const getProductByID = async (product_id) => {
+    try{
+        const url = `${URL}get-product`;
+        const response = await axios.get(url, {
+            params: { product_id }
+        });
+        return response.data;
+    }catch(error){
+        console.log("Lỗi khi lấy sản phẩm: ", error);
+        switch (error.response.status) {
+            case 404:
+                return { error: true, message: "No product found" };
+            case 500:
+                return { error: true, message: "Lỗi server" };
+            default:
+                return {
+                    error: true, message: error.message || error
+                };
+        }
+    }
+}

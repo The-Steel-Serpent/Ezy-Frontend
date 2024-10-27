@@ -595,6 +595,7 @@ const SellerEditProfileBasic = () => {
                             disabled={state.enableConfirm}
                             onClick={async () => await handleSave()}
                             loading={state.submit_loading}
+                            className='bg-primary text-white'
                         >
                             Lưu
                         </Button>

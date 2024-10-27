@@ -241,7 +241,7 @@ const SellerEditProfileTax = () => {
               />
               {state.touched.tax_code && state.errors.tax_code && <div className='text-red-500 ml-5'>{state.errors.tax_code}</div>}
             </Col>
-          </Row>
+        </Row>
           {!state.disable_fields && (
             <div className='flex gap-3 justify-end mr-10 mt-10'>
               <Button
@@ -254,6 +254,7 @@ const SellerEditProfileTax = () => {
               <Button
                 onClick={handleCancelEdit}
                 loading={state.submit_loading}
+                className='bg-primary text-white'
               >
                 Hủy
               </Button>
