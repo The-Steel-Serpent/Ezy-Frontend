@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { Form, Input, Upload, Button, Modal, Table, Row, Col, Select } from 'antd';
 import { RiImageAddFill } from "react-icons/ri";
 import { RightOutlined } from '@ant-design/icons';
@@ -6,6 +6,9 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import axios from 'axios';
 import '../../../styles/Quill.css';
+import { getProductByID } from '../../../services/productService';
+import { getSubCategoriesByID } from '../../../services/categoriesService';
+import ModalCategory from '../category/ModalCategory';
 
 const { Option } = Select;
 
@@ -44,8 +47,10 @@ const initialState = {
         product_name: false,
         description: false,
         origin: false,
-        brand: false,
-    }
+        brand: false
+    },
+    isCatModalVisible: false,
+    selectedSubcat: null,
 };
 
 const reducer = (state, action) => {
@@ -82,6 +87,10 @@ const reducer = (state, action) => {
             return { ...state, subcategory: action.payload };
         case 'SET_ERRORS':
             return { ...state, errors: action.payload };
+        case 'SET_CAT_MODAL_VISIBLE':
+            return { ...state, isCatModalVisible: action.payload };
+        case 'SET_SELECTED_SUBCAT':
+            return { ...state, selectedSubcat: action.payload };
         case 'SET_TOUCHED':
             return {
                 ...state,
@@ -95,66 +104,26 @@ const reducer = (state, action) => {
     }
 };
 
-export const BasicInformation = ({ onData }) => {
+const EditBasicInformation = ({ product, onData }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
-    const [categories, setCategories] = useState([]);
-    const [subCategories, setSubCategories] = useState([]);
-    const [isCatModalVisible, setIsCatModalVisible] = useState(false);
-    const [selectedCategoryPath, setSelectedCategoryPath] = useState('');
-    const [isRowClicked, setIsRowClicked] = useState(false);
+    const uploadRef = useRef(null);
+    const [form] = Form.useForm();
 
     const showCatModal = () => {
-        setIsCatModalVisible(true);
-        dispatch({ type: 'SET_IS_SUBMITTED', payload: false });
+        dispatch({ type: 'SET_CAT_MODAL_VISIBLE', payload: true });
     };
-
-    const handleCatOK = () => {
-        setIsCatModalVisible(false);
-        dispatch({ type: 'SET_IS_SUBMITTED', payload: true });
+    const handleCatOK = (subcategory) => {
+        // dispatch({ type: 'SET_SUBCATEGORY', payload: subcategory });
+        dispatch({ type: 'SET_SELECTED_SUBCAT', payload: subcategory });
+        form.setFieldsValue({
+            sub_category: subcategory.sub_category_name
+        });
+        dispatch({ type: 'SET_CAT_MODAL_VISIBLE', payload: false });
     };
 
     const handleCatCancel = () => {
-        setIsCatModalVisible(false);
-    };
-
-    const onCatSelect = (record) => {
-        dispatch({ type: 'SET_SUBCATEGORY', payload: '' });
-        if (record && record.category_name) {
-            setSelectedCategoryPath(record.category_name);
-            setSubCategories(record.SubCategories || []);
-        } else {
-            console.error('Category record is undefined or missing category_name');
-        }
-    };
-
-    const onSubCatSelect = (record) => {
-        if (record && record.sub_category_name) {
-            setSelectedCategoryPath(prevPath => {
-                const pathArray = prevPath.split(' > ');
-                if (pathArray[0] !== selectedCategoryPath.split(' > ')[0]) {
-                    return `${selectedCategoryPath.split(' > ')[0]} > ${record.sub_category_name}`;
-                }
-                if (pathArray.length > 1) {
-                    pathArray[pathArray.length - 1] = record.sub_category_name;
-                } else {
-                    pathArray.push(record.sub_category_name);
-                }
-                return pathArray.join(' > ');
-            });
-            dispatch({ type: 'SET_SUBCATEGORY', payload: record.sub_category_id });
-        } else {
-            console.error('Subcategory record is undefined or missing sub_category_name');
-        }
-    };
-
-    const handleRowCatClick = (record) => {
-        onCatSelect(record);
-        setIsRowClicked(false);
-    };
-
-    const handleRowSubCatClick = (record) => {
-        onSubCatSelect(record);
-        setIsRowClicked(true);
+        dispatch({ type: 'SET_SELECTED_SUBCAT', payload: null });
+        dispatch({ type: 'SET_CAT_MODAL_VISIBLE', payload: false });
     };
 
     const handleUploadListProductChange = ({ fileList: newFileList }) => {
@@ -204,24 +173,8 @@ export const BasicInformation = ({ onData }) => {
         dispatch({ type: 'SET_TOUCHED', payload: 'description' });
     };
 
+
     useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const URL = `${process.env.REACT_APP_BACKEND_URL}/api/categories-sub`;
-                const res = await axios({
-                    method: "GET",
-                    url: URL,
-                    withCredentials: true
-                });
-                if (res.data && Array.isArray(res.data.data)) {
-                    setCategories(res.data.data);
-                } else {
-                    console.error("API response is not an array:", res.data);
-                }
-            } catch (error) {
-                console.log("Error:", error);
-            }
-        };
         axios.get('https://restcountries.com/v3.1/all')
             .then(response => {
                 const countryList = response.data.map(country => ({
@@ -233,32 +186,10 @@ export const BasicInformation = ({ onData }) => {
             .catch(error => {
                 console.error('Error origin:', error);
             });
-        fetchCategories();
     }, []);
 
 
 
-    const categoryColumns = [
-        {
-            title: 'Category Name',
-            dataIndex: 'category_name',
-            key: 'category_name',
-            render: (text) => (
-                <div className='flex justify-between'>
-                    <span>{text}</span>
-                    <RightOutlined />
-                </div>
-            ),
-        }
-    ];
-
-    const subCategoryColumns = [
-        {
-            title: 'Subcategory Name',
-            dataIndex: 'sub_category_name',
-            key: 'sub_category_id',
-        }
-    ];
     const validate = () => {
         let valid = true;
         let newErrors = {
@@ -317,7 +248,7 @@ export const BasicInformation = ({ onData }) => {
         }
 
         // subcategory
-        if (state.subcategory.length === 0) {
+        if (state.selectedSubcat === null) {
             newErrors.subcategory = 'Hãy chọn danh mục';
             valid = false;
         }
@@ -327,7 +258,6 @@ export const BasicInformation = ({ onData }) => {
     };
 
     useEffect(() => {
-        console.log("Product Name: ", state.product_name);
         validate();
     }, [
         state.product_name,
@@ -337,7 +267,7 @@ export const BasicInformation = ({ onData }) => {
         state.gender,
         state.fileListProduct,
         state.thumbnail,
-        state.subcategory
+        state.selectedSubcat
     ]);
 
     useEffect(() => {
@@ -359,7 +289,7 @@ export const BasicInformation = ({ onData }) => {
                 brand: state.brand,
                 fileListProduct: state.fileListProduct,
                 thumbnail: state.thumbnail,
-                sub_category_id: state.subcategory,
+                sub_category_id: state.selectedSubcat.sub_category_id,
                 gender: state.gender,
                 noErrorBasicInfo: true
             };
@@ -371,37 +301,85 @@ export const BasicInformation = ({ onData }) => {
         }
     }, [state.errors]);
 
+
+    useEffect(() => {
+        if (product) {
+            const setProductData = async () => {
+                try {
+                    const thumbail_payload = {
+                        uid: '-1',
+                        url: product.thumbnail,
+                        status: 'done',
+                    }
+                    dispatch({ type: 'SET_THUMBNAIL', payload: [thumbail_payload] });
+                    dispatch({ type: 'SET_PRODUCT_NAME', payload: product.product_name });
+                    dispatch({ type: 'SET_DESCRIPTION', payload: product.description });
+                    dispatch({ type: 'SET_FILE_LIST_PRODUCT', payload: product.ProductImgs });
+                    dispatch({ type: 'SET_ORIGIN', payload: product.origin });
+                    dispatch({ type: 'SET_GENDER', payload: product.gender_object });
+                    dispatch({ type: 'SET_BRAND', payload: product.brand });
+                    const subCategory = await getSubCategoriesByID(product.sub_category_id);
+                    console.log('SubCategory present', subCategory.data);
+                    dispatch({ type: 'SET_SELECTED_SUBCAT', payload: subCategory.data });
+                    console.log('Producttttttttttttttt:', product);
+                    form.setFieldsValue({
+                        productName: product.product_name,
+                        productDescription: product.description,
+                        productImages: product.productImages,
+                        productImages: product.thumbnail,
+                        origin: product.origin,
+                        gender: product.gender_object,
+                        brand: product.brand,
+                        sub_category: subCategory.data.sub_category_name
+                    });
+
+                } catch (error) {
+                    console.error('Error fetching:', error);
+                }
+            };
+            setProductData();
+        }
+    }, [product])
+
+
+
     return (
         <div>
             <h3 className='text-lg'>Thông tin cơ bản</h3>
-            <Form layout='vertical' className='ml-5 gap-12'>
+            <Form layout='vertical' className='ml-5 gap-12' form={form}>
                 <Form.Item
                     label="Hình ảnh sản phẩm"
+                    name="productImages"
                     required>
-                    <Upload
-                        listType="picture-card"
-                        maxCount={5}
-                        fileList={state.fileListProduct}
-                        onChange={handleUploadListProductChange}
-                        onPreview={handlePreview}
-                        beforeUpload={beforeUpload}
-                        onRemove={handleRemoveProductImage}
-                        className='custom-upload'
-                    >
-                        {state.fileListProduct.length < 5 && (
-                            <div className='flex flex-col items-center'>
-                                <RiImageAddFill size={20} color='#EE4D2D' />
-                                <div className='text-[#EE4D2D]'>Thêm hình ảnh {state.fileListProduct.length}/5</div>
-                            </div>
-                        )}
-                    </Upload>
-                    {state.errors.fileListProduct && state.touch.fileListProduct && <p className='text-red-500'>{state.errors.fileListProduct}</p>}
+                    <div>
+                        <Upload
+                            ref={uploadRef}
+                            listType="picture-card"
+                            maxCount={5}
+                            fileList={state.fileListProduct}
+                            onChange={handleUploadListProductChange}
+                            onPreview={handlePreview}
+                            beforeUpload={beforeUpload}
+                            onRemove={handleRemoveProductImage}
+                            className='custom-upload'
+                        >
+                            {state.fileListProduct.length < 5 && (
+                                <div className='flex flex-col items-center'>
+                                    <RiImageAddFill size={20} color='#EE4D2D' />
+                                    <div className='text-[#EE4D2D]'>Thêm hình ảnh {state.fileListProduct.length}/5</div>
+                                </div>
+                            )}
+                        </Upload>
+                        {state.errors.fileListProduct && state.touch.fileListProduct && <p className='text-red-500'>{state.errors.fileListProduct}</p>}
+                    </div>
                 </Form.Item>
                 <Form.Item
                     label="Ảnh bìa"
+                    name="thumbnail"
                     required>
                     <div className='flex items-center space-x-4'>
                         <Upload
+                            ref={uploadRef}
                             listType="picture-card"
                             fileList={state.thumbnail}
                             onChange={handleUploadThumbnailChange}
@@ -415,7 +393,7 @@ export const BasicInformation = ({ onData }) => {
                                 </div>
                             )}
                         </Upload>
-                        {state.errors.thumbnail && state.touch.thumbnail &&  <p className='text-red-500'>{state.errors.thumbnail}</p>}
+                        {state.errors.thumbnail && state.touch.thumbnail && <p className='text-red-500'>{state.errors.thumbnail}</p>}
                         <div className='description'>
                             <ul className='list-disc pl-5 text-[14px] text-gray-400'>
                                 <li>Tải lên hình ảnh 1:1.</li>
@@ -426,12 +404,15 @@ export const BasicInformation = ({ onData }) => {
                 </Form.Item>
 
                 {/* Ngành hàng */}
-                <Form.Item label="Ngành hàng" required>
+                <Form.Item
+                    label="Ngành hàng"
+                    name="sub_category"
+                    required>
                     <Input
-                        value={state.isSubmitted ? selectedCategoryPath : ''}
+                        value={state?.selectedSubcat?.sub_category_name ?? ''}
+                        placeholder="Tìm theo ngành hàng"
                         readOnly
                         onClick={showCatModal}
-                        placeholder="Chọn ngành hàng"
                     />
                 </Form.Item>
 
@@ -454,139 +435,108 @@ export const BasicInformation = ({ onData }) => {
                 {/* Mô tả sản phẩm */}
                 <Form.Item
                     label="Mô tả sản phẩm"
-                    name="productDescription"
                     rules={[
                         { required: true, message: 'Không được để ô trống' },
                     ]}
                 >
-                    <ReactQuill
-                        value={state.description}
-                        onChange={handleDescription}
-                        placeholder='Mô tả sản phẩm của bạn...'
-                        modules={{
-                            toolbar: [
-                                [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
-                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                ['bold', 'italic', 'underline'],
-                                [{ 'align': [] }],
-                                ['link', 'image']
-                            ],
-                        }}
-                        formats={[
-                            'header', 'font',
-                            'list', 'bullet',
-                            'bold', 'italic', 'underline',
-                            'align',
-                            'link', 'image'
-                        ]}
-                    />
-                    {state.errors.description && state.touch.description && <p className='text-red-500'>{state.errors.description}</p>}
-                    {/* sex, brand and origin */}
-                    <div className='mt-3'>
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="origin"
-                                    rules={[{ required: true, message: 'Không được để ô trống' }]}
-                                    label="Xuất xứ">
-                                    <Select
-                                        showSearch
-                                        className='border rounded-md'
-                                        value={state.origin}
-                                        onChange={(value) => dispatch({ type: 'SET_ORIGIN', payload: value })}
-                                        placeholder="Chọn xuất xứ"
-                                        optionFilterProp="children"
-                                        filterOption={(input, option) =>
-                                            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                                        }
-                                    >
-                                        {state.countries.map(country => (
-                                            <Option key={country.code} value={country.name}>
-                                                {country.name}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="gender"
-                                    rules={[{ required: true, message: 'Không được để ô trống' }]}
-                                    label="Giới tính">
-                                    <Select
-                                        className='border rounded-md'
-                                        placeholder="Giới tính"
-                                        value={state.gender}
-                                        onChange={(value) => dispatch({ type: 'SET_GENDER', payload: value })}
-                                    >
-                                        {Object.keys(state.gender_objects).map(key => (
-                                            <Option key={key} value={state.gender_objects[key]}>
-                                                {state.gender_objects[key]}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Form.Item
-                            name="brand"
-                            rules={[{ required: true, message: 'Không được để ô trống' }]}
-                            label="Thương hiệu">
-                            <Input
-                                className='border rounded-md'
-                                value={state.brand}
-                                placeholder="Thương hiệu"
-                                onChange={(e) => dispatch({ type: 'SET_BRAND', payload: e.target.value })} />
-                        </Form.Item>
+                    <div>
+                        <ReactQuill
+                            value={state.description}
+                            onChange={handleDescription}
+                            placeholder='Mô tả sản phẩm'
+                            name="productDescription"
+                            modules={{
+                                toolbar: [
+                                    [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
+                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                    ['bold', 'italic', 'underline'],
+                                    [{ 'align': [] }],
+                                    ['link', 'image']
+                                ],
+                            }}
+                            formats={[
+                                'header', 'font',
+                                'list', 'bullet',
+                                'bold', 'italic', 'underline',
+                                'align',
+                                'link', 'image'
+                            ]}
+                        />
+                        {state.errors.description && state.touch.description && <p className='text-red-500'>{state.errors.description}</p>}
+
+
                     </div>
                 </Form.Item>
+                {/* sex, brand and origin */}
+                <div className='mt-3'>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="origin"
+                                rules={[{ required: true, message: 'Không được để ô trống' }]}
+                                label="Xuất xứ">
+                                <Select
+                                    showSearch
+                                    className='border rounded-md'
+                                    value={state.origin}
+                                    onChange={(value) => dispatch({ type: 'SET_ORIGIN', payload: value })}
+                                    placeholder="Chọn xuất xứ"
+                                    optionFilterProp="children"
+                                    filterOption={(input, option) =>
+                                        option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                    }
+                                >
+                                    {state.countries.map(country => (
+                                        <Option key={country.code} value={country.name}>
+                                            {country.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="gender"
+                                rules={[{ required: true, message: 'Không được để ô trống' }]}
+                                label="Giới tính">
+                                <Select
+                                    className='border rounded-md'
+                                    placeholder="Giới tính"
+                                    value={state.gender}
+                                    onChange={(value) => dispatch({ type: 'SET_GENDER', payload: value })}
+                                >
+                                    {Object.keys(state.gender_objects).map(key => (
+                                        <Option key={key} value={state.gender_objects[key]}>
+                                            {state.gender_objects[key]}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Form.Item
+                        name="brand"
+                        rules={[{ required: true, message: 'Không được để ô trống' }]}
+                        label="Thương hiệu">
+                        <Input
+                            className='border rounded-md'
+                            value={state.brand}
+                            placeholder="Thương hiệu"
+                            onChange={(e) => dispatch({ type: 'SET_BRAND', payload: e.target.value })} />
+                    </Form.Item>
+                </div>
             </Form>
 
-            {/* Modal */}
-            <Modal
-                title="Chọn ngành hàng"
-                visible={isCatModalVisible}
-                onOk={handleCatOK}
-                onCancel={handleCatCancel}
-                footer={[
-                    <Button key="cancel" onClick={handleCatCancel}>Cancel</Button>,
-                    <Button disabled={!isRowClicked} key="confirm" type="primary" onClick={handleCatOK}>Confirm</Button>
-                ]}
-            >
-                <div className='flex h-72 overflow-hidden'>
-                    <Table
-                        columns={categoryColumns}
-                        dataSource={categories}
-                        pagination={false}
-                        rowKey="category_id"
-                        showHeader={false}
-                        className='w-[50%] overflow-y-auto custom-scrollbar'
-                        onRow={(record) => ({
-                            onClick: () => handleRowCatClick(record),
-                            className: record.category_name === selectedCategoryPath.split(' > ')[0] ? 'bg-gray-200' : ''
-                        })}
-                    />
-                    <Table
-                        columns={subCategoryColumns}
-                        dataSource={subCategories}
-                        pagination={false}
-                        rowKey="sub_category_id"
-                        showHeader={false}
-                        className='w-[50%] overflow-y-auto custom-scrollbar'
-                        onRow={(record) => ({
-                            onClick: () => handleRowSubCatClick(record),
-                            className: record.sub_category_name === selectedCategoryPath.split(' > ')[1] ? 'bg-gray-200' : ''
-                        })}
-                    />
-                </div>
-                <div className='mt-4'>
-                    <p>Đã chọn: {selectedCategoryPath}</p>
-                </div>
-            </Modal>
+            {/* Modal Categories */}
+            <ModalCategory
+                isCatModalVisible={state.isCatModalVisible}
+                handleCatOK={handleCatOK}
+                handleCatCancel={handleCatCancel}
+            />
 
             {/* Preview Modal */}
             <Modal
-                visible={state.previewVisible}
+                open={state.previewVisible}
                 title={state.previewTitle}
                 footer={null}
                 onCancel={handleCancel}
@@ -596,7 +546,7 @@ export const BasicInformation = ({ onData }) => {
 
             {/* Error Modal */}
             <Modal
-                visible={state.errorVisible}
+                open={state.errorVisible}
                 title="Lưu ý"
                 footer={[
                     <Button
@@ -611,5 +561,7 @@ export const BasicInformation = ({ onData }) => {
                 <p>{state.errorMessage}</p>
             </Modal>
         </div>
-    );
-};
+    )
+}
+
+export default EditBasicInformation

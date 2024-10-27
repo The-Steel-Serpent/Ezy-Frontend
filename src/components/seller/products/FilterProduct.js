@@ -2,7 +2,7 @@ import React, { useEffect, useReducer } from 'react'
 import { Button, Input } from 'antd';
 import { CiSearch } from "react-icons/ci";
 import { BsPencil } from "react-icons/bs";
-import ModalCategory from '../category/ModalCategory';
+import ModalShopCategory from '../category/ModalShopCategory';
 
 const initialState = {
   isCatModalVisible: false,
@@ -76,7 +76,11 @@ const FilterProduct = ({ handleSetSearchInfo }) => {
         className='text-primary border rounded border-primary px-4 py-2 font-[500] hover:text-white'>
         Đặt lại
       </Button>
-      <ModalCategory isCatModalVisible={state.isCatModalVisible} handleCatOK={handleCatOK} handleCatCancel={handleCatCancel} />
+      <ModalShopCategory
+        isCatModalVisible={state.isCatModalVisible}
+        handleCatOK={handleCatOK}
+        handleCatCancel={handleCatCancel}
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { Button, Modal, Table, Select, message } from 'antd';
 import React, { useEffect, useReducer, useState } from 'react'
-import { getAllCategoriesWithSubCategories, getCategoriesByShop } from '../../../services/categoriesService';
+import { getCategoriesByShop } from '../../../services/categoriesService';
 import { RightOutlined } from '@ant-design/icons';
 import { useSelector } from "react-redux";
 
@@ -31,8 +31,9 @@ const reducer = (state, action) => {
     }
 };
 
-const ModalCategory = ({ isCatModalVisible, handleCatOK, handleCatCancel }) => {
+const ModalShopCategory = ({ isCatModalVisible, handleCatOK, handleCatCancel }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
+    const shop = useSelector(state => state.shop);
     const [selectedCatRow, setSelectedCatRow] = useState('');
     const [selectedCategoryPath, setSelectedCategoryPath] = useState('');
 
@@ -95,8 +96,9 @@ const ModalCategory = ({ isCatModalVisible, handleCatOK, handleCatCancel }) => {
     useEffect(() => {
         let categories = []
         const fetchCategories = async () => {
+            const shop_id = shop.shop_id;
             try {
-                categories = await getAllCategoriesWithSubCategories();
+                categories = await getCategoriesByShop(shop_id);
                 console.log("Fetched categories:", categories);
                 categories = categories.data.map(category => {
                     return {
@@ -112,8 +114,10 @@ const ModalCategory = ({ isCatModalVisible, handleCatOK, handleCatCancel }) => {
                 dispatch({ type: 'SET_CATEGORIES', payload: [] });
             }
         };
+        if (shop.shop_id != "") {
             fetchCategories();
-    }, []);
+        }
+    }, [shop]);
 
 
     return (
@@ -161,4 +165,4 @@ const ModalCategory = ({ isCatModalVisible, handleCatOK, handleCatCancel }) => {
     )
 }
 
-export default ModalCategory
+export default ModalShopCategory

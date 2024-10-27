@@ -88,6 +88,9 @@ const AllProduct = withSuspense(
 const AddProduct = withSuspense(
   lazy(() => import("../pages/seller/product_management/AddProduct"))
 );
+const EditProduct = withSuspense(
+  lazy(() => import("../pages/seller/product_management/EditProduct"))
+);
 const SearchPage = withSuspense(
   lazy(() => import("../pages/buyer/product-pages/SearchPage"))
 );
@@ -347,6 +350,14 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <AddProduct />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: `seller/product-management/edit-product/:product_id`,
+        element: (
+          <SellerAuthLayout>
+            <EditProduct />
           </SellerAuthLayout>
         ),
       },

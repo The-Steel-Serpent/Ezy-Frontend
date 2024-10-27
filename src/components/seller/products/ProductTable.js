@@ -3,6 +3,7 @@ import React, { useEffect, useReducer } from 'react'
 import { useSelector } from 'react-redux'
 import { getShopProducts, searchShopProducts, updateProductStatus } from '../../../services/productService'
 import { MdOutlineSell } from "react-icons/md";
+import { useNavigate } from 'react-router-dom';
 // reducer
 const initialState = {
     productsFetch: [],
@@ -100,6 +101,7 @@ const ProductTable =
     }) => {
         const [state, dispatch] = useReducer(reducer, initialState)
         const shop = useSelector(state => state.shop);
+        const navigate = useNavigate();
 
         const rowSelection = {
             selectedRowKeys: state.selectedRowKeys,
@@ -171,8 +173,7 @@ const ProductTable =
                         <Image
                             src={record.thumbnail}
                             alt={text}
-                            width={50}
-                            className='cursor-pointer'
+                            className='cursor-pointer min-w-20 max-w-20'
                             preview={{
                                 mask: record.product_status === 0 ? (
                                     <span className='text-red-500 text-center'>Đã tạm dừng</span>
@@ -180,15 +181,21 @@ const ProductTable =
                             }}
                         />
                         <div className='flex flex-col items-start'>
-                            <span className='font-semibold'>{text}</span>
+                            <span className='font-semibold  max-w-36 line-clamp-2 '>{text}</span>
                             <div className='flex w-full h-full items-center gap-2'>
-                                <div>
-                                    <MdOutlineSell className='text-slate-500' />
-                                </div>
-                                <div className='mt-[10px] text-slate-500'>
-                                    {record.sold}
+                                <div className='flex items-center'>
+                                    <MdOutlineSell size={15} className='text-slate-500' />
+                                    <div className='mt-[12px] ml-3'>
+                                        {record.sold}
+                                    </div>
                                 </div>
                             </div>
+                            {
+                                record.product_status === 0 ? (
+                                    <div className='text-red-500'>Đã tạm dừng</div>
+                                ) : null
+                            }
+
                         </div>
                     </div>
                 )
@@ -219,6 +226,10 @@ const ProductTable =
                 key: 'action',
             }
         ]
+
+        const handleNavigateToEditProduct = (product_id) => {
+            navigate(`/seller/product-management/edit-product/${product_id}`);
+        }
 
         const createDataSource = () => {
             const dataSource = state.products_name.map((product_name, index) => {
@@ -251,9 +262,13 @@ const ProductTable =
                     sold:
                         <p className='text-center'>{state.sold[index]}</p>,
                     action:
-                        <div className='flex flex-col mx-auto'>
-                            <button className='btn btn-primary text-primary'>Sửa</button>
-                            {/* <button className='btn btn-danger text-primary'>Xóa</button> */}
+                        <div className='flex justify-center items-center'>
+                            <Button
+                                className='max-w-20'
+                                onClick={() => handleNavigateToEditProduct(state.productsFetch[index].product_id)}
+                            >
+                                Cập nhật
+                            </Button>
                         </div>
                 }
             });
@@ -463,6 +478,7 @@ const ProductTable =
             } finally {
                 dispatch({ type: 'SET_LOADING_UPDATE_PRODUCT_STATUS', payload: false });
                 dispatch({ type: 'SET_VISIBLE_MODAL', payload: false });
+                dispatch({ type: 'OPEN_BOTTOM', payload: false });
             }
         };
 
