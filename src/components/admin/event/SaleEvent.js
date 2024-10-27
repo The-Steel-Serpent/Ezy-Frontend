@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Table, message, Modal, Form, Input, DatePicker, Button, Upload, Select } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import uploadFile from '../../../helpers/uploadFile';
 
 const { Option } = Select;
@@ -12,9 +12,11 @@ const SaleEvent = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isSettingModalVisible, setIsSettingModalVisible] = useState(false);
     const [form] = Form.useForm();
+    const [settingForm] = Form.useForm(); // Form riêng cho thiết lập danh mục
     const [thumbnail, setThumbnail] = useState([]);
     const [categories, setCategories] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [eventCategories, setEventCategories] = useState([]);
 
     useEffect(() => {
         fetchSaleEvents();
@@ -88,22 +90,40 @@ const SaleEvent = () => {
             await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/set-categories/${eventId}`, {
                 category_ids: selectedCategories,
             });
-            message.success('Categories set successfully');
+            message.success('Cài đặt danh mục thành công');
             fetchSaleEvents();
         } catch (error) {
-            message.error('Error setting categories for the event.');
+            message.error('Lỗi khi cài đặt danh mục cho sự kiện.');
         } finally {
             setIsSettingModalVisible(false);
         }
     };
 
+    const handleOpenSetupCategories = async (eventId) => {
+        setSelectedEvent(eventId);
+        setEventCategories([]);
+        settingForm.resetFields();
+        setIsSettingModalVisible(true);
+    
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/get-categories/${eventId}`);
+            
+            if (response.data.success) {
+                const selectedCategories = response.data.data;
+                setEventCategories(selectedCategories);
+                settingForm.setFieldsValue({ categories: selectedCategories });
+            } else {
+                settingForm.setFieldsValue({ categories: [] });
+            }
+        } catch (error) {
+            console.error("Lỗi khi lấy danh mục:", error.response?.data?.message || error.message);
+        }
+    };
+    
+
     const handleSettingModalOk = async (values) => {
         if (selectedEvent) {
-            try {
-                await handleSetCategories(selectedEvent, values.categories);
-            } catch (error) {
-                message.error('Error setting categories for the event.');
-            }
+            await handleSetCategories(selectedEvent, values.categories);
         }
     };
 
@@ -113,11 +133,17 @@ const SaleEvent = () => {
 
     const handleDeleteEvent = (id) => {
         Modal.confirm({
-            title: 'Xác nhận xóa',
-            content: 'Bạn có chắc chắn muốn xóa sự kiện này?',
-            okText: 'Có',
+            title: 'Xác nhận xóa sự kiện',
+            content: (
+                <div>
+                    <p style={{ color: 'red', fontWeight: 'bold' }}>Bạn có chắc chắn muốn xóa sự kiện này?</p>
+                </div>
+            ),
+            okText: 'Có, xóa ngay',
             okType: 'danger',
-            cancelText: 'Không',
+            cancelText: 'Không, quay lại',
+            icon: <ExclamationCircleOutlined />,
+            centered: true,
             onOk: async () => {
                 setLoading(true);
                 try {
@@ -129,9 +155,17 @@ const SaleEvent = () => {
                 } finally {
                     setLoading(false);
                 }
-            }
+            },
+            okButtonProps: {
+                style: {
+                    backgroundColor: 'red',
+                    borderColor: 'red',
+                    color: 'white',
+                },
+            },
         });
     };
+
     const beforeUpload = (file) => {
         const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
         if (!isJpgOrPng) {
@@ -178,16 +212,18 @@ const SaleEvent = () => {
             key: 'action',
             render: (text, record) => (
                 <>
-                    <Button 
-                        type="primary" 
-                        onClick={() => {
-                            setSelectedEvent(record.sale_events_id);
-                            setIsSettingModalVisible(true);
-                        }}
+                    <Button
+                        type="primary"
+                        onClick={() => handleOpenSetupCategories(record.sale_events_id)}
                     >
                         Thiết lập
                     </Button>
-                    <Button type="primary" danger onClick={() => handleDeleteEvent(record.sale_events_id)}>
+                    <Button 
+                        type="primary" 
+                        danger 
+                        onClick={() => handleDeleteEvent(record.sale_events_id)} 
+                        style={{ marginLeft: '8px' }}
+                    >
                         Xóa
                     </Button>
                 </>
@@ -197,7 +233,7 @@ const SaleEvent = () => {
 
     return (
         <div>
-            <h1>Sự kiện nguyến mãi</h1>
+            <h1>Sự kiện khuyến mãi</h1>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
                 Tạo sự kiện mới
             </Button>
@@ -220,39 +256,38 @@ const SaleEvent = () => {
                     <Form.Item
                         label="Tên sự kiện"
                         name="sale_events_name"
-                        rules={[{ required: true, message: 'Vui lòng nhập tên sự kiện' }]}
+                        rules={[{ required: true, message: 'Vui lòng nhập tên sự kiện!' }]}
                     >
-                        <Input placeholder="Nhập tên sự kiện" />
+                        <Input />
                     </Form.Item>
-
-                    <Form.Item label="Thumbnail" name="thumbnail">
+                    <Form.Item
+                        label="Thumbnail"
+                        rules={[{ required: true, message: 'Vui lòng chọn ảnh!' }]}
+                    >
                         <Upload
-                            name="file"
                             listType="picture"
-                            maxCount={1}
                             beforeUpload={beforeUpload}
+                            fileList={thumbnail}
                             onChange={handleThumbnailChange}
+                            maxCount={1}
                         >
-                            <Button icon={<PlusOutlined />}>Chọn ảnh</Button>
+                            <Button>Chọn ảnh</Button>
                         </Upload>
                     </Form.Item>
-
                     <Form.Item
                         label="Ngày bắt đầu"
                         name="started_at"
-                        rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+                        rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu!' }]}
                     >
-                        <DatePicker showTime />
+                        <DatePicker />
                     </Form.Item>
-
                     <Form.Item
                         label="Ngày kết thúc"
                         name="ended_at"
-                        rules={[{ required: true, message: 'Vui lòng nhập ngày kết thúc' }]}
+                        rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc!' }]}
                     >
-                        <DatePicker showTime />
+                        <DatePicker />
                     </Form.Item>
-
                     <Form.Item>
                         <Button type="primary" htmlType="submit" loading={loading}>
                             Tạo sự kiện
@@ -262,19 +297,19 @@ const SaleEvent = () => {
             </Modal>
 
             <Modal
-                title="Cài đặt danh mục cho sự kiện"
+                title="Thiết lập danh mục cho sự kiện"
                 visible={isSettingModalVisible}
                 onCancel={() => setIsSettingModalVisible(false)}
                 footer={null}
             >
-                <Form layout="vertical" onFinish={handleSettingModalOk}>
-                    <Form.Item label="Chọn danh mục" name="categories">
-                        <Select
-                            mode="multiple"
-                            placeholder="Chọn danh mục"
-                            allowClear
-                        >
-                            {categories.map(category => (
+                <Form form={settingForm} layout="vertical" onFinish={handleSettingModalOk}>
+                    <Form.Item
+                        label="Chọn danh mục"
+                        name="categories"
+                        rules={[{ required: true, message: 'Vui lòng chọn ít nhất một danh mục!' }]}
+                    >
+                        <Select mode="multiple" placeholder="Chọn danh mục">
+                            {categories.map((category) => (
                                 <Option key={category.category_id} value={category.category_id}>
                                     {category.category_name}
                                 </Option>
