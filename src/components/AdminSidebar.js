@@ -97,7 +97,7 @@ const AdminSidebar = () => {
                             label: 'Sự kiện',
                         },
                         {
-                            key: '4.2',
+                            key: '/admin/event-management/sale-event/discount-voucher',
                             icon: <ProductOutlined />,
                             label: 'Voucher',
                         },
