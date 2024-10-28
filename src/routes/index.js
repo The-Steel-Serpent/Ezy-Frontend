@@ -60,6 +60,9 @@ const AddProductSubCategory = withSuspense(
 const AddSaleEvent = withSuspense(
   lazy(() => import("../pages/admin/event_management/AddSaleEvent"))
 );
+const AddDiscountVoucher = withSuspense(
+  lazy(() => import("../pages/admin/event_management/AddDiscountVoucher"))
+);
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
@@ -400,6 +403,14 @@ const router = createBrowserRouter([
         element: (
           <AdminAuthLayout>
             <AddSaleEvent />
+          </AdminAuthLayout>
+        ),
+      },
+      {
+        path: "/admin/event-management/sale-event/discount-voucher",
+        element: (
+          <AdminAuthLayout>
+            <AddDiscountVoucher />
           </AdminAuthLayout>
         ),
       }

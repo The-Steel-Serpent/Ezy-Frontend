@@ -218,6 +218,9 @@ const SaleEvent = () => {
                     >
                         Thiết lập
                     </Button>
+                    <Button type="primary" style={{ marginLeft: '8px' }}>
+                        Cập nhật
+                    </Button>
                     <Button 
                         type="primary" 
                         danger 
