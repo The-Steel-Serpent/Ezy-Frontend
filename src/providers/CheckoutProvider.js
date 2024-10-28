@@ -359,7 +359,7 @@ export const CheckoutProvider = ({ children }) => {
           if (res.paymentUrl) {
             window.location.href = res.paymentUrl;
           } else {
-            navigate("/cart/checkout/result");
+            navigate("/cart/checkout/result?status=success");
           }
         }
       } catch (error) {

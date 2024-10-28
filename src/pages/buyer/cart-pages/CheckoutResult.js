@@ -62,6 +62,7 @@ const CheckoutResult = () => {
   const vnp_TransactionStatus = queryParams.get("vnp_TransactionStatus");
   const vnp_TxnRef = queryParams.get("vnp_TxnRef");
   const vnp_SecureHash = queryParams.get("vnp_SecureHash");
+  const status = queryParams.get("status");
 
   const { error, success, warning, loading } = localState;
 
@@ -116,6 +117,21 @@ const CheckoutResult = () => {
     updateOrder();
   }, []);
 
+  useEffect(() => {
+    if (status !== "") {
+      setLocalState({
+        type: "success",
+        payload: {
+          isSuccess: status === "success",
+          message:
+            status === "success"
+              ? "Thanh toán thành công"
+              : "Thanh toán thất bại",
+        },
+      });
+    }
+  }, [status]);
+
   return (
     <>
       <section className="max-w-[1200px] mx-auto py-5">
@@ -139,11 +155,10 @@ const CheckoutResult = () => {
                     <span className="text-lg font-semibold">Thanh toán</span>
                   ),
                   icon: <MdOutlinePayment size={32} />,
-                  status: "process",
                 },
                 {
                   title: (
-                    <span className="text-lg">
+                    <span className="text-lg font-semibold">
                       {loading
                         ? "Đang xử lý"
                         : success.isSuccess

@@ -188,6 +188,7 @@ const CheckoutPage = () => {
             {/* Steps */}
             <section className="col-span-12">
               <Steps
+                current={1}
                 className="flex justify-center"
                 items={[
                   {
