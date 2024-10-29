@@ -136,20 +136,19 @@ export const sendMessage = async (
 export const markMessagesAsRead = async (messageIds) => {
   const batch = writeBatch(db);
   const ids = Array.isArray(messageIds) ? messageIds : [messageIds];
-  const updatePromises = ids.map(async (messageId) => {
+  ids.forEach((messageId) => {
     const messageRef = doc(db, "messages", messageId);
-    await updateDoc(messageRef, {
-      isRead: true,
-    });
+    batch.update(messageRef, { isRead: true });
   });
 
-  // Chờ tất cả các cập nhật hoàn tất
-  await Promise.all(updatePromises);
+  await batch.commit();
+  console.log("Messages marked as read");
 };
 
 export const getChattingUsers = async (userId) => {
   const users = new Map();
 
+  // Query for sent messages
   const qSent = query(
     messagesCollection,
     where("sender_id", "==", userId),
@@ -165,6 +164,7 @@ export const getChattingUsers = async (userId) => {
     }
   });
 
+  // Query for received messages
   const qReceived = query(
     messagesCollection,
     where("receiver_id", "==", userId),
@@ -175,9 +175,18 @@ export const getChattingUsers = async (userId) => {
   snapshotReceived.forEach((doc) => {
     const message = doc.data();
     const senderId = message.sender_id;
-    if (senderId !== userId && users.has(senderId)) {
-      const userInfo = users.get(senderId);
-      userInfo.unseenCount += 1;
+    if (senderId !== userId) {
+      if (!users.has(senderId)) {
+        users.set(senderId, { lastMessage: message, unseenCount: 0 });
+      } else {
+        const userInfo = users.get(senderId);
+        if (!message.isRead) {
+          userInfo.unseenCount += 1;
+        }
+        if (message.createdAt > userInfo.lastMessage.createdAt) {
+          userInfo.lastMessage = message;
+        }
+      }
     }
   });
 

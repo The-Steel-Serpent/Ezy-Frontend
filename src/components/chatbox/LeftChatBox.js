@@ -140,6 +140,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
       try {
         setLoading(true);
         const users = await getChattingUsers(user?.user_id);
+
         setAllUser(users);
         setLoading(false);
       } catch (error) {
