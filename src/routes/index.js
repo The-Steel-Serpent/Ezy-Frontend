@@ -55,9 +55,6 @@ const AdminDashboard = withSuspense(
 const AddProductCategory = withSuspense(
   lazy(() => import("../pages/admin/category_management/AddProductCategory"))
 );
-const AddProductSubCategory = withSuspense(
-  lazy(() => import("../pages/admin/category_management/AddProductSubCategory"))
-);
 const AddSaleEvent = withSuspense(
   lazy(() => import("../pages/admin/event_management/AddSaleEvent"))
 );
@@ -400,14 +397,6 @@ const router = createBrowserRouter([
         element: (
           <AdminAuthLayout>
             <AddProductCategory />
-          </AdminAuthLayout>
-        ),
-      },
-      {
-        path: "admin/category-management/product-category/sub-category",
-        element: (
-          <AdminAuthLayout>
-            <AddProductSubCategory />
           </AdminAuthLayout>
         ),
       },
