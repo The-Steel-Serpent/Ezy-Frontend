@@ -87,21 +87,9 @@ const AdminSidebar = () => {
                     ],
                 },
                 {
-                    key: '4',
+                    key: '/admin/event-management/sale-event/event',
                     icon: <GiftOutlined />,
                     label: 'Quản lý sự kiện',
-                    children: [
-                        {
-                            key: '/admin/event-management/sale-event/event',
-                            icon: <ProductOutlined />,
-                            label: 'Sự kiện',
-                        },
-                        {
-                            key: '/admin/event-management/sale-event/discount-voucher',
-                            icon: <ProductOutlined />,
-                            label: 'Voucher',
-                        },
-                    ],
                 },
                 {
                     key: '5',
