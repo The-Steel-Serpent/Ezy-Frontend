@@ -1,3 +1,4 @@
+import { message } from "antd";
 import { db } from "./firebase";
 import axios from "axios";
 import {
@@ -12,12 +13,14 @@ import {
   getDocs,
   writeBatch,
   doc,
+  getDoc,
 } from "firebase/firestore";
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const storage = getStorage();
 const messagesCollection = collection(db, "messages");
+const conversationsCollection = collection(db, "conversations");
 export const compressVideo = async (file) => {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
@@ -69,46 +72,100 @@ export const uploadFile = async (file, type) => {
   return await getDownloadURL(snapshot.ref);
 };
 
-export const subscribeToMessages = (senderId, receiverId, callback) => {
-  const q = query(messagesCollection, orderBy("createdAt"));
-  return onSnapshot(q, async (querySnapshot) => {
-    const messages = await Promise.all(
-      querySnapshot.docs.map(async (doc) => {
-        const messageData = {
-          id: doc.id,
-          ...doc.data(),
-        };
+const getOrCreateConversation = async (senderId, receiverId) => {
+  const q = query(
+    conversationsCollection,
+    where("participants", "array-contains", senderId)
+  );
+  const snapshot = await getDocs(q);
 
-        const sender = await getUserInfo(messageData.sender_id);
-        const receiver = await getUserInfo(messageData.receiver_id);
+  let conversation = null;
 
-        return {
-          ...messageData,
-          sender,
-          receiver,
-        };
-      })
-    );
-    const filteredMessages = messages.filter((message) => {
-      // Kiểm tra quyền truy cập
-      const senderRole = message.sender.role_id;
-      const receiverRole = message.receiver.role_id;
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    // Kiểm tra nếu người nhận có trong participants
+    if (data.participants.includes(receiverId)) {
+      conversation = { id: doc.id, ...data };
+    }
+  });
 
-      const isAuthorized =
-        (senderRole === 1 && receiverRole === 2) ||
-        (senderRole === 2 && receiverRole === 1);
-      // (senderRole === "admin" &&
-      //   (receiverRole === "customer" || receiverRole === "shop"));
-
-      return (
-        isAuthorized &&
-        ((message.sender_id === senderId &&
-          message.receiver_id === receiverId) ||
-          (message.sender_id === receiverId &&
-            message.receiver_id === senderId))
-      );
+  if (!conversation) {
+    // Tạo mới một conversation nếu chưa có
+    const newConversationRef = await addDoc(conversationsCollection, {
+      participants: [senderId, receiverId],
+      isMuted: false,
+      isPinned: false,
+      createdAt: serverTimestamp(),
     });
-    callback(filteredMessages);
+    conversation = { id: newConversationRef.id };
+  }
+
+  return conversation.id;
+};
+
+export const subscribeToMessages = (senderId, receiverId, callback) => {
+  const qConversation = query(
+    conversationsCollection,
+    where("participants", "array-contains", senderId)
+  );
+  return onSnapshot(qConversation, async (conversationSnapshot) => {
+    let conversationId = null;
+
+    // Kiểm tra xem cuộc trò chuyện giữa sender và receiver có tồn tại không
+    conversationSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.participants.includes(receiverId)) {
+        conversationId = doc.id;
+      }
+    });
+
+    if (conversationId) {
+      // Nếu conversationId tồn tại, lấy các tin nhắn thuộc cuộc trò chuyện này
+      const qMessages = query(
+        messagesCollection,
+        where("conversationId", "==", conversationId),
+        orderBy("createdAt")
+      );
+
+      return onSnapshot(qMessages, async (messagesSnapshot) => {
+        const messages = await Promise.all(
+          messagesSnapshot.docs.map(async (doc) => {
+            const messageData = {
+              id: doc.id,
+              ...doc.data(),
+            };
+
+            const sender = await getUserInfo(messageData.sender_id);
+            const receiver = await getUserInfo(messageData.receiver_id);
+
+            // Thêm kiểm tra quyền truy cập cho từng tin nhắn
+            const senderRole = sender.role_id;
+            const receiverRole = receiver.role_id;
+
+            const isAuthorized =
+              (senderRole === 1 && receiverRole === 2) ||
+              (senderRole === 2 && receiverRole === 1);
+
+            if (isAuthorized) {
+              return {
+                ...messageData,
+                sender,
+                receiver,
+              };
+            } else {
+              return null; // Bỏ qua các tin nhắn không hợp lệ
+            }
+          })
+        );
+
+        // Lọc các tin nhắn hợp lệ và gọi callback
+        const filteredMessages = messages.filter((message) => message !== null);
+        callback(filteredMessages);
+      });
+    } else {
+      // Nếu không có conversation nào, callback với mảng rỗng
+      callback([]);
+    }
   });
 };
 
@@ -120,7 +177,12 @@ export const sendMessage = async (
   receiverId
 ) => {
   if ((message.trim() || mediaType.trim()) && senderId && receiverId) {
+    // Kiểm tra hoặc tạo mới một conversation
+    const conversationId = await getOrCreateConversation(senderId, receiverId);
+
+    // Thêm tin nhắn mới vào collection messages với conversationId
     await addDoc(messagesCollection, {
+      conversationId,
       text: message,
       mediaUrl: mediaUrl || "",
       mediaType: mediaType || "",
@@ -129,22 +191,30 @@ export const sendMessage = async (
       isRead: false,
       createdAt: serverTimestamp(),
     });
+
     console.log("Message sent successfully");
   }
 };
 
-export const markMessagesAsRead = async (messageIds) => {
+export const markMessagesAsRead = async (conversationIds, userId) => {
   const batch = writeBatch(db);
-  const ids = Array.isArray(messageIds) ? messageIds : [messageIds];
-  ids.forEach((messageId) => {
-    const messageRef = doc(db, "messages", messageId);
-    batch.update(messageRef, { isRead: true });
-  });
+
+  for (const conversationId of conversationIds) {
+    const q = query(messagesCollection, where("id", "==", conversationId));
+
+    const snapshot = await getDocs(q);
+    snapshot.forEach((doc) => {
+      const messageData = doc.data();
+      // Chỉ đánh dấu là đã đọc nếu người dùng là người nhận và tin nhắn chưa được đọc
+      if (messageData.receiver_id === userId && !messageData.isRead) {
+        const messageRef = doc(db, "messages", doc.id);
+        batch.update(messageRef, { isRead: true });
+      }
+    });
+  }
 
   await batch.commit();
-  console.log("Messages marked as read");
 };
-
 export const getChattingUsers = async (userId) => {
   const users = new Map();
 
@@ -192,16 +262,47 @@ export const getChattingUsers = async (userId) => {
 
   const chattingUsers = await Promise.all(
     Array.from(users).map(async ([otherUserId, userInfo]) => {
-      const userDetails = await getUserInfo(otherUserId);
+      const conversationQuery = query(
+        conversationsCollection,
+        where("participants", "array-contains", userId)
+      );
+
+      const conversationSnapshot = await getDocs(conversationQuery);
+      let conversationData = null;
+
+      conversationSnapshot.forEach((doc) => {
+        const conversation = doc.data();
+        if (conversation.participants.includes(otherUserId)) {
+          conversationData = {
+            conversationId: doc.id,
+            isMuted: conversation.isMuted,
+            isPinned: conversation.isPinned,
+            createdAt: conversation.createdAt,
+          };
+        }
+      });
       return {
-        userInfo: userDetails,
+        userInfo: await getUserInfo(otherUserId),
         lastMessage: userInfo.lastMessage,
         unseenCount: userInfo.unseenCount,
+        ...conversationData,
       };
     })
   );
+  const sortedChattingUsers = chattingUsers.sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
 
-  return chattingUsers;
+    const aCreatedAt = a.lastMessage.createdAt
+      ? a.lastMessage.createdAt.toMillis()
+      : 0;
+    const bCreatedAt = b.lastMessage.createdAt
+      ? b.lastMessage.createdAt.toMillis()
+      : 0;
+
+    return bCreatedAt - aCreatedAt;
+  });
+  return sortedChattingUsers;
 };
 
 export const subscribeToNewMessages = (userId, fetchChattingUsers) => {
@@ -230,9 +331,38 @@ export const subscribeToNewMessages = (userId, fetchChattingUsers) => {
       (message) =>
         message.receiver_id === userId || message.sender_id === userId
     );
-
     if (hasNewMessage) {
       fetchChattingUsers();
     }
   });
+};
+
+export const togglePinConversation = async (conversationId, isPinned) => {
+  await updateDoc(doc(conversationsCollection, conversationId), {
+    isPinned: !isPinned,
+  });
+};
+
+export const toggleMuteConversation = async (conversationId, isMuted) => {
+  await updateDoc(doc(conversationsCollection, conversationId), {
+    isMuted: !isMuted,
+  });
+};
+
+export const deleteConversation = async (conversationId) => {
+  const q = query(
+    messagesCollection,
+    where("conversationId", "==", conversationId)
+  );
+  const snapshot = await getDocs(q);
+  const batch = writeBatch(db);
+
+  snapshot.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+
+  const conversationRef = doc(conversationsCollection, conversationId);
+  batch.delete(conversationRef);
+
+  await batch.commit();
 };

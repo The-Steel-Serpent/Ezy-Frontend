@@ -58,7 +58,6 @@ export const MessagesProvider = ({ children }) => {
     });
   }, [state.expandChatBox]);
   const handleUserSelected = useCallback((userID) => {
-    console.log(userID);
     setState({
       type: "SET_OPEN_CHAT_BOX",
       payload: true,
@@ -72,6 +71,12 @@ export const MessagesProvider = ({ children }) => {
       payload: userID,
     });
   }, []);
+  const handleUnsetUserSelected = useCallback(() => {
+    setState({
+      type: "SET_SELECTED_USER_ID",
+      payload: null,
+    });
+  }, []);
   return (
     <MessagesContext.Provider
       value={{
@@ -81,6 +86,7 @@ export const MessagesProvider = ({ children }) => {
         handleOpenChatBox,
         handleExpandChatBox,
         handleUserSelected,
+        handleUnsetUserSelected,
       }}
     >
       {children}

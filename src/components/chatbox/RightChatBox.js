@@ -87,14 +87,7 @@ const RightChatBox = (props) => {
   //Redux State
   const { state } = useMessages();
   const user = useSelector((state) => state?.user);
-  const [dataUser, setDataUser] = useState({
-    _id: "",
-    name: "",
-    username: "",
-    phoneNumber: "",
-    email: "",
-    profile_pic: "",
-  });
+  const [dataUser, setDataUser] = useState(null);
   const [allMessage, setAllMessage] = useState([]);
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
@@ -255,20 +248,14 @@ const RightChatBox = (props) => {
     );
   }, []);
   const handleMessageClick = async () => {
-    const lastMessage = allMessage[allMessage.length - 1];
+    const unreadMessages = allMessage.filter((message) => !message.isRead);
 
-    // Kiểm tra nếu tin nhắn gần nhất chưa được xem
-    if (lastMessage && !lastMessage.isRead) {
-      await markMessagesAsRead(lastMessage.id); // Đánh dấu tin nhắn gần nhất là đã xem
-    }
-
-    // Đánh dấu tất cả tin nhắn là đã xem nếu cần
-    const unreadMessages = allMessage.filter(
-      (message) => !message.isRead && message.receiver_id === user?.user_id
-    );
     if (unreadMessages.length > 0) {
-      const allMessageIds = unreadMessages.map((message) => message.id);
-      await markMessagesAsRead(allMessageIds); // Đánh dấu tất cả tin nhắn chưa xem
+      const conversationIds = new Set(
+        unreadMessages.map((message) => message.id)
+      );
+
+      await markMessagesAsRead(Array.from(conversationIds), user.user_id);
     }
   };
   const handleUploadFilesInput = (e) => {
@@ -296,7 +283,10 @@ const RightChatBox = (props) => {
   }, [allMessage]);
 
   //********************* */
-
+  useEffect(() => {
+    console.log("selectedUserID: ", state.selectedUserID);
+    console.log("dataUser: ", dataUser);
+  }, [state.selectedUserID, dataUser]);
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
@@ -312,6 +302,8 @@ const RightChatBox = (props) => {
 
     if (state.selectedUserID) {
       fetchUserData();
+    } else {
+      setDataUser(null);
     }
   }, [state.selectedUserID]);
 
@@ -321,7 +313,6 @@ const RightChatBox = (props) => {
         user?.user_id,
         state.selectedUserID,
         (messages) => {
-          console.log(messages);
           setAllMessage(messages);
         }
       );
@@ -335,10 +326,10 @@ const RightChatBox = (props) => {
     <div
       className={`${props.expandChatBox ? "" : "hidden"} right-chatbox `}
       ref={chatboxRef}
-      onClick={handleMessageClick}
+      onClick={user?.user_id && handleMessageClick}
     >
       {/**Primary Bg Content */}
-      {!dataUser.user_id && (
+      {!dataUser?.user_id && (
         <div className="w-full h-full bg-[#f3f3f3] flex justify-center items-center flex-col">
           <i class="h-[120px] w-[200px] inline-block" style={{ lineHeight: 0 }}>
             <svg
@@ -416,7 +407,7 @@ const RightChatBox = (props) => {
       )}
 
       {/**Conversation*/}
-      {dataUser.user_id && (
+      {dataUser?.user_id && (
         <div className="conversation">
           <div className="flex justify-start items-center h-full pl-3">
             {dataUser.role_id === 2 ? (
