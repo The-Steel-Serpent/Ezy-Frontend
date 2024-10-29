@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Input, Button, Modal, Table, Upload, message } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { RiImageAddFill } from "react-icons/ri";
 import uploadFile from '../../../helpers/uploadFile';
+import ModalProductSubCategory from './ModalProductSubCategory';
 
 function ProductCategory() {
     const [categories, setCategories] = useState([]);
     const [thumbnail, setThumbnail] = useState(null);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [isSubCategoryModalVisible, setIsSubCategoryModalVisible] = useState(false);
     const [currentCategoryId, setCurrentCategoryId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
@@ -25,8 +26,9 @@ function ProductCategory() {
         {
             key: '4', title: 'Thao tác', render: (text, record) => (
                 <div>
-                    <EditOutlined style={{ marginRight: 12 }} onClick={() => handleEdit(record)} />
-                    <DeleteOutlined style={{ color: "red" }} onClick={() => handleDelete(record.category_id)} />
+                    <Button type="primary" onClick={() => handleEdit(record)}>Sửa</Button>
+                    <Button type="primary" style={{ marginLeft: '8px' }} onClick={() => handleManageSubCategory(record.category_id)}>Danh mục con</Button>
+                    <Button type="primary" style={{ marginLeft: '8px' }} danger onClick={() => handleDelete(record.category_id)}>Xóa</Button>
                 </div>
             )
         }
@@ -80,7 +82,6 @@ function ProductCategory() {
             message.success('Cập nhật danh mục thành công!');
             resetEditForm();
         } catch (error) {
-            console.error('Error during category update:', error);
             handleError(error);
         }
     };
@@ -101,8 +102,6 @@ function ProductCategory() {
                 console.error('Lỗi khi tải lên ảnh:', error);
                 throw new Error('Tải ảnh lên không thành công. Vui lòng thử lại.');
             }
-        } else {
-            console.warn('Không có tệp ảnh để tải lên.');
         }
         return null;
     };
@@ -112,7 +111,6 @@ function ProductCategory() {
             const values = await form.validateFields();
             await handleAddCategory(values);
         } catch (error) {
-            console.error('Form validation error:', error);
             handleError(error);
         }
     };
@@ -122,7 +120,6 @@ function ProductCategory() {
             const values = await form.validateFields();
             await handleUpdateCategory(values);
         } catch (error) {
-            console.error('Form validation error:', error);
             handleError(error);
         }
     };
@@ -132,7 +129,6 @@ function ProductCategory() {
             const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/add-category`, values);
             return response.data;
         } catch (error) {
-            console.error("Error adding category: ", error);
             throw error;
         }
     };
@@ -142,7 +138,6 @@ function ProductCategory() {
             const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/delete-category/${category_id}`);
             return response.data;
         } catch (error) {
-            console.error('Error deleting category:', error);
             if (error.response && error.response.data) {
                 throw new Error(error.response.data.message || 'Có lỗi xảy ra trong quá trình xóa danh mục.');
             }
@@ -153,18 +148,12 @@ function ProductCategory() {
     const updateCategory = async (category_id, updatedData) => {
         try {
             const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/update-category/${category_id}`, updatedData);
-            console.log('Category updated:', response.data);
             return response.data;
         } catch (error) {
             if (error.response) {
-                throw new Error(error.response.data.message || 'Lổi cập nhật danh mục.');
-            } else if (error.request) {
-                console.error('No response received:', error.request);
-                throw new Error('No response received from the server.');
-            } else {
-                console.error('Error message:', error.message);
-                throw new Error('Error in request setup.');
+                throw new Error(error.response.data.message || 'Lỗi cập nhật danh mục.');
             }
+            throw new Error('Có lỗi xảy ra. Vui lòng thử lại.');
         }
     };
 
@@ -175,17 +164,33 @@ function ProductCategory() {
         setIsEditModalVisible(true);
     };
 
-    const confirmDelete = async (category_id) => {
-        const confirm = window.confirm('Bạn có chắc chắn muốn xóa danh mục này?');
-        if (confirm) {
-            try {
-                await deleteCategory(category_id);
-                message.success('Xóa danh mục thành công!');
-                fetchCategories();
-            } catch (error) {
-                message.error(error.message);
-            }
-        }
+    const confirmDelete = (category_id) => {
+        Modal.confirm({
+            title: 'Bạn có chắc chắn muốn xóa danh mục này?',
+            okText: 'Có',
+            okType: 'danger',
+            cancelText: 'Không',
+            onOk: async () => {
+                try {
+                    message.loading('Đang xóa danh mục...', 0);
+                    await deleteCategory(category_id);
+                    message.success('Xóa danh mục thành công!');
+                    fetchCategories();
+                } catch (error) {
+                    console.error('Error deleting category:', error);
+                    message.error(error.response?.data?.message || 'Có lỗi xảy ra trong quá trình xóa danh mục.');
+                } finally {
+                    message.destroy();
+                }
+            },
+            okButtonProps: {
+                style: {
+                    backgroundColor: 'red',
+                    borderColor: 'red',
+                    color: 'white',
+                },
+            },
+        });
     };
 
     const handleDelete = (category_id) => {
@@ -194,11 +199,7 @@ function ProductCategory() {
 
     const handleError = (error) => {
         console.error(error);
-        if (error.response) {
-            message.error(error.response.data.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
-        } else {
-            message.error('Có lỗi xảy ra. Vui lòng thử lại.');
-        }
+        message.error(error.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
     };
 
     const resetAddForm = () => {
@@ -241,9 +242,22 @@ function ProductCategory() {
             setThumbnail(file);
         }
     };
+    const handleManageSubCategory = (categoryId) => {
+        setCurrentCategoryId(categoryId);
+        setIsSubCategoryModalVisible(true);
+    };
+
+    const handleSubCategoryOk = async () => {
+        setIsSubCategoryModalVisible(false);
+    };
 
     return (
         <div>
+            <ModalProductSubCategory
+                categoryId={currentCategoryId}
+                visible={isSubCategoryModalVisible}
+                onCancel={() => setIsSubCategoryModalVisible(false)}
+            />
             <Modal title="Thêm danh mục" visible={isAddModalVisible} onOk={handleAddOk} onCancel={handleAddCancel}>
                 <Form form={form} layout="vertical">
                     <Form.Item name="category_name" label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục!' }]}>
@@ -262,13 +276,12 @@ function ProductCategory() {
                     </Form.Item>
                 </Form>
             </Modal>
-
-            <Modal title="Cập nhật danh mục" visible={isEditModalVisible} onOk={handleEditOk} onCancel={handleEditCancel}>
+            <Modal title="Sửa danh mục" visible={isEditModalVisible} onOk={handleEditOk} onCancel={handleEditCancel}>
                 <Form form={form} layout="vertical">
                     <Form.Item name="category_name" label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục!' }]}>
                         <Input />
                     </Form.Item>
-                    <Form.Item name="thumbnail" label="Thumbnail">
+                    <Form.Item label="Thumbnail">
                         <Upload
                             listType="picture-card"
                             fileList={thumbnail ? [thumbnail] : []}
@@ -281,13 +294,16 @@ function ProductCategory() {
                     </Form.Item>
                 </Form>
             </Modal>
-
-            <div style={{ marginBottom: 16 }}>
-                <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
-                    Thêm danh mục
-                </Button>
-            </div>
-            <Table columns={columns} dataSource={categories} rowKey="category_id" loading={loading} />
+            <Button type="primary" onClick={() => setIsAddModalVisible(true)} style={{ marginBottom: '16px' }}>
+                Thêm danh mục
+            </Button>
+            <Table
+                loading={loading}
+                columns={columns}
+                dataSource={categories}
+                pagination={{ pageSize: 10 }}
+                rowKey="category_id"
+            />
         </div>
     );
 }

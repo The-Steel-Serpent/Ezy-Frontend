@@ -79,9 +79,8 @@ const DiscountVoucher = () => {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/voucher/add-voucher`, formattedValues);
       if (response.data.success) {
         message.success('Voucher added successfully');
-        form.resetFields();
+        fetchVouchers();
         setIsModalVisible(false);
-        fetchVouchers(); // Refresh voucher list
       } else {
         message.error('Failed to add voucher: ' + response.data.message);
       }
@@ -89,6 +88,11 @@ const DiscountVoucher = () => {
       console.error('Error adding voucher:', error);
       message.error('Failed to add voucher: ' + (error.response ? error.response.data.message : error.message));
     }
+  };
+
+  const handleCancel = () => {
+    form.resetFields();
+    setIsModalVisible(false);
   };
 
   const columns = [
@@ -166,7 +170,7 @@ const DiscountVoucher = () => {
       <Modal
         title="Thêm Voucher"
         visible={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={handleCancel} 
         footer={null}
       >
         <Form form={form} onFinish={handleAddVoucher}>
