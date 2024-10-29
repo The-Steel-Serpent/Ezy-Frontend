@@ -14,6 +14,9 @@ import { IoNotificationsOutline } from "react-icons/io5";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ImPencil2 } from "react-icons/im";
+const OrderSection = lazy(() =>
+  import("../../../../components/order/OrderSection")
+);
 const EditProfile = lazy(() =>
   import("../../../../components/user/EditProfile")
 );
@@ -119,52 +122,92 @@ const AccountSetting = () => {
       if (parentNode) {
         navigate(`/user/${parentNode.key}?type=${key}`);
       } else {
-        navigate(`/user/${key}`);
+        if (key === "purchase") {
+          navigate(`/user/${key}?status-id=-1`);
+        } else {
+          navigate(`/user/${key}`);
+        }
       }
     }
-    setState({ type: "SELECTED_KEYS", payload: keys });
   };
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const type = query.get("type");
-    setState({ type: "SELECTED_KEYS", payload: type });
-  }, [location.search]);
+    if (type) {
+      setState({ type: "SELECTED_KEYS", payload: type });
+    } else {
+      setState({
+        type: "SELECTED_KEYS",
+        payload: location.pathname.split("/").pop(),
+      });
+    }
+  }, [location.pathname, location.search]);
   const renderContent = () => {
-    switch (type) {
-      case "profile":
-        return (
-          <Suspense
-            fallback={<Skeleton.Node active={true} className="w-full" />}
-          >
-            <EditProfile />
-          </Suspense>
-        );
-      case "email":
-        return (
-          <Suspense
-            fallback={<Skeleton.Node active={true} className="w-full" />}
-          >
-            <ChangeEmail />
-          </Suspense>
-        );
-      case "address":
-        return (
-          <Suspense
-            fallback={<Skeleton.Node active={true} className="w-full" />}
-          >
-            <AddressChange />
-          </Suspense>
-        );
-      case "password":
-        return (
-          <Suspense
-            fallback={<Skeleton.Node active={true} className="w-full" />}
-          >
-            <ChangePassword />
-          </Suspense>
-        );
-      default:
-        return <EditProfile />;
+    if (type) {
+      switch (type) {
+        case "profile":
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <EditProfile />
+            </Suspense>
+          );
+        case "email":
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <ChangeEmail />
+            </Suspense>
+          );
+        case "address":
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <AddressChange />
+            </Suspense>
+          );
+        case "password":
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <ChangePassword />
+            </Suspense>
+          );
+        case "order":
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <ChangePassword />
+            </Suspense>
+          );
+        case "wallet":
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <ChangePassword />
+            </Suspense>
+          );
+        default:
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <EditProfile />
+            </Suspense>
+          );
+      }
+    } else {
+      return (
+        <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
+          <OrderSection />
+        </Suspense>
+      );
     }
   };
 

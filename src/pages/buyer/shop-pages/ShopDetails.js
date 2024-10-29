@@ -15,11 +15,13 @@ import { CaretRightFilled, RightOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
 import { TfiMenuAlt } from "react-icons/tfi";
 import { FaShopSlash } from "react-icons/fa6";
+import { useMessages } from "../../../providers/MessagesProvider";
 
 const SortBar = lazy(() => import("../../../components/sorts/SortBar"));
 
 const ShopDetails = () => {
   const navigate = useNavigate();
+  const { handleUserSelected } = useMessages();
   const query = new URLSearchParams(window.location.search);
   let sub_category_id = query.get("sub_category_id");
   if (!sub_category_id) {
@@ -243,7 +245,12 @@ const ShopDetails = () => {
                         <span className="text-white text-lg font-semibold">
                           {shop?.shop_name}
                         </span>
-                        <Button className="border-white text-white">
+                        <Button
+                          className="border-white text-white"
+                          onClick={() =>
+                            handleUserSelected(shop.UserAccount.user_id)
+                          }
+                        >
                           <BiChat />
                           Chat Ngay
                         </Button>

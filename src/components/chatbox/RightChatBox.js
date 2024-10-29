@@ -1,5 +1,5 @@
 import { DownOutlined } from "@ant-design/icons";
-import { Divider, Dropdown, Menu, Space, Spin, Switch } from "antd";
+import { Divider, Dropdown, Image, Menu, Space, Spin, Switch } from "antd";
 import React, {
   lazy,
   memo,
@@ -16,8 +16,16 @@ import { MdEventNote, MdOutlineEmojiEmotions } from "react-icons/md";
 import { RiImage2Line, RiVideoLine } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
 import { useSelector } from "react-redux";
+import { useMessages } from "../../providers/MessagesProvider";
+import {
+  getUserInfo,
+  markMessagesAsRead,
+  sendMessage,
+  subscribeToMessages,
+  uploadFile,
+} from "../../firebase/messageFirebase";
+import toast from "react-hot-toast";
 const ImageChatbox = withSuspense(lazy(() => import("./ImageChatbox")));
-
 const items = [
   {
     label: "Tất cả",
@@ -65,7 +73,10 @@ const conversationDropdownItems = (props) => (
       <Divider className="mt-2 mb-0" />
     </Menu.Item>
     <Menu.Item style={{ padding: "8px 0px" }}>
-      <div className="w-full flex justify-between items-center">
+      <div
+        className="w-full flex justify-between items-center"
+        onClick={() => (window.location.href = `/shop/${props.username}`)}
+      >
         <span className="text-xs text-[#333]">Xem thông tin cá nhân</span>
         <FaAngleRight className="text-[#999]" />
       </div>
@@ -74,11 +85,8 @@ const conversationDropdownItems = (props) => (
 );
 const RightChatBox = (props) => {
   //Redux State
+  const { state } = useMessages();
   const user = useSelector((state) => state?.user);
-  const socketConnection = useSelector(
-    (state) => state?.user?.socketConnection
-  );
-  //States
   const [dataUser, setDataUser] = useState({
     _id: "",
     name: "",
@@ -88,8 +96,7 @@ const RightChatBox = (props) => {
     profile_pic: "",
   });
   const [allMessage, setAllMessage] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [openDropdownStickers, setOpenDropdownStickers] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
   const [message, setMessage] = useState({
     text: "",
@@ -102,11 +109,6 @@ const RightChatBox = (props) => {
   const inputRef = useRef(null);
   const chatboxRef = useRef(null);
   //Handlers
-  const onOpenDropdownStickersChange = useCallback(() => {
-    setOpenDropdownStickers((preve) => {
-      return !preve;
-    });
-  }, []);
   const handleOnChange = useCallback(
     (e) => {
       const { name, value } = e.target;
@@ -120,127 +122,223 @@ const RightChatBox = (props) => {
     [message]
   );
 
-  const handleUploadFiles = useCallback(
-    (e) => {
-      const file = Array.from(e.target.files);
+  const handleUploadFiles = (filesArray) => {
+    const files = Array.from(filesArray);
+    const validFiles = [];
+    console.log(files);
 
-      setFiles((prevFile) => [...prevFile, ...file]);
-    },
-    [files]
-  );
+    const videoPromises = files.map((file) => {
+      return new Promise((resolve) => {
+        if (file.type.includes("image") && file.size <= 2 * 1024 * 1024) {
+          validFiles.push(file);
+          resolve(); // Hoàn thành kiểm tra file hình ảnh
+        } else if (file.type.includes("video")) {
+          const video = document.createElement("video");
+          video.src = URL.createObjectURL(file);
+          video.onloadedmetadata = () => {
+            if (video.duration <= 5 * 60) {
+              validFiles.push(file);
+            } else {
+              toast.error("Video phải có thời lượng tối đa 5 phút");
+            }
+            URL.revokeObjectURL(video.src); // Giải phóng bộ nhớ
+            resolve(); // Hoàn thành kiểm tra file video
+          };
+        } else {
+          toast.error("Hình ảnh phải có dung lượng tối đa 2MB.");
+          resolve(); // Đảm bảo Promise luôn được hoàn thành
+        }
+      });
+    });
+
+    // Khi tất cả các Promise đã hoàn thành
+    Promise.all(videoPromises).then(() => {
+      setFiles((prevFile) => [...prevFile, ...validFiles]);
+    });
+  };
+  const handleRemoveAllFiles = useCallback(() => {
+    setFiles([]);
+  }, []);
 
   const handleSendMessage = useCallback(
-    (e) => {
+    async (e) => {
       e.preventDefault();
-      setLoading(true);
-      let updatedMessage = { ...message };
-      setLoading(false);
-      if (message.text || message.imgUrl || message.videoUrl) {
-        if (socketConnection) {
-          socketConnection.emit("new-message", {
-            sender: user?._id,
-            receiver: props.selectedUserID,
-            text: updatedMessage.text,
-            imageUrl: updatedMessage.imageUrl,
-            videoUrl: updatedMessage.videoUrl,
-            msgByUserID: user?._id,
-          });
-
-          setMessage({
-            text: "",
-            imageUrl: "",
-            videoUrl: "",
-          });
+      try {
+        const sendMessages = [];
+        if (message.text.trim() !== "") {
+          console.log("Gửi tin nhắn thành công");
+          sendMessages.push(
+            sendMessage(
+              message.text,
+              "",
+              "",
+              user?.user_id,
+              state.selectedUserID
+            )
+          );
         }
+        if (files.length > 0) {
+          for (const file of files) {
+            if (file.type.startsWith("image/")) {
+              const imgUrl = await uploadFile(file, "image");
+              sendMessages.push(
+                sendMessage(
+                  "",
+                  "image",
+                  imgUrl,
+                  user?.user_id,
+                  state.selectedUserID
+                )
+              );
+              console.log("Gửi tin nhắn thành công");
+            }
+          }
+        }
+
+        if (files.length > 0) {
+          for (const file of files) {
+            if (file.type.startsWith("video/")) {
+              const videoUrl = await uploadFile(file, "video");
+              sendMessages.push(
+                sendMessage(
+                  "",
+                  "video",
+                  videoUrl,
+                  user?.user_id,
+                  state.selectedUserID
+                )
+              );
+            }
+          }
+        }
+
+        await Promise.all(sendMessages);
+      } catch (error) {
+        console.log("Gửi tin nhắn thất bại: ", error);
+      } finally {
+        setMessage({
+          text: "",
+        });
+        setFiles([]);
       }
     },
-    [message]
+    [files, message.text, state.selectedUserID, user?.user_id]
   );
   const handleFormatTime = useCallback((time) => {
-    const date = new Date(time);
+    if (!time || !time.seconds || !time.nanoseconds) {
+      return ""; // Hoặc giá trị mặc định khác nếu muốn
+    }
+    const date = new Date(time.seconds * 1000 + time.nanoseconds / 1000000);
 
+    const now = new Date(); // Ngày giờ hiện tại
     let hours = date.getHours();
     let minutes = date.getMinutes();
-
     hours = hours.toString().padStart(2, "0");
     minutes = minutes.toString().padStart(2, "0");
+    const isToday =
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
 
-    return `${hours}:${minutes}`;
+    if (isToday) {
+      return `${hours}:${minutes}`;
+    } else {
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are zero-indexed
+      const year = date.getFullYear();
+      return `${hours}:${minutes} ${day}/${month}/${year}`;
+    }
   }, []);
   const handleRemoveFile = useCallback((key) => {
     setFiles((prevFileList) =>
       prevFileList.filter((_, index) => index !== key)
     );
   }, []);
+  const handleMessageClick = async () => {
+    const lastMessage = allMessage[allMessage.length - 1];
 
-  //Effects
-  // useEffect(() => {
-  //   if (!socketConnection && !props.selectedUserID) return;
+    // Kiểm tra nếu tin nhắn gần nhất chưa được xem
+    if (lastMessage && !lastMessage.isRead) {
+      await markMessagesAsRead(lastMessage.id); // Đánh dấu tin nhắn gần nhất là đã xem
+    }
 
-  //   setLoading(true);
-  //   socketConnection.emit("message-section", props.selectedUserID);
-  //   socketConnection.emit("seen", props.selectedUserID);
+    // Đánh dấu tất cả tin nhắn là đã xem nếu cần
+    const unreadMessages = allMessage.filter(
+      (message) => !message.isRead && message.receiver_id === user?.user_id
+    );
+    if (unreadMessages.length > 0) {
+      const allMessageIds = unreadMessages.map((message) => message.id);
+      await markMessagesAsRead(allMessageIds); // Đánh dấu tất cả tin nhắn chưa xem
+    }
+  };
+  const handleUploadFilesInput = (e) => {
+    const { files } = e.target;
+    handleUploadFiles(files);
+    e.target.value = "";
+  };
+  const handlePaste = (e) => {
+    const items = e.clipboardData.items;
 
-  //   //Handlers
-  //   const handlerMessageUser = (data) => {
-  //     setDataUser(data);
-  //   };
-  //   const handlerMessage = (data) => {
-  //     if (
-  //       (data[data?.length - 1]?.msgByUserID === user._id &&
-  //         data[data?.length - 1]?.reiceiverID === props.selectedUserID) ||
-  //       (data[data?.length - 1]?.msgByUserID === props.selectedUserID &&
-  //         data[data?.length - 1]?.reiceiverID === user._id)
-  //     ) {
-  //       setAllMessage(data);
-  //     }
-  //   };
-  //   const markAsSeen = () => {
-  //     socketConnection.emit("seen", props.selectedUserID);
-  //   };
-  //   //Add event listeners to chat input and chatbox window
-  //   const chatInput = inputRef.current;
-  //   const chatBox = chatboxRef.current;
-  //   if (chatInput) {
-  //     chatInput.addEventListener("focus", markAsSeen);
-  //     chatInput.addEventListener("input", markAsSeen);
-  //   }
-  //   if (chatBox) {
-  //     chatBox.addEventListener("click", markAsSeen);
-  //   }
-  //   //Catch Socket Event
-  //   socketConnection.on("message-user", handlerMessageUser);
-  //   socketConnection.on("message", handlerMessage);
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
 
-  //   setLoading(false);
-
-  //   return () => {
-  //     if (chatInput) {
-  //       chatInput.removeEventListener("focus", markAsSeen);
-  //       chatInput.removeEventListener("input", markAsSeen);
-  //     }
-  //     if (chatBox) {
-  //       chatBox.removeEventListener("click", markAsSeen);
-  //     }
-  //     socketConnection.off("message-user", handlerMessageUser);
-  //     socketConnection.off("message", handlerMessage);
-  //   };
-  // }, [user, props?.selectedUserID, socketConnection]);
-
-  // useEffect(() => {
-  //   if (currMessage.current)
-  //     currMessage.current.scrollIntoView({ behavior: "smooth", block: "end" });
-  // }, [allMessage]);
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) {
+          handleUploadFiles([file]);
+        }
+      }
+    }
+  };
+  useEffect(() => {
+    if (currMessage.current)
+      currMessage.current.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [allMessage]);
 
   //********************* */
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setLoading(true);
+      try {
+        const user = await getUserInfo(state.selectedUserID);
+        setLoading(false);
+        setDataUser(user);
+      } catch (error) {
+        console.log(error);
+        setLoading(false);
+      }
+    };
+
+    if (state.selectedUserID) {
+      fetchUserData();
+    }
+  }, [state.selectedUserID]);
+
+  useEffect(() => {
+    if (user?.user_id && state.selectedUserID) {
+      const unsubscribe = subscribeToMessages(
+        user?.user_id,
+        state.selectedUserID,
+        (messages) => {
+          console.log(messages);
+          setAllMessage(messages);
+        }
+      );
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [user, state.selectedUserID]);
 
   return (
     <div
       className={`${props.expandChatBox ? "" : "hidden"} right-chatbox `}
       ref={chatboxRef}
+      onClick={handleMessageClick}
     >
       {/**Primary Bg Content */}
-      {!dataUser._id && (
+      {!dataUser.user_id && (
         <div className="w-full h-full bg-[#f3f3f3] flex justify-center items-center flex-col">
           <i class="h-[120px] w-[200px] inline-block" style={{ lineHeight: 0 }}>
             <svg
@@ -311,30 +409,49 @@ const RightChatBox = (props) => {
             </svg>
           </i>
           <div className="text-base mt-4 text-[#333] font-[500] my-2 select-none">
-            Chào mừng bạn đến với Shopee Chat
+            Chào mừng bạn đến với Ezy Chat
           </div>
           <div>Bắt đầu trả lời người mua!</div>
         </div>
       )}
 
       {/**Conversation*/}
-      {dataUser._id && (
+      {dataUser.user_id && (
         <div className="conversation">
           <div className="flex justify-start items-center h-full pl-3">
-            <Dropdown
-              overlay={conversationDropdownItems({
-                name: dataUser.username,
-                img: dataUser.profile_pic,
-              })}
-              trigger={["click"]}
-            >
-              <a onClick={(e) => e.preventDefault()}>
-                <Space className="text-sm text-[#333] whitespace-nowrap text-ellipsis overflow-hidden max-w-[248px] ">
-                  {dataUser.username}
-                  <DownOutlined className="text-[12px]" />
-                </Space>
-              </a>
-            </Dropdown>
+            {dataUser.role_id === 2 ? (
+              <>
+                <Dropdown
+                  overlay={conversationDropdownItems({
+                    name:
+                      dataUser.role_id === 2
+                        ? dataUser.Shop.shop_name
+                        : dataUser.username,
+                    img:
+                      dataUser.role_id === 2
+                        ? dataUser.Shop.logo_url
+                        : dataUser.avatar,
+                    username: dataUser.username,
+                  })}
+                  trigger={["click"]}
+                >
+                  <a onClick={(e) => e.preventDefault()}>
+                    <Space className="text-sm text-[#333] whitespace-nowrap text-ellipsis overflow-hidden max-w-[248px] ">
+                      {dataUser.role_id === 2
+                        ? dataUser.Shop.shop_name
+                        : dataUser.username}
+                      <DownOutlined className="text-[12px]" />
+                    </Space>
+                  </a>
+                </Dropdown>
+              </>
+            ) : (
+              <span className="text-sm text-[#333] whitespace-nowrap text-ellipsis overflow-hidden max-w-[248px]">
+                {dataUser.role_id === 2
+                  ? dataUser.Shop.shop_name
+                  : dataUser.username}
+              </span>
+            )}
           </div>
           <div className="flex flex-col w-full relative">
             <div className="bg-[#f3f3f3] min-w-[6px] flex-1 border-t-[1px] border-solid border-[eee]">
@@ -354,15 +471,30 @@ const RightChatBox = (props) => {
                         return (
                           <div
                             className={`message-container ${
-                              user?._id === message.msgByUserID
+                              user?.user_id === message.sender_id
                                 ? "sender"
                                 : "receiver"
                             }`}
                             ref={currMessage}
                           >
                             <div className="message">
-                              <span>{message?.text}</span>
-                              <span className="text-[#666] text-xs text-end static">
+                              {message.text && <span>{message?.text}</span>}
+                              {message.mediaUrl &&
+                                message.mediaType === "image" && (
+                                  <Image
+                                    src={message.mediaUrl}
+                                    className="size-32"
+                                  />
+                                )}
+                              {message.mediaUrl &&
+                                message.mediaType === "video" && (
+                                  <video
+                                    src={message.mediaUrl}
+                                    controls
+                                    className="size-32"
+                                  />
+                                )}
+                              <span className="text-[#666] text-xs text-end static mt-1">
                                 {handleFormatTime(message?.createdAt)}
                               </span>
                             </div>
@@ -393,7 +525,7 @@ const RightChatBox = (props) => {
                         multiple
                         type="file"
                         className="hidden"
-                        onChange={handleUploadFiles}
+                        onChange={handleUploadFilesInput}
                       />
                       <FaPlus className="text-[#a09e9e]" size={12} />
                     </label>
@@ -403,12 +535,7 @@ const RightChatBox = (props) => {
                   className="w-6 h-16 flex flex-col items-center flex-shrink-0 flex-grow-0 text-[#a09e9e] pt-1"
                   style={{ flexBasis: "auto" }}
                 >
-                  <IoClose
-                    size={17}
-                    onClick={() => {
-                      setFiles([]);
-                    }}
-                  />
+                  <IoClose size={17} onClick={handleRemoveAllFiles} />
                 </div>
               </section>
             )}
@@ -427,6 +554,8 @@ const RightChatBox = (props) => {
                           placeholder="Nhập nội dung tin nhắn"
                           onChange={handleOnChange}
                           value={message.text}
+                          onPaste={handlePaste}
+                          onFocus={handleMessageClick}
                         />
                       </div>
                       <div className="absolute right-2 bottom-[10px]">
@@ -448,25 +577,6 @@ const RightChatBox = (props) => {
                       <div className="flex h-full flex-row box-border flex-nowrap justify-between bg-white pb-[6px] pl-2">
                         <div className="flex flex-nowrap justify-start">
                           <div
-                            className="flex justify-center items-center size-18 mr-2  cursor-pointer"
-                            title="Stickers"
-                          >
-                            <Dropdown
-                              menu={{ items }}
-                              placement="top"
-                              open={openDropdownStickers}
-                              onOpenChange={onOpenDropdownStickersChange}
-                              trigger={["click"]}
-                              className={`${
-                                openDropdownStickers
-                                  ? "text-[#ee4d2d]"
-                                  : "text-[#8ea4d1]"
-                              } transition-colors duration-200 `}
-                            >
-                              <MdOutlineEmojiEmotions size={18} />
-                            </Dropdown>
-                          </div>
-                          <div
                             className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] "
                             title="Hình ảnh"
                           >
@@ -476,7 +586,7 @@ const RightChatBox = (props) => {
                                 className="hidden"
                                 id="uploadImage"
                                 name="uploadImage"
-                                onChange={handleUploadFiles}
+                                onChange={handleUploadFilesInput}
                                 multiple
                               />
                               <RiImage2Line
@@ -495,7 +605,7 @@ const RightChatBox = (props) => {
                                 className="hidden"
                                 id="uploadVideo"
                                 name="uploadVideo"
-                                onChange={handleUploadFiles}
+                                onChange={handleUploadFilesInput}
                                 multiple
                               />
                               <RiVideoLine
@@ -503,18 +613,6 @@ const RightChatBox = (props) => {
                                 size={18}
                               />
                             </label>
-                          </div>
-                          <div
-                            className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] cursor-pointer"
-                            title="Sản phẩm"
-                          >
-                            <LuShoppingBag size={18} />
-                          </div>
-                          <div
-                            className="flex justify-center items-center size-18 mr-2 transition-colors duration-200 text-[#8ea4d1] cursor-pointer"
-                            title="Đơn hàng"
-                          >
-                            <MdEventNote size={18} />
                           </div>
                         </div>
                       </div>

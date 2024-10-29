@@ -8,8 +8,10 @@ import { Button } from "antd";
 import { RiProductHuntLine } from "react-icons/ri";
 import { FaRegStar } from "react-icons/fa";
 import { FaRegCommentDots } from "react-icons/fa";
+import { useMessages } from "../../providers/MessagesProvider";
 
 const ShopCard = ({ value }) => {
+  const { handleUserSelected } = useMessages();
   return (
     <div className="hover:shadow-lg w-full pt-5 px-[25px] pb-[25px] bg-white items-center flex  overflow-visible justify-between ">
       <div className="gap-4 justify-center items-center  flex max-w-[440px] pr-[25px]">
@@ -47,7 +49,11 @@ const ShopCard = ({ value }) => {
           </span>
         </div>
         <div className="flex gap-2">
-          <Button className="h-10 text-base" icon={<MdChat />}>
+          <Button
+            className="h-10 text-base"
+            icon={<MdChat />}
+            onClick={() => handleUserSelected(value?.UserAccount?.user_id)}
+          >
             Chat Ngay
           </Button>
           <Button

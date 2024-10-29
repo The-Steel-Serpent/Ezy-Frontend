@@ -10,7 +10,15 @@ import {
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import axios from "axios";
+import {
+  getChattingUsers,
+  subscribeToMessages,
+  subscribeToNewMessages,
+} from "../../firebase/messageFirebase";
 // import { format } from "date-fns";
+import { FaImage } from "react-icons/fa6";
+import { FaVideo } from "react-icons/fa";
+
 const items = [
   {
     label: "Tất cả",
@@ -61,92 +69,10 @@ const conversationOptions = [
     key: "3",
   },
 ];
-const conversations = [
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-  {
-    img: "https://cf.shopee.vn/file/0053f6d0c7990dbeac4b71ad498ac9e2_tn",
-    name: "razervietnam",
-    msg: "Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2",
-    date: "Ngày hôm qua",
-  },
-];
+
 const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
   //Redux state
   const user = useSelector((state) => state.user);
-  const socketConnection = useSelector(
-    (state) => state?.user?.socketConnection
-  );
 
   //States
   const [loading, setLoading] = useState(false);
@@ -164,8 +90,13 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
     [items]
   );
   const formatLastDay = useCallback((lastDay) => {
+    if (!lastDay || !lastDay.seconds) return "";
+
     const today = new Date();
-    const updatedDay = new Date(lastDay);
+    const updatedDay = new Date(
+      lastDay.seconds * 1000 + lastDay.nanoseconds / 1000000
+    );
+
     const weekdays = [
       "Chủ nhật",
       "Thứ Hai",
@@ -175,75 +106,57 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
       "Thứ Sáu",
       "Thứ Bảy",
     ];
-    if (today.toDateString() === updatedDay.toDateString()) {
+
+    const timeDiff = today - updatedDay;
+    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+    if (daysDiff === 0) {
       return "Ngày hôm nay";
     }
-    if (today > updatedDay) {
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      if (updatedDay === yesterday) {
-        return "Ngày hôm qua";
-      }
-      if (updatedDay.toDateString() !== yesterday.toDateString()) {
-        return weekdays[updatedDay.getDay()];
-      }
+
+    if (daysDiff === 1) {
+      return "Ngày hôm qua";
+    }
+
+    if (daysDiff <= 7) {
+      return weekdays[updatedDay.getDay()];
     }
 
     const day = updatedDay.getDate();
     const month = updatedDay.getMonth() + 1;
-
     return `${day}/${month}`;
   }, []);
-  //Effects
-  // useEffect(() => {
-  //   const handleSearchUser = async () => {
-  //     try {
-  //       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/search-user`;
-  //       setLoading(true);
-  //       const res = await axios.post(URL, {
-  //         search: search,
-  //         currentUser: user?.username,
-  //       });
-  //       setLoading(false);
-  //       setSearchUser(res.data.data);
-  //     } catch (error) {
-  //       toast.error(error?.response?.data?.message);
-  //     }
-  //   };
-  //   handleSearchUser();
-  // }, [search]);
-  useEffect(() => {
-    if (socketConnection) {
-      setLoading(true);
-      socketConnection.emit("sidebar", user?._id);
 
-      socketConnection.on("conversation", (data) => {
-        // console.log("conversation", data);
-        const conversationUserData = data.map((conversationUser, index) => {
-          if (
-            conversationUser?.sender?._id === conversationUser?.receiver?._id
-          ) {
-            return {
-              ...conversationUser,
-              userDetails: conversationUser?.sender,
-            };
-          } else if (conversationUser?.receiver?._id !== user?._id) {
-            return {
-              ...conversationUser,
-              userDetails: conversationUser.receiver,
-            };
-          } else {
-            return {
-              ...conversationUser,
-              userDetails: conversationUser.sender,
-            };
-          }
-        });
-        setAllUser(conversationUserData);
+  useEffect(() => {
+    const fetchChatting = async () => {
+      try {
+        const users = await getChattingUsers(user?.user_id);
+        setAllUser(users);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    const fetchChattingUsers = async () => {
+      try {
+        setLoading(true);
+        const users = await getChattingUsers(user?.user_id);
+        setAllUser(users);
         setLoading(false);
-      });
+      } catch (error) {
+        console.log(error);
+        setLoading(false);
+      }
+    };
+    if (user?.user_id) {
+      setLoading(true);
+      fetchChattingUsers();
+      setLoading(false);
+
+      const unsubscribe = subscribeToNewMessages(user.user_id, fetchChatting);
+
+      return () => unsubscribe();
     }
-  }, [socketConnection, user]);
+  }, [user]);
 
   return (
     <div className="left-chatbox">
@@ -320,45 +233,73 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
             allUser.map((conversation, key) => {
               return (
                 <div
-                  key={conversation?.userDetails?._id}
+                  key={conversation?.userInfo?.user_id}
                   className={`${
-                    conversation?.userDetails?._id === selectedUserRef
+                    conversation?.userInfo?.user_id === selectedUserRef
                       ? "active"
                       : ""
                   } conversation-cell`}
                   onClick={() => {
-                    onUserSelected(conversation?.userDetails?._id);
+                    onUserSelected(conversation?.userInfo?.user_id);
                   }}
                 >
                   <img
                     className="border-0 size-8 rounded-[50%]"
-                    src={conversation?.userDetails?.profile_pic}
+                    src={
+                      conversation?.userInfo?.role_id === 2
+                        ? conversation?.userInfo?.Shop?.logo_url
+                        : conversation?.userInfo?.avt_url
+                    }
+                    alt={
+                      conversation?.userInfo?.role_id === 2
+                        ? conversation?.userInfo?.Shop?.shop_name
+                        : conversation?.userInfo?.username
+                    }
                   />
                   <div className="flex-1 overflow-hidden flex ml-2 flex-col justify-center">
                     <div className="flex items-center justify-between overflow-hidden">
                       <div className="flex mr-2 overflow-hidden">
                         <div
-                          title={conversation?.userDetails?.username}
+                          title={
+                            conversation?.userInfo?.role_id === 2
+                              ? conversation?.userInfo?.Shop?.shop_name
+                              : conversation?.userInfo?.username
+                          }
                           className="flex-1 text-[#333] text-base overflow-hidden whitespace-nowrap text-ellipsis  font-[500]"
                         >
-                          {conversation?.userDetails?.username}
+                          {conversation?.userInfo?.role_id === 2
+                            ? conversation?.userInfo?.Shop?.shop_name
+                            : conversation?.userInfo?.username}
                         </div>
                       </div>
                       <div className="text-[#666] text-xs whitespace-nowrap">
-                        {formatLastDay(conversation?.lastMsg?.updatedAt)}
+                        {formatLastDay(conversation?.lastMessage?.createdAt)}
                       </div>
                     </div>
                     <div className="chatting-text">
                       <div className="text-[#666] text-sm mr-2 overflow-hidden whitespace-nowrap text-ellipsis">
                         <span title="Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2">
-                          {conversation?.lastMsg?.text}
+                          {conversation?.lastMessage?.mediaType === "image" ? (
+                            <span className="flex gap-1 items-center">
+                              <FaImage />
+                              Hình Ảnh
+                            </span>
+                          ) : conversation?.lastMessage?.mediaType ===
+                            "video" ? (
+                            <span className="flex gap-1 items-center">
+                              <FaVideo />
+                              Video
+                            </span>
+                          ) : (
+                            conversation?.lastMessage?.text
+                          )}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        {Boolean(conversation?.unseenMsg) && (
+                        {Boolean(conversation?.unseenCount) && (
                           <div className="flex items-center">
                             <div className="size-4 ml-1 p-0 items-center bg-primary rounded-lg text-white flex text-[12px] justify-center">
-                              {conversation?.unseenMsg}
+                              {conversation?.unseenCount}
                             </div>
                           </div>
                         )}
@@ -370,7 +311,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
                             className="h-6 w-6 flex justify-center items-center"
                           >
                             <a onClick={(e) => e.preventDefault()}>
-                              <Space className="text-base inline-block text-[#666]">
+                              <Space className="text-base inline-block text-[#666] bg-transparent">
                                 <DownOutlined className="text-sm" />
                               </Space>
                             </a>

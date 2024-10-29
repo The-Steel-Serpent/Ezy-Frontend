@@ -114,10 +114,6 @@ const DetailsProduct = () => {
   useEffect(() => {
     const fetchProductVarient = async () => {
       try {
-        console.log(
-          "url: ",
-          `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${id}&product_classify_id=${selectedClassify}`
-        );
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/product-varients?product_id=${id}&product_classify_id=${selectedClassify}`
         );
@@ -298,7 +294,6 @@ const DetailsProduct = () => {
   // useEffect(() => {
   //   setCurrentThumbnail(details.product_varients[0].thumbnail);
   // }, [currentThumbnail]);
-  console.log("Details Product: ", currentVarient);
   return (
     <>
       {success ? (

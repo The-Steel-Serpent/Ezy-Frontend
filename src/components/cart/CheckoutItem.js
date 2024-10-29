@@ -4,6 +4,7 @@ import CheckoutCartItem from "./CheckoutCartItem";
 import { getServiceTypes, getShippingFee } from "../../services/ghnService";
 import ModalShippingFees from "./ModalShippingFees";
 import { useCheckout } from "../../providers/CheckoutProvider";
+import { useMessages } from "../../providers/MessagesProvider";
 
 const CheckoutItem = (props) => {
   const { item, defaultAddress, handleUpdateTotal } = props;
@@ -14,6 +15,8 @@ const CheckoutItem = (props) => {
     handleUpdateTotalPayment,
     calculateVoucherDiscounts,
   } = useCheckout();
+  const { handleUserSelected } = useMessages();
+
   const prevSelectedVoucherRef = useRef(state.selectedVoucher);
   const prevTotalRef = useRef(state.total);
   const prevTotalPerShopRef = useRef({});
@@ -59,7 +62,7 @@ const CheckoutItem = (props) => {
     discountShippingFee,
   } = localState;
 
-  const { total, selectedVoucher } = state;
+  const { total, selectedVoucher, cartListWithoutInvalidItems } = state;
 
   useEffect(() => {
     const fetchDefaultService = async () => {
@@ -266,13 +269,33 @@ const CheckoutItem = (props) => {
     handleCancelModalShippingFees();
   };
 
+  const handleOnNoteChange = (e) => {
+    const note = e.target.value;
+    const updatedCartItem = cartListWithoutInvalidItems.map((shop) => {
+      if (shop.shop_id === item.Shop.shop_id) {
+        return {
+          ...shop,
+          orderNote: note,
+        };
+      }
+      return shop;
+    });
+    setState({
+      type: "cartListWithoutInvalidItems",
+      payload: updatedCartItem,
+    });
+  };
+
   return (
     <>
       <div className="w-full flex flex-col gap-5">
         <div className="flex gap-2 justify-start px-[30px] items-center">
           <Avatar src={item?.Shop?.logo_url} size={40} />
           <span className="text-lg font-semibold">{item?.Shop?.shop_name}</span>
-          <div className="size-5 fill-primary cursor-pointer">
+          <div
+            className="size-5 fill-primary cursor-pointer"
+            onClick={() => handleUserSelected(item?.Shop?.UserAccount?.user_id)}
+          >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
               <path d="M18 6.07a1 1 0 01.993.883L19 7.07v10.365a1 1 0 01-1.64.768l-1.6-1.333H6.42a1 1 0 01-.98-.8l-.016-.117-.149-1.783h9.292a1.8 1.8 0 001.776-1.508l.018-.154.494-6.438H18zm-2.78-4.5a1 1 0 011 1l-.003.077-.746 9.7a1 1 0 01-.997.923H4.24l-1.6 1.333a1 1 0 01-.5.222l-.14.01a1 1 0 01-.993-.883L1 13.835V2.57a1 1 0 011-1h13.22zm-4.638 5.082c-.223.222-.53.397-.903.526A4.61 4.61 0 018.2 7.42a4.61 4.61 0 01-1.48-.242c-.372-.129-.68-.304-.902-.526a.45.45 0 00-.636.636c.329.33.753.571 1.246.74A5.448 5.448 0 008.2 8.32c.51 0 1.126-.068 1.772-.291.493-.17.917-.412 1.246-.74a.45.45 0 00-.636-.637z"></path>
             </svg>
@@ -289,6 +312,7 @@ const CheckoutItem = (props) => {
               <div className="flex gap-5 items-center">
                 <span className="w-24">Lời nhắn: </span>
                 <Input
+                  onChange={handleOnNoteChange}
                   className="w-full"
                   placeholder="Lưu ý cho Người bán..."
                 />

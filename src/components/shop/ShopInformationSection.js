@@ -5,7 +5,9 @@ import { MdChat } from "react-icons/md";
 import formatNumber from "../../helpers/formatNumber";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
+import { useMessages } from "../../providers/MessagesProvider";
 const ShopInformationSection = ({ value }) => {
+  const { handleUserSelected } = useMessages();
   return (
     <div className="w-full pt-5 px-[25px] pb-[25px] items-center flex  overflow-visible">
       <div className="gap-4 justify-center items-center border-r-[1px] border-solid border-slate-300 flex max-w-[440px] pr-[25px]">
@@ -15,7 +17,11 @@ const ShopInformationSection = ({ value }) => {
         <div className="flex flex-col gap-2">
           <span className="text-lg font-semibold">{value?.shop_name}</span>
           <div className="flex gap-2">
-            <Button className="h-10 text-base" icon={<MdChat />}>
+            <Button
+              className="h-10 text-base"
+              icon={<MdChat />}
+              onClick={() => handleUserSelected(value?.UserAccount?.user_id)}
+            >
               Chat Ngay
             </Button>
             <Button

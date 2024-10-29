@@ -8,6 +8,7 @@ import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
 import { CheckoutProvider } from "../providers/CheckoutProvider";
+import { MessagesProvider } from "../providers/MessagesProvider";
 const CheckoutResult = withSuspense(
   lazy(() => import("../pages/buyer/cart-pages/CheckoutResult"))
 );
@@ -114,7 +115,11 @@ const CheckoutPage = withSuspense(
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: (
+      <MessagesProvider>
+        <App />
+      </MessagesProvider>
+    ),
     children: [
       {
         path: "",
@@ -144,6 +149,14 @@ const router = createBrowserRouter([
           },
           {
             path: "purchase",
+            element: (
+              <AuthLayout>
+                <AccountSetting />
+              </AuthLayout>
+            ),
+          },
+          {
+            path: "notification",
             element: (
               <AuthLayout>
                 <AccountSetting />
@@ -413,7 +426,7 @@ const router = createBrowserRouter([
             <AddDiscountVoucher />
           </AdminAuthLayout>
         ),
-      }
+      },
     ],
   },
 ]);

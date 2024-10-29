@@ -5,6 +5,8 @@
   "dependencies": {
     "@ant-design/icons": "^5.4.0",
     "@babel/core": "^7.16.0",
+    "@ffmpeg/core": "^0.12.6",
+    "@ffmpeg/ffmpeg": "^0.12.10",
     "@reduxjs/toolkit": "^2.2.6",
     "@svgr/webpack": "^5.5.0",
     "@testing-library/jest-dom": "^5.17.0",

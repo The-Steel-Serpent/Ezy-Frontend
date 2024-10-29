@@ -79,7 +79,6 @@ const CheckoutPage = () => {
   useEffect(() => {
     const fetchVoucher = async () => {
       setState({ type: "loading", payload: true });
-      console.log("prevTotalPayment.current: ", state.totalPayment);
       try {
         const reqData = {
           user_id: user.user_id,
@@ -96,9 +95,6 @@ const CheckoutPage = () => {
           const findFirstValidDiscountVoucher = voucherDiscount?.find(
             (item) => item.isVoucherValid === true
           );
-
-          console.log("voucherDiscount", voucherDiscount);
-          console.log("voucherFreeShip", voucherFreeShip);
 
           setState({
             type: "updateSelectedVoucher",

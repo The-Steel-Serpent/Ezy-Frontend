@@ -13,35 +13,23 @@ import { io } from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import IconNotLogin from "../../assets/icon-not-login.png";
 import { setOnlineUser, setSocketConnection } from "../../redux/userSlice";
+import { useMessages } from "../../providers/MessagesProvider";
 const LeftChatBox = lazy(() => import("./LeftChatBox"));
 const RightChatBox = lazy(() => import("./RightChatBox"));
 const ChatBox = () => {
   const user = useSelector((state) => state.user);
-  const dispatch = useDispatch();
-  const socketC = useSelector((state) => state?.user?.socketConnection);
+  const {
+    state,
+    setState,
+    selectedUserRef,
+    handleOpenChatBox,
+    handleExpandChatBox,
+    handleUserSelected,
+  } = useMessages();
   //States
-  const [unseenMessagesCount, setUnseenMessagesCount] = useState(0);
-  const [openChatBox, setOpenChatBox] = useState(false);
-  const [expandChatBox, setExpandChatBox] = useState(true);
-  const [selectedUserID, setSelectedUserID] = useState(null);
-  const selectedUserRef = useRef();
+
   //Handler
-  const handleOpenChatBox = useCallback(() => {
-    setOpenChatBox((preve) => {
-      return !preve;
-    });
-  }, []);
-  const handleExpandChatBox = useCallback(() => {
-    setExpandChatBox((preve) => {
-      return !preve;
-    });
-  }, []);
-  const handleUserSelected = useCallback(
-    (userID) => {
-      setSelectedUserID(userID);
-    },
-    [selectedUserID]
-  );
+
   //Effects
   // useEffect(() => {
   //   if (!user) return;
@@ -73,14 +61,16 @@ const ChatBox = () => {
       <div className="fixed right-2 bottom-0 z-[99999] font-[400] bg-white rounded">
         {/**Modal Chatbox*/}
         <div
-          className={`${openChatBox ? `w-0 h-0 hidden` : `w-[100px] h-12`} ${
+          className={`${
+            state.openChatBox ? `w-0 h-0 hidden` : `w-[100px] h-12`
+          } ${
             user._id ? "fill-white bg-primary" : "fill-primary bg-transparent"
           }  items-center flex rounded-t-[4px] shadow-md  relative justify-center transform-cpu translate-x-0  transition-all duration-150 ease-out transform-origin-bottom-right`}
           onClick={handleOpenChatBox}
         >
           {user?._id && (
             <div className="total-unseen-messages bg-primary border border-solid border-white rounded-[9px] text-white text-xs h-[18px] overflow-hidden px-[5px] absolute -right-1 -top-[9px]">
-              {unseenMessagesCount}
+              {state.unseenMessagesCount}
             </div>
           )}
 
@@ -99,8 +89,8 @@ const ChatBox = () => {
         {/**Chatbox Window*/}
         <div
           className={`${
-            openChatBox
-              ? expandChatBox
+            state.openChatBox
+              ? state.expandChatBox
                 ? "w-[642px] h-[502px] border border-solid"
                 : "w-[226px] h-[502px] border border-solid"
               : "w-0 h-0 border-0"
@@ -116,7 +106,7 @@ const ChatBox = () => {
               </i>
               {user?._id && (
                 <div className="text-primary text-[12px] pl-2 pb-1 font-semibold">
-                  ({unseenMessagesCount})
+                  ({state.unseenMessagesCount})
                 </div>
               )}
             </div>
@@ -126,7 +116,7 @@ const ChatBox = () => {
                 onClick={handleExpandChatBox}
               >
                 <i class="cursor-pointer size-4">
-                  {!expandChatBox && (
+                  {!state.expandChatBox && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 16 16"
@@ -135,7 +125,7 @@ const ChatBox = () => {
                       <path d="M14 1a1 1 0 011 1v12a1 1 0 01-1 1H9v-1h5V2H9V1h5zM2 13v1h1v1H2a1 1 0 01-.993-.883L1 14v-1h1zm6 1v1H4v-1h4zM2 3.999V12H1V3.999h1zm4.975 1.319a.5.5 0 01.707.707L5.707 8h4.621a.5.5 0 010 1h-4.62l1.974 1.975a.5.5 0 01-.707.707L4.146 8.854a.5.5 0 010-.708zM3 1v1H2v.999H1V2a1 1 0 01.883-.993L2 1h1zm5 0v1H4V1h4z"></path>
                     </svg>
                   )}
-                  {expandChatBox && (
+                  {state.expandChatBox && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 16 16"
@@ -146,7 +136,7 @@ const ChatBox = () => {
                   )}
                 </i>
                 <div className="arial-button arial-expand">
-                  {expandChatBox ? "Ẩn Cửa Sổ Chat" : "Xem Cửa Sổ Chat"}
+                  {state.expandChatBox ? "Ẩn Cửa Sổ Chat" : "Xem Cửa Sổ Chat"}
                 </div>
               </div>
               <div
@@ -168,7 +158,7 @@ const ChatBox = () => {
           </div>
           {/**Chatbox Container*/}
           <div className="flex h-[460px] ">
-            {!user?._id && (
+            {!user?.user_id && (
               <div className="flex justify-center items-center w-full">
                 <div className="flex flex-col justify-center items-center">
                   <img
@@ -189,7 +179,7 @@ const ChatBox = () => {
                 </div>
               </div>
             )}
-            {user?._id && (
+            {user?.user_id && (
               <>
                 {/**Left-Chatbox */}
 
@@ -197,7 +187,7 @@ const ChatBox = () => {
                   <LeftChatBox
                     className="animate-pulse"
                     onUserSelected={handleUserSelected}
-                    selectedUserRef={selectedUserID}
+                    selectedUserRef={state.selectedUserID}
                   />
                 </Suspense>
 
@@ -205,8 +195,8 @@ const ChatBox = () => {
                 <Suspense>
                   <RightChatBox
                     className="animate-pulse"
-                    expandChatBox={expandChatBox}
-                    selectedUserID={selectedUserID}
+                    expandChatBox={state.expandChatBox}
+                    selectedUserID={state.selectedUserID}
                   />
                 </Suspense>
               </>
