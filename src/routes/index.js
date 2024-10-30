@@ -3,6 +3,7 @@ import { lazy } from "react";
 import withSuspense from "../hooks/HOC/withSuspense";
 import App from "../App";
 import AuthenticationLayout from "../layout/AuthenticationLayout";
+import AdminAuthenticationLayout from "../layout/admin/AdminAuthenticationLayout";
 import SellerAuthLayout from "../layout/seller";
 import AdminAuthLayout from "../layout/admin";
 import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
@@ -379,9 +380,9 @@ const router = createBrowserRouter([
       {
         path: "admin/login",
         element: (
-          <AuthLayout>
+          <AdminAuthenticationLayout>
             <AdminLogin />
-          </AuthLayout>
+          </AdminAuthenticationLayout>
         ),
       },
       {
