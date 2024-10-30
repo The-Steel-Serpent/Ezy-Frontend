@@ -14,9 +14,12 @@ import {
   writeBatch,
   doc,
   getDoc,
+  arrayRemove,
+  arrayUnion,
 } from "firebase/firestore";
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { IoFastFoodOutline } from "react-icons/io5";
 
 const storage = getStorage();
 const messagesCollection = collection(db, "messages");
@@ -93,8 +96,9 @@ const getOrCreateConversation = async (senderId, receiverId) => {
     // Tạo mới một conversation nếu chưa có
     const newConversationRef = await addDoc(conversationsCollection, {
       participants: [senderId, receiverId],
-      isMuted: false,
-      isPinned: false,
+      mutedBy: [],
+      pinnedBy: [],
+      isBlocked: false,
       createdAt: serverTimestamp(),
     });
     conversation = { id: newConversationRef.id };
@@ -104,6 +108,7 @@ const getOrCreateConversation = async (senderId, receiverId) => {
 };
 
 export const subscribeToMessages = (senderId, receiverId, callback) => {
+  console.log(senderId, receiverId);
   const qConversation = query(
     conversationsCollection,
     where("participants", "array-contains", senderId)
@@ -134,32 +139,22 @@ export const subscribeToMessages = (senderId, receiverId, callback) => {
               id: doc.id,
               ...doc.data(),
             };
-
-            const sender = await getUserInfo(messageData.sender_id);
-            const receiver = await getUserInfo(messageData.receiver_id);
-
-            // Thêm kiểm tra quyền truy cập cho từng tin nhắn
-            const senderRole = sender.role_id;
-            const receiverRole = receiver.role_id;
-
-            const isAuthorized =
-              (senderRole === 1 && receiverRole === 2) ||
-              (senderRole === 2 && receiverRole === 1);
-
-            if (isAuthorized) {
+            if (
+              (messageData.sender_id === senderId &&
+                messageData.receiver_id === receiverId) ||
+              (messageData.sender_id === receiverId &&
+                messageData.receiver_id === senderId)
+            ) {
               return {
                 ...messageData,
-                sender,
-                receiver,
               };
-            } else {
-              return null; // Bỏ qua các tin nhắn không hợp lệ
             }
           })
         );
 
         // Lọc các tin nhắn hợp lệ và gọi callback
         const filteredMessages = messages.filter((message) => message !== null);
+
         callback(filteredMessages);
       });
     } else {
@@ -196,21 +191,19 @@ export const sendMessage = async (
   }
 };
 
-export const markMessagesAsRead = async (conversationIds, userId) => {
+export const markMessagesAsRead = async (msgIds, userId) => {
   const batch = writeBatch(db);
-
-  for (const conversationId of conversationIds) {
-    const q = query(messagesCollection, where("id", "==", conversationId));
-
-    const snapshot = await getDocs(q);
-    snapshot.forEach((doc) => {
-      const messageData = doc.data();
-      // Chỉ đánh dấu là đã đọc nếu người dùng là người nhận và tin nhắn chưa được đọc
+  for (const msgId of msgIds) {
+    const messageRef = doc(db, "messages", msgId);
+    const messageSnapshot = await getDoc(messageRef);
+    if (messageSnapshot.exists()) {
+      const messageData = messageSnapshot.data();
       if (messageData.receiver_id === userId && !messageData.isRead) {
-        const messageRef = doc(db, "messages", doc.id);
         batch.update(messageRef, { isRead: true });
       }
-    });
+    } else {
+      console.log(`No document found for messageId: ${msgId}`);
+    }
   }
 
   await batch.commit();
@@ -228,9 +221,15 @@ export const getChattingUsers = async (userId) => {
 
   snapshotSent.forEach((doc) => {
     const message = doc.data();
+    const id = doc.id;
+    const dataMessage = { id, ...message };
+
     const receiverId = message.receiver_id;
     if (receiverId !== userId && !users.has(receiverId)) {
-      users.set(receiverId, { lastMessage: message, unseenCount: 0 });
+      users.set(receiverId, {
+        lastMessage: dataMessage,
+        unseenCount: 0,
+      });
     }
   });
 
@@ -245,16 +244,21 @@ export const getChattingUsers = async (userId) => {
   snapshotReceived.forEach((doc) => {
     const message = doc.data();
     const senderId = message.sender_id;
+    const id = doc.id;
+    const dataMessage = { id, ...message };
     if (senderId !== userId) {
       if (!users.has(senderId)) {
-        users.set(senderId, { lastMessage: message, unseenCount: 0 });
+        users.set(senderId, {
+          lastMessage: dataMessage,
+          unseenCount: 0,
+        });
       } else {
         const userInfo = users.get(senderId);
         if (!message.isRead) {
           userInfo.unseenCount += 1;
         }
         if (message.createdAt > userInfo.lastMessage.createdAt) {
-          userInfo.lastMessage = message;
+          userInfo.lastMessage = dataMessage;
         }
       }
     }
@@ -275,8 +279,9 @@ export const getChattingUsers = async (userId) => {
         if (conversation.participants.includes(otherUserId)) {
           conversationData = {
             conversationId: doc.id,
-            isMuted: conversation.isMuted,
-            isPinned: conversation.isPinned,
+            isMuted: conversation.mutedBy.includes(userId),
+            isPinned: conversation.pinnedBy.includes(userId),
+            isBlocked: conversation.isBlocked,
             createdAt: conversation.createdAt,
           };
         }
@@ -284,7 +289,7 @@ export const getChattingUsers = async (userId) => {
       return {
         userInfo: await getUserInfo(otherUserId),
         lastMessage: userInfo.lastMessage,
-        unseenCount: userInfo.unseenCount,
+        unseenCount: conversationData?.isMuted ? 0 : userInfo.unseenCount,
         ...conversationData,
       };
     })
@@ -315,14 +320,8 @@ export const subscribeToNewMessages = (userId, fetchChattingUsers) => {
           id: doc.id,
           ...doc.data(),
         };
-
-        const sender = await getUserInfo(messageData.sender_id);
-        const receiver = await getUserInfo(messageData.receiver_id);
-
         return {
           ...messageData,
-          sender,
-          receiver,
         };
       })
     );
@@ -337,16 +336,40 @@ export const subscribeToNewMessages = (userId, fetchChattingUsers) => {
   });
 };
 
-export const togglePinConversation = async (conversationId, isPinned) => {
-  await updateDoc(doc(conversationsCollection, conversationId), {
-    isPinned: !isPinned,
-  });
+export const togglePinConversation = async (
+  conversationId,
+  userId,
+  isPinned,
+  fetchChatting
+) => {
+  if (isPinned) {
+    await updateDoc(doc(conversationsCollection, conversationId), {
+      pinnedBy: arrayRemove(userId),
+    });
+  } else {
+    await updateDoc(doc(conversationsCollection, conversationId), {
+      pinnedBy: arrayUnion(userId),
+    });
+  }
+  fetchChatting();
 };
 
-export const toggleMuteConversation = async (conversationId, isMuted) => {
-  await updateDoc(doc(conversationsCollection, conversationId), {
-    isMuted: !isMuted,
-  });
+export const toggleMuteConversation = async (
+  conversationId,
+  userId,
+  isMuted,
+  fetchChatting
+) => {
+  if (isMuted) {
+    await updateDoc(doc(conversationsCollection, conversationId), {
+      mutedBy: arrayRemove(userId),
+    });
+  } else {
+    await updateDoc(doc(conversationsCollection, conversationId), {
+      mutedBy: arrayUnion(userId),
+    });
+  }
+  fetchChatting();
 };
 
 export const deleteConversation = async (conversationId) => {
@@ -365,4 +388,24 @@ export const deleteConversation = async (conversationId) => {
   batch.delete(conversationRef);
 
   await batch.commit();
+};
+
+export const markMessageAsNotRead = async (
+  messageId,
+  userId,
+  isRead,
+  fetchChattingUsers
+) => {
+  const messageRef = doc(messagesCollection, messageId);
+  const messageSnapshot = await getDoc(messageRef);
+
+  if (
+    messageSnapshot.exists() &&
+    messageSnapshot.data().receiver_id === userId
+  ) {
+    await updateDoc(doc(messagesCollection, messageId), {
+      isRead: !isRead,
+    });
+    fetchChattingUsers();
+  }
 };

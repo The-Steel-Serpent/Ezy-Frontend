@@ -24,17 +24,23 @@ import {
   MdOutlineNotificationsOff,
 } from "react-icons/md";
 import { useSelector } from "react-redux";
+import { TbPinnedFilled } from "react-icons/tb";
+
 import toast from "react-hot-toast";
 import axios from "axios";
 import {
   deleteConversation,
   getChattingUsers,
+  markMessageAsNotRead,
   subscribeToMessages,
   subscribeToNewMessages,
   toggleMuteConversation,
   togglePinConversation,
 } from "../../firebase/messageFirebase";
 import { PiChatsDuotone } from "react-icons/pi";
+import { TbPinnedOff } from "react-icons/tb";
+import { MdNotificationsNone } from "react-icons/md";
+import { MdOutlineMarkChatRead } from "react-icons/md";
 
 // import { format } from "date-fns";
 import { FaImage } from "react-icons/fa6";
@@ -54,42 +60,6 @@ const items = [
   {
     label: "Đã Ghim",
     key: "2",
-  },
-];
-const conversationOptions = [
-  {
-    label: (
-      <span className="flex items-center">
-        <MdOutlineMarkChatUnread className="text-[#888] mr-2" />
-        <span>Đánh dấu chưa đọc</span>
-      </span>
-    ),
-    key: "0",
-  },
-  {
-    label: (
-      <span className="flex items-center">
-        <BsPinAngle className="text-[#888] mr-2" /> <span>Ghim trò chuyện</span>
-      </span>
-    ),
-    key: "1",
-  },
-  {
-    label: (
-      <span className="flex items-center">
-        <MdOutlineNotificationsOff className="text-[#888] mr-2" />{" "}
-        <span>Tắt thông báo</span>
-      </span>
-    ),
-    key: "2",
-  },
-  {
-    label: (
-      <span className="flex items-center">
-        <BiTrash className="text-[#888] mr-2" /> Xóa trò chuyện
-      </span>
-    ),
-    key: "3",
   },
 ];
 
@@ -152,21 +122,40 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
     const month = updatedDay.getMonth() + 1;
     return `${day}/${month}`;
   }, []);
+  const fetchChatting = async () => {
+    try {
+      const users = await getChattingUsers(user?.user_id);
+      setAllUser(users);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const handleMenuClick = (conversation, e) => {
+    e.domEvent.stopPropagation();
     switch (e.key) {
       case "0":
-        toast.success("Đánh dấu chưa đọc thành công");
+        console.log(conversation);
+        markMessageAsNotRead(
+          conversation.lastMessage?.id,
+          user?.user_id,
+          conversation?.lastMessage?.isRead,
+          fetchChatting
+        );
         break;
       case "1":
         togglePinConversation(
           conversation.conversationId,
-          conversation.isPinned
+          user?.user_id,
+          conversation.isPinned,
+          fetchChatting
         );
         break;
       case "2":
         toggleMuteConversation(
           conversation.conversationId,
-          conversation.isMuted
+          user?.user_id,
+          conversation.isMuted,
+          fetchChatting
         );
         break;
       case "3":
@@ -185,15 +174,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
     setOpenModalDeleteConversation(false);
     conversationIdRef.current = null;
   };
-  const fetchChatting = async () => {
-    try {
-      const users = await getChattingUsers(user?.user_id);
-      console.log(users);
-      setAllUser(users);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+
   useEffect(() => {
     const fetchChattingUsers = async () => {
       try {
@@ -336,7 +317,16 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
                       </div>
                       <div className="chatting-text">
                         <div className="text-[#666] text-sm mr-2 overflow-hidden whitespace-nowrap text-ellipsis">
-                          <span title="Chúc mừng bạn đã nhận được một chuột Razer Deathadder Essential V2">
+                          <span
+                            title={
+                              conversation?.lastMessage?.mediaType === "image"
+                                ? "Hình Ảnh"
+                                : conversation?.lastMessage?.mediaType ===
+                                  "video"
+                                ? "Video"
+                                : conversation?.lastMessage?.text
+                            }
+                          >
                             {conversation?.lastMessage?.mediaType ===
                             "image" ? (
                               <span className="flex gap-1 items-center">
@@ -362,18 +352,96 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
                               </div>
                             </div>
                           )}
-
+                          {conversation?.isMuted && (
+                            <div className="flex items-center">
+                              <MdOutlineNotificationsOff />
+                            </div>
+                          )}
+                          {conversation?.isPinned && (
+                            <div className="flex items-center">
+                              <TbPinnedFilled />
+                            </div>
+                          )}
                           <div className="conversation-cell-dropdown-options">
                             <Dropdown
                               menu={{
-                                items: conversationOptions,
+                                items: [
+                                  {
+                                    label: (
+                                      <span className="flex items-center">
+                                        {conversation?.lastMessage?.isRead ? (
+                                          <>
+                                            <MdOutlineMarkChatUnread className="text-[#888] mr-2" />
+                                            <span>Đánh dấu chưa đọc</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <MdOutlineMarkChatRead className="text-[#888] mr-2" />
+                                            <span>Đánh dấu đã đọc</span>
+                                          </>
+                                        )}
+                                      </span>
+                                    ),
+                                    key: "0",
+                                  },
+                                  {
+                                    label: (
+                                      <span className="flex items-center">
+                                        {conversation?.isPinned ? (
+                                          <>
+                                            <TbPinnedOff className="text-[#888] mr-2" />{" "}
+                                            <span>Bỏ Ghim trò chuyện</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <BsPinAngle className="text-[#888] mr-2" />{" "}
+                                            <span>Ghim trò chuyện</span>
+                                          </>
+                                        )}
+                                      </span>
+                                    ),
+                                    key: "1",
+                                  },
+                                  {
+                                    label: (
+                                      <span className="flex items-center">
+                                        {conversation?.isMuted ? (
+                                          <>
+                                            <MdNotificationsNone className="text-[#888] mr-2" />{" "}
+                                            <span>Bật thông báo</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <MdOutlineNotificationsOff className="text-[#888] mr-2" />{" "}
+                                            <span>Tắt thông báo</span>
+                                          </>
+                                        )}
+                                      </span>
+                                    ),
+                                    key: "2",
+                                  },
+                                  {
+                                    label: (
+                                      <span className="flex items-center">
+                                        <BiTrash className="text-[#888] mr-2" />{" "}
+                                        Xóa trò chuyện
+                                      </span>
+                                    ),
+                                    key: "3",
+                                  },
+                                ],
                                 onClick: (e) =>
                                   handleMenuClick(conversation, e),
                               }}
                               trigger={["click"]}
                               className="h-6 w-6 flex justify-center items-center"
                             >
-                              <a onClick={(e) => e.preventDefault()}>
+                              <a
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                              >
                                 <Space className="text-base inline-block text-[#666] bg-transparent">
                                   <DownOutlined className="text-sm" />
                                 </Space>

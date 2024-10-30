@@ -25,6 +25,7 @@ import {
   uploadFile,
 } from "../../firebase/messageFirebase";
 import toast from "react-hot-toast";
+import { se } from "date-fns/locale";
 const ImageChatbox = withSuspense(lazy(() => import("./ImageChatbox")));
 const items = [
   {
@@ -85,7 +86,7 @@ const conversationDropdownItems = (props) => (
 );
 const RightChatBox = (props) => {
   //Redux State
-  const { state } = useMessages();
+  const { state, selectedUserRef } = useMessages();
   const user = useSelector((state) => state?.user);
   const [dataUser, setDataUser] = useState(null);
   const [allMessage, setAllMessage] = useState([]);
@@ -101,6 +102,7 @@ const RightChatBox = (props) => {
   const currMessage = useRef(null);
   const inputRef = useRef(null);
   const chatboxRef = useRef(null);
+  const unsubscribeRef = useRef(null);
   //Handlers
   const handleOnChange = useCallback(
     (e) => {
@@ -249,12 +251,10 @@ const RightChatBox = (props) => {
   }, []);
   const handleMessageClick = async () => {
     const unreadMessages = allMessage.filter((message) => !message.isRead);
-
     if (unreadMessages.length > 0) {
       const conversationIds = new Set(
         unreadMessages.map((message) => message.id)
       );
-
       await markMessagesAsRead(Array.from(conversationIds), user.user_id);
     }
   };
@@ -278,15 +278,12 @@ const RightChatBox = (props) => {
     }
   };
   useEffect(() => {
-    if (currMessage.current)
+    if (currMessage.current) {
       currMessage.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
   }, [allMessage]);
 
   //********************* */
-  useEffect(() => {
-    console.log("selectedUserID: ", state.selectedUserID);
-    console.log("dataUser: ", dataUser);
-  }, [state.selectedUserID, dataUser]);
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
@@ -309,15 +306,29 @@ const RightChatBox = (props) => {
 
   useEffect(() => {
     if (user?.user_id && state.selectedUserID) {
-      const unsubscribe = subscribeToMessages(
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+      unsubscribeRef.current = subscribeToMessages(
         user?.user_id,
         state.selectedUserID,
         (messages) => {
-          setAllMessage(messages);
+          const filteredMessages = messages.filter(
+            (message) =>
+              (message.sender_id === user?.user_id &&
+                message.receiver_id === state.selectedUserID) ||
+              (message.sender_id === state.selectedUserID &&
+                message.receiver_id === user?.user_id)
+          );
+          setAllMessage(filteredMessages);
+          console.log(filteredMessages);
         }
       );
+
       return () => {
-        unsubscribe();
+        if (unsubscribeRef.current) {
+          unsubscribeRef.current();
+        }
       };
     }
   }, [user, state.selectedUserID]);
