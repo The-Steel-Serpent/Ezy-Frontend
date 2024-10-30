@@ -545,7 +545,7 @@ export const BasicInformation = ({ onData }) => {
             {/* Modal */}
             <Modal
                 title="Chọn ngành hàng"
-                visible={isCatModalVisible}
+                open={isCatModalVisible}
                 onOk={handleCatOK}
                 onCancel={handleCatCancel}
                 footer={[
@@ -586,7 +586,7 @@ export const BasicInformation = ({ onData }) => {
 
             {/* Preview Modal */}
             <Modal
-                visible={state.previewVisible}
+                open={state.previewVisible}
                 title={state.previewTitle}
                 footer={null}
                 onCancel={handleCancel}
@@ -596,7 +596,7 @@ export const BasicInformation = ({ onData }) => {
 
             {/* Error Modal */}
             <Modal
-                visible={state.errorVisible}
+                open={state.errorVisible}
                 title="Lưu ý"
                 footer={[
                     <Button
