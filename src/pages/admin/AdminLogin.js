@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import wallpaper from "../../assets/wallpaper-seller1.png";
 import { IoMdEye } from "react-icons/io";
 import { RiEyeCloseLine } from "react-icons/ri";
@@ -12,6 +12,14 @@ const AdminLogin = () => {
   const [data, setData] = useState({ identifier: "", password: "" });
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      message.info("Bạn đăng nhập, vui lòng đăng xuất trước khi đăng nhập lại");
+      navigate("/admin");
+    }
+  }, [navigate]);
+
   const handleHidePassword = (e) => {
     e.preventDefault();
     setHidePassword(!hidePassword);
@@ -20,7 +28,7 @@ const AdminLogin = () => {
   const handleSignIn = async ({ email, password }) => {
     try {
       const user = await signInWithEmailPassword(email, password);
-  
+
       if (user.emailVerified) {
         const token = await user.getIdToken();
         localStorage.setItem("token", token);
@@ -41,7 +49,6 @@ const AdminLogin = () => {
       message.error(error.message || "Đăng nhập thất bại");
     }
   };
-  
 
   const handleOnSubmit = async (e) => {
     e.preventDefault();
@@ -77,7 +84,6 @@ const AdminLogin = () => {
   };
 
   return (
-    (document.title = "Đăng nhập"),
     <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32">
       <div className="max-w-96 px-3 my-24 hidden lg:block">
         <div className="text-primary text-3xl font-[490]">Quản lý chuyên nghiệp</div>
