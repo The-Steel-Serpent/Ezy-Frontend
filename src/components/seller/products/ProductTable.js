@@ -515,14 +515,15 @@ const ProductTable =
                     dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
                     // fetch products
                     const shop_id = shop.shop_id;
-                    getShopProducts(shop_id, product_status, state.current_page, state.page_size)
-                        .then(products => {
-                            console.log("Fetched products:", products);
-                            dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
-                            handleSetFetchProducts(products);
-                        });
-                    // clear selected row
-                    dispatch({ type: 'SET_SELECTED_ROW_KEYS', payload: [] });
+                    // getShopProducts(shop_id, product_status, state.current_page, state.page_size)
+                    //     .then(products => {
+                    //         console.log("Fetched products:", products);
+                    //         dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
+                    //         handleSetFetchProducts(products);
+                    //     });
+                    // // clear selected row
+                    // dispatch({ type: 'SET_SELECTED_ROW_KEYS', payload: [] });
+                    resetDataSource();
                 });
             } catch (error) {
                 console.error('Error updating product status:', error);
@@ -533,6 +534,20 @@ const ProductTable =
                 dispatch({ type: 'OPEN_BOTTOM', payload: false });
             }
         };
+
+        const resetDataSource = () => {
+            dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
+            // fetch products
+            const shop_id = shop.shop_id;
+            getShopProducts(shop_id, product_status, state.current_page, state.page_size)
+                .then(products => {
+                    console.log("Fetched products:", products);
+                    dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
+                    handleSetFetchProducts(products);
+                });
+            // clear selected row
+            dispatch({ type: 'SET_SELECTED_ROW_KEYS', payload: [] });
+        }
 
         useEffect(() => {
             console.log('Search Sub Category:', search_sub_category);
@@ -616,6 +631,7 @@ const ProductTable =
                             visible={state.visible_edit_product_level_1_modal}
                             onCancel={handleCancleEditProductModal}
                             product={state.product_edit_level}
+                            resetDataSource={resetDataSource}
                         />
                     )
                 }

@@ -148,7 +148,7 @@ export const updateProductStatus = async (product_id, update_status) => {
 
     try {
         const url = `${URL}update-product-status`;
-        const response = await axios.post(url, payload);  
+        const response = await axios.post(url, payload);
         return response.data;
     } catch (error) {
         console.log("Lỗi khi cập nhật trạng thái sản phẩm: ", error);
@@ -161,13 +161,13 @@ export const updateProductStatus = async (product_id, update_status) => {
 };
 
 export const getProductByID = async (product_id) => {
-    try{
+    try {
         const url = `${URL}get-product`;
         const response = await axios.get(url, {
             params: { product_id }
         });
         return response.data;
-    }catch(error){
+    } catch (error) {
         console.log("Lỗi khi lấy sản phẩm: ", error);
         switch (error.response.status) {
             case 404:
@@ -181,3 +181,73 @@ export const getProductByID = async (product_id) => {
         }
     }
 }
+
+
+export const resetProductStock = async (product_id) => {
+    try {
+        const url = `${URL}reset-product-stock`;
+        const response = await axios.post(url, { product_id });
+        return response.data;
+    } catch (error) {
+        console.log("Lỗi khi reset số lượng sản phẩm: ", error);
+        let errorMessage;
+        switch (error?.response?.status) {
+            case 400:
+                errorMessage = "Product ID is required";
+            case 404:
+                errorMessage = "No product found";
+            case 500:
+                errorMessage = "Lỗi server";
+            default:
+                errorMessage = error.message || error;
+        }
+        throw new Error(errorMessage);
+    }
+}
+
+export const findProductVarient = async (product_id) => {
+    try {
+        const url = `${URL}find-product-varient`;
+        const response = await axios.get(url, { product_id });
+        return response.data;
+    } catch (error) {
+        console.log("Lỗi khi tìm kiếm sản phẩm: ", error);
+        let errorMessage;
+        switch (error?.response?.status) {
+            case 400:
+                errorMessage = "Product ID is required";
+            case 500:
+                errorMessage = "Lỗi server";
+            default:
+                errorMessage = error.message || error;
+        }
+        throw new Error(errorMessage);
+    }
+}
+export const deleteProductVarient = async (product_varients_id) => {
+    try {
+        const url = `${URL}delete-product-varient`;
+        const response = await axios.post(url, { product_varients_id });
+        return response;
+    } catch (error) {
+        console.log("Error when deleting product variant:", error);
+
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "Cannot delete product variant as it is referenced by other records.";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status };
+    }
+};

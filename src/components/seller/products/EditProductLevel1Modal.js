@@ -1,8 +1,10 @@
 import { Button, Col, Input, message, Modal, Row, Upload } from 'antd'
-import React, { forwardRef, useEffect, useImperativeHandle, useReducer } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useReducer, useRef } from 'react'
 import { GoPlus } from "react-icons/go";
 import { RiImageAddFill } from 'react-icons/ri';
 import { CiSquarePlus, CiSquareRemove } from "react-icons/ci";
+import { addProductClassify, addProductSize, addProductVarient, deleteProductVarient, getProductSize, resetProductStock } from '../../../services/productService';
+import uploadFile from '../../../helpers/uploadFile';
 const initialState = {
   visible_btn_add_classify: true,
   visible_btn_add_varient: true,
@@ -20,7 +22,9 @@ const initialState = {
   touchs: {
     classify_type: false,
     varient_type: false
-  }
+  },
+  enable_submit: false,
+  submit_loading: false
 }
 
 const reducer = (state, action) => {
@@ -47,6 +51,10 @@ const reducer = (state, action) => {
       return { ...state, errors: { ...state.errors, [action.payload.name]: action.payload.value } }
     case 'SET_TOUCH':
       return { ...state, touchs: { ...state.touchs, [action.payload.name]: action.payload.value } }
+    case 'SET_ENABLE_SUBMIT':
+      return { ...state, enable_submit: action.payload }
+    case 'SET_SUBMIT_LOADING':
+      return { ...state, submit_loading: action.payload }
     case 'RESET':
       return initialState
     default:
@@ -54,10 +62,11 @@ const reducer = (state, action) => {
   }
 }
 
-const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product }, ref) => {
+const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product, resetDataSource }, ref) => {
 
   const [state, dispatch] = useReducer(reducer, initialState);
-
+  const prevClassifyRowsRef = useRef([]);
+  const prevVarientRowsRef = useRef([]);
   const uploadButton = (
     <button
       style={{
@@ -104,6 +113,7 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product }, ref) 
     else {
       dispatch({ type: 'SET_ERROR', payload: { name: 'classify_type', value: '' } })
     }
+    validateSubmit();
   }
   // classify
   const handleAddProductClassify = () => {
@@ -209,15 +219,303 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product }, ref) 
         : row
     );
     dispatch({ type: 'SET_VARIENT_ROWS', payload: updatedRows });
+    validateSubmit();
   };
+
+  const validateSubmit = () => {
+    // Validate classify fields
+    const classifyTypeValid = state.classify_type !== '';
+    let enableSubmit = false;
+    let classifyRowsValid = state.classify_rows.every(row =>
+      row.classify_name !== '' &&
+      row.classify_image.length > 0 &&
+      row.error_classify_name === '' &&
+      row.error_classify_image === ''
+    );
+
+    if (state.classify_rows.length === 0) {
+      classifyRowsValid = false;
+    }
+
+    let varientTypeValid = false;
+    let varientRowsValid = false;
+    if (!state.visible_btn_add_varient) {
+      varientTypeValid = state.varient_type !== '';
+      varientRowsValid = state.varient_rows.every(row =>
+        row.varient_name !== '' &&
+        row.error_varient_name === ''
+      );
+      if (state.varient_rows.length === 0) {
+        varientRowsValid = false
+      }
+    }
+    else {
+      varientTypeValid = true;
+      varientRowsValid = true;
+    }
+
+    if (classifyTypeValid && classifyRowsValid && varientTypeValid && varientRowsValid) {
+      enableSubmit = true;
+    }
+    dispatch({ type: 'SET_ENABLE_SUBMIT', payload: enableSubmit });
+  };
+
+
+  const handleUploadClassifyThumnail = async (thumnails) => {
+    console.log("Classify Thumnail: ", thumnails);
+    const uploadPromises = thumnails.map(file => uploadFile(file.originFileObj, 'seller-img'));
+    try {
+      const uploadResults = await Promise.all(uploadPromises);
+      console.log("Upload Classify Thumnail: ", uploadResults);
+      const uploadUrls = uploadResults.map(file => file.url);
+      return uploadUrls;
+    } catch (error) {
+      console.log("Error uploading classify thumbnail:", error);
+      return [];
+    }
+  }
+
+  const handleUpdateProductLevel2 = async (classify_rows) => {
+    try {
+      const classifyDataArray = await Promise.all(classify_rows.map(async (row) => {
+        const classifyThumnails = await handleUploadClassifyThumnail(row.classify_image);
+        const classifyData = {
+          product_id: product.product_id,
+          product_classify_name: row.classify_name,
+          type_name: state.classify_type,
+          thumbnail: classifyThumnails[0]
+        }
+        return classifyData;
+      }));
+      console.log("Classify Data Array: ", classifyDataArray);
+      const classifyResults = await Promise.all(classifyDataArray.map(async (classifyData) => {
+        try {
+          const res = await addProductClassify(classifyData);
+          return res;
+        } catch (error) {
+          console.error('Error adding product classify:', error);
+          throw error;
+        }
+      }));
+      console.log("Classify Results: ", classifyResults);
+      const varientsResults = await Promise.all(classifyResults.map(async (classifyResult) => {
+        const varientData = {
+          product_id: product.product_id,
+          product_classify_id: classifyResult.data.product_classify_id,
+          product_size_id: null,
+          price: 0,
+          stock: 0,
+          sale_percents: 0,
+          height: 0,
+          length: 0,
+          width: 0,
+          weight: 0
+        }
+        try {
+          const res = await addProductVarient(varientData);
+          return res;
+        }
+        catch (error) {
+          console.error('Error adding product varient:', error);
+          throw error
+        }
+      }));
+      console.log("Varient Results: ", varientsResults);
+    } catch (error) {
+      console.log('Error in handleUpdateProductLevel2:', error);
+    }
+  }
+
+  const handleAddSizes = async (varient_rows) => {
+    try {
+      const sizePromises = varient_rows.map(async (row) => {
+        try {
+          const sizePayload = {
+            product_id: product.product_id,
+            product_size_name: row.varient_name,
+            type_of_size: state.varient_type,
+          };
+          const res = await addProductSize(sizePayload);
+          return res;
+        } catch (error) {
+          console.error('Error adding product size:', error);
+          throw error;
+        }
+      });
+
+      const sizeResults = await Promise.all(sizePromises);
+      console.log("Size Results: ", sizeResults);
+      return sizeResults;
+    } catch (error) {
+      console.error('Error in handleAddSizes:', error);
+      return [];
+    }
+  };
+  const handleUpdateProductLevel3 = async (classify_rows, varient_rows) => {
+    try {
+      const classifyDataArray = await Promise.all(classify_rows.map(async (row) => {
+        const classifyThumnails = await handleUploadClassifyThumnail(row.classify_image);
+        const classifyData = {
+          product_id: product.product_id,
+          product_classify_name: row.classify_name,
+          type_name: state.classify_type,
+          thumbnail: classifyThumnails[0]
+        }
+        return classifyData;
+      }));
+      console.log("Classify Data Array: ", classifyDataArray);
+      const classifyResults = await Promise.all(classifyDataArray.map(async (classifyData) => {
+        try {
+          const res = await addProductClassify(classifyData);
+          return res;
+        } catch (error) {
+          console.error('Error adding product classify:', error);
+          throw error;
+        }
+      }));
+      console.log("Classify Results: ", classifyResults);
+      const sizes = await handleAddSizes(varient_rows);
+      if(sizes.length === 0) {
+        message.error('Lỗi khi thêm phân loại sản phẩm');
+      }
+      else{
+        const sizeRes = await getProductSize({ product_id: product.product_id });
+        const varientsResults = await Promise.all(classifyResults.map(async (classifyResult) => {
+          const varientPromises = sizeRes.data.map(async (size) => {
+            const varientData = {
+              product_id: product.product_id,
+              product_classify_id: classifyResult.data.product_classify_id,
+              product_size_id: size.product_size_id,
+              price: 0,
+              stock: 0,
+              sale_percents: 0,
+              height: 0,
+              length: 0,
+              width: 0,
+              weight: 0
+            }
+            try {
+              const res = await addProductVarient(varientData);
+              return res;
+            }
+            catch (error) {
+              console.error('Error adding product varient:', error);
+              throw error
+            }
+          });
+          try {
+            const res = await Promise.all(varientPromises);
+            return res;
+          } catch (error) {
+            console.error('Error adding product varients:', error);
+            throw error;
+          }
+        }));
+        console.log("Varient Results: ", varientsResults);
+      }
+    } catch (error) {
+      console.log('Error in handleUpdateProductLevel2:', error);
+    }
+  }
+
+  const handleSubmit = async () => {
+    dispatch({ type: 'SET_SUBMIT_LOADING', payload: true });
+    try {
+      if (state.varient_rows.length === 0) {
+        try {
+          const delete_old_varient = await deleteProductVarient(product.ProductVarients[0].product_varients_id);
+          console.log('Delete old varient:', delete_old_varient);
+          if (delete_old_varient?.status === 400) {
+            message.error('Sản phẩm này đang được sử dụng không thể cập nhật phân loại');
+          }
+          else {
+            await resetProductStock(product.product_id);
+            await handleUpdateProductLevel2(state.classify_rows);
+            resetDataSource();
+            message.success('Chỉnh sửa phân loại thành công');
+          }
+
+        } catch (error) {
+          console.log('Error in delete old varient:', error);
+        }
+      }
+      else {
+        try {
+          const delete_old_varient = await deleteProductVarient(product.ProductVarients[0].product_varients_id);
+          console.log('Delete old varient:', delete_old_varient);
+          if (delete_old_varient?.status === 400) {
+            message.error('Sản phẩm này đang được sử dụng không thể cập nhật phân loại');
+          }
+          else {
+            await resetProductStock(product.product_id);
+            await handleUpdateProductLevel3(state.classify_rows, state.varient_rows);
+            resetDataSource();
+            message.success('Chỉnh sửa phân loại thành công');
+          }
+        } catch (error) {
+          console.log('Error in delete old varient:', error);
+        }
+      }
+    } catch (error) {
+      message.error('Có lỗi xảy ra, vui lòng thử lại sau');
+      console.log('Error in handleSubmit:', error);
+    } finally {
+      dispatch({ type: 'SET_SUBMIT_LOADING', payload: false });
+      onCancel();
+    }
+  }
+
+
+  useEffect(() => {
+    const hasClassifyRowsChanged = state.classify_rows.some((row, index) => {
+      const prevRow = prevClassifyRowsRef.current[index] || {};
+      return (
+        row.classify_name !== prevRow.classify_name ||
+        row.classify_image.length !== prevRow.classify_image?.length ||
+        row.error_classify_name !== prevRow.error_classify_name ||
+        row.error_classify_image !== prevRow.error_classify_image
+      );
+    });
+
+    const hasVarientRowsChanged = state.varient_rows.some((row, index) => {
+      const prevRow = prevVarientRowsRef.current[index] || {};
+      return (
+        row.varient_name !== prevRow.varient_name ||
+        row.error_varient_name !== prevRow.error_varient_name
+      );
+    });
+
+    if (
+      hasClassifyRowsChanged ||
+      hasVarientRowsChanged ||
+      state.classify_type !== prevClassifyRowsRef.current.classify_type ||
+      state.varient_type !== prevVarientRowsRef.current.varient_type
+    ) {
+      validateSubmit();
+      prevClassifyRowsRef.current = [...state.classify_rows];
+      prevVarientRowsRef.current = [...state.varient_rows];
+    }
+  }, [
+    state.classify_rows,
+    state.classify_type,
+    state.varient_rows,
+    state.varient_type,
+    state.visible_btn_add_varient
+  ]);
+
+
+
 
   useEffect(() => {
     console.log('classify_rows:', state.classify_rows);
+    console.log('varient_rows:', state.varient_rows);
   }, [
     state.classify_rows,
     state.classify_type,
     state.varient_type,
     state.varient_rows,
+    state.visible_btn_add_varient
+
   ])
 
   useEffect(() => {
@@ -232,6 +530,25 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product }, ref) 
         title="Chỉnh sửa phân loại"
         onCancel={onCancel}
         centered={true}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={onCancel}
+            loading={state.submit_loading}
+          >
+            Cancel
+          </Button>,
+          <Button
+            disabled={!state.enable_submit}
+            key="confirm"
+            type="primary"
+            onClick={handleSubmit}
+            loading={state.submit_loading}
+
+          >
+            Confirm
+          </Button>
+        ]}
       >
         <div>
           {
@@ -257,7 +574,7 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product }, ref) 
                     <Input
                       showCount
                       maxLength={15}
-                      placeholder="Nhập tên phân loại"
+                      placeholder="ví dụ: màu sắc v.v"
                       value={state.classify_type}
                       onChange={(e) => handleClassifyTypeChange(e.target.value)}
                     />
@@ -330,7 +647,7 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product }, ref) 
                         <Input
                           showCount
                           maxLength={15}
-                          placeholder="Nhập tên phân loại"
+                          placeholder="ví dụ: kích thước v.v"
                           value={state.varient_type}
                           onChange={(e) => handleVarientTypeChange(e.target.value)}
                         />
