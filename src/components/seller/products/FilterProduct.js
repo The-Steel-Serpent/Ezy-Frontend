@@ -66,7 +66,7 @@ const FilterProduct = ({ handleSetSearchInfo }) => {
         suffix={<BsPencil />}
       />
       <Button
-        className='text-primary border rounded border-primary px-4 py-2 font-[500] hover:text-white'
+        className='bg-primary text-white border rounded border-primary px-4 py-2 font-[500]'
         onClick={handleApplyFilter}
       >
         Áp dụng

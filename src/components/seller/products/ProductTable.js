@@ -1,9 +1,12 @@
-import { Button, Checkbox, Image, message, Modal, Table } from 'antd'
-import React, { useEffect, useReducer } from 'react'
+import { Button, Checkbox, Dropdown, Image, message, Modal, Table } from 'antd'
+import React, { useEffect, useReducer, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { getShopProducts, searchShopProducts, updateProductStatus } from '../../../services/productService'
 import { MdOutlineSell } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
+import EditProductLevel1Modal from './EditProductLevel1Modal';
+import EditProductLevel2Modal from './EditProductLevel2Modal';
+import EditProductLevel3Modal from './EditProductLevel3Modal';
 // reducer
 const initialState = {
     productsFetch: [],
@@ -32,6 +35,10 @@ const initialState = {
     visible_modal: false,
     status_modal: null,
     loading_update_product_status: false,
+    visible_edit_product_level_1_modal: false,
+    visible_edit_product_level_2_modal: false,
+    visible_edit_product_level_3_modal: false,
+    product_edit_level: null,
 }
 
 const reducer = (state, action) => {
@@ -88,6 +95,14 @@ const reducer = (state, action) => {
             return { ...state, status_modal: action.payload }
         case 'SET_LOADING_UPDATE_PRODUCT_STATUS':
             return { ...state, loading_update_product_status: action.payload }
+        case 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_1_MODAL':
+            return { ...state, visible_edit_product_level_1_modal: action.payload }
+        case 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_2_MODAL':
+            return { ...state, visible_edit_product_level_2_modal: action.payload }
+        case 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_3_MODAL':
+            return { ...state, visible_edit_product_level_3_modal: action.payload }
+        case 'SET_PRODUCT_EDIT_LEVEL':
+            return { ...state, product_edit_level: action.payload }
         default:
             return state;
     }
@@ -102,6 +117,44 @@ const ProductTable =
         const [state, dispatch] = useReducer(reducer, initialState)
         const shop = useSelector(state => state.shop);
         const navigate = useNavigate();
+        const modalRef = useRef(null);
+        const createItems = (index) => [
+            {
+                key: '1',
+                label: 'Thông tin sản phẩm / Vận chuyển',
+                onClick: () => handleNavigateToEditProduct(state.productsFetch[index].product_id)
+            },
+            {
+                key: '2',
+                label: 'Phân loại',
+                onClick: () => handleVisbleEditProductModal(index)
+            }
+        ];
+
+        const handleVisbleEditProductModal = (index) => {
+            if (state.productsFetch[index]?.ProductVarients[0]?.ProductClassify == null) {
+                dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_1_MODAL', payload: true });
+                dispatch({ type: 'SET_PRODUCT_EDIT_LEVEL', payload: state.productsFetch[index] });
+
+            }
+            else if (state.productsFetch[index]?.ProductVarients[0]?.ProductSize == null) {
+                dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_2_MODAL', payload: true });
+                dispatch({ type: 'SET_PRODUCT_EDIT_LEVEL', payload: state.productsFetch[index] });
+            }
+            else {
+                dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_3_MODAL', payload: true });
+                dispatch({ type: 'SET_PRODUCT_EDIT_LEVEL', payload: state.productsFetch[index] });
+            }
+        }
+
+        const handleCancleEditProductModal = () => {
+            dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_1_MODAL', payload: false });
+            dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_2_MODAL', payload: false });
+            dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_3_MODAL', payload: false });
+            dispatch({ type: 'SET_PRODUCT_EDIT_LEVEL', payload: null });
+            modalRef.current.resetState();
+        }
+
 
         const rowSelection = {
             selectedRowKeys: state.selectedRowKeys,
@@ -156,8 +209,6 @@ const ProductTable =
             console.log('Count hide products:', state.count_hide_products);
             console.log('Count active products:', state.count_active_products);
         }, [state.count_active_products, state.count_hide_products])
-
-
 
         // table
         const columns = [
@@ -263,12 +314,16 @@ const ProductTable =
                         <p className='text-center'>{state.sold[index]}</p>,
                     action:
                         <div className='flex justify-center items-center'>
-                            <Button
-                                className='max-w-20'
-                                onClick={() => handleNavigateToEditProduct(state.productsFetch[index].product_id)}
+                            <Dropdown
+                                menu={{ items: createItems(index) }}
                             >
-                                Cập nhật
-                            </Button>
+                                <Button
+                                    className='max-w-20'
+                                >
+                                    Cập nhật
+                                </Button>
+                            </Dropdown>
+
                         </div>
                 }
             });
@@ -341,7 +396,6 @@ const ProductTable =
             state.page_size
         ]);
 
-
         // set data source
         useEffect(() => {
             if (state?.productsFetch?.length > 0) {
@@ -399,7 +453,6 @@ const ProductTable =
             return messages;
         }
 
-
         const activeProductModalMessage = () => {
             const messages = {
                 title: '',
@@ -432,7 +485,6 @@ const ProductTable =
 
 
         }
-
 
         const handleModalActiveProduct = () => {
             // show modal
@@ -481,8 +533,6 @@ const ProductTable =
                 dispatch({ type: 'OPEN_BOTTOM', payload: false });
             }
         };
-
-
 
         useEffect(() => {
             console.log('Search Sub Category:', search_sub_category);
@@ -559,6 +609,39 @@ const ProductTable =
                 >
                     <p>{state.content_modal}</p>
                 </Modal>
+                {
+                    state?.product_edit_level?.ProductVarients[0]?.ProductClassify == null && (
+                        <EditProductLevel1Modal
+                            ref={modalRef}
+                            visible={state.visible_edit_product_level_1_modal}
+                            onCancel={handleCancleEditProductModal}
+                            product={state.product_edit_level}
+                        />
+                    )
+                }
+
+                {
+                    state?.product_edit_level?.ProductVarients[0]?.ProductSize == null && (
+                        <EditProductLevel2Modal
+                            ref={modalRef}
+                            visible={state.visible_edit_product_level_2_modal}
+                            onCancel={handleCancleEditProductModal}
+                            product={state.product_edit_level}
+                        />
+                    )
+                }
+
+                {
+                    state?.product_edit_level?.ProductVarients[0]?.ProductSize != null && (
+                        <EditProductLevel3Modal
+                            ref={modalRef}
+                            visible={state.visible_edit_product_level_3_modal}
+                            onCancel={handleCancleEditProductModal}
+                            product={state.product_edit_level}
+                        />
+                    )
+                }
+
             </div>
 
         )

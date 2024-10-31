@@ -4,23 +4,23 @@ import { Dropdown, Space, Button, Menu } from 'antd';
 import { GoPlus } from "react-icons/go";
 import { useNavigate } from 'react-router-dom';
 
-const items = [
-  {
-    key: '/seller/product-management/all',
-    label: 'Tất cả'
-  },
-  {
-    key: '/seller/product-management/working-products',
-    label: 'Đang hoạt động'
-  },
-  {
-    key: '/seller/product-management/notworking-products',
-    label: 'Dừng hoạt động'
-  },
-];
 
 const ProductSellerHeader = ({ status }) => {
   const navigate = useNavigate();
+  const items = [
+    {
+      key: '/seller/product-management/all',
+      label: 'Tất cả'
+    },
+    {
+      key: '/seller/product-management/working-products',
+      label: 'Đang hoạt động'
+    },
+    {
+      key: '/seller/product-management/notworking-products',
+      label: 'Dừng hoạt động'
+    },
+  ];
 
   const handleNavigate = (e) => {
     if (e.key)
@@ -28,21 +28,9 @@ const ProductSellerHeader = ({ status }) => {
   }
   return (
     <div>
-      <div className='flex justify-between rounded-lg'>
-        <div className='text-lg'>Sản phẩm</div>
+      <div className='flex justify-between items-center rounded-lg'>
+      <div className='text-lg font-semibold'>Sản phẩm</div>
         <div className='flex gap-3 items-center'>
-          <Dropdown
-            menu={{
-              items,
-            }}
-          >
-            <a onClick={(e) => e.preventDefault()}>
-              <Space>
-                Cài đặt sản phẩm
-                <DownOutlined />
-              </Space>
-            </a>
-          </Dropdown>
           <Button
             onClick={() => navigate('/seller/product-management/add-product')}
             type="primary"

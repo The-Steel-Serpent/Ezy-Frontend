@@ -36,6 +36,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
+import { startTokenRefreshListener } from "../../firebase/AuthenticationFirebase";
 const ChatBox = lazy(() => import("../../components/chatbox/ChatBox"));
 
 const { Header, Content, Sider } = Layout;
@@ -317,6 +318,11 @@ const SellerAuthLayout = ({ children }) => {
     }
   }, [token]);
 
+
+  useEffect(() => {
+    startTokenRefreshListener();
+  }, []);
+
   useEffect(() => {
     const fetchShopData = async () => {
       try {
@@ -347,6 +353,7 @@ const SellerAuthLayout = ({ children }) => {
       }
     }
   }, [state.authenticate]);
+
 
   const isSellerSetupPath = location.pathname === "/seller/seller-setup";
 

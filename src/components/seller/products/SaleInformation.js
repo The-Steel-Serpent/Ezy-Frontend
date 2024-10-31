@@ -826,6 +826,7 @@ const SaleInformation = ({ onData }) => {
                                                     onChange={(e) => dispatch({ type: 'SET_CLASSIFY_TYPE_NAME', payload: e.target.value })}
                                                     showCount
                                                     maxLength={15}
+                                                    placeholder='Nhập tên phân loại'
                                                     className='w-64'
                                                 />
                                             </Form.Item>
@@ -935,7 +936,11 @@ const SaleInformation = ({ onData }) => {
                                                     value={state.variantName}
                                                     onChange={(e) => dispatch({ type: 'SET_VARIANT_NAME', payload: e.target.value })}
                                                 >
-                                                    <Input showCount maxLength={15} className='w-64' />
+                                                    <Input 
+                                                        showCount 
+                                                        maxLength={15}
+                                                        placeholder='Nhập tên phân loại' 
+                                                        className='w-64' />
                                                 </Form.Item>
                                             </Col>
                                         </Row>
