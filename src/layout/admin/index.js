@@ -1,95 +1,108 @@
 import React, { useEffect, useState } from 'react';
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-} from '@ant-design/icons';
-import { Button, Layout, message, theme } from 'antd';
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { Button, Layout, message, theme, Spin } from 'antd';
 import AdminSidebar from '../../components/AdminSidebar';
 import logo from '../../assets/image (1) (2).png';
 import "../../styles/admin.css";
 import AdminHeader from '../../components/AdminHeader';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // Import axios
+import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { logout, setToken, setUser } from "../../redux/userSlice";
+import { startTokenRefreshListener } from "../../firebase/AuthenticationFirebase";
 
 const { Header, Sider, Content } = Layout;
 
 const AdminAuthLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
+  const handleExpiredToken = () => {
+    dispatch(logout());
+    localStorage.clear();
+    message.error("Vui lòng đăng nhập.");
+    navigate('/admin/login');
+  };
 
-  // Hàm đăng xuất
-  const onLogout = () => {
-    localStorage.removeItem('token'); // Xóa token
-    navigate('/admin/login'); // Chuyển hướng về trang đăng nhập
+  const logOut = async () => {
+    try {
+      const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
+      await axios.post(
+        URL,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      handleExpiredToken();
+    } catch (error) {
+      if (error.response?.data?.code === "auth/id-token-expired") {
+        handleExpiredToken();
+      } else {
+        message.error("Đăng xuất không thành công. Vui lòng thử lại.");
+      }
+    }
+  };
+
+  const fetchUserData = async () => {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      handleExpiredToken();
+      return;
+    }
+    
+    try {
+      const url = `${process.env.REACT_APP_BACKEND_URL}/api/fetch_user_data`;
+      const res = await axios.post(url, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      });
+
+      const fetchedUser = res.data.user;
+      if (fetchedUser.role_id === 3) {
+        setUserState({
+          user_id: fetchedUser.user_id,
+          username: fetchedUser.username,
+          full_name: fetchedUser.full_name,
+          email: fetchedUser.email,
+          phone_number: fetchedUser.phone_number,
+          gender: fetchedUser.gender,
+          dob: fetchedUser.dob,
+          avt_url: fetchedUser.avt_url,
+          role_id: fetchedUser.role_id,
+          setup: fetchedUser.setup,
+
+          isVerified: fetchedUser.isVerified,
+        });
+        dispatch(setUser(fetchedUser));
+        dispatch(setToken(token));
+      } else {
+        message.error("Tài khoản của bạn không có quyền truy cập vào trang này");
+        handleExpiredToken();
+      }
+    } catch (error) {
+      if (error.response?.status === 401 || error.response?.data?.code === "auth/id-token-expired") {
+        handleExpiredToken();
+      } else {
+        console.error("Lỗi khi Fetch dữ liệu người dùng: ", error);
+        message.error("Lỗi hệ thống, vui lòng thử lại sau.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      navigate('/admin/login'); 
-    } else {
-      const fetchUserData = async () => {
-        try {
-          const url = `${process.env.REACT_APP_BACKEND_URL}/api/fetch_user_data`; // URL API
-          const res = await axios.post(
-            url,
-            {},
-            {
-              headers: { Authorization: `Bearer ${token}` },
-              withCredentials: true,
-            }
-          );
-
-          if (res.status === 200) {
-            const fetchedUser = res.data.user;
-            if (fetchedUser.role_id === 3) { // Kiểm tra role_id
-              setUser({
-                user_id: fetchedUser.user_id,
-                username: fetchedUser.username,
-                full_name: fetchedUser.full_name,
-                email: fetchedUser.email,
-                phone_number: fetchedUser.phone_number,
-                gender: fetchedUser.gender,
-                dob: fetchedUser.dob,
-                avt_url: fetchedUser.avt_url,
-                role_id: fetchedUser.role_id,
-                setup: fetchedUser.setup,
-                isVerified: fetchedUser.isVerified,
-              });
-            } else {
-              message.error("Tài khoản của bạn không có quyền truy cập vào trang này");
-              onLogout();
-            }
-          } else {
-            console.log("Lỗi khi Fetch dữ liệu người dùng: ", res);
-          }
-        } catch (error) {
-          console.log("Lỗi khi Fetch dữ liệu người dùng: ", error.response?.status);
-          switch (error.response?.status) {
-            case 500:
-              message.error("Phiên Đăng nhập đã hết hạn");
-              navigate("/admin/login");
-              break;
-            default:
-              break;
-          }
-          console.log("Lỗi khi Fetch dữ liệu người dùng: ", error);
-        }
-      };
-
-      // Fetch user data nếu token tồn tại
-      if (token && !user?.user_id) {
-        fetchUserData();
-      } else {
-        console.log("Token không tồn tại hoặc đã có dữ liệu");
-        if (user?.user_id === "") {
-          navigate("/admin/login");
-        }
-      }
-    }
-  }, [navigate, user]);
+    startTokenRefreshListener();
+    fetchUserData();
+  }, []);
 
   return (
     <Layout>
@@ -107,15 +120,14 @@ const AdminAuthLayout = ({ children }) => {
       </Sider>
       <Layout>
         <Header className='header'>
-          {/* Truyền user vào AdminHeader */}
-          <AdminHeader onLogout={onLogout} user={user} />
+          <AdminHeader onLogout={logOut} user={user} />
         </Header>
         <Content className='content'>
-          {children}
+          {loading ? <Spin size="large" /> : children}
         </Content>
       </Layout>
     </Layout>
   );
-}
+};
 
 export default AdminAuthLayout;
