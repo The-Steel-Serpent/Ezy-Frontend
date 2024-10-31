@@ -66,7 +66,7 @@ const items = [
 const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
   //Redux state
   const user = useSelector((state) => state.user);
-  const { handleUserSelected, handleUnsetUserSelected } = useMessages();
+  const { state, handleUserSelected, handleUnsetUserSelected } = useMessages();
   //States
   const [loading, setLoading] = useState(false);
   const [openModalDeleteConversation, setOpenModalDeleteConversation] =
@@ -188,13 +188,13 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
         setLoading(false);
       }
     };
-    if (user?.user_id) {
+    if (user?.user_id && state.openChatBox) {
       fetchChattingUsers();
       const unsubscribe = subscribeToNewMessages(user.user_id, fetchChatting);
 
       return () => unsubscribe();
     }
-  }, [user]);
+  }, [user, state.openChatBox]);
 
   return (
     <>

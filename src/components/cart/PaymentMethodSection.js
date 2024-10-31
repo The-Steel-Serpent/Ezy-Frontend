@@ -1,18 +1,20 @@
 import { Button, Modal, Radio } from "antd";
-import React, { memo, useReducer, useState } from "react";
+import React, { memo, useEffect, useReducer, useState } from "react";
 import { useCheckout } from "../../providers/CheckoutProvider";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { VscError } from "react-icons/vsc";
 import { useNavigate } from "react-router-dom";
 import ModalOTP from "../user/ModalOTP";
+import { fetchWallet } from "../../redux/walletSlice";
 
 const momo = require("../../assets/momo.png");
 const vnpay = require("../../assets/vnpay.png");
 const cod = require("../../assets/cod.png");
-const wallet = require("../../assets/wallet.png");
+const walletImg = require("../../assets/wallet.png");
 
 const PaymentMethodSection = (props) => {
   const { total, loading } = props;
+  const token = localStorage.getItem("token");
   const {
     state,
     onPaymentMethodChange,
@@ -21,7 +23,10 @@ const PaymentMethodSection = (props) => {
     handleOnVerifyOTP,
   } = useCheckout();
   const user = useSelector((state) => state.user);
+  const wallet = useSelector((state) => state.wallet.wallet);
+
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const {
     totalPayment,
     openModalCheckoutError,
@@ -42,11 +47,19 @@ const PaymentMethodSection = (props) => {
     {
       name: "Ví EzyPay ",
       value: 4,
-      image: wallet,
-      balance: user?.wallet?.balance,
+      image: walletImg,
+      balance: wallet.balance,
     },
   ];
 
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchWallet(token));
+    }
+  }, [token, dispatch]);
+  const formatCurrency = (balance) => {
+    return new Intl.NumberFormat("vi-VN").format(balance) + "đ";
+  };
   return (
     <>
       <div className="w-full flex flex-col gap-10">
@@ -69,7 +82,7 @@ const PaymentMethodSection = (props) => {
                       <div className="flex flex-col">
                         <span>{item.name}</span>
                         {item?.balance !== undefined && (
-                          <span>Số dư: ({item?.balance}đ)</span>
+                          <span>Số dư: ({formatCurrency(item?.balance)})</span>
                         )}
                       </div>
                     </div>

@@ -160,6 +160,14 @@ const router = createBrowserRouter([
               </AuthLayout>
             ),
           },
+          {
+            path: "ezy-wallet",
+            element: (
+              <AuthLayout>
+                <AccountSetting />
+              </AuthLayout>
+            ),
+          },
         ],
       },
       //login && register

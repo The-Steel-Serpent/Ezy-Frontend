@@ -14,6 +14,11 @@ import { IoNotificationsOutline } from "react-icons/io5";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ImPencil2 } from "react-icons/im";
+import { LuWallet } from "react-icons/lu";
+const WalletSection = lazy(() =>
+  import("../../../../components/wallet/WalletSection")
+);
+
 const OrderSection = lazy(() =>
   import("../../../../components/order/OrderSection")
 );
@@ -105,6 +110,11 @@ const AccountSetting = () => {
           parentKey: "notification",
         },
       ],
+    },
+    {
+      title: "Ví Ezy",
+      key: "ezy-wallet",
+      icon: <LuWallet size={22} className="text-primary" />,
     },
   ];
   const onSelect = (keys, event) => {
@@ -202,6 +212,12 @@ const AccountSetting = () => {
             </Suspense>
           );
       }
+    } else if (location.pathname === "/user/ezy-wallet") {
+      return (
+        <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
+          <WalletSection />
+        </Suspense>
+      );
     } else {
       return (
         <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>

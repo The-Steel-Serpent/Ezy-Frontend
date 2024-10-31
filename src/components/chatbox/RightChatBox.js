@@ -305,7 +305,12 @@ const RightChatBox = (props) => {
   }, [state.selectedUserID]);
 
   useEffect(() => {
-    if (user?.user_id && state.selectedUserID) {
+    if (
+      user?.user_id &&
+      state.selectedUserID &&
+      state.openChatBox &&
+      state.expandChatBox
+    ) {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
       }
@@ -331,7 +336,7 @@ const RightChatBox = (props) => {
         }
       };
     }
-  }, [user, state.selectedUserID]);
+  }, [user, state.selectedUserID, state.openChatBox, state.expandChatBox]);
 
   return (
     <div
