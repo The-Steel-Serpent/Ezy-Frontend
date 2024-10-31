@@ -826,7 +826,7 @@ const SaleInformation = ({ onData }) => {
                                                     onChange={(e) => dispatch({ type: 'SET_CLASSIFY_TYPE_NAME', payload: e.target.value })}
                                                     showCount
                                                     maxLength={15}
-                                                    placeholder='Nhập tên phân loại'
+                                                    placeholder='ví du: Màu sắc v.v'
                                                     className='w-64'
                                                 />
                                             </Form.Item>
@@ -939,7 +939,7 @@ const SaleInformation = ({ onData }) => {
                                                     <Input 
                                                         showCount 
                                                         maxLength={15}
-                                                        placeholder='Nhập tên phân loại' 
+                                                        placeholder='ví dụ: size v.v' 
                                                         className='w-64' />
                                                 </Form.Item>
                                             </Col>

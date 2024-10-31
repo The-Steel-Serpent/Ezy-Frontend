@@ -17,15 +17,17 @@ const AuthenticationLayout = ({ children }) => {
             <Layout>
                 <header className='bg-primary w-full flex items-center lg:px-20 custom-header'>
                     <div className='flex py-2 items-center gap-2'>
-                        <img
-                            src={logo}
-                            alt='logo'
-                            className='w-24 lg:w-28'
-                        />
+                        <a href='/seller'>
+                            <img
+                                src={logo}
+                                alt='logo'
+                                className='w-24 lg:w-28'
+                            />
+                        </a>
                         <div className='text-sm lg:text-[26px] mt-2 text-white flex justify-center'>
-                            <a 
-                            className='hover:text-white flex mb-2'
-                            href='/seller'>Kênh người bán</a>
+                            <a
+                                className='hover:text-white flex mb-2'
+                                href='/seller'>Kênh người bán</a>
                         </div>
                     </div>
                 </header>
