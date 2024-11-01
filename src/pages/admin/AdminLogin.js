@@ -6,6 +6,7 @@ import { signInWithEmailPassword } from "../../firebase/AuthenticationFirebase";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
+const ALLOWED_ROLES = [3, 4, 5];// 3: Admin, 4: Event manager, 5: Shop manager
 
 const AdminLogin = () => {
   const [hidePassword, setHidePassword] = useState(false);
@@ -66,7 +67,7 @@ const AdminLogin = () => {
       );
 
       if (response.status === 200) {
-        if (response.data.user.role_id !== 3) {
+        if (!ALLOWED_ROLES.includes(response.data.user.role_id)) {
           message.error("Tài khoản của bạn không có quyền truy cập vào trang này");
         } else {
           const email = response.data.user.email;

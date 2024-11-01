@@ -10,7 +10,7 @@ import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { logout, setToken, setUser } from "../../redux/userSlice";
 import { startTokenRefreshListener } from "../../firebase/AuthenticationFirebase";
-
+const ALLOWED_ROLES = [3, 4, 5]; // 3: Admin, 4: Event manager, 5: Shop manager
 const { Header, Sider, Content } = Layout;
 
 const AdminAuthLayout = ({ children }) => {
@@ -57,16 +57,18 @@ const AdminAuthLayout = ({ children }) => {
       handleExpiredToken();
       return;
     }
-    
+  
     try {
       const url = `${process.env.REACT_APP_BACKEND_URL}/api/fetch_user_data`;
       const res = await axios.post(url, {}, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
-
+  
       const fetchedUser = res.data.user;
-      if (fetchedUser.role_id === 3) {
+  
+  
+      if (ALLOWED_ROLES.includes(fetchedUser.role_id)) {
         setUserState({
           user_id: fetchedUser.user_id,
           username: fetchedUser.username,
@@ -78,7 +80,6 @@ const AdminAuthLayout = ({ children }) => {
           avt_url: fetchedUser.avt_url,
           role_id: fetchedUser.role_id,
           setup: fetchedUser.setup,
-
           isVerified: fetchedUser.isVerified,
         });
         dispatch(setUser(fetchedUser));
@@ -88,10 +89,15 @@ const AdminAuthLayout = ({ children }) => {
         handleExpiredToken();
       }
     } catch (error) {
-      if (error.response?.status === 401 || error.response?.data?.code === "auth/id-token-expired") {
-        handleExpiredToken();
+      console.error("Error while fetching user data: ", error);
+      if (error.response) {
+        console.error("Error Response: ", error.response.data);
+        if (error.response.status === 401 || error.response.data.code === "auth/id-token-expired") {
+          handleExpiredToken();
+        } else {
+          message.error("Lỗi hệ thống, vui lòng thử lại sau.");
+        }
       } else {
-        console.error("Lỗi khi Fetch dữ liệu người dùng: ", error);
         message.error("Lỗi hệ thống, vui lòng thử lại sau.");
       }
     } finally {
@@ -110,7 +116,9 @@ const AdminAuthLayout = ({ children }) => {
         <div style={{ backgroundColor: theme.primaryColor }}>
           <img src={logo} alt='logo' />
         </div>
-        <AdminSidebar />
+        {!loading && user && (
+          <AdminSidebar role_id={user.role_id} />
+        )}
         <Button
           type='text'
           icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
