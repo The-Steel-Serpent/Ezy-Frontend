@@ -1,4 +1,4 @@
-import { Button, Col, Input, message, Modal, Row, Upload } from 'antd'
+import { Button, Col, Input, message, Modal, Popconfirm, Row, Upload } from 'antd'
 import React, { forwardRef, useEffect, useImperativeHandle, useReducer, useRef } from 'react'
 import { GoPlus } from "react-icons/go";
 import { RiImageAddFill } from 'react-icons/ri';
@@ -375,10 +375,10 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product, resetDa
       }));
       console.log("Classify Results: ", classifyResults);
       const sizes = await handleAddSizes(varient_rows);
-      if(sizes.length === 0) {
+      if (sizes.length === 0) {
         message.error('Lỗi khi thêm phân loại sản phẩm');
       }
-      else{
+      else {
         const sizeRes = await getProductSize({ product_id: product.product_id });
         const varientsResults = [];
         for (const classifyResult of classifyResults) {
@@ -531,18 +531,20 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product, resetDa
             onClick={onCancel}
             loading={state.submit_loading}
           >
-            Cancel
+            Hủy
           </Button>,
-          <Button
-            disabled={!state.enable_submit}
-            key="confirm"
-            type="primary"
-            onClick={handleSubmit}
-            loading={state.submit_loading}
-
+          <Popconfirm
+            description="Xác nhận"
+            onConfirm={handleSubmit}
+            // onOpenChange={() => console.log('open change')}
           >
-            Confirm
-          </Button>
+            <Button
+              disabled={!state.enable_submit}
+              loading={state.submit_loading}
+              type="primary">
+              Lưu thay đổi
+            </Button>
+          </Popconfirm>
         ]}
       >
         <div>
