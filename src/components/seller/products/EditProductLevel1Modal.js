@@ -1,4 +1,4 @@
-import { Button, Col, Input, message, Modal, Row, Upload } from 'antd'
+import { Button, Col, Input, message, Modal, Popconfirm, Row, Upload } from 'antd'
 import React, { forwardRef, useEffect, useImperativeHandle, useReducer, useRef } from 'react'
 import { GoPlus } from "react-icons/go";
 import { RiImageAddFill } from 'react-icons/ri';
@@ -375,13 +375,15 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product, resetDa
       }));
       console.log("Classify Results: ", classifyResults);
       const sizes = await handleAddSizes(varient_rows);
-      if(sizes.length === 0) {
+      if (sizes.length === 0) {
         message.error('Lỗi khi thêm phân loại sản phẩm');
       }
-      else{
+      else {
         const sizeRes = await getProductSize({ product_id: product.product_id });
-        const varientsResults = await Promise.all(classifyResults.map(async (classifyResult) => {
-          const varientPromises = sizeRes.data.map(async (size) => {
+        const varientsResults = [];
+        for (const classifyResult of classifyResults) {
+          const varientResults = [];
+          for (const size of sizeRes.data) {
             const varientData = {
               product_id: product.product_id,
               product_classify_id: classifyResult.data.product_classify_id,
@@ -393,24 +395,17 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product, resetDa
               length: 0,
               width: 0,
               weight: 0
-            }
+            };
             try {
               const res = await addProductVarient(varientData);
-              return res;
-            }
-            catch (error) {
+              varientResults.push(res);
+            } catch (error) {
               console.error('Error adding product varient:', error);
-              throw error
+              throw error;
             }
-          });
-          try {
-            const res = await Promise.all(varientPromises);
-            return res;
-          } catch (error) {
-            console.error('Error adding product varients:', error);
-            throw error;
           }
-        }));
+          varientsResults.push(varientResults);
+        }
         console.log("Varient Results: ", varientsResults);
       }
     } catch (error) {
@@ -536,18 +531,20 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product, resetDa
             onClick={onCancel}
             loading={state.submit_loading}
           >
-            Cancel
+            Hủy
           </Button>,
-          <Button
-            disabled={!state.enable_submit}
-            key="confirm"
-            type="primary"
-            onClick={handleSubmit}
-            loading={state.submit_loading}
-
+          <Popconfirm
+            description="Xác nhận"
+            onConfirm={handleSubmit}
+            // onOpenChange={() => console.log('open change')}
           >
-            Confirm
-          </Button>
+            <Button
+              disabled={!state.enable_submit}
+              loading={state.submit_loading}
+              type="primary">
+              Lưu thay đổi
+            </Button>
+          </Popconfirm>
         ]}
       >
         <div>

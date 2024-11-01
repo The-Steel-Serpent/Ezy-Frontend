@@ -5,13 +5,14 @@ import { RiEyeCloseLine } from "react-icons/ri";
 import { signInWithEmailPassword } from "../../firebase/AuthenticationFirebase";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { Button, message } from "antd";
 const ALLOWED_ROLES = [3, 4, 5];// 3: Admin, 4: Event manager, 5: Shop manager
 
 const AdminLogin = () => {
   const [hidePassword, setHidePassword] = useState(false);
   const [data, setData] = useState({ identifier: "", password: "" });
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -28,6 +29,7 @@ const AdminLogin = () => {
 
   const handleSignIn = async ({ email, password }) => {
     try {
+      setLoading(true);
       const user = await signInWithEmailPassword(email, password);
 
       if (user.emailVerified) {
@@ -48,6 +50,9 @@ const AdminLogin = () => {
     } catch (error) {
       console.error("Error during sign-in:", error.message);
       message.error(error.message || "Đăng nhập thất bại");
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -92,7 +97,7 @@ const AdminLogin = () => {
         <img src={wallpaper} width={500} alt="wallpaper" />
       </div>
       <div>
-        <form className="w-96 shadow-lg px-6 py-10 mb-10" onSubmit={handleOnSubmit}>
+        <form className="w-96 shadow-lg px-6 py-10 mb-10">
           <h1 className="font-[450] text-xl mb-10">Đăng nhập</h1>
           <input
             type="text"
@@ -119,9 +124,12 @@ const AdminLogin = () => {
               )}
             </button>
           </div>
-          <button type="submit" className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
+          <Button
+            onClick={handleOnSubmit}
+            loading={loading}
+            type="submit" className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
             Đăng nhập
-          </button>
+          </Button>
         </form>
       </div>
     </div>
