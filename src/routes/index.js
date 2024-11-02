@@ -62,6 +62,12 @@ const AddSaleEvent = withSuspense(
 const AddDiscountVoucher = withSuspense(
   lazy(() => import("../pages/admin/event_management/AddDiscountVoucher"))
 );
+const AllUserAccount = withSuspense(
+  lazy(() => import("../pages/admin/user_management/AllUserAccount"))
+);
+const AllRole = withSuspense(
+  lazy(() => import("../pages/admin/user_management/AllRole"))
+);
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
@@ -417,6 +423,22 @@ const router = createBrowserRouter([
           </AdminAuthLayout>
         ),
       },
+      {
+        path: "/admin/user-management/all-user",
+        element: (
+          <AdminAuthLayout>
+            <AllUserAccount />
+          </AdminAuthLayout>
+        ),
+      },
+      {
+        path: "/admin/user-management/roles",
+        element: (
+          <AdminAuthLayout>
+            <AllRole />
+          </AdminAuthLayout>
+        ),
+      }
     ],
   },
 ]);

@@ -37,13 +37,13 @@ const AdminSidebar = ({ role_id }) => {
             roles: [3, 4],
         },
         {
-            key: '8',
+            key: '4',
             icon: <UserOutlined />,
             label: 'Quản lý người dùng',
             roles: [3], 
             children: [
-                { key: '8.1', icon: <TeamOutlined />, label: 'Tất cả', roles: [3] },
-                { key: '8.2', icon: <KeyOutlined />, label: 'Phân quyền', roles: [3] },
+                { key: '/admin/user-management/all-user', icon: <TeamOutlined />, label: 'Tất cả', roles: [3] },
+                { key: '/admin/user-management/roles', icon: <KeyOutlined />, label: 'Role', roles: [3] },
             ],
         },
         {
