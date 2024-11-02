@@ -205,7 +205,7 @@ export const resetProductStock = async (product_id) => {
     }
 }
 
-export const findProductVarient = async (product_id) => {
+export const findProductVarients = async (product_id) => {
     try {
         const url = `${URL}find-product-varient`;
         const response = await axios.get(url, { product_id });
@@ -251,3 +251,100 @@ export const deleteProductVarient = async (product_varients_id) => {
         return { success: false, message: errorMessage, status: error.response?.status };
     }
 };
+
+export const updateProductClassify = async (payload) => {
+    try {
+        const url = `${URL}update-product-classify`;
+        const response = await axios.post(url, payload);
+        return response.data;
+    } catch (error) {
+        console.log("Error when updating product classify:", error);
+
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "Product classify ID is required.";
+                    break;
+                case 404:
+                    errorMessage = "Product classify not found.";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const deleteSomeProductVarients = async (product_varients_ids) => {
+    try {
+        const url = `${URL}delete-some-product-varients`;
+        const response = await axios.post(url, { product_varients_ids });
+        return { success: true, data: response.data }; // Trả về dữ liệu thành công
+    } catch (error) {
+        console.log("Error when deleting some product variants:", error);
+
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = error.response.data.message || "Cannot delete product variants as they are referenced by other records.";
+                    break;
+                case 404:
+                    errorMessage = error.response.data.message || "No product variants found to delete.";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else if (error.request) {
+            errorMessage = "No response from the server. Please try again later.";
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status };
+    }
+}
+
+export const deleteSomeProductClassify = async (product_classify_ids) => {
+    try {
+        const url = `${URL}delete-some-product-classify`;
+        const response = await axios.post(url, { product_classify_ids });
+        return { success: true, data: response.data }; // Trả về dữ liệu thành công
+    } catch (error) {
+        console.log("Error when deleting some product classifies:", error);
+
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = error.response.data.message || "Cannot delete product classifies as they are referenced by other records.";
+                    break;
+                case 404:
+                    errorMessage = error.response.data.message || "No product classifies found to delete.";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else if (error.request) {
+            errorMessage = "No response from the server. Please try again later.";
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status };
+    }
+}

@@ -1,5 +1,5 @@
-import { Button, Col, Input, message, Modal, Row, Upload } from 'antd'
-import React, { forwardRef, useEffect, useImperativeHandle, useReducer } from 'react'
+import { Button, Col, Input, message, Modal, Popconfirm, Row, Upload } from 'antd'
+import React, { forwardRef, useEffect, useImperativeHandle, useReducer, useRef } from 'react'
 import { GoPlus } from "react-icons/go";
 import { RiImageAddFill } from 'react-icons/ri';
 import { CiSquarePlus, CiSquareRemove } from "react-icons/ci";
@@ -19,7 +19,10 @@ const initialState = {
     touchs: {
         classify_type: false,
         varient_type: false
-    }
+    },
+    enable_submit: false,
+    submit_loading: false,
+    initial_data: null
 }
 const reducer = (state, action) => {
     switch (action.type) {
@@ -43,6 +46,12 @@ const reducer = (state, action) => {
             return { ...state, errors: { ...state.errors, [action.payload.name]: action.payload.value } }
         case 'SET_TOUCH':
             return { ...state, touchs: { ...state.touchs, [action.payload.name]: action.payload.value } }
+        case 'SET_ENABLE_SUBMIT':
+            return { ...state, enable_submit: action.payload }
+        case 'SET_SUBMIT_LOADING':
+            return { ...state, submit_loading: action.payload }
+        case 'SET_INITIAL_DATA':
+            return { ...state, initial_data: action.payload }
         case 'RESET':
             return initialState
         default:
@@ -51,7 +60,8 @@ const reducer = (state, action) => {
 }
 const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product }, ref) => {
     const [state, dispatch] = useReducer(reducer, initialState)
-
+    const prevClassifyRowsRef = useRef([]);
+    const prevVarientRowsRef = useRef([]);
     const resetState = () => {
         dispatch({ type: 'RESET' })
     }
@@ -96,6 +106,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product }, ref) 
         else {
             dispatch({ type: 'SET_ERROR', payload: { name: 'classify_type', value: '' } })
         }
+        validateSubmit();
     }
     // classify
     const handleAddClassifyRow = () => {
@@ -198,7 +209,134 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product }, ref) 
                 : row
         );
         dispatch({ type: 'SET_VARIENT_ROWS', payload: updatedRows });
+        validateSubmit();
     };
+
+    const validateSubmit = () => {
+        // Validate classify fields
+        const classifyTypeValid = state.classify_type !== '';
+        let enableSubmit = false;
+        let classifyRowsValid = state.classify_rows.every(row =>
+            row.classify_name !== '' &&
+            row.classify_image.length > 0 &&
+            row.error_classify_name === '' &&
+            row.error_classify_image === ''
+        );
+
+        if (state.classify_rows.length === 0) {
+            classifyRowsValid = false;
+        }
+
+        let varientTypeValid = false;
+        let varientRowsValid = false;
+        if (!state.visible_btn_add_varient) {
+            varientTypeValid = state.varient_type !== '';
+            varientRowsValid = state.varient_rows.every(row =>
+                row.varient_name !== '' &&
+                row.error_varient_name === ''
+            );
+            if (state.varient_rows.length === 0) {
+                varientRowsValid = false
+            }
+        }
+        else {
+            varientTypeValid = true;
+            varientRowsValid = true;
+        }
+
+        if (classifyTypeValid && classifyRowsValid && varientTypeValid && varientRowsValid) {
+            enableSubmit = true;
+        }
+        dispatch({ type: 'SET_ENABLE_SUBMIT', payload: enableSubmit });
+    };
+
+    const handleSubmit = () => {
+        const addedClassifyRows = state.classify_rows.filter(row => !state.initial_data.classify_rows.some(initialRow => initialRow.key === row.key));
+        const removedClassifyRows = state.initial_data.classify_rows.filter(initialRow => !state.classify_rows.some(row => row.key === initialRow.key));
+        const updatedClassifyRows = state.classify_rows.filter(row => state.initial_data.classify_rows.some(initialRow => initialRow.key === row.key && initialRow !== row));
+
+        const addedVarientRows = state.varient_rows.filter(row => !state.initial_data.varient_rows.some(initialRow => initialRow.key === row.key));
+        const removedVarientRows = state.initial_data.varient_rows.filter(initialRow => !state.varient_rows.some(row => row.key === initialRow.key));
+        const updatedVarientRows = state.varient_rows.filter(row => state.initial_data.varient_rows.some(initialRow => initialRow.key === row.key && initialRow !== row));
+
+        console.log('Initial Classify rows:', state.initial_data.classify_rows);
+
+        // Check and log actions based on changes
+        if (updatedClassifyRows.length > 0) {
+            console.log('Updated classify rows action is performed:', updatedClassifyRows);
+
+        }
+        if (removedClassifyRows.length > 0) {
+
+            console.log('Removed classify rows action is performed:', removedClassifyRows);
+        }
+        if (addedClassifyRows.length > 0) {
+            console.log('Added classify rows action is performed:', addedClassifyRows);
+
+
+        }
+
+        if (addedVarientRows.length > 0) {
+            console.log('Added variant rows action is performed:', addedVarientRows);
+        }
+        if (removedVarientRows.length > 0) {
+            console.log('Removed variant rows action is performed:', removedVarientRows);
+        }
+        if (updatedVarientRows.length > 0) {
+            console.log('Updated variant rows action is performed:', updatedVarientRows);
+        }
+
+        if (
+            addedClassifyRows.length === 0 &&
+            removedClassifyRows.length === 0 &&
+            updatedClassifyRows.length === 0 &&
+            addedVarientRows.length === 0
+            && removedVarientRows.length === 0 &&
+            updatedVarientRows.length === 0
+        ) {
+            console.log('No action is performed');
+        }
+
+        // update product classify type
+    };
+
+
+    useEffect(() => {
+        const hasClassifyRowsChanged = state.classify_rows.some((row, index) => {
+            const prevRow = prevClassifyRowsRef.current[index] || {};
+            return (
+                row.classify_name !== prevRow.classify_name ||
+                row.classify_image.length !== prevRow.classify_image?.length ||
+                row.error_classify_name !== prevRow.error_classify_name ||
+                row.error_classify_image !== prevRow.error_classify_image
+            );
+        });
+
+        const hasVarientRowsChanged = state.varient_rows.some((row, index) => {
+            const prevRow = prevVarientRowsRef.current[index] || {};
+            return (
+                row.varient_name !== prevRow.varient_name ||
+                row.error_varient_name !== prevRow.error_varient_name
+            );
+        });
+
+        if (
+            hasClassifyRowsChanged ||
+            hasVarientRowsChanged ||
+            state.classify_type !== prevClassifyRowsRef.current.classify_type ||
+            state.varient_type !== prevVarientRowsRef.current.varient_type
+        ) {
+            validateSubmit();
+            prevClassifyRowsRef.current = [...state.classify_rows];
+            prevVarientRowsRef.current = [...state.varient_rows];
+        }
+    }, [
+        state.classify_rows,
+        state.classify_type,
+        state.varient_rows,
+        state.varient_type,
+        state.visible_btn_add_varient
+    ]);
 
     useEffect(() => {
         if (product && product?.ProductVarients[0]?.ProductClassify) {
@@ -239,7 +377,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product }, ref) 
 
             const varient_name_set = new Set(); // Set to track unique varient names
             const varient_rows = [];
-            
+
             product.ProductVarients.forEach((item) => {
                 const varient_name = item.ProductSize.product_size_name;
                 if (!varient_name_set.has(varient_name)) {
@@ -255,6 +393,8 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product }, ref) 
             });
 
             dispatch({ type: 'SET_VARIENT_ROWS', payload: varient_rows });
+            dispatch({ type: 'SET_INITIAL_DATA', payload: { classify_rows, varient_rows: [] } })
+
             // console.log('Varient Rows:', varient_rows);
 
         }
@@ -272,6 +412,26 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product }, ref) 
                 title="Chỉnh sửa phân loại"
                 onCancel={onCancel}
                 centered={true}
+                footer={[
+                    <Button
+                        key="cancel"
+                        onClick={onCancel}
+                        loading={state.submit_loading}
+                    >
+                        Hủy
+                    </Button>,
+                    <Popconfirm
+                        description="Xác nhận"
+                        onConfirm={handleSubmit}
+                    >
+                        <Button
+                            disabled={!state.enable_submit}
+                            loading={state.submit_loading}
+                            type="primary">
+                            Lưu thay đổi
+                        </Button>
+                    </Popconfirm>
+                ]}
             >
                 <Row className='flex items-center mb-5 mt-5'>
                     <Col span={4}>
