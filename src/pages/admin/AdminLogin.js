@@ -1,16 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import wallpaper from "../../assets/wallpaper-seller1.png";
 import { IoMdEye } from "react-icons/io";
 import { RiEyeCloseLine } from "react-icons/ri";
 import { signInWithEmailPassword } from "../../firebase/AuthenticationFirebase";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { Button, message } from "antd";
+const ALLOWED_ROLES = [3, 4, 5];// 3: Admin, 4: Event manager, 5: Shop manager
 
 const AdminLogin = () => {
   const [hidePassword, setHidePassword] = useState(false);
   const [data, setData] = useState({ identifier: "", password: "" });
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      message.info("Bạn đăng nhập, vui lòng đăng xuất trước khi đăng nhập lại");
+      navigate("/admin");
+    }
+  }, [navigate]);
 
   const handleHidePassword = (e) => {
     e.preventDefault();
@@ -19,8 +29,9 @@ const AdminLogin = () => {
 
   const handleSignIn = async ({ email, password }) => {
     try {
+      setLoading(true);
       const user = await signInWithEmailPassword(email, password);
-  
+
       if (user.emailVerified) {
         const token = await user.getIdToken();
         localStorage.setItem("token", token);
@@ -40,8 +51,10 @@ const AdminLogin = () => {
       console.error("Error during sign-in:", error.message);
       message.error(error.message || "Đăng nhập thất bại");
     }
+    finally {
+      setLoading(false);
+    }
   };
-  
 
   const handleOnSubmit = async (e) => {
     e.preventDefault();
@@ -59,7 +72,7 @@ const AdminLogin = () => {
       );
 
       if (response.status === 200) {
-        if (response.data.user.role_id !== 3) {
+        if (!ALLOWED_ROLES.includes(response.data.user.role_id)) {
           message.error("Tài khoản của bạn không có quyền truy cập vào trang này");
         } else {
           const email = response.data.user.email;
@@ -77,7 +90,6 @@ const AdminLogin = () => {
   };
 
   return (
-    (document.title = "Đăng nhập"),
     <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32">
       <div className="max-w-96 px-3 my-24 hidden lg:block">
         <div className="text-primary text-3xl font-[490]">Quản lý chuyên nghiệp</div>
@@ -85,7 +97,7 @@ const AdminLogin = () => {
         <img src={wallpaper} width={500} alt="wallpaper" />
       </div>
       <div>
-        <form className="w-96 shadow-lg px-6 py-10 mb-10" onSubmit={handleOnSubmit}>
+        <form className="w-96 shadow-lg px-6 py-10 mb-10">
           <h1 className="font-[450] text-xl mb-10">Đăng nhập</h1>
           <input
             type="text"
@@ -112,9 +124,12 @@ const AdminLogin = () => {
               )}
             </button>
           </div>
-          <button type="submit" className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
+          <Button
+            onClick={handleOnSubmit}
+            loading={loading}
+            type="submit" className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a]">
             Đăng nhập
-          </button>
+          </Button>
         </form>
       </div>
     </div>
