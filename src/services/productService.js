@@ -35,6 +35,8 @@ export const addProductVarient = async (payload) => {
         const res = await axios.post(url, payload);
         if (res.status === 200) {
             return res.data;
+        } else {
+            return { error: true, message: "Failed to add product variant" };
         }
     } catch (error) {
         switch (error.status) {
@@ -252,6 +254,36 @@ export const deleteProductVarient = async (product_varients_id) => {
     }
 };
 
+export const deleteAllProductVarients = async (product_id) => {
+    try {
+        const url = `${URL}delete-all-product-varients`;
+        const response = await axios.post(url, { product_id });
+        return response;
+    } catch (error) {
+        console.log("Error when deleting all product variants:", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 404:
+                    errorMessage = "No product varients found to delete"
+                    break;
+                case 400:
+                    errorMessage = "Cannot delete product variant as it is referenced by other records.";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status };
+    }
+}
+
 export const updateProductClassify = async (payload) => {
     try {
         const url = `${URL}update-product-classify`;
@@ -295,7 +327,7 @@ export const deleteSomeProductVarients = async (product_varients_ids) => {
         if (error.response) {
             switch (error.response.status) {
                 case 400:
-                    errorMessage = error.response.data.message || "Cannot delete product variants as they are referenced by other records.";
+                    errorMessage = error.response.data.message || "Cannot delete product variant as it is referenced by other records.";
                     break;
                 case 404:
                     errorMessage = error.response.data.message || "No product variants found to delete.";
@@ -341,6 +373,67 @@ export const deleteSomeProductClassify = async (product_classify_ids) => {
             }
         } else if (error.request) {
             errorMessage = "No response from the server. Please try again later.";
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status };
+    }
+}
+
+export const updateClassifyTypeName = async (payload) => {
+    try {
+        const url = `${URL}update-classify-type-name`;
+        const response = await axios.post(url, payload);
+        return response.data;
+    } catch (error) {
+        console.log("Error when updating classify type name:", error);
+
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "Invalid input data";
+                    break;
+                case 404:
+                    errorMessage = "Product classify not found";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const deleteProductVarientsByClassify = async (product_classify_id) => {
+    try {
+        const url = `${URL}delete-product-varients-by-classify`;
+        const response = await axios.post(url, { product_classify_id });
+        return response.data;
+    } catch (error) {
+        console.log("Error when deleting product varients by classify:", error);
+
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "Cannot delete product variant as it is referenced by other records.";
+                    break;
+                case 404:
+                    errorMessage = "No product varients found for this product classify ID";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
         } else {
             errorMessage = "Network error or server is unreachable.";
         }
