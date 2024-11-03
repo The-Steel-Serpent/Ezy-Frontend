@@ -4,8 +4,7 @@ import axios from 'axios';
 
 const UserAccount = () => {
   const [userData, setUserData] = useState([]);
-
-  useEffect(() => {
+  const fecthData = async () => {
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/all-user`)
       .then(response => {
         if (response.data.success) {
@@ -15,6 +14,9 @@ const UserAccount = () => {
       .catch(error => {
         console.error("There was an error fetching the user data:", error);
       });
+  };
+  useEffect(() => {
+    fecthData();
   }, []);
 
   const columns = [
