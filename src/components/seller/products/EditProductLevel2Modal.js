@@ -1,8 +1,11 @@
-import { Button, Col, Input, message, Modal, Row, Upload } from 'antd'
-import React, { forwardRef, useEffect, useImperativeHandle, useReducer } from 'react'
+import { Button, Col, Input, message, Modal, Popconfirm, Row, Upload } from 'antd'
+import React, { forwardRef, useEffect, useImperativeHandle, useReducer, useRef } from 'react'
 import { GoPlus } from "react-icons/go";
 import { RiImageAddFill } from 'react-icons/ri';
 import { CiSquarePlus, CiSquareRemove } from "react-icons/ci";
+import { MdOutlineLeakRemove } from "react-icons/md";
+import uploadFile from '../../../helpers/uploadFile';
+import { addProductClassify, addProductVarient, deleteSomeProductClassify, deleteSomeProductVarients, updateProductClassify } from '../../../services/productService';
 const initialState = {
     classify_type: null,
     classifies_name: [],
@@ -19,7 +22,10 @@ const initialState = {
     touchs: {
         classify_type: false,
         varient_type: false
-    }
+    },
+    enable_submit: false,
+    submit_loading: false,
+    initial_data: null
 }
 const reducer = (state, action) => {
     switch (action.type) {
@@ -43,15 +49,22 @@ const reducer = (state, action) => {
             return { ...state, errors: { ...state.errors, [action.payload.name]: action.payload.value } }
         case 'SET_TOUCH':
             return { ...state, touchs: { ...state.touchs, [action.payload.name]: action.payload.value } }
+        case 'SET_ENABLE_SUBMIT':
+            return { ...state, enable_submit: action.payload }
+        case 'SET_SUBMIT_LOADING':
+            return { ...state, submit_loading: action.payload }
+        case 'SET_INITIAL_DATA':
+            return { ...state, initial_data: action.payload }
         case 'RESET':
             return initialState
         default:
             return state
     }
 }
-const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product }, ref) => {
+const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDataSource }, ref) => {
     const [state, dispatch] = useReducer(reducer, initialState)
-
+    const prevClassifyRowsRef = useRef([]);
+    const prevVarientRowsRef = useRef([]);
     const resetState = () => {
         dispatch({ type: 'RESET' })
     }
@@ -96,6 +109,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product }, ref) 
         else {
             dispatch({ type: 'SET_ERROR', payload: { name: 'classify_type', value: '' } })
         }
+        validateSubmit();
     }
     // classify
     const handleAddClassifyRow = () => {
@@ -198,13 +212,322 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product }, ref) 
                 : row
         );
         dispatch({ type: 'SET_VARIENT_ROWS', payload: updatedRows });
+        validateSubmit();
     };
+
+    const validateSubmit = () => {
+        // Validate classify fields
+        const classifyTypeValid = state.classify_type !== '';
+        let enableSubmit = false;
+        let classifyRowsValid = state.classify_rows.every(row =>
+            row.classify_name !== '' &&
+            row.classify_image.length > 0 &&
+            row.error_classify_name === '' &&
+            row.error_classify_image === ''
+        );
+
+        if (state.classify_rows.length === 0) {
+            classifyRowsValid = false;
+        }
+
+        let varientTypeValid = false;
+        let varientRowsValid = false;
+        if (!state.visible_btn_add_varient) {
+            varientTypeValid = state.varient_type !== '';
+            varientRowsValid = state.varient_rows.every(row =>
+                row.varient_name !== '' &&
+                row.error_varient_name === ''
+            );
+            if (state.varient_rows.length === 0) {
+                varientRowsValid = false
+            }
+        }
+        else {
+            varientTypeValid = true;
+            varientRowsValid = true;
+        }
+
+        if (classifyTypeValid && classifyRowsValid && varientTypeValid && varientRowsValid) {
+            enableSubmit = true;
+        }
+        dispatch({ type: 'SET_ENABLE_SUBMIT', payload: enableSubmit });
+    };
+
+    // update classify
+    const checkThumbnailChanges = (update_classify_rows, initial_classify_rows) => {
+        let updatedClassifyRows = [];
+        update_classify_rows.map((updateRow) => {
+            initial_classify_rows.map((initialRow) => {
+                if (updateRow.key === initialRow.key) {
+                    if (updateRow.classify_image[0].uid !== initialRow.classify_image[0].uid) {
+                        updatedClassifyRows.push(updateRow)
+                    }
+                }
+            })
+        })
+        return updatedClassifyRows;
+    }
+
+    const uploadClassifyThumnail = async (thumnails) => {
+        const uploadPromises = thumnails.map(file => uploadFile(file.originFileObj, 'seller-img'));
+        try {
+            const uploadResults = await Promise.all(uploadPromises);
+            console.log("Upload Classify Thumnail: ", uploadResults);
+            const uploadUrls = uploadResults.map(file => file.url);
+            return uploadUrls;
+        } catch (error) {
+            console.log("Error uploading classify thumbnail:", error);
+            return [];
+        }
+    }
+
+    const updateClassifyThumbnailChanges = async (updatedClassifyRows, new_thumbnails) => {
+        try {
+            const thumbnails = await uploadClassifyThumnail(new_thumbnails);
+            if (thumbnails.length === 0) {
+                console.error("Failed to upload thumbnails.");
+                message.error("Cập nhật phân loại thất bại");
+                resetDataSource();
+                onCancel();
+            }
+            const updatePromises = thumbnails.map((thumbnail, index) => {
+                if (updatedClassifyRows[index]) {
+                    const update_classify_promise = {
+                        product_classify_id: updatedClassifyRows[index].product_classify_id,
+                        thumbnail: thumbnail,
+                        type_name: state.classify_type,
+                        product_classify_name: updatedClassifyRows[index].classify_name,
+                    };
+                    return updateProductClassify(update_classify_promise);
+                }
+            }).filter(Boolean);
+
+            if (updatePromises.length > 0) {
+                await Promise.all(updatePromises);
+                console.log("All updates completed successfully.");
+            } else {
+                console.log("No updates were made.");
+                message.error("Cập nhật phân loại thất bại");
+                resetDataSource();
+                onCancel();
+            }
+        } catch (error) {
+            console.error("Error updating product classify:", error);
+            message.error("Cập nhật phân loại thất bại");
+            resetDataSource();
+            onCancel();
+        }
+    };
+
+    const updateClassifyNonThumbnailChanges = async (updatedClassifyRows) => {
+        try {
+            const updatePromises = updatedClassifyRows.map((row) => {
+                const update_classify_promise = {
+                    product_classify_id: row.product_classify_id,
+                    type_name: state.classify_type,
+                    product_classify_name: row.classify_name,
+                };
+                return updateProductClassify(update_classify_promise);
+            });
+            if (updatePromises.length > 0) {
+                await Promise.all(updatePromises);
+                console.log("All updates completed successfully.");
+            } else {
+                console.log("No updates were made.");
+                message.error("Cập nhật phân loại thất bại");
+            }
+        } catch (error) {
+            console.error("Error updating product classify:", error);
+            message.error("Cập nhật phân loại thất bại");
+            resetDataSource();
+            onCancel();
+        }
+    }
+
+    // delete classify
+    const deleteProductClassifyVarients = async (product_varients_ids, product_classify_ids) => {
+        const deleteVarientsResult = await deleteSomeProductVarients(product_varients_ids);
+        if (deleteVarientsResult.success) {
+            console.log("Delete product varients successfully");
+            const deteleClassifyResult = await deleteSomeProductClassify(product_classify_ids);
+            if (deteleClassifyResult.success) {
+                console.log("Delete product classify successfully");
+            } else {
+                console.error("Delete product classify failed");
+                message.error("Cập nhật phân loại thất bại");
+                resetDataSource();
+                onCancel();
+            }
+        } else {
+            console.error("Delete product varients failed");
+            message.error("Cập nhật phân loại thất bại");
+            resetDataSource();
+            onCancel();
+        }
+    }
+
+    // add classify
+    const addProductClassifyVarients = async (addedClassifyRows) => {
+        const added_thumbnails = addedClassifyRows.map((item) => item.classify_image[0]);
+        const added_classify_names = addedClassifyRows.map((item) => item.classify_name);
+        const thumbnails = await uploadClassifyThumnail(added_thumbnails);
+        if (thumbnails.length === 0) {
+            console.error("Failed to upload thumbnails.");
+            message.error("Cập nhật phân loại thất bại");
+            resetDataSource();
+            onCancel();
+        }
+        const addClassifyPromises = thumbnails.map((thumbnail, index) => {
+            const add_classify_promise = {
+                product_id: product.product_id,
+                thumbnail: thumbnail,
+                type_name: state.classify_type,
+                product_classify_name: added_classify_names[index],
+            };
+            return addProductClassify(add_classify_promise);
+        });
+        if (addClassifyPromises.length > 0) {
+            const addClassifyResult = await Promise.all(addClassifyPromises);
+            if (addClassifyResult.length === addedClassifyRows.length) {
+                console.log("All adds completed successfully", addClassifyResult);
+                const product_classify_ids = addClassifyResult.map((item) => item.data.product_classify_id);
+                const addVarientsPromises = product_classify_ids.map((product_classify_id, index) => {
+                    const add_varients_promise = {
+                        product_id: product.product_id,
+                        product_classify_id: product_classify_id
+                    };
+                    return addProductVarient(add_varients_promise);
+                });
+                const addVarientsResult = await Promise.all(addVarientsPromises);
+                if (addVarientsResult.length === product_classify_ids.length) {
+                    console.log("All adds completed successfully", addVarientsResult);
+                }
+                else {
+                    console.error("Some adds failed");
+                    message.error("Cập nhật phân loại thất bại");
+                    resetDataSource();
+                    onCancel();
+                }
+            } else {
+                console.error("Some adds failed");
+                message.error("Cập nhật phân loại thất bại");
+                resetDataSource();
+                onCancel();
+            }
+        } else {
+            console.log("No adds were made.");
+            message.error("Cập nhật phân loại thất bại");
+            resetDataSource();
+            onCancel();
+        }
+    }
+
+    const handleSubmit = async () => {
+        dispatch({ type: 'SET_SUBMIT_LOADING', payload: true });
+        const addedClassifyRows = state.classify_rows.filter(row => !state.initial_data.classify_rows.some(initialRow => initialRow.key === row.key));
+        const removedClassifyRows = state.initial_data.classify_rows.filter(initialRow => !state.classify_rows.some(row => row.key === initialRow.key));
+        const updatedClassifyRows = state.classify_rows.filter(row => state.initial_data.classify_rows.some(initialRow => initialRow.key === row.key && initialRow !== row));
+
+        const addedVarientRows = state.varient_rows.filter(row => !state.initial_data.varient_rows.some(initialRow => initialRow.key === row.key));
+
+        console.log('Initial Classify rows:', state.initial_data.classify_rows);
+
+        // Check and log actions based on changes
+        if (updatedClassifyRows.length > 0) {
+            console.log('Updated classify rows action is performed:', updatedClassifyRows);
+            const check = checkThumbnailChanges(updatedClassifyRows, state.initial_data.classify_rows);
+            if (check.length > 0) {
+                const update_thumbnail = check.map((item) => item.classify_image[0]);
+                await updateClassifyThumbnailChanges(updatedClassifyRows, update_thumbnail);
+            }
+            else {
+                await updateClassifyNonThumbnailChanges(updatedClassifyRows);
+            }
+        }
+        if (removedClassifyRows.length > 0) {
+
+            console.log('Removed classify rows action is performed:', removedClassifyRows);
+            const product_varients_ids = removedClassifyRows.map(row => row.product_varient_id);
+            console.log('Product varients ids:', product_varients_ids);
+            const product_classify_ids = removedClassifyRows.map(row => row.product_classify_id);
+            console.log('Product classify ids:', product_classify_ids);
+            await deleteProductClassifyVarients(product_varients_ids, product_classify_ids);
+        }
+        if (addedClassifyRows.length > 0) {
+            console.log('Added classify rows action is performed:', addedClassifyRows);
+            await addProductClassifyVarients(addedClassifyRows);
+
+        }
+
+        if (addedVarientRows.length > 0) {
+            console.log('Added variant rows action is performed:', addedVarientRows);
+
+        }
+
+        if (
+            addedClassifyRows.length === 0 &&
+            removedClassifyRows.length === 0 &&
+            updatedClassifyRows.length === 0 &&
+            addedVarientRows.length === 0
+        ) {
+            // update product classify type
+            console.log('No action is performed');
+
+        }
+        console.log('Current classify rows:', state.classify_rows);
+
+        dispatch({ type: 'SET_SUBMIT_LOADING', payload: false });
+        message.success('Cập nhật phân loại thành công');
+        resetDataSource();
+        onCancel();
+    };
+
+    const changeToInitialData = () => {
+        dispatch({ type: 'RESET' });
+    }
+
+    useEffect(() => {
+        const hasClassifyRowsChanged = state.classify_rows.some((row, index) => {
+            const prevRow = prevClassifyRowsRef.current[index] || {};
+            return (
+                row.classify_name !== prevRow.classify_name ||
+                row.classify_image.length !== prevRow.classify_image?.length ||
+                row.error_classify_name !== prevRow.error_classify_name ||
+                row.error_classify_image !== prevRow.error_classify_image
+            );
+        });
+
+        const hasVarientRowsChanged = state.varient_rows.some((row, index) => {
+            const prevRow = prevVarientRowsRef.current[index] || {};
+            return (
+                row.varient_name !== prevRow.varient_name ||
+                row.error_varient_name !== prevRow.error_varient_name
+            );
+        });
+
+        if (
+            hasClassifyRowsChanged ||
+            hasVarientRowsChanged ||
+            state.classify_type !== prevClassifyRowsRef.current.classify_type ||
+            state.varient_type !== prevVarientRowsRef.current.varient_type
+        ) {
+            validateSubmit();
+            prevClassifyRowsRef.current = [...state.classify_rows];
+            prevVarientRowsRef.current = [...state.varient_rows];
+        }
+    }, [
+        state.classify_rows,
+        state.classify_type,
+        state.varient_rows,
+        state.varient_type,
+        state.visible_btn_add_varient
+    ]);
+
 
     useEffect(() => {
         if (product && product?.ProductVarients[0]?.ProductClassify && product.ProductVarients[0]?.ProductSize == null) {
             console.log('Nhan level 2 duoc roi nha cam on:', product);
             dispatch({ type: 'SET_CLASSIFY_TYPE', payload: product.ProductVarients[0]?.ProductClassify?.type_name })
-            console.log('Type:', product.ProductVarients[0]?.ProductClassify?.type_name)
             let classify_name = [];
             let classify_image = [];
             let classify_rows = [];
@@ -221,18 +544,17 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product }, ref) 
                     }],
                     error_classify_name: '',
                     error_classify_image: '',
-                    touch: false
+                    touch: false,
+                    product_varient_id: item.product_varients_id,
+                    product_classify_id: item.ProductClassify.product_classify_id
                 })
-                console.log('Item:', item.ProductClassify.product_classify_name);
             })
             dispatch({ type: 'SET_CLASSIFY_ROWS', payload: classify_rows })
+            dispatch({ type: 'SET_INITIAL_DATA', payload: { classify_rows, varient_rows: [] } })
             console.log('Classify Rowssssssssssssssssssssss:', classify_rows);
         }
     }, [product])
 
-    useEffect(() => {
-        console.log('Classify Helllllooooo:', state.classify_rows);
-    }, [state.classify_rows])
 
     return (
         <div>
@@ -241,12 +563,33 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product }, ref) 
                 title="Chỉnh sửa phân loại"
                 onCancel={onCancel}
                 centered={true}
+                footer={[
+                    <Button
+                        key="cancel"
+                        onClick={onCancel}
+                        loading={state.submit_loading}
+                    >
+                        Hủy
+                    </Button>,
+                    <Popconfirm
+                        title="Bạn có chắc chắn muốn lưu thay đổi không?"
+                        showCancel={false}
+                        onConfirm={handleSubmit}
+                    >
+                        <Button
+                            disabled={!state.enable_submit}
+                            loading={state.submit_loading}
+                            type="primary">
+                            Lưu thay đổi
+                        </Button>
+                    </Popconfirm>
+                ]}
             >
-                <Row className='flex items-center mb-5 mt-5'>
+                <Row className='flex items-center mb-5 mt-5' gutter={10}>
                     <Col span={4}>
                         <div className='font-semibold'>Phân loại 1</div>
                     </Col>
-                    <Col span={20}>
+                    <Col span={18}>
                         <Input
                             showCount
                             maxLength={15}
@@ -255,6 +598,21 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product }, ref) 
                             onChange={(e) => handleClassifyTypeChange(e.target.value)}
                         />
                         {state.errors.classify_type && state.touchs.classify_type && (<div className='text-red-500 text-sm'>{state.errors.classify_type}</div>)}
+                    </Col>
+                    <Col span={2}>
+                        <Popconfirm
+                            title="Lưu ý"
+                            description="Tùy chọn này sẽ xóa tất cả các phân loại. Bạn có chắc chắn muốn thực hiện không?"
+                            onConfirm={changeToInitialData}
+                            okButtonProps={<Button type="primary">Xác nhận</Button>}
+                            cancelButtonProps={<Button type="default">Hủy</Button>}
+                        >
+                            <MdOutlineLeakRemove
+                                size={25}
+                                className='cursor-pointer'
+                                // onClick={() => handleRemoveClassifyRow(row.key)}
+                                color='#ff4d4f' />
+                        </Popconfirm>
                     </Col>
                 </Row>
                 {state.classify_rows.map((row) => (
