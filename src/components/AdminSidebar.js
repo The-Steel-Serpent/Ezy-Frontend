@@ -25,9 +25,12 @@ const AdminSidebar = ({ role_id }) => {
             label: 'Quản lý cửa hàng',
             roles: [3, 5], 
             children: [
-                { key: '3.1', icon: <ShopOutlined />, label: 'Tất cả cửa hàng', roles: [3, 5] },
-                { key: '3.2', icon: <ShopOutlined />, label: 'Option 5', roles: [3, 5] },
-                { key: '3.3', icon: <ShopOutlined />, label: 'Option 6', roles: [3, 5] },
+                { 
+                    key: '/admin/shop-management/all-shop', 
+                    icon: <ShopOutlined />, 
+                    label: 'Tất cả cửa hàng', 
+                    roles: [3, 5] 
+                },
             ],
         },
         {

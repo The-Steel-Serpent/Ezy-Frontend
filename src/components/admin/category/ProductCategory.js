@@ -247,10 +247,6 @@ function ProductCategory() {
         setIsSubCategoryModalVisible(true);
     };
 
-    const handleSubCategoryOk = async () => {
-        setIsSubCategoryModalVisible(false);
-    };
-
     return (
         <div>
             <ModalProductSubCategory
@@ -301,7 +297,7 @@ function ProductCategory() {
                 loading={loading}
                 columns={columns}
                 dataSource={categories}
-                pagination={{ pageSize: 10 }}
+                pagination={{ pageSize: 5 }}
                 rowKey="category_id"
             />
         </div>

@@ -72,6 +72,9 @@ const AllUserAccount = withSuspense(
 const AllRole = withSuspense(
   lazy(() => import("../pages/admin/user_management/AllRole"))
 );
+const AllShop = withSuspense(
+  lazy(() => import("../pages/admin/shop_management/AllShop"))
+);
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
@@ -456,6 +459,14 @@ const router = createBrowserRouter([
         element: (
           <AdminAuthLayout>
             <AllRole />
+          </AdminAuthLayout>
+        ),
+      },
+      {
+        path: "/admin/shop-management/all-shop",
+        element: (
+          <AdminAuthLayout>
+            <AllShop />
           </AdminAuthLayout>
         ),
       }
