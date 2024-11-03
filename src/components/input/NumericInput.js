@@ -3,7 +3,7 @@ import React from "react";
 
 const NumericInput = (props) => {
   const formatNumber = (value) => new Intl.NumberFormat().format(value);
-  const { value, onChange, placeholder } = props;
+  const { value, onChange, placeholder, status = "valid" } = props;
   const handleChange = (e) => {
     const { value: inputValue } = e.target;
     const reg = /^-?\d*(\.\d*)?$/;
@@ -37,6 +37,7 @@ const NumericInput = (props) => {
         onChange={handleChange}
         onBlur={handleBlur}
         placeholder={placeholder}
+        status={status}
         maxLength={16}
       />
     </Tooltip>

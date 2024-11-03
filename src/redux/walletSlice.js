@@ -8,7 +8,6 @@ export const fetchWallet = createAsyncThunk(
     if (data.error) {
       throw new Error(data.message);
     }
-    console.log("Dữ liệu ví: ", data);
     return data; // Trả về dữ liệu
   }
 );

@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { memo, useEffect, useReducer } from "react";
+import React, { memo, useCallback, useEffect, useReducer } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWallet } from "../../redux/walletSlice";
 import EzyWhite from "../../assets/logo_goat.png";
@@ -9,10 +9,10 @@ import { BiSolidBank } from "react-icons/bi";
 import { IoIosJournal } from "react-icons/io";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import WalletHistoryModal from "./WalletHistoryModal";
+import WalletDepositModal from "./WalletDepositModal";
 
 const WalletSection = () => {
   const wallet = useSelector((state) => state.wallet.wallet);
-  console.log(wallet);
   const dispatch = useDispatch();
   const token = localStorage.getItem("token");
   const [localState, setLocalState] = useReducer(
@@ -24,12 +24,26 @@ const WalletSection = () => {
             balance: action.payload,
           };
         }
+
         case "SET_IS_HIDDEN": {
           return {
             ...state,
             isCurrentHidden: action.payload,
           };
         }
+        case "SET_OPEN_WALLET_HISTORY_MODAL": {
+          return {
+            ...state,
+            openWalletHistoryModal: action.payload,
+          };
+        }
+        case "SET_OPEN_WALLET_DEPOSIT_MODAL": {
+          return {
+            ...state,
+            openWalletDepositModal: action.payload,
+          };
+        }
+
         default:
           return state;
       }
@@ -37,13 +51,15 @@ const WalletSection = () => {
     {
       balance: 0,
       isCurrentHidden: true,
+      openWalletHistoryModal: false,
+      openWalletDepositModal: false,
     }
   );
   useEffect(() => {
     if (token) {
       dispatch(fetchWallet(token));
     }
-  }, [token]);
+  }, [token, dispatch]);
   const formatCurrency = (balance, isHidden) => {
     if (isHidden) {
       return "****";
@@ -56,6 +72,30 @@ const WalletSection = () => {
       payload: !localState.isCurrentHidden,
     });
   };
+  const handleOpenHistoryWalletModal = useCallback(() => {
+    setLocalState({
+      type: "SET_OPEN_WALLET_HISTORY_MODAL",
+      payload: true,
+    });
+  }, []);
+  const handleOpenDepositWalletModal = useCallback(() => {
+    setLocalState({
+      type: "SET_OPEN_WALLET_DEPOSIT_MODAL",
+      payload: true,
+    });
+  }, []);
+  const handleCloseHistoryWalletModal = useCallback(() => {
+    setLocalState({
+      type: "SET_OPEN_WALLET_HISTORY_MODAL",
+      payload: false,
+    });
+  }, []);
+  const handleCloseDepositWalletModal = useCallback(() => {
+    setLocalState({
+      type: "SET_OPEN_WALLET_DEPOSIT_MODAL",
+      payload: false,
+    });
+  }, []);
   return (
     <>
       <section className="w-full bg-white grid grid-cols-12 p-4">
@@ -94,13 +134,25 @@ const WalletSection = () => {
               </span>
             </div>
             <div className="w-full flex items-center gap-7 absolute bottom-5">
-              <span className="text-base flex flex-col items-center text-white cursor-pointer hover:opacity-80">
+              <span
+                className="text-base flex flex-col items-center text-white cursor-pointer hover:opacity-80"
+                onClick={handleOpenDepositWalletModal}
+              >
                 <IoWallet className="text-3xl text-orange-500" /> Nạp tiền
               </span>
-              <span className="text-base flex flex-col items-center text-white cursor-pointer hover:opacity-80">
-                <BiSolidBank className="text-3xl text-yellow-500" /> Rút Tiền
+              <span className="text-base flex flex-col items-center text-white  cursor-pointer hover:opacity-80">
+                <BiSolidBank className="text-3xl text-yellow-500" />
+                <span
+                  title="Rút Tiền ( Sắp Ra Mắt )"
+                  className="w-[118px] text-ellipsis line-clamp-1"
+                >
+                  Rút Tiền ( Sắp ra mắt )
+                </span>
               </span>
-              <span className="text-base flex flex-col items-center text-white cursor-pointer hover:opacity-80">
+              <span
+                className="text-base flex flex-col items-center text-white cursor-pointer hover:opacity-80"
+                onClick={handleOpenHistoryWalletModal}
+              >
                 <IoIosJournal className="text-3xl text-red-400" /> Lịch sử giao
                 dịch
               </span>
@@ -108,7 +160,16 @@ const WalletSection = () => {
           </div>
         </section>
       </section>
-      <WalletHistoryModal walletHistory={wallet?.WalletTransactions || []} />
+      <WalletHistoryModal
+        walletId={wallet?.user_wallet_id}
+        openWalletHistoryModal={localState.openWalletHistoryModal}
+        handleCloseHistoryWalletModal={handleCloseHistoryWalletModal}
+      />
+      <WalletDepositModal
+        walletId={wallet?.user_wallet_id}
+        openWalletDepositModal={localState.openWalletDepositModal}
+        handleCloseDepositWalletModal={handleCloseDepositWalletModal}
+      />
     </>
   );
 };

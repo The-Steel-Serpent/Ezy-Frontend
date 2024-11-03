@@ -10,6 +10,10 @@ import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
 import { CheckoutProvider } from "../providers/CheckoutProvider";
 import { MessagesProvider } from "../providers/MessagesProvider";
+
+const WalletResult = withSuspense(
+  lazy(() => import("../pages/buyer/user-pages/my-account/WalletResult"))
+);
 const CheckoutResult = withSuspense(
   lazy(() => import("../pages/buyer/cart-pages/CheckoutResult"))
 );
@@ -170,6 +174,14 @@ const router = createBrowserRouter([
             ),
           },
         ],
+      },
+      {
+        path: "ezy-wallet/deposit",
+        element: (
+          <AuthLayout>
+            <WalletResult />
+          </AuthLayout>
+        ),
       },
       //login && register
       {
