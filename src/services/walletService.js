@@ -58,9 +58,10 @@ export const depositToWallet = async (user_wallet_id, amount) => {
 
 export const ipnHandler = async (user_wallet_id, data) => {
   try {
-    const response = await axios.post(`${url}/wallet-ipn`, data, {
-      params: { user_wallet_id },
-    });
+    const response = await axios.post(
+      `${url}/wallet-ipn?user_wallet_id=${user_wallet_id}`,
+      data
+    );
     return response.data;
   } catch (error) {
     console.log("Failed to handle IPN: ", error);

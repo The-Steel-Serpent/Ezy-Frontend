@@ -1,4 +1,4 @@
-import { Result } from "antd";
+import { Button, Result } from "antd";
 import React, { memo, useEffect, useReducer } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ipnHandler } from "../../../../services/walletService";
@@ -14,6 +14,8 @@ const WalletResult = () => {
   const [localState, setLocalState] = useReducer(
     (state, action) => {
       switch (action.type) {
+        case "loadingWallet":
+          return { ...state, loadingWallet: action.payload };
         case "loading":
           return { ...state, loading: action.payload };
         case "error":
@@ -25,6 +27,7 @@ const WalletResult = () => {
       }
     },
     {
+      loadingWallet: false,
       loading: false,
       error: {
         isError: false,
@@ -62,13 +65,21 @@ const WalletResult = () => {
 
   const { error, success, warning, loading } = localState;
   useEffect(() => {
+    const fetchData = async () => {
+      if (token) {
+        dispatch(fetchWallet(token));
+      }
+    };
     if (token) {
-      dispatch(fetchWallet(token));
+      fetchData().then(() => {
+        setLocalState({ type: "loadingWallet", payload: true });
+      });
     }
   }, [token, dispatch]);
   useEffect(() => {
     const updateWallet = async () => {
       try {
+        setLocalState({ type: "loading", payload: true });
         const data = {
           vnp_Amount,
           vnp_BankCode,
@@ -85,18 +96,84 @@ const WalletResult = () => {
         };
         const res = await ipnHandler(wallet.user_wallet_id, data);
         console.log(res);
+        if (res.status === "fail") {
+          setLocalState({
+            type: "error",
+            payload: { isError: true, message: res.message },
+          });
+        } else if (res.status === "success") {
+          setLocalState({
+            type: "success",
+            payload: { isSuccess: true, message: res.message },
+          });
+        } else {
+          setLocalState({
+            type: "warning",
+            payload: { isWarning: true, message: res.message },
+          });
+        }
       } catch (error) {
         console.log(error);
+        setLocalState({
+          type: "error",
+          payload: { isError: true, message: error.message },
+        });
+      } finally {
+        setLocalState({ type: "loading", payload: false });
       }
     };
 
-    if (wallet.user_wallet_id) {
-      console.log("wallet.user_wallet_id: ", wallet.user_wallet_id);
+    if (wallet.user_wallet_id && localState.loadingWallet) {
       updateWallet();
     }
-  }, [wallet]);
+  }, [localState.loadingWallet, wallet]);
 
-  return <Result />;
+  return (
+    <Result
+      status={
+        loading
+          ? "info"
+          : success.isSuccess
+          ? "success"
+          : error.isError
+          ? "error"
+          : "warning"
+      }
+      title={
+        <span className="font-semibold text-3xl">
+          {loading
+            ? "Đang xử lý"
+            : success.isSuccess
+            ? "Nạp tiền thành công"
+            : error.isError
+            ? "Nạp tiền thất bại"
+            : "Có lỗi xảy ra"}
+        </span>
+      }
+      subTitle={
+        <span className="text-lg text-neutral-600">
+          {loading
+            ? "Vui lòng đợi trong giây lát"
+            : success.isSuccess
+            ? "Đã nạp tiền vào ví thành công"
+            : error.isError
+            ? error.message
+            : warning.isWarning
+            ? warning.message
+            : "Có lỗi xảy ra"}
+        </span>
+      }
+      extra={
+        <Button
+          className="bg-primary text-white hover:opacity-80"
+          size="large"
+          onClick={() => navigate("/user/ezy-wallet")}
+        >
+          Trở về
+        </Button>
+      }
+    />
+  );
 };
 
 export default memo(WalletResult);

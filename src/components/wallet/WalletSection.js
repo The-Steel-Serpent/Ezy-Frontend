@@ -10,9 +10,11 @@ import { IoIosJournal } from "react-icons/io";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import WalletHistoryModal from "./WalletHistoryModal";
 import WalletDepositModal from "./WalletDepositModal";
+import ModalOTP from "../user/ModalOTP";
 
 const WalletSection = () => {
   const wallet = useSelector((state) => state.wallet.wallet);
+  const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const token = localStorage.getItem("token");
   const [localState, setLocalState] = useReducer(
@@ -24,7 +26,12 @@ const WalletSection = () => {
             balance: action.payload,
           };
         }
-
+        case "isVerify": {
+          return {
+            ...state,
+            isVerify: action.payload,
+          };
+        }
         case "SET_IS_HIDDEN": {
           return {
             ...state,
@@ -50,6 +57,7 @@ const WalletSection = () => {
     },
     {
       balance: 0,
+      isVerify: false,
       isCurrentHidden: true,
       openWalletHistoryModal: false,
       openWalletDepositModal: false,
@@ -71,6 +79,9 @@ const WalletSection = () => {
       type: "SET_IS_HIDDEN",
       payload: !localState.isCurrentHidden,
     });
+  };
+  const onVerify = () => {
+    setLocalState({ type: "isVerify", payload: true });
   };
   const handleOpenHistoryWalletModal = useCallback(() => {
     setLocalState({
@@ -170,6 +181,7 @@ const WalletSection = () => {
         openWalletDepositModal={localState.openWalletDepositModal}
         handleCloseDepositWalletModal={handleCloseDepositWalletModal}
       />
+      <ModalOTP user={user} onVerify={onVerify} />
     </>
   );
 };

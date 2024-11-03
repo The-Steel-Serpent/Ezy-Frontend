@@ -25,7 +25,12 @@ const WalletHistoryItem = ({ item }) => {
       </div>
       <div className="col-span-7 px-2 flex flex-col justify-start items-start">
         <span className="font-semibold text-xl">{item?.transaction_type}</span>
-        <span className="text-base">{item?.description}</span>
+        <span
+          className="text-base line-clamp-2 text-ellipsis cursor-pointer"
+          title={item?.description}
+        >
+          {item?.description}
+        </span>
         <span className="text-sm text-gray-500">
           {formatDateTime(item?.transaction_date)}
         </span>
@@ -33,10 +38,13 @@ const WalletHistoryItem = ({ item }) => {
       <div className="col-span-3 flex justify-end items-center">
         <span
           className={`text-lg font-semibold ${
-            item?.amount?.toString().includes("-") ? "text-red-500" : ""
+            item?.amount?.toString().includes("-")
+              ? "text-red-500"
+              : "text-green-600"
           }`}
         >
-          {formatCurrency(item?.amount || 0)}
+          {(!item?.amount?.toString().includes("-") ? "+" : "") +
+            formatCurrency(item?.amount || 0)}
           <sup>đ</sup>
         </span>
       </div>

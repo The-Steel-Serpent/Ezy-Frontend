@@ -302,10 +302,6 @@ const EditProfile = () => {
   };
 
   useEffect(() => {
-    console.log("error", error);
-  }, [error]);
-
-  useEffect(() => {
     if (fullName !== "") {
       setState({
         type: "setError",
