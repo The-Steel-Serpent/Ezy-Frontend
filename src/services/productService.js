@@ -523,3 +523,66 @@ export const addSomeProductVarientLevel3 = async (payload) => {
         return { success: false, message: errorMessage, status: error.response?.status || 0 };
     }
 }
+
+export const deleteSomeProductSize = async (product_size_ids) => {
+    try {
+        const url = `${URL}delete-some-product-size`;
+        const response = await axios.post(url, { product_size_ids });
+        return response.data;
+    } catch (error) {
+        console.log("Error when deleting some product size:", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "Cannot delete product size as it is referenced by other records.";
+                    break;
+                case 404:
+                    errorMessage = "No product sizes found to delete.";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else if (error.request) {
+            errorMessage = "No response from the server. Please try again later.";
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status };
+    }
+}
+
+export const deleteSomeProductVarientsBySize = async (product_size_ids) => {
+    try {
+        const url = `${URL}delete-some-product-varients-by-size`;
+        const response = await axios.post(url, { product_size_ids });
+        return response.data;
+    } catch (error) {
+        console.log("Error when deleting product varients by size:", error);
+
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "Cannot delete product variant as it is referenced by other records.";
+                    break;
+                case 404:
+                    errorMessage = "Not found product_size_ids";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status };
+    }
+}

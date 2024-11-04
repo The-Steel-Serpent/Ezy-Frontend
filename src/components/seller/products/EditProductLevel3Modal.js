@@ -10,7 +10,9 @@ import {
     addSomeProductSize,
     addSomeProductVarientLevel3,
     deleteSomeProductClassify,
+    deleteSomeProductSize,
     deleteSomeProductVarientsByClassify,
+    deleteSomeProductVarientsBySize,
     findClassifiesID,
     getProductSize,
     updateClassifyTypeName,
@@ -481,77 +483,136 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
         }
     }
 
+    // delete varient
+    const handleDeleteVarient = async (product_size_ids) => {
+        const deleteSomeProductVarientsBySizeResult = await deleteSomeProductVarientsBySize(product_size_ids);
+        if (deleteSomeProductVarientsBySizeResult.success) {
+            console.log("Delete product varients successfully");
+            const deleteSomeProductSizeResult = await deleteSomeProductSize(product_size_ids);
+            if (deleteSomeProductSizeResult.success) {
+                console.log("Delete product size successfully");
+                message.success("Xóa thành công " + product_size_ids.length + " phân loại");
+                return true;
+            } else {
+                console.error("Delete product size failed");
+                message.error("Cập nhật phân loại thất bại");
+                return false;
+            }
+        }
+        else {
+            if (deleteSomeProductVarientsBySizeResult?.status === 400) {
+                message.error('Có phân loại đang được sử dụng không thể xóa');
+                return false;
+            }
+            else {
+                console.error("Delete product varients failed");
+                message.error("Cập nhật phân loại thất bại");
+                return false;
+            }
+        }
+    }
+    const isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+    const resetDataSourceAndCancel = () => {
+        resetDataSource();
+        onCancel();
+    };
 
     const handleSubmit = async () => {
-        const addedClassifyRows = state.classify_rows.filter(row => !state.initial_data.classify_rows.some(initialRow => initialRow.key === row.key));
-        const removedClassifyRows = state.initial_data.classify_rows.filter(initialRow => !state.classify_rows.some(row => row.key === initialRow.key));
-        const updatedClassifyRows = state.classify_rows.filter(row => state.initial_data.classify_rows.some(initialRow => initialRow.key === row.key && initialRow !== row));
+        // Xác định các hàng phân loại được thêm, xóa và cập nhật với so sánh sâu
+        const addedClassifyRows = state.classify_rows.filter(
+            row => !state.initial_data.classify_rows.some(
+                initialRow => initialRow.product_varient_id === row.product_varient_id && initialRow.key === row.key
+            )
+        );
 
-        const addedVarientRows = state.varient_rows.filter(row => !state.initial_data.varient_rows.some(initialRow => initialRow.key === row.key));
-        const removedVarientRows = state.initial_data.varient_rows.filter(initialRow => !state.varient_rows.some(row => row.key === initialRow.key));
-        const updatedVarientRows = state.varient_rows.filter(row => state.initial_data.varient_rows.some(initialRow => initialRow.key === row.key && initialRow !== row));
+        const removedClassifyRows = state.initial_data.classify_rows.filter(
+            initialRow => !state.classify_rows.some(
+                row => row.product_varient_id === initialRow.product_varient_id && row.key === initialRow.key
+            )
+        );
 
-        console.log('Initial Classify rows:', state.initial_data.classify_rows);
-        // Check and log actions based on changes
+        const updatedClassifyRows = state.classify_rows.filter(
+            row => state.initial_data.classify_rows.some(
+                initialRow => initialRow.product_varient_id === row.product_varient_id &&
+                    initialRow.key === row.key &&
+                    !isEqual(initialRow, row)
+            )
+        );
+
+        // Lọc các hàng biến thể
+        const addedVarientRows = state.varient_rows.filter(
+            row => !state.initial_data.varient_rows.some(
+                initialRow => initialRow.product_varient_id === row.product_varient_id && initialRow.key === row.key
+            )
+        );
+
+        const removedVarientRows = state.initial_data.varient_rows.filter(
+            initialRow => !state.varient_rows.some(
+                row => row.product_varient_id === initialRow.product_varient_id && row.key === initialRow.key
+            )
+        );
+
+        const updatedVarientRows = state.varient_rows.filter(
+            row => state.initial_data.varient_rows.some(
+                initialRow => initialRow.product_varient_id === row.product_varient_id &&
+                    initialRow.key === row.key &&
+                    !isEqual(initialRow, row)
+            )
+        );
         let check;
+
+        // Xử lý các hàng phân loại cập nhật
         if (updatedClassifyRows.length > 0) {
             console.log('Updated classify rows action is performed:', updatedClassifyRows);
             const checkThumb = checkThumbnailChanges(updatedClassifyRows, state.initial_data.classify_rows);
             if (checkThumb.length > 0) {
                 const update_thumbnail = checkThumb.map((item) => item.classify_image[0]);
                 check = await updateClassifyThumbnailChanges(updatedClassifyRows, update_thumbnail);
-                if (!check) {
-                    resetDataSource();
-                    onCancel();
-                    return;
-                }
-            }
-            else {
+                if (!check) return resetDataSourceAndCancel();
+            } else {
                 check = await updateClassifyNonThumbnailChanges(updatedClassifyRows);
-                if (!check) {
-                    resetDataSource();
-                    onCancel();
-                    return;
-                }
+                if (!check) return resetDataSourceAndCancel();
             }
         }
+
+        // Xử lý các hàng phân loại xóa
         if (removedClassifyRows.length > 0) {
             console.log('Removed classify rows action is performed:', removedClassifyRows);
             const product_classify_ids = removedClassifyRows.map(row => row.product_classify_id);
-            console.log('Product classify ids:', product_classify_ids);
             check = await deleteProductClassifyVarients(product_classify_ids);
-            if (!check) {
-                resetDataSource();
-                onCancel();
-                return;
-            }
+            if (!check) return resetDataSourceAndCancel();
         }
+
+        // Xử lý các hàng phân loại thêm
         if (addedClassifyRows.length > 0) {
             console.log('Added classify rows action is performed:', addedClassifyRows);
             check = await addProductClassify(addedClassifyRows);
-            if (!check) {
-                resetDataSource();
-                onCancel();
-                return;
-            }
+            if (!check) return resetDataSourceAndCancel();
         }
 
+        // Xử lý các hàng biến thể cập nhật
+        if (updatedVarientRows.length > 0) {
+            console.log('Updated variant rows action is performed:', updatedVarientRows);
+            // Thêm các xử lý khác nếu cần
+        }
+
+        // Xử lý các hàng biến thể thêm
         if (addedVarientRows.length > 0) {
             console.log('Added variant rows action is performed:', addedVarientRows);
             check = await handelAddProductVarient(addedVarientRows);
-            if (!check) {
-                resetDataSource();
-                onCancel();
-                return;
-            }
-        }
-        if (removedVarientRows.length > 0) {
-            console.log('Removed variant rows action is performed:', removedVarientRows);
-        }
-        if (updatedVarientRows.length > 0) {
-            console.log('Updated variant rows action is performed:', updatedVarientRows);
+            if (!check) return resetDataSourceAndCancel();
         }
 
+        // Xử lý các hàng biến thể xóa
+        if (removedVarientRows.length > 0) {
+            console.log('Removed variant rows action is performed:', removedVarientRows);
+            const product_size_ids = removedVarientRows.map(row => row.product_size_id);
+            check = await handleDeleteVarient(product_size_ids);
+            if (!check) return resetDataSourceAndCancel();
+        }
+
+        // Kiểm tra nếu không có thay đổi nào
         if (
             addedClassifyRows.length === 0 &&
             removedClassifyRows.length === 0 &&
@@ -563,25 +624,28 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             console.log('No action is performed');
         }
 
-        // update classify type
+        // Cập nhật loại phân loại nếu cần thiết
         if (state.classify_type !== product.ProductVarients[0]?.ProductClassify?.type_name) {
-            const update_type_name_result = await updateClassifyTypeName({ product_id: product.product_id, type_name: state.classify_type });
+            const update_type_name_result = await updateClassifyTypeName({
+                product_id: product.product_id,
+                type_name: state.classify_type
+            });
+
             if (update_type_name_result.success) {
                 console.log('Update type name successfully');
-            }
-            else {
+            } else {
                 console.error('Update type name failed');
                 message.error('Cập nhật phân loại thất bại');
-                resetDataSource();
-                onCancel();
+                return resetDataSourceAndCancel();
             }
         }
 
+        // Hoàn thành, tắt trạng thái submit loading và reset lại nguồn dữ liệu
         dispatch({ type: 'SET_SUBMIT_LOADING', payload: false });
-        // message.success('Cập nhật phân loại thành công');
         resetDataSource();
         onCancel();
     };
+
 
     const handleDownToLevel1 = () => {
         dispatch({ type: 'SET_CLASSIFY_TYPE', payload: '' });
@@ -678,7 +742,9 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                         key: varient_rows.length + 1,
                         varient_name,
                         error_varient_name: '',
-                        touch: false
+                        touch: false,
+                        product_size_id: item.ProductSize.product_size_id,
+                        product_varient_id: item.product_varients_id
                     });
                 }
                 // console.log('Item:', varient_name);
