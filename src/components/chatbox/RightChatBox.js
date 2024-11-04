@@ -27,20 +27,7 @@ import {
 import toast from "react-hot-toast";
 import { se } from "date-fns/locale";
 const ImageChatbox = withSuspense(lazy(() => import("./ImageChatbox")));
-const items = [
-  {
-    label: "Tất cả",
-    key: "0",
-  },
-  {
-    label: "Chưa đọc",
-    key: "1",
-  },
-  {
-    label: "Đã Ghim",
-    key: "2",
-  },
-];
+
 const conversationDropdownItems = (props) => (
   <Menu className="hover-dropdown" style={{ padding: "16px", width: "215px" }}>
     <Menu.Item style={{ padding: "0px" }}>
@@ -49,22 +36,7 @@ const conversationDropdownItems = (props) => (
         <span className="text-base">{props.name}</span>
       </div>
     </Menu.Item>
-    <Menu.Item style={{ padding: "0px" }}>
-      <Divider className="mt-2 mb-0" />
-    </Menu.Item>
-    <Menu.Item style={{ padding: "8px 0px" }}>
-      <div className="w-full flex justify-between">
-        <span className="text-xs text-[#333]">Tắt thông báo</span>
-        <Switch size="small" defaultChecked={false} />
-      </div>
-    </Menu.Item>
-    <Menu.Item style={{ padding: "8px 0px" }}>
-      <div className="w-full flex justify-between">
-        <span className="text-xs text-[#333]">Chặn người dùng</span>
-        <Switch size="small" defaultChecked={false} />
-      </div>
-    </Menu.Item>
-    <Menu.Item style={{ padding: "8px 0px" }}>
+    <Menu.Item style={{ padding: "8px 0px", marginTop: "4px" }}>
       <div className="w-full flex justify-between items-center">
         <span className="text-xs text-[#333]">Tố cáo người dùng</span>
         <FaAngleRight className="text-[#999]" />
@@ -86,7 +58,7 @@ const conversationDropdownItems = (props) => (
 );
 const RightChatBox = (props) => {
   //Redux State
-  const { state, selectedUserRef } = useMessages();
+  const { state, selectedUserRef, cache } = useMessages();
   const user = useSelector((state) => state?.user);
   const [dataUser, setDataUser] = useState(null);
   const [allMessage, setAllMessage] = useState([]);
@@ -103,6 +75,8 @@ const RightChatBox = (props) => {
   const inputRef = useRef(null);
   const chatboxRef = useRef(null);
   const unsubscribeRef = useRef(null);
+  const loadMoreRef = useRef(null);
+  const selectedUserIDRef = useRef(state.selectedUserID);
   //Handlers
   const handleOnChange = useCallback(
     (e) => {
@@ -214,6 +188,12 @@ const RightChatBox = (props) => {
         setMessage({
           text: "",
         });
+        if (currMessage.current) {
+          currMessage.current.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+          });
+        }
         setFiles([]);
       }
     },
@@ -277,11 +257,6 @@ const RightChatBox = (props) => {
       }
     }
   };
-  useEffect(() => {
-    if (currMessage.current) {
-      currMessage.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  }, [allMessage]);
 
   //********************* */
   useEffect(() => {
@@ -305,39 +280,94 @@ const RightChatBox = (props) => {
   }, [state.selectedUserID]);
 
   useEffect(() => {
+    const initializeSubscription = async () => {
+      const { unsubscribe, loadMore } = await subscribeToMessages(
+        user?.user_id,
+        state.selectedUserID,
+        (newMessages) => {
+          const isMessageFromSelectedUser = newMessages.every(
+            (msg) =>
+              (msg.sender_id === selectedUserIDRef.current &&
+                msg.receiver_id === user?.user_id) ||
+              (msg.receiver_id === selectedUserIDRef.current &&
+                msg.sender_id === user?.user_id)
+          );
+
+          if (isMessageFromSelectedUser && Array.isArray(newMessages)) {
+            setAllMessage((prevMessages) => {
+              const existingMessageIds = new Set(
+                prevMessages.map((msg) => msg.id)
+              );
+              const uniqueNewMessages = newMessages.filter(
+                (msg) =>
+                  !existingMessageIds.has(msg.id) && msg.createdAt !== null
+              );
+              if (uniqueNewMessages.length > 0) {
+                return [...prevMessages, ...uniqueNewMessages];
+              }
+              return prevMessages;
+            });
+          }
+        },
+        (moreMessages) => {
+          const isMoreMessagesFromSelectedUser = moreMessages.every(
+            (msg) =>
+              (msg.sender_id === selectedUserIDRef.current &&
+                msg.receiver_id === user?.user_id) ||
+              (msg.receiver_id === selectedUserIDRef.current &&
+                msg.sender_id === user?.user_id)
+          );
+          if (isMoreMessagesFromSelectedUser && Array.isArray(moreMessages)) {
+            setAllMessage((prevMessages) => [...moreMessages, ...prevMessages]);
+          }
+        }
+      );
+
+      unsubscribeRef.current = unsubscribe;
+      loadMoreRef.current = loadMore;
+    };
+
     if (
       user?.user_id &&
       state.selectedUserID &&
       state.openChatBox &&
-      state.expandChatBox
+      state.expandChatBox &&
+      !unsubscribeRef.current
     ) {
+      initializeSubscription();
+      console.log("hehe"); // Call the renamed function
+    }
+
+    return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
+        unsubscribeRef.current = null;
       }
-      unsubscribeRef.current = subscribeToMessages(
-        user?.user_id,
-        state.selectedUserID,
-        (messages) => {
-          const filteredMessages = messages.filter(
-            (message) =>
-              (message.sender_id === user?.user_id &&
-                message.receiver_id === state.selectedUserID) ||
-              (message.sender_id === state.selectedUserID &&
-                message.receiver_id === user?.user_id)
-          );
-          setAllMessage(filteredMessages);
-          console.log(filteredMessages);
-        }
-      );
-
-      return () => {
-        if (unsubscribeRef.current) {
-          unsubscribeRef.current();
-        }
-      };
-    }
+    };
   }, [user, state.selectedUserID, state.openChatBox, state.expandChatBox]);
 
+  useEffect(() => {
+    selectedUserIDRef.current = state.selectedUserID;
+    setAllMessage([]);
+  }, [state.selectedUserID]);
+  const handleScroll = async (e) => {
+    const { scrollTop } = e.target;
+
+    if (
+      scrollTop === 0 &&
+      !loading &&
+      typeof loadMoreRef.current === "function"
+    ) {
+      setLoading(true);
+      try {
+        await loadMoreRef.current();
+      } catch (error) {
+        console.error("Error loading more messages:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
   return (
     <div
       className={`${props.expandChatBox ? "" : "hidden"} right-chatbox `}
@@ -468,47 +498,49 @@ const RightChatBox = (props) => {
                     files.length === 0 ? "h-[330px]" : "h-[266px]"
                   }`}
                 >
-                  <div className="w-full h-full overflow-y-scroll custom-scrollbar">
-                    {loading ? (
+                  <div
+                    className={`w-full max-h-full overflow-y-auto custom-scrollbar`}
+                    onScroll={handleScroll}
+                  >
+                    {loading && (
                       <div className="w-full h-full flex justify-center items-center ">
                         <Spin className="text-primary" />
                       </div>
-                    ) : (
-                      allMessage?.map((message) => {
-                        return (
-                          <div
-                            className={`message-container ${
-                              user?.user_id === message.sender_id
-                                ? "sender"
-                                : "receiver"
-                            }`}
-                            ref={currMessage}
-                          >
-                            <div className="message">
-                              {message.text && <span>{message?.text}</span>}
-                              {message.mediaUrl &&
-                                message.mediaType === "image" && (
-                                  <Image
-                                    src={message.mediaUrl}
-                                    className="size-32"
-                                  />
-                                )}
-                              {message.mediaUrl &&
-                                message.mediaType === "video" && (
-                                  <video
-                                    src={message.mediaUrl}
-                                    controls
-                                    className="size-32"
-                                  />
-                                )}
-                              <span className="text-[#666] text-xs text-end static mt-1">
-                                {handleFormatTime(message?.createdAt)}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })
                     )}
+                    {allMessage?.map((message) => {
+                      return (
+                        <div
+                          className={`message-container ${
+                            user?.user_id === message.sender_id
+                              ? "sender"
+                              : "receiver"
+                          }`}
+                          ref={currMessage}
+                        >
+                          <div className="message">
+                            {message.text && <span>{message?.text}</span>}
+                            {message.mediaUrl &&
+                              message.mediaType === "image" && (
+                                <Image
+                                  src={message.mediaUrl}
+                                  className="size-32"
+                                />
+                              )}
+                            {message.mediaUrl &&
+                              message.mediaType === "video" && (
+                                <video
+                                  src={message.mediaUrl}
+                                  controls
+                                  className="size-32"
+                                />
+                              )}
+                            <span className="text-[#666] text-xs text-end static mt-1">
+                              {handleFormatTime(message?.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

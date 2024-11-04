@@ -9,6 +9,11 @@ import {
 const MessagesContext = createContext();
 
 export const MessagesProvider = ({ children }) => {
+  const cache = {
+    conversations: {},
+    messages: {},
+    users: {},
+  };
   const [state, setState] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -28,6 +33,7 @@ export const MessagesProvider = ({ children }) => {
             expandChatBox: action.payload,
           };
         case "SET_SELECTED_USER_ID":
+          console.log(action.payload);
           return {
             ...state,
             selectedUserID: action.payload,
@@ -84,6 +90,7 @@ export const MessagesProvider = ({ children }) => {
   return (
     <MessagesContext.Provider
       value={{
+        cache,
         state,
         selectedUserRef,
         setState,

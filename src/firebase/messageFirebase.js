@@ -16,6 +16,9 @@ import {
   getDoc,
   arrayRemove,
   arrayUnion,
+  limit,
+  startAfter,
+  increment,
 } from "firebase/firestore";
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -83,10 +86,6 @@ export const uploadFile = async (file, type) => {
 };
 
 const getOrCreateConversation = async (senderId, receiverId) => {
-  const cacheKey = `${senderId}-${receiverId}`;
-  if (cache.conversations[cacheKey]) {
-    return cache.conversations[cacheKey];
-  }
   const q = query(
     conversationsCollection,
     where("participants", "array-contains", senderId)
@@ -100,7 +99,6 @@ const getOrCreateConversation = async (senderId, receiverId) => {
     // Kiểm tra nếu người nhận có trong participants
     if (data.participants.includes(receiverId)) {
       conversation = { id: doc.id, ...data };
-      cache.conversations[cacheKey] = conversation.id;
     }
   });
 
@@ -114,78 +112,137 @@ const getOrCreateConversation = async (senderId, receiverId) => {
       createdAt: serverTimestamp(),
     });
     conversation = { id: newConversationRef.id };
-    cache.conversations[cacheKey] = conversation.id;
   }
 
   return conversation.id;
 };
 
-export const subscribeToMessages = (senderId, receiverId, callback) => {
-  const cacheKey = `${senderId}-${receiverId}`;
-
-  if (cache.conversations[cacheKey]) {
-    const conversationId = cache.conversations[cacheKey];
-
-    const cachedMessages = Object.values(cache.messages).filter(
-      (message) =>
-        (message.sender_id === senderId &&
-          message.receiver_id === receiverId) ||
-        (message.sender_id === receiverId && message.receiver_id === senderId)
-    );
-
-    callback(cachedMessages);
-  }
-
+export const subscribeToMessages = (
+  senderId,
+  receiverId,
+  callback,
+  onLoadMore
+) => {
   const qConversation = query(
     conversationsCollection,
     where("participants", "array-contains", senderId)
   );
+  let lastVisible = null;
+  let conversationId = null;
 
-  return onSnapshot(qConversation, async (conversationSnapshot) => {
-    let conversationId = null;
+  const unsubscribeConversation = onSnapshot(
+    qConversation,
+    async (conversationSnapshot) => {
+      conversationId = null;
+      conversationSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.participants.includes(receiverId)) {
+          conversationId = doc.id;
+        }
+      });
 
-    conversationSnapshot.forEach((doc) => {
-      const data = doc.data();
-      if (data.participants.includes(receiverId)) {
-        conversationId = doc.id;
-        cache.conversations[cacheKey] = conversationId;
-      }
-    });
-
-    if (conversationId) {
-      const qMessages = query(
-        messagesCollection,
-        where("conversationId", "==", conversationId),
-        orderBy("createdAt")
-      );
-
-      return onSnapshot(qMessages, async (messagesSnapshot) => {
-        const messages = await Promise.all(
-          messagesSnapshot.docs.map(async (doc) => {
-            const messageData = {
-              id: doc.id,
-              ...doc.data(),
-            };
-            if (
-              (messageData.sender_id === senderId &&
-                messageData.receiver_id === receiverId) ||
-              (messageData.sender_id === receiverId &&
-                messageData.receiver_id === senderId)
-            ) {
-              cache.messages[messageData.id] = messageData;
-              return messageData;
-            }
-            return null;
-          })
+      if (conversationId) {
+        const qMessages = query(
+          messagesCollection,
+          where("conversationId", "==", conversationId),
+          orderBy("createdAt", "desc"),
+          limit(6)
         );
 
-        const filteredMessages = messages.filter((message) => message !== null);
-        callback(filteredMessages);
-      });
-    } else {
-      callback([]);
+        return onSnapshot(qMessages, async (messagesSnapshot) => {
+          const messages = await Promise.all(
+            messagesSnapshot.docs.map(async (doc) => {
+              const messageData = {
+                id: doc.id,
+                ...doc.data(),
+              };
+              if (
+                (messageData.sender_id === senderId &&
+                  messageData.receiver_id === receiverId) ||
+                (messageData.sender_id === receiverId &&
+                  messageData.receiver_id === senderId)
+              ) {
+                return {
+                  ...messageData,
+                };
+              }
+            })
+          );
+
+          lastVisible = messagesSnapshot.docs[messagesSnapshot.docs.length - 1];
+
+          // Lọc các tin nhắn hợp lệ và gọi callback
+          const filteredMessages = messages
+            .filter((message) => message !== null)
+            .sort(
+              (a, b) =>
+                (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0)
+            );
+
+          callback(filteredMessages);
+        });
+      } else {
+        // Nếu không có conversation nào, callback với mảng rỗng
+        callback([]);
+      }
     }
-  });
+  );
+  const loadMore = async () => {
+    console.log("Load more messages");
+    if (!lastVisible) {
+      console.log("No more messages to load.");
+      return;
+    }
+
+    if (lastVisible) {
+      const qMoreMessages = query(
+        messagesCollection,
+        where("conversationId", "==", conversationId),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisible),
+        limit(6)
+      );
+
+      const moreMessagesSnapshot = await getDocs(qMoreMessages);
+      const moreMessages = await Promise.all(
+        moreMessagesSnapshot.docs.map(async (doc) => {
+          const messageData = {
+            id: doc.id,
+            ...doc.data(),
+          };
+          if (
+            (messageData.sender_id === senderId &&
+              messageData.receiver_id === receiverId) ||
+            (messageData.sender_id === receiverId &&
+              messageData.receiver_id === senderId &&
+              messageData.createdAt !== null)
+          ) {
+            return {
+              ...messageData,
+            };
+          }
+        })
+      );
+      // Lọc các tin nhắn hợp lệ và gọi callback
+      const filteredMoreMessages = moreMessages.filter(
+        (message) => message !== null
+      );
+      const filteredMessages = filteredMoreMessages
+        .filter((message) => message !== null)
+        .sort(
+          (a, b) =>
+            (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0)
+        );
+      // Cập nhật tin nhắn cuối cùng
+      lastVisible =
+        moreMessagesSnapshot.docs[moreMessagesSnapshot.docs.length - 1];
+      onLoadMore(filteredMessages);
+    }
+  };
+  return {
+    unsubscribe: unsubscribeConversation,
+    loadMore: loadMore,
+  };
 };
 
 export const sendMessage = async (
@@ -199,7 +256,8 @@ export const sendMessage = async (
     // Kiểm tra hoặc tạo mới một conversation
     const conversationId = await getOrCreateConversation(senderId, receiverId);
 
-    const newMessageData = {
+    // Thêm tin nhắn mới vào collection messages với conversationId
+    await addDoc(messagesCollection, {
       conversationId,
       text: message,
       mediaUrl: mediaUrl || "",
@@ -208,53 +266,34 @@ export const sendMessage = async (
       receiver_id: receiverId,
       isRead: false,
       createdAt: serverTimestamp(),
-    };
-
-    // Thêm tin nhắn mới vào collection messages với conversationId
-    await addDoc(messagesCollection, newMessageData);
+    });
 
     console.log("Message sent successfully");
-    const newMessageId = newMessageData.id; // Bạn có thể lấy id mới từ Firestore nếu cần
-    cache.messages[newMessageId] = newMessageData;
   }
 };
 
 export const markMessagesAsRead = async (msgIds, userId) => {
   const batch = writeBatch(db);
-  const updatedIds = [];
   for (const msgId of msgIds) {
-    if (cache.messages[msgId]) {
-      const messageData = cache.messages[msgId];
+    const messageRef = doc(db, "messages", msgId);
+    const messageSnapshot = await getDoc(messageRef);
+    if (messageSnapshot.exists()) {
+      const messageData = messageSnapshot.data();
       if (messageData.receiver_id === userId && !messageData.isRead) {
-        batch.update(doc(db, "messages", msgId), { isRead: true });
-        cache.messages[msgId].isRead = true;
-        updatedIds.push(msgId);
+        batch.update(messageRef, { isRead: true });
       }
     } else {
-      const messageRef = doc(db, "messages", msgId);
-      const messageSnapshot = await getDoc(messageRef);
-      if (messageSnapshot.exists()) {
-        const messageData = messageSnapshot.data();
-        if (messageData.receiver_id === userId && !messageData.isRead) {
-          batch.update(messageRef, { isRead: true });
-          cache.messages[msgId] = { id: msgId, ...messageData, isRead: true };
-          updatedIds.push(msgId);
-        }
-      } else {
-        console.log(`No document found for messageId: ${msgId}`);
-      }
+      console.log("No document found for messageId: ${msgId}");
     }
   }
 
-  if (updatedIds.length > 0) {
-    await batch.commit();
-  }
+  await batch.commit();
 };
-export const getChattingUsers = async (userId) => {
-  if (cache.messages[userId]) {
-    return cache.messages[userId];
-  }
-
+export const getChattingUsers = async (
+  userId,
+  filterType = "",
+  filterText = ""
+) => {
   const users = new Map();
 
   // Query for sent messages
@@ -340,7 +379,32 @@ export const getChattingUsers = async (userId) => {
       };
     })
   );
-  const sortedChattingUsers = chattingUsers.sort((a, b) => {
+  const filteredChattingUsers = chattingUsers.filter((chatUser) => {
+    const { userInfo, unseenCount, isPinned } = chatUser;
+
+    // Filter based on the filterType
+    if (filterType === "unread") {
+      return unseenCount > 0;
+    } else if (filterType === "pinned") {
+      return isPinned;
+    } else {
+      return true;
+    }
+  });
+
+  const finalFilteredChattingUsers = filterText
+    ? filteredChattingUsers.filter((chatUser) => {
+        const { userInfo } = chatUser;
+        return (
+          userInfo.Shop.shop_name
+            .toLowerCase()
+            .includes(filterText.toLowerCase()) ||
+          userInfo.username.toLowerCase().includes(filterText.toLowerCase())
+        );
+      })
+    : filteredChattingUsers;
+
+  const sortedChattingUsers = finalFilteredChattingUsers.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
 
@@ -353,7 +417,7 @@ export const getChattingUsers = async (userId) => {
 
     return bCreatedAt - aCreatedAt;
   });
-  cache.messages[userId] = sortedChattingUsers;
+
   return sortedChattingUsers;
 };
 
@@ -367,8 +431,9 @@ export const subscribeToNewMessages = (userId, fetchChattingUsers) => {
           id: doc.id,
           ...doc.data(),
         };
-        cache.messages[doc.id] = messageData;
-        return messageData;
+        return {
+          ...messageData,
+        };
       })
     );
 
@@ -392,18 +457,10 @@ export const togglePinConversation = async (
     await updateDoc(doc(conversationsCollection, conversationId), {
       pinnedBy: arrayRemove(userId),
     });
-    if (cache.conversations[conversationId]) {
-      const conversationInfo = cache.conversations[conversationId];
-      conversationInfo.isPinned = false;
-    }
   } else {
     await updateDoc(doc(conversationsCollection, conversationId), {
       pinnedBy: arrayUnion(userId),
     });
-    if (cache.conversations[conversationId]) {
-      const conversationInfo = cache.conversations[conversationId];
-      conversationInfo.isPinned = true;
-    }
   }
   fetchChatting();
 };
@@ -418,18 +475,10 @@ export const toggleMuteConversation = async (
     await updateDoc(doc(conversationsCollection, conversationId), {
       mutedBy: arrayRemove(userId),
     });
-    if (cache.conversations[conversationId]) {
-      const conversationInfo = cache.conversations[conversationId];
-      conversationInfo.isMuted = false;
-    }
   } else {
     await updateDoc(doc(conversationsCollection, conversationId), {
       mutedBy: arrayUnion(userId),
     });
-    if (cache.conversations[conversationId]) {
-      const conversationInfo = cache.conversations[conversationId];
-      conversationInfo.isMuted = true;
-    }
   }
   fetchChatting();
 };
@@ -443,12 +492,10 @@ export const deleteConversation = async (conversationId) => {
   const batch = writeBatch(db);
 
   snapshot.forEach((doc) => {
-    delete cache.messages[doc.id];
     batch.delete(doc.ref);
   });
 
   const conversationRef = doc(conversationsCollection, conversationId);
-  delete cache.conversations[conversationId];
   batch.delete(conversationRef);
 
   await batch.commit();
@@ -467,18 +514,9 @@ export const markMessageAsNotRead = async (
     messageSnapshot.exists() &&
     messageSnapshot.data().receiver_id === userId
   ) {
-    await updateDoc(messageRef, {
+    await updateDoc(doc(messagesCollection, messageId), {
       isRead: !isRead,
     });
-
-    // Cập nhật cache
-    const messageData = {
-      id: messageId,
-      ...messageSnapshot.data(),
-      isRead: !isRead,
-    };
-    cache.messages[messageId] = messageData;
-
     fetchChattingUsers();
   }
 };

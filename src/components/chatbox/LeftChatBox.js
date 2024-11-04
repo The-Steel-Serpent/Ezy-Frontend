@@ -47,26 +47,26 @@ import { FaImage } from "react-icons/fa6";
 import { FaVideo } from "react-icons/fa";
 import { IoIosWarning } from "react-icons/io";
 import { useMessages } from "../../providers/MessagesProvider";
-
+import { debounce } from "lodash";
 const items = [
   {
     label: "Tất cả",
-    key: "0",
+    key: "all",
   },
   {
     label: "Chưa đọc",
-    key: "1",
+    key: "unread",
   },
   {
     label: "Đã Ghim",
-    key: "2",
+    key: "pinned",
   },
 ];
 
 const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
   //Redux state
   const user = useSelector((state) => state.user);
-  const { state, handleUserSelected, handleUnsetUserSelected } = useMessages();
+  const { state, handleUnsetUserSelected } = useMessages();
   //States
   const [loading, setLoading] = useState(false);
   const [openModalDeleteConversation, setOpenModalDeleteConversation] =
@@ -74,14 +74,39 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
   const conversationIdRef = useRef(null);
   const [allUser, setAllUser] = useState([]);
   const [search, setSearch] = useState("");
-  const [searchUser, setSearchUser] = useState([]);
   const [selectedDropdownSortByLabel, setSelectedDropdownSortByLabel] =
-    useState("Tất cả");
+    useState({
+      label: "Tất cả",
+      key: "all",
+    });
   //Handlers
+
+  const fetchChattingUsers = async () => {
+    try {
+      setLoading(true);
+      const users = await getChattingUsers(
+        user?.user_id,
+        selectedDropdownSortByLabel.key,
+        search
+      );
+      setAllUser(users);
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setAllUser([]);
+      setLoading(false);
+    }
+  };
+
   const handleSelectedDropdownSortByLabel = useCallback(
     (e) => {
+      const key = e.key;
       const label = e.domEvent.target.innerText;
-      setSelectedDropdownSortByLabel(label);
+      console.log(key);
+      setSelectedDropdownSortByLabel({
+        label,
+        key,
+      });
     },
     [items]
   );
@@ -124,12 +149,17 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
   }, []);
   const fetchChatting = async () => {
     try {
-      const users = await getChattingUsers(user?.user_id);
+      const users = await getChattingUsers(
+        user?.user_id,
+        selectedDropdownSortByLabel.key,
+        search
+      );
       setAllUser(users);
     } catch (error) {
       console.log(error);
     }
   };
+
   const handleMenuClick = (conversation, e) => {
     e.domEvent.stopPropagation();
     switch (e.key) {
@@ -175,26 +205,25 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
     conversationIdRef.current = null;
   };
 
-  useEffect(() => {
-    const fetchChattingUsers = async () => {
-      try {
-        setLoading(true);
-        const users = await getChattingUsers(user?.user_id);
-        setAllUser(users);
-        setLoading(false);
-      } catch (error) {
-        console.log(error);
-        setAllUser([]);
-        setLoading(false);
-      }
-    };
-    if (user?.user_id && state.openChatBox) {
-      fetchChattingUsers();
-      const unsubscribe = subscribeToNewMessages(user.user_id, fetchChatting);
+  const debouncedFetchChattingUsers = useCallback(
+    debounce(fetchChattingUsers, 600),
+    [search, selectedDropdownSortByLabel.key]
+  );
 
-      return () => unsubscribe();
+  useEffect(() => {
+    if (user?.user_id && state.openChatBox) {
+      const unsubscribe = subscribeToNewMessages(user.user_id, fetchChatting);
+      debouncedFetchChattingUsers();
+      return () => {
+        unsubscribe();
+        debouncedFetchChattingUsers.cancel();
+      };
     }
-  }, [user, state.openChatBox]);
+  }, [user, state.openChatBox, debouncedFetchChattingUsers]);
+
+  const handleSearch = (text) => {
+    setSearch(text);
+  };
 
   return (
     <>
@@ -206,7 +235,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
             prefix={<SearchOutlined className="text-slate-500" />}
             placeholder="Tìm kiếm"
             onChange={(e) => {
-              setSearch(e.target.value);
+              handleSearch(e.target.value);
             }}
             value={search}
           />
@@ -220,7 +249,7 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
           >
             <a onClick={(e) => e.preventDefault()}>
               <Space className="text-[12px] w-max">
-                {selectedDropdownSortByLabel}
+                {selectedDropdownSortByLabel.label}
                 <DownOutlined />
               </Space>
             </a>
@@ -234,27 +263,43 @@ const LeftChatBox = ({ onUserSelected, selectedUserRef }) => {
                 <Spin className="text-primary" />
               </div>
             ) : (
-              searchUser.map((user, key) => {
+              allUser.map((conversation, key) => {
                 return (
                   <div
-                    key={user?._id}
+                    key={conversation?.userInfo?.user_id}
                     className="conversation-cell"
                     onClick={() => {
-                      onUserSelected(user?._id);
+                      onUserSelected(conversation?.userInfo?.user_id);
+                      setSearch("");
                     }}
                   >
                     <img
                       className="border-0 size-8 rounded-[50%]"
-                      src={user.profile_pic}
+                      src={
+                        conversation?.userInfo?.role_id === 2
+                          ? conversation?.userInfo?.Shop?.logo_url
+                          : conversation?.userInfo?.avt_url
+                      }
+                      alt={
+                        conversation?.userInfo?.role_id === 2
+                          ? conversation?.userInfo?.Shop?.shop_name
+                          : conversation?.userInfo?.username
+                      }
                     />
                     <div className="flex-1 overflow-hidden flex ml-2 flex-col justify-center">
                       <div className="flex items-center justify-between overflow-hidden">
                         <div className="flex mr-2 overflow-hidden">
                           <div
-                            title={user.username}
+                            title={
+                              conversation?.userInfo?.role_id === 2
+                                ? conversation?.userInfo?.Shop?.shop_name
+                                : conversation?.userInfo?.username
+                            }
                             className="flex-1 text-[#333] text-base overflow-hidden whitespace-nowrap text-ellipsis  font-[500]"
                           >
-                            {user.username}
+                            {conversation?.userInfo?.role_id === 2
+                              ? conversation?.userInfo?.Shop?.shop_name
+                              : conversation?.userInfo?.username}
                           </div>
                         </div>
                       </div>
