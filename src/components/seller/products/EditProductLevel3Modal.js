@@ -6,9 +6,11 @@ import { MdOutlineLeakRemove } from "react-icons/md";
 import { CiSquarePlus, CiSquareRemove } from "react-icons/ci";
 import uploadFile from '../../../helpers/uploadFile';
 import {
+    addProductVarient,
     addSomeClassify,
     addSomeProductSize,
     addSomeProductVarientLevel3,
+    addSomeProductVarientsByClassifies,
     deleteSomeProductClassify,
     deleteSomeProductSize,
     deleteSomeProductVarientsByClassify,
@@ -16,7 +18,9 @@ import {
     findClassifiesID,
     getProductSize,
     updateClassifyTypeName,
-    updateProductClassify
+    updateProductClassify,
+    updateSomeProductSize,
+    updateTypeOfProductSize
 } from '../../../services/productService';
 const initialState = {
     classify_type: null,
@@ -38,7 +42,8 @@ const initialState = {
     enable_submit: false,
     submit_loading: false,
     initial_data: null,
-    down_to_level_1: false
+    down_to_level_1: false,
+    down_to_level_2: false,
 
 }
 const reducer = (state, action) => {
@@ -71,6 +76,8 @@ const reducer = (state, action) => {
             return { ...state, initial_data: action.payload }
         case 'SET_DOWN_TO_LEVEL_1':
             return { ...state, down_to_level_1: action.payload }
+        case 'SET_DOWN_TO_LEVEL_2':
+            return { ...state, down_to_level_2: action.payload }
         case 'RESET':
             return initialState
         default:
@@ -189,6 +196,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
         }
     }
 
+
     const handleVarientTypeChange = (value) => {
         dispatch({ type: 'SET_TOUCH', payload: { name: 'varient_type', value: true } })
         dispatch({ type: 'SET_VARIENT_TYPE', payload: value })
@@ -264,6 +272,13 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
         }
 
         if (classifyTypeValid && classifyRowsValid && varientTypeValid && varientRowsValid) {
+            enableSubmit = true;
+        }
+
+        if (state.down_to_level_1) {
+            enableSubmit = true;
+        }
+        if (state.down_to_level_2) {
             enableSubmit = true;
         }
         dispatch({ type: 'SET_ENABLE_SUBMIT', payload: enableSubmit });
@@ -452,7 +467,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
         if (addSomeSizeResult.success) {
             console.log("Add product size successfully", addSomeSizeResult.data);
             const classifyIdsRes = await findClassifiesID({ product_id: product.product_id });
-            if(classifyIdsRes.success) {
+            if (classifyIdsRes.success) {
                 const addSomeProductVarientLevel3Result = await addSomeProductVarientLevel3({
                     product_id: product.product_id,
                     product_classify_ids: classifyIdsRes.data.map(item => item.product_classify_id),
@@ -511,6 +526,26 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             }
         }
     }
+
+    // update varient
+
+    const handleUpdateVarient = async (product_size_ids, product_size_names, type_of_size) => {
+        const updateSomeProductSizeResult = await updateSomeProductSize({
+            product_size_ids: product_size_ids,
+            product_size_names: product_size_names,
+            type_of_size: type_of_size
+        });
+        if (updateSomeProductSizeResult.success) {
+            console.log("Update product size successfully");
+            message.success("Cập nhật thành công " + product_size_ids.length + " phân loại");
+            return true;
+        } else {
+            console.error("Update product size failed");
+            message.error("Cập nhật phân loại thất bại");
+            return false;
+        }
+    }
+
     const isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
     const resetDataSourceAndCancel = () => {
@@ -519,7 +554,10 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
     };
 
     const handleSubmit = async () => {
-        // Xác định các hàng phân loại được thêm, xóa và cập nhật với so sánh sâu
+        dispatch({ type: 'SET_SUBMIT_LOADING', payload: true });
+        // Identify added, deleted, and updated rows with comparative depth
+
+        // filter added, removed, updated classify rows
         const addedClassifyRows = state.classify_rows.filter(
             row => !state.initial_data.classify_rows.some(
                 initialRow => initialRow.product_varient_id === row.product_varient_id && initialRow.key === row.key
@@ -540,7 +578,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             )
         );
 
-        // Lọc các hàng biến thể
+        // filter added, removed, updated varient rows
         const addedVarientRows = state.varient_rows.filter(
             row => !state.initial_data.varient_rows.some(
                 initialRow => initialRow.product_varient_id === row.product_varient_id && initialRow.key === row.key
@@ -562,21 +600,31 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
         );
         let check;
 
-        // Xử lý các hàng phân loại cập nhật
         if (updatedClassifyRows.length > 0) {
             console.log('Updated classify rows action is performed:', updatedClassifyRows);
-            const checkThumb = checkThumbnailChanges(updatedClassifyRows, state.initial_data.classify_rows);
-            if (checkThumb.length > 0) {
-                const update_thumbnail = checkThumb.map((item) => item.classify_image[0]);
-                check = await updateClassifyThumbnailChanges(updatedClassifyRows, update_thumbnail);
+
+            // Kiểm tra các thay đổi liên quan đến thumbnail
+            const rowsWithThumbnailChange = checkThumbnailChanges(updatedClassifyRows, state.initial_data.classify_rows);
+
+            // Các hàng cập nhật có thumbnail thay đổi
+            if (rowsWithThumbnailChange.length > 0) {
+                const update_thumbnail = rowsWithThumbnailChange.map((item) => item.classify_image[0]);
+                check = await updateClassifyThumbnailChanges(rowsWithThumbnailChange, update_thumbnail);
                 if (!check) return resetDataSourceAndCancel();
-            } else {
-                check = await updateClassifyNonThumbnailChanges(updatedClassifyRows);
+            }
+
+            // Các hàng cập nhật không có thumbnail thay đổi
+            const rowsWithoutThumbnailChange = updatedClassifyRows.filter(
+                row => !rowsWithThumbnailChange.some(thumbnailRow => thumbnailRow.key === row.key)
+            );
+
+            if (rowsWithoutThumbnailChange.length > 0) {
+                check = await updateClassifyNonThumbnailChanges(rowsWithoutThumbnailChange);
                 if (!check) return resetDataSourceAndCancel();
             }
         }
 
-        // Xử lý các hàng phân loại xóa
+        // handle removed classify rows
         if (removedClassifyRows.length > 0) {
             console.log('Removed classify rows action is performed:', removedClassifyRows);
             const product_classify_ids = removedClassifyRows.map(row => row.product_classify_id);
@@ -584,35 +632,6 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             if (!check) return resetDataSourceAndCancel();
         }
 
-        // Xử lý các hàng phân loại thêm
-        if (addedClassifyRows.length > 0) {
-            console.log('Added classify rows action is performed:', addedClassifyRows);
-            check = await addProductClassify(addedClassifyRows);
-            if (!check) return resetDataSourceAndCancel();
-        }
-
-        // Xử lý các hàng biến thể cập nhật
-        if (updatedVarientRows.length > 0) {
-            console.log('Updated variant rows action is performed:', updatedVarientRows);
-            // Thêm các xử lý khác nếu cần
-        }
-
-        // Xử lý các hàng biến thể thêm
-        if (addedVarientRows.length > 0) {
-            console.log('Added variant rows action is performed:', addedVarientRows);
-            check = await handelAddProductVarient(addedVarientRows);
-            if (!check) return resetDataSourceAndCancel();
-        }
-
-        // Xử lý các hàng biến thể xóa
-        if (removedVarientRows.length > 0) {
-            console.log('Removed variant rows action is performed:', removedVarientRows);
-            const product_size_ids = removedVarientRows.map(row => row.product_size_id);
-            check = await handleDeleteVarient(product_size_ids);
-            if (!check) return resetDataSourceAndCancel();
-        }
-
-        // Kiểm tra nếu không có thay đổi nào
         if (
             addedClassifyRows.length === 0 &&
             removedClassifyRows.length === 0 &&
@@ -624,8 +643,95 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             console.log('No action is performed');
         }
 
-        // Cập nhật loại phân loại nếu cần thiết
-        if (state.classify_type !== product.ProductVarients[0]?.ProductClassify?.type_name) {
+        if (state.down_to_level_1) {
+            const payload = {
+                product_id: product.product_id,
+                price: 0,
+                stock: 0,
+                sale_percents: 0,
+                height: 0,
+                lenght: 0,
+                width: 0,
+                weight: 0,
+            };
+
+            const result = await addProductVarient(payload);
+            if (result.success) {
+                console.log('Add product varient successfully');
+                message.success('Xóa thành công phân loại');
+                return resetDataSourceAndCancel();
+            } else {
+                console.error('Add product varient failed');
+                message.error('Cập nhật phân loại thất bại');
+                return resetDataSourceAndCancel();
+            }
+        }
+
+
+        if (state.down_to_level_2) {
+            const classifyIdsRes = await findClassifiesID({ product_id: product.product_id });
+            if (classifyIdsRes.success) {
+                const payload = {
+                    product_id: product.product_id,
+                    product_classify_ids: classifyIdsRes.data.map(item => item.product_classify_id),
+                    product_size_id: null,
+                    price: 0,
+                    stock: 0,
+                    sale_percents: 0,
+                    height: 0,
+                    length: 0,
+                    width: 0,
+                    weight: 0
+                }
+                const down_to_level_2_result = await addSomeProductVarientsByClassifies(payload);
+                if (down_to_level_2_result.success) {
+                    console.log('Add product varient successfully');
+                    message.success('Xóa thành công phân loại 2');
+                } else {
+                    console.error('Add product varient failed');
+                    return resetDataSourceAndCancel();
+                }
+
+            }
+        }
+
+        // handle added classify rows
+        if (addedClassifyRows.length > 0) {
+            console.log('Added classify rows action is performed:', addedClassifyRows);
+            check = await addProductClassify(addedClassifyRows);
+            if (!check) return resetDataSourceAndCancel();
+        }
+
+
+        // handle added varient rows
+        if (addedVarientRows.length > 0) {
+            console.log('Added variant rows action is performed:', addedVarientRows);
+            check = await handelAddProductVarient(addedVarientRows);
+            if (!check) return resetDataSourceAndCancel();
+        }
+
+        // handle removed varient rows
+        if (removedVarientRows.length > 0) {
+            console.log('Removed variant rows action is performed:', removedVarientRows);
+            const product_size_ids = removedVarientRows.map(row => row.product_size_id);
+            check = await handleDeleteVarient(product_size_ids);
+            if (!check) return resetDataSourceAndCancel();
+        }
+
+
+
+        // handle updated varient rows
+        if (updatedVarientRows.length > 0) {
+            console.log('Updated variant rows action is performed:', updatedVarientRows);
+            const product_size_ids = updatedVarientRows.map(row => row.product_size_id);
+            const product_size_names = updatedVarientRows.map(row => row.varient_name);
+            check = await handleUpdateVarient(product_size_ids, product_size_names, state.varient_type);
+            if (!check) return resetDataSourceAndCancel();
+        }
+
+
+        // Update classify type name
+        if (state.classify_type !== product.ProductVarients[0]?.ProductClassify?.type_name && state.classify_rows.length > 0) {
             const update_type_name_result = await updateClassifyTypeName({
                 product_id: product.product_id,
                 type_name: state.classify_type
@@ -633,14 +739,33 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
 
             if (update_type_name_result.success) {
                 console.log('Update type name successfully');
+                message.success('Cập nhật tên phân loại 1 thành công');
             } else {
                 console.error('Update type name failed');
-                message.error('Cập nhật phân loại thất bại');
+                // message.error('Cập nhật phân loại thất bại');
+                return resetDataSourceAndCancel();
+            }
+        }
+        // Check if no action is performed
+
+        if (state.varient_type !== product.ProductVarients[0]?.ProductSize?.type_of_size && state.varient_rows.length > 0) {
+            const payload = {
+                product_id: product.product_id,
+                type_of_size: state.varient_type
+            }
+            const update_type_name_result = await updateTypeOfProductSize(payload);
+
+            if (update_type_name_result.success) {
+                console.log('Update type name successfully');
+                message.success('Cập nhật tên phân loại 2 thành công');
+            } else {
+                console.error('Update type name failed');
+                // message.error('Cập nhật phân loại thất bại');
                 return resetDataSourceAndCancel();
             }
         }
 
-        // Hoàn thành, tắt trạng thái submit loading và reset lại nguồn dữ liệu
+        // Reset state and close modal
         dispatch({ type: 'SET_SUBMIT_LOADING', payload: false });
         resetDataSource();
         onCancel();
@@ -653,6 +778,14 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
         dispatch({ type: 'SET_VARIENT_TYPE', payload: '' });
         dispatch({ type: 'SET_VARIENT_ROWS', payload: [] });
         dispatch({ type: 'SET_DOWN_TO_LEVEL_1', payload: true });
+        dispatch({ type: 'SET_DOWN_TO_LEVEL_2', payload: true });
+    }
+    const handleDownToLevel2 = () => {
+        dispatch({ type: 'SET_VARIENT_TYPE', payload: null })
+        dispatch({ type: 'SET_TOUCH', payload: { name: 'varient_type', value: false } })
+        dispatch({ type: 'SET_ERROR', payload: { name: 'varient_type', value: 'Hãy nhập tên phân loại' } })
+        dispatch({ type: 'SET_VARIENT_ROWS', payload: [] });
+        dispatch({ type: 'SET_DOWN_TO_LEVEL_2', payload: true });
     }
 
     useEffect(() => {
@@ -690,7 +823,8 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
         state.varient_rows,
         state.varient_type,
         state.visible_btn_add_varient,
-        state.down_to_level_1
+        state.down_to_level_1,
+        state.down_to_level_2
     ]);
 
     useEffect(() => {
@@ -776,7 +910,8 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                         Hủy
                     </Button>,
                     <Popconfirm
-                        description="Xác nhận"
+                        title="Bạn có chắc chắn muốn lưu thay đổi không?"
+                        showCancel={false}
                         onConfirm={handleSubmit}
                     >
                         <Button
@@ -788,7 +923,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                     </Popconfirm>
                 ]}
             >
-                <Row className='flex items-center mb-5 mt-5'>
+                <Row className='flex items-center mb-5 mt-5' gutter={10}>
                     <Col span={4}>
                         <div className='font-semibold'>Phân loại 1</div>
                     </Col>
@@ -796,7 +931,8 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                         <Input
                             showCount
                             maxLength={15}
-                            placeholder="Nhập tên phân loại"
+                            placeholder='ví dụ: Màu sắc v.v'
+                            disabled={state.down_to_level_1}
                             value={state.classify_type}
                             onChange={(e) => handleClassifyTypeChange(e.target.value)}
                         />
@@ -805,15 +941,16 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                     <Col span={2}>
                         <Popconfirm
                             title="Lưu ý"
-                            description="Tùy chọn này sẽ xóa tất cả các phân loại. Bạn có chắc chắn muốn thực hiện không?"
+                            description={!state.down_to_level_1 ? "Tùy chọn này sẽ xóa tất cả các phân loại. Bạn có chắc chắn muốn thực hiện không?" : "Phân loại 1 đã được xóa chọn hủy để hoàn tác"}
                             onConfirm={handleDownToLevel1}
                             okText="Xác nhận"
                             cancelText="Hủy"
+                            showCancel={!state.down_to_level_1}
+
                         >
                             <MdOutlineLeakRemove
                                 size={25}
                                 className='cursor-pointer'
-                                // onClick={() => handleRemoveClassifyRow(row.key)}
                                 color='#ff4d4f' />
                         </Popconfirm>
                     </Col>
@@ -856,12 +993,16 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                         </Col>
                     </Row>
                 ))}
-                <CiSquarePlus
-                    size={30}
-                    onClick={handleAddClassifyRow}
-                    className='mx-auto cursor-pointer'
-                    color='#327bb3'
-                />
+                {
+                    !state.down_to_level_1  && (
+                        <CiSquarePlus
+                            size={30}
+                            onClick={handleAddClassifyRow}
+                            className='mx-auto cursor-pointer'
+                            color='#327bb3'
+                        />
+                    )
+                }
                 {state.visible_btn_add_varient ? (
                     <div>
                         <p className='font-semibold'>Phân loại 2</p>
@@ -870,6 +1011,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                             icon={<GoPlus size={25} />}
                             className='text-sm'
                             onClick={handleAddVarient}
+                            disabled={state.down_to_level_1}
                         >
                             Thêm nhóm phân loại 2
                         </Button>
@@ -884,18 +1026,28 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                                 <Input
                                     showCount
                                     maxLength={15}
-                                    placeholder="Nhập tên phân loại"
+                                    placeholder='ví dụ: size v.v'
+                                    disabled={state.down_to_level_1 || state.down_to_level_2}
                                     value={state.varient_type}
                                     onChange={(e) => handleVarientTypeChange(e.target.value)}
                                 />
                                 {state.errors.varient_type && state.touchs.varient_type && (<div className='text-red-500 text-sm'>{state.errors.varient_type}</div>)}
                             </Col>
                             <Col span={2}>
-                                <CiSquareRemove
-                                    size={25}
-                                    className='cursor-pointer'
-                                    onClick={handleAddVarient}
-                                    color='#ff4d4f' />
+
+                                <Popconfirm
+                                    title="Lưu ý"
+                                    description={!state.down_to_level_2 ? "Tùy chọn này sẽ xóa phân loại 2. Bạn có chắc chắn muốn thực hiện không?" : "Phân loại 2 đã được xóa chọn hủy để hoàn tác"}
+                                    onConfirm={handleDownToLevel2}
+                                    okText="Xác nhận"
+                                    cancelText="Hủy"
+                                    showCancel={!state.down_to_level_2}
+                                >
+                                    <MdOutlineLeakRemove
+                                        size={25}
+                                        className='cursor-pointer'
+                                        color='#ff4d4f' />
+                                </Popconfirm>
                             </Col>
                         </Row>
                         {state.varient_rows.map((row) => (
@@ -919,12 +1071,16 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                                 </Col>
                             </Row>
                         ))}
-                        <CiSquarePlus
-                            size={30}
-                            onClick={handleAddVarientRow}
-                            className='mx-auto cursor-pointer'
-                            color='#327bb3'
-                        />
+                        {
+                            !state.down_to_level_2 && (
+                                <CiSquarePlus
+                                    size={30}
+                                    onClick={handleAddVarientRow}
+                                    className='mx-auto cursor-pointer'
+                                    color='#327bb3'
+                                />
+                            )
+                        }
                     </div>
                 )}
             </Modal>
