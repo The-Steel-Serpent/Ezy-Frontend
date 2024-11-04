@@ -826,7 +826,7 @@ const SaleInformation = ({ onData }) => {
                                                     onChange={(e) => dispatch({ type: 'SET_CLASSIFY_TYPE_NAME', payload: e.target.value })}
                                                     showCount
                                                     maxLength={15}
-                                                    placeholder='ví du: Màu sắc v.v'
+                                                    placeholder='ví dụ: Màu sắc v.v'
                                                     className='w-64'
                                                 />
                                             </Form.Item>

@@ -5,7 +5,7 @@ import { RiImageAddFill } from 'react-icons/ri';
 import { CiSquarePlus, CiSquareRemove } from "react-icons/ci";
 import { MdOutlineLeakRemove } from "react-icons/md";
 import uploadFile from '../../../helpers/uploadFile';
-import { addProductClassify, addProductVarient, deleteSomeProductClassify, deleteSomeProductVarients, updateProductClassify } from '../../../services/productService';
+import { addProductClassify, addProductSize, addProductVarient, deleteAllProductVarients, deleteSomeProductClassify, deleteSomeProductVarients, findClassifiesID, getProductSize, resetProductStock, updateClassifyTypeName, updateProductClassify } from '../../../services/productService';
 const initialState = {
     classify_type: null,
     classifies_name: [],
@@ -25,7 +25,8 @@ const initialState = {
     },
     enable_submit: false,
     submit_loading: false,
-    initial_data: null
+    initial_data: null,
+    down_to_level_1: false
 }
 const reducer = (state, action) => {
     switch (action.type) {
@@ -55,6 +56,8 @@ const reducer = (state, action) => {
             return { ...state, submit_loading: action.payload }
         case 'SET_INITIAL_DATA':
             return { ...state, initial_data: action.payload }
+        case 'SET_DOWN_TO_LEVEL_1':
+            return { ...state, down_to_level_1: action.payload }
         case 'RESET':
             return initialState
         default:
@@ -250,6 +253,10 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
         if (classifyTypeValid && classifyRowsValid && varientTypeValid && varientRowsValid) {
             enableSubmit = true;
         }
+
+        if (state.down_to_level_1) {
+            enableSubmit = true;
+        }
         dispatch({ type: 'SET_ENABLE_SUBMIT', payload: enableSubmit });
     };
 
@@ -287,8 +294,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             if (thumbnails.length === 0) {
                 console.error("Failed to upload thumbnails.");
                 message.error("Cập nhật phân loại thất bại");
-                resetDataSource();
-                onCancel();
+                return false;
             }
             const updatePromises = thumbnails.map((thumbnail, index) => {
                 if (updatedClassifyRows[index]) {
@@ -305,17 +311,17 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             if (updatePromises.length > 0) {
                 await Promise.all(updatePromises);
                 console.log("All updates completed successfully.");
+                message.success("Cập nhật thành công " + updatePromises.length + " phân loại");
+                return true;
             } else {
                 console.log("No updates were made.");
                 message.error("Cập nhật phân loại thất bại");
-                resetDataSource();
-                onCancel();
+                return false;
             }
         } catch (error) {
             console.error("Error updating product classify:", error);
             message.error("Cập nhật phân loại thất bại");
-            resetDataSource();
-            onCancel();
+            return false;
         }
     };
 
@@ -332,15 +338,16 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             if (updatePromises.length > 0) {
                 await Promise.all(updatePromises);
                 console.log("All updates completed successfully.");
+                return true;
             } else {
                 console.log("No updates were made.");
                 message.error("Cập nhật phân loại thất bại");
+                return false;
             }
         } catch (error) {
             console.error("Error updating product classify:", error);
             message.error("Cập nhật phân loại thất bại");
-            resetDataSource();
-            onCancel();
+            return false;
         }
     }
 
@@ -352,17 +359,23 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             const deteleClassifyResult = await deleteSomeProductClassify(product_classify_ids);
             if (deteleClassifyResult.success) {
                 console.log("Delete product classify successfully");
+                return true;
             } else {
                 console.error("Delete product classify failed");
                 message.error("Cập nhật phân loại thất bại");
-                resetDataSource();
-                onCancel();
+                return false;
             }
         } else {
-            console.error("Delete product varients failed");
-            message.error("Cập nhật phân loại thất bại");
-            resetDataSource();
-            onCancel();
+            if (deleteVarientsResult?.status === 400) {
+                message.error('Sản phẩm này đang được sử dụng không thể xóa phân loại');
+                console.error("Helloooooooooooooo", deleteVarientsResult);
+                return false;
+            }
+            else {
+                console.error("Delete product varients failed");
+                message.error("Cập nhật phân loại thất bại");
+                return false;
+            }
         }
     }
 
@@ -370,78 +383,200 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
     const addProductClassifyVarients = async (addedClassifyRows) => {
         const added_thumbnails = addedClassifyRows.map((item) => item.classify_image[0]);
         const added_classify_names = addedClassifyRows.map((item) => item.classify_name);
+
+        // Tải lên các thumbnail
         const thumbnails = await uploadClassifyThumnail(added_thumbnails);
         if (thumbnails.length === 0) {
             console.error("Failed to upload thumbnails.");
             message.error("Cập nhật phân loại thất bại");
-            resetDataSource();
-            onCancel();
+            return false;
         }
-        const addClassifyPromises = thumbnails.map((thumbnail, index) => {
+
+        // Thực hiện thêm phân loại tuần tự
+        const product_classify_ids = [];
+        for (let i = 0; i < thumbnails.length; i++) {
             const add_classify_promise = {
                 product_id: product.product_id,
-                thumbnail: thumbnail,
+                thumbnail: thumbnails[i],
                 type_name: state.classify_type,
-                product_classify_name: added_classify_names[index],
+                product_classify_name: added_classify_names[i],
             };
-            return addProductClassify(add_classify_promise);
-        });
-        if (addClassifyPromises.length > 0) {
-            const addClassifyResult = await Promise.all(addClassifyPromises);
-            if (addClassifyResult.length === addedClassifyRows.length) {
-                console.log("All adds completed successfully", addClassifyResult);
-                const product_classify_ids = addClassifyResult.map((item) => item.data.product_classify_id);
-                const addVarientsPromises = product_classify_ids.map((product_classify_id, index) => {
-                    const add_varients_promise = {
+
+            try {
+                const addClassifyResult = await addProductClassify(add_classify_promise);
+                product_classify_ids.push(addClassifyResult.data.product_classify_id);
+            } catch (error) {
+                console.error("Failed to add classify:", error);
+                message.error("Cập nhật phân loại thất bại");
+                return false;
+            }
+        }
+
+        // Thực hiện thêm các biến thể tuần tự
+        for (let i = 0; i < product_classify_ids.length; i++) {
+            const add_varients_promise = {
+                product_id: product.product_id,
+                product_classify_id: product_classify_ids[i],
+                price: 0,
+                stock: 0,
+                sale_percents: 0,
+                height: 0,
+                length: 0,
+                width: 0,
+                weight: 0
+            };
+
+            try {
+                await addProductVarient(add_varients_promise);
+            } catch (error) {
+                console.error("Failed to add variant:", error);
+                message.error("Cập nhật phân loại thất bại");
+                return false;
+            }
+        }
+
+        console.log("All adds completed successfully");
+        message.success("Thêm thành công " + product_classify_ids.length + " phân loại");
+        return true;
+    };
+
+    // add varient
+    const handleAddSizes = async (varient_rows) => {
+        try {
+            const sizePromises = varient_rows.map(async (row) => {
+                try {
+                    const sizePayload = {
                         product_id: product.product_id,
-                        product_classify_id: product_classify_id
+                        product_size_name: row.varient_name,
+                        type_of_size: state.varient_type,
                     };
-                    return addProductVarient(add_varients_promise);
-                });
-                const addVarientsResult = await Promise.all(addVarientsPromises);
-                if (addVarientsResult.length === product_classify_ids.length) {
-                    console.log("All adds completed successfully", addVarientsResult);
+                    const res = await addProductSize(sizePayload);
+                    return res;
+                } catch (error) {
+                    console.error('Error adding product size:', error);
+                    throw error;
+                }
+            });
+
+            const sizeResults = await Promise.all(sizePromises);
+            console.log("Size Results: ", sizeResults);
+            return sizeResults;
+        } catch (error) {
+            console.error('Error in handleAddSizes:', error);
+            return [];
+        }
+    };
+    const handleUpdateProductLevel3 = async (varient_rows) => {
+        console.log('Product:', product.product_id);
+        try {
+            const classifyIdResult = await findClassifiesID({ product_id: product.product_id });
+            if (classifyIdResult.success) {
+                console.log('Classify Ids:', classifyIdResult.data);
+                const sizes = await handleAddSizes(varient_rows);
+                if (sizes.length === 0) {
+                    message.error('Lỗi khi thêm phân loại sản phẩm');
+                    return false;
                 }
                 else {
-                    console.error("Some adds failed");
-                    message.error("Cập nhật phân loại thất bại");
-                    resetDataSource();
-                    onCancel();
+                    const sizeRes = await getProductSize({ product_id: product.product_id });
+                    console.log('Size Result:', sizeRes);
+                    const varientsResults = [];
+                    for (const classifyResult of classifyIdResult.data) {
+                        const varientResults = [];
+                        for (const size of sizeRes.data) {
+                            const varientData = {
+                                product_id: product.product_id,
+                                product_classify_id: classifyResult.product_classify_id,
+                                product_size_id: size.product_size_id,
+                                price: 0,
+                                stock: 0,
+                                sale_percents: 0,
+                                height: 0,
+                                length: 0,
+                                width: 0,
+                                weight: 0
+                            };
+                            try {
+                                const res = await addProductVarient(varientData);
+                                varientResults.push(res);
+                            } catch (error) {
+                                console.error('Error adding product varient:', error);
+                                return false;
+                            }
+                        }
+                        varientsResults.push(varientResults);
+                    }
+                    console.log("Varient Results: ", varientsResults);
+                    message.success('Cập nhật phân loại thành công');
+                    return true;
                 }
-            } else {
-                console.error("Some adds failed");
-                message.error("Cập nhật phân loại thất bại");
-                resetDataSource();
-                onCancel();
             }
-        } else {
-            console.log("No adds were made.");
-            message.error("Cập nhật phân loại thất bại");
-            resetDataSource();
-            onCancel();
+            else {
+                console.log('Error in find classify id:', classifyIdResult);
+                message.error('Cập nhật phân loại thất bại');
+                return false;
+            }
+        } catch (error) {
+            console.log('Error in find classify id:', error);
+            message.error('Cập nhật phân loại thất bại');
+            return false;
         }
     }
 
+    const isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+    const resetDataSourceAndCancel = () => {
+        resetDataSource();
+        onCancel();
+    };
+
     const handleSubmit = async () => {
         dispatch({ type: 'SET_SUBMIT_LOADING', payload: true });
-        const addedClassifyRows = state.classify_rows.filter(row => !state.initial_data.classify_rows.some(initialRow => initialRow.key === row.key));
-        const removedClassifyRows = state.initial_data.classify_rows.filter(initialRow => !state.classify_rows.some(row => row.key === initialRow.key));
-        const updatedClassifyRows = state.classify_rows.filter(row => state.initial_data.classify_rows.some(initialRow => initialRow.key === row.key && initialRow !== row));
+        const addedClassifyRows = state.classify_rows.filter(
+            row => !state.initial_data.classify_rows.some(
+                initialRow => initialRow.product_varient_id === row.product_varient_id && initialRow.key === row.key
+            )
+        );
 
+        const removedClassifyRows = state.initial_data.classify_rows.filter(
+            initialRow => !state.classify_rows.some(
+                row => row.product_varient_id === initialRow.product_varient_id && row.key === initialRow.key
+            )
+        );
+
+        const updatedClassifyRows = state.classify_rows.filter(
+            row => state.initial_data.classify_rows.some(
+                initialRow => initialRow.product_varient_id === row.product_varient_id &&
+                    initialRow.key === row.key &&
+                    !isEqual(initialRow, row)
+            )
+        );
         const addedVarientRows = state.varient_rows.filter(row => !state.initial_data.varient_rows.some(initialRow => initialRow.key === row.key));
 
         console.log('Initial Classify rows:', state.initial_data.classify_rows);
-
+        let check;
         // Check and log actions based on changes
         if (updatedClassifyRows.length > 0) {
             console.log('Updated classify rows action is performed:', updatedClassifyRows);
-            const check = checkThumbnailChanges(updatedClassifyRows, state.initial_data.classify_rows);
-            if (check.length > 0) {
-                const update_thumbnail = check.map((item) => item.classify_image[0]);
-                await updateClassifyThumbnailChanges(updatedClassifyRows, update_thumbnail);
+
+            // Kiểm tra các thay đổi liên quan đến thumbnail
+            const rowsWithThumbnailChange = checkThumbnailChanges(updatedClassifyRows, state.initial_data.classify_rows);
+
+            // Các hàng cập nhật có thumbnail thay đổi
+            if (rowsWithThumbnailChange.length > 0) {
+                const update_thumbnail = rowsWithThumbnailChange.map((item) => item.classify_image[0]);
+                check = await updateClassifyThumbnailChanges(rowsWithThumbnailChange, update_thumbnail);
+                if (!check) return resetDataSourceAndCancel();
             }
-            else {
-                await updateClassifyNonThumbnailChanges(updatedClassifyRows);
+
+            // Các hàng cập nhật không có thumbnail thay đổi
+            const rowsWithoutThumbnailChange = updatedClassifyRows.filter(
+                row => !rowsWithThumbnailChange.some(thumbnailRow => thumbnailRow.key === row.key)
+            );
+
+            if (rowsWithoutThumbnailChange.length > 0) {
+                check = await updateClassifyNonThumbnailChanges(rowsWithoutThumbnailChange);
+                if (!check) return resetDataSourceAndCancel();
             }
         }
         if (removedClassifyRows.length > 0) {
@@ -451,16 +586,31 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             console.log('Product varients ids:', product_varients_ids);
             const product_classify_ids = removedClassifyRows.map(row => row.product_classify_id);
             console.log('Product classify ids:', product_classify_ids);
-            await deleteProductClassifyVarients(product_varients_ids, product_classify_ids);
+            check = await deleteProductClassifyVarients(product_varients_ids, product_classify_ids);
+            if (!check) return resetDataSourceAndCancel();
         }
         if (addedClassifyRows.length > 0) {
             console.log('Added classify rows action is performed:', addedClassifyRows);
-            await addProductClassifyVarients(addedClassifyRows);
-
+            check = await addProductClassifyVarients(addedClassifyRows);
+            if (!check) return resetDataSourceAndCancel();
         }
 
         if (addedVarientRows.length > 0) {
             console.log('Added variant rows action is performed:', addedVarientRows);
+            // delete all old product varients
+            try {
+                const deleteAllProductVarientsResult = await deleteAllProductVarients(product.product_id);
+                if (deleteAllProductVarientsResult?.status === 400) {
+                    message.warning('Không cập nhật được phân loại 2');
+                }
+                else {
+                    await resetProductStock(product.product_id);
+                    check = await handleUpdateProductLevel3(addedVarientRows);
+                    if (!check) return resetDataSourceAndCancel();
+                }
+            } catch (error) {
+                console.log('Error in delete old varient:', error);
+            }
 
         }
 
@@ -470,20 +620,60 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             updatedClassifyRows.length === 0 &&
             addedVarientRows.length === 0
         ) {
-            // update product classify type
             console.log('No action is performed');
 
         }
         console.log('Current classify rows:', state.classify_rows);
 
+        if (state.down_to_level_1) {
+            const payload = {
+                product_id: product.product_id,
+                price: 0,
+                stock: 0,
+                sale_percents: 0,
+                height: 0,
+                lenght: 0,
+                width: 0,
+                weight: 0,
+            };
+
+            const result = await addProductVarient(payload);
+            if (result.success) {
+                console.log('Add product varient successfully');
+                return resetDataSourceAndCancel();
+            } else {
+                console.error('Add product varient failed');
+                message.error('Cập nhật phân loại thất bại');
+                return resetDataSourceAndCancel();
+            }
+        }
+
+        // update classify type
+        if (state.classify_type !== product.ProductVarients[0]?.ProductClassify?.type_name && state.classify_rows.length > 0) {
+            const update_type_name_result = await updateClassifyTypeName({ product_id: product.product_id, type_name: state.classify_type });
+            if (update_type_name_result.success) {
+                console.log('Update type name successfully');
+            }
+            else {
+                console.error('Update type name failed');
+                message.error('Cập nhật phân loại thất bại');
+                resetDataSource();
+                onCancel();
+            }
+        }
+
         dispatch({ type: 'SET_SUBMIT_LOADING', payload: false });
-        message.success('Cập nhật phân loại thành công');
+        // message.success('Cập nhật phân loại thành công');
         resetDataSource();
         onCancel();
     };
 
-    const changeToInitialData = () => {
-        dispatch({ type: 'RESET' });
+    const handleDownToLevel1 = () => {
+        dispatch({ type: 'SET_CLASSIFY_TYPE', payload: '' });
+        dispatch({ type: 'SET_CLASSIFY_ROWS', payload: [] });
+        dispatch({ type: 'SET_VARIENT_TYPE', payload: '' });
+        dispatch({ type: 'SET_VARIENT_ROWS', payload: [] });
+        dispatch({ type: 'SET_DOWN_TO_LEVEL_1', payload: true });
     }
 
     useEffect(() => {
@@ -520,7 +710,8 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
         state.classify_type,
         state.varient_rows,
         state.varient_type,
-        state.visible_btn_add_varient
+        state.visible_btn_add_varient,
+        state.down_to_level_1
     ]);
 
 
@@ -593,7 +784,8 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
                         <Input
                             showCount
                             maxLength={15}
-                            placeholder="Nhập tên phân loại"
+                            placeholder='ví dụ: Màu sắc v.v'
+                            disabled={state.down_to_level_1}
                             value={state.classify_type}
                             onChange={(e) => handleClassifyTypeChange(e.target.value)}
                         />
@@ -603,9 +795,9 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
                         <Popconfirm
                             title="Lưu ý"
                             description="Tùy chọn này sẽ xóa tất cả các phân loại. Bạn có chắc chắn muốn thực hiện không?"
-                            onConfirm={changeToInitialData}
-                            okButtonProps={<Button type="primary">Xác nhận</Button>}
-                            cancelButtonProps={<Button type="default">Hủy</Button>}
+                            onConfirm={handleDownToLevel1}
+                            okText="Xác nhận"
+                            cancelText="Hủy"
                         >
                             <MdOutlineLeakRemove
                                 size={25}
@@ -653,12 +845,17 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
                         </Col>
                     </Row>
                 ))}
-                <CiSquarePlus
-                    size={30}
-                    onClick={handleAddClassifyRow}
-                    className='mx-auto cursor-pointer'
-                    color='#327bb3'
-                />
+                {
+                    !state.down_to_level_1 === 0 && (
+                        <CiSquarePlus
+                            size={30}
+                            onClick={handleAddClassifyRow}
+                            className='mx-auto cursor-pointer'
+                            color='#327bb3'
+                        />
+                    )
+                }
+
                 {state.visible_btn_add_varient ? (
                     <div>
                         <p className='font-semibold'>Phân loại 2</p>
@@ -667,6 +864,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
                             icon={<GoPlus size={25} />}
                             className='text-sm'
                             onClick={handleAddVarient}
+                            disabled={state.down_to_level_1}
                         >
                             Thêm nhóm phân loại 2
                         </Button>
@@ -681,7 +879,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
                                 <Input
                                     showCount
                                     maxLength={15}
-                                    placeholder="Nhập tên phân loại"
+                                    placeholder='ví dụ: size v.v'
                                     value={state.varient_type}
                                     onChange={(e) => handleVarientTypeChange(e.target.value)}
                                 />

@@ -655,6 +655,7 @@ const ProductTable =
                             visible={state.visible_edit_product_level_3_modal}
                             onCancel={handleCancleEditProductModal}
                             product={state.product_edit_level}
+                            resetDataSource={resetDataSource}
                         />
                     )
                 }
