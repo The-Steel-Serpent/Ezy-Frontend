@@ -1,7 +1,18 @@
 import { Menu } from 'antd';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HomeOutlined, ProductOutlined, ShopOutlined, BarChartOutlined, GiftOutlined, UserOutlined, KeyOutlined, TeamOutlined } from '@ant-design/icons';
+import { 
+    HomeOutlined, 
+    ProductOutlined, 
+    ShopOutlined, 
+    BarChartOutlined, 
+    GiftOutlined, 
+    UserOutlined, 
+    KeyOutlined, 
+    TeamOutlined ,
+    ThunderboltOutlined,
+    TagOutlined
+} from '@ant-design/icons';
 
 const AdminSidebar = ({ role_id }) => {
     const navigate = useNavigate();
@@ -34,13 +45,33 @@ const AdminSidebar = ({ role_id }) => {
             ],
         },
         {
-            key: '/admin/event-management/sale-event/event',
+            key: '4',
             icon: <GiftOutlined />,
             label: 'Quản lý sự kiện',
             roles: [3, 4],
+            children: [
+                { 
+                    key: '/admin/event-management/sale-event/event', 
+                    icon: <GiftOutlined />, 
+                    label: 'Sự kiện khuyến mãi', roles: [3, 4] 
+                },
+                { 
+                    key: '/admin/event-management/sale-event/flash-sale', 
+                    icon: <ThunderboltOutlined />, 
+                    label: 'Flash Sale', 
+                    roles: [3, 4] 
+                },
+                {
+                    key: '/admin/event-management/sale-event/discount-voucher',
+                    icon: <TagOutlined />,
+                    label: 'Voucher',
+                    roles: [3, 4],
+                }
+                
+            ],
         },
         {
-            key: '4',
+            key: '5',
             icon: <UserOutlined />,
             label: 'Quản lý người dùng',
             roles: [3], 
@@ -50,7 +81,7 @@ const AdminSidebar = ({ role_id }) => {
             ],
         },
         {
-            key: '5',
+            key: '6',
             icon: <BarChartOutlined />,
             label: 'Thống kê',
             roles: [3, 4], 
