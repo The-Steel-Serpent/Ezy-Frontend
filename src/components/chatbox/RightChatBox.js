@@ -188,12 +188,7 @@ const RightChatBox = (props) => {
         setMessage({
           text: "",
         });
-        if (currMessage.current) {
-          currMessage.current.scrollIntoView({
-            behavior: "smooth",
-            block: "end",
-          });
-        }
+
         setFiles([]);
       }
     },
@@ -302,9 +297,12 @@ const RightChatBox = (props) => {
                 (msg) =>
                   !existingMessageIds.has(msg.id) && msg.createdAt !== null
               );
+
               if (uniqueNewMessages.length > 0) {
+                currMessage.current = uniqueNewMessages[0]?.id;
                 return [...prevMessages, ...uniqueNewMessages];
               }
+
               return prevMessages;
             });
           }
@@ -335,7 +333,6 @@ const RightChatBox = (props) => {
       !unsubscribeRef.current
     ) {
       initializeSubscription();
-      console.log("hehe"); // Call the renamed function
     }
 
     return () => {
@@ -345,7 +342,17 @@ const RightChatBox = (props) => {
       }
     };
   }, [user, state.selectedUserID, state.openChatBox, state.expandChatBox]);
-
+  useEffect(() => {
+    if (currMessage.current) {
+      const element = document.getElementById(currMessage.current);
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }
+    }
+  }, [allMessage]);
   useEffect(() => {
     selectedUserIDRef.current = state.selectedUserID;
     setAllMessage([]);
@@ -515,7 +522,8 @@ const RightChatBox = (props) => {
                               ? "sender"
                               : "receiver"
                           }`}
-                          ref={currMessage}
+                          key={message.id}
+                          id={message.id}
                         >
                           <div className="message">
                             {message.text && <span>{message?.text}</span>}
