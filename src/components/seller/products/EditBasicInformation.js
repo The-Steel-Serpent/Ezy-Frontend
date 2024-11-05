@@ -1,12 +1,10 @@
-import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { Form, Input, Upload, Button, Modal, Table, Row, Col, Select } from 'antd';
+import React, { useEffect, useReducer, useRef } from 'react';
+import { Form, Input, Upload, Button, Modal, Row, Col, Select } from 'antd';
 import { RiImageAddFill } from "react-icons/ri";
-import { RightOutlined } from '@ant-design/icons';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import axios from 'axios';
 import '../../../styles/Quill.css';
-import { getProductByID } from '../../../services/productService';
 import { getSubCategoriesByID } from '../../../services/categoriesService';
 import ModalCategory from '../category/ModalCategory';
 
@@ -51,6 +49,9 @@ const initialState = {
     },
     isCatModalVisible: false,
     selectedSubcat: null,
+    initial_file_list_product: null,
+    initial_thumbnail: null,
+   
 };
 
 const reducer = (state, action) => {
@@ -91,6 +92,10 @@ const reducer = (state, action) => {
             return { ...state, isCatModalVisible: action.payload };
         case 'SET_SELECTED_SUBCAT':
             return { ...state, selectedSubcat: action.payload };
+        case 'SET_INITIAL_FILE_LIST_PRODUCT':
+            return { ...state, initial_file_list_product: action.payload };
+        case 'SET_INITIAL_THUMBNAIL':
+            return { ...state, initial_thumbnail: action.payload };
         case 'SET_TOUCHED':
             return {
                 ...state,
@@ -128,8 +133,8 @@ const EditBasicInformation = ({ product, onData }) => {
 
     const handleUploadListProductChange = ({ fileList: newFileList }) => {
         dispatch({ type: 'SET_FILE_LIST_PRODUCT', payload: newFileList });
-        console.log("File List: ", state.fileListProduct);
-        console.log("New List: ", newFileList);
+        // console.log("File List: ", state.fileListProduct);
+        // console.log("New List: ", newFileList);
         dispatch({ type: 'SET_TOUCHED', payload: 'fileListProduct' });
     };
     const handleRemoveProductImage = (file) => {
@@ -288,16 +293,18 @@ const EditBasicInformation = ({ product, onData }) => {
                 origin: state.origin,
                 brand: state.brand,
                 fileListProduct: state.fileListProduct,
+                initial_file_list_product: state.initial_file_list_product,
                 thumbnail: state.thumbnail,
+                initial_thumbnail: state.initial_thumbnail,
                 sub_category_id: state.selectedSubcat.sub_category_id,
-                gender: state.gender,
+                gender_object: state.gender,
                 noErrorBasicInfo: true
             };
             onData(data);
-            console.log("No errors: ", state.errors);
+            // console.log("No errors: ", state.errors);
         } else {
             onData({ noErrorBasicInfo: false });
-            console.log("Errors: ", state.errors);
+            // console.log("Errors: ", state.errors);
         }
     }, [state.errors]);
 
@@ -312,21 +319,23 @@ const EditBasicInformation = ({ product, onData }) => {
                         status: 'done',
                     }
                     dispatch({ type: 'SET_THUMBNAIL', payload: [thumbail_payload] });
+                    dispatch({ type: 'SET_INITIAL_THUMBNAIL', payload: [thumbail_payload] });
                     dispatch({ type: 'SET_PRODUCT_NAME', payload: product.product_name });
                     dispatch({ type: 'SET_DESCRIPTION', payload: product.description });
                     dispatch({ type: 'SET_FILE_LIST_PRODUCT', payload: product.ProductImgs });
+                    dispatch({ type: 'SET_INITIAL_FILE_LIST_PRODUCT', payload: product.ProductImgs });
                     dispatch({ type: 'SET_ORIGIN', payload: product.origin });
                     dispatch({ type: 'SET_GENDER', payload: product.gender_object });
                     dispatch({ type: 'SET_BRAND', payload: product.brand });
                     const subCategory = await getSubCategoriesByID(product.sub_category_id);
-                    console.log('SubCategory present', subCategory.data);
+                    // console.log('SubCategory present', subCategory.data);
                     dispatch({ type: 'SET_SELECTED_SUBCAT', payload: subCategory.data });
-                    console.log('Producttttttttttttttt:', product);
+                    // console.log('Producttttttttttttttt:', product);
                     form.setFieldsValue({
                         productName: product.product_name,
                         productDescription: product.description,
                         productImages: product.productImages,
-                        productImages: product.thumbnail,
+                        thumbnail: product.thumbnail,
                         origin: product.origin,
                         gender: product.gender_object,
                         brand: product.brand,

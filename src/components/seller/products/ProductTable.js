@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import EditProductLevel1Modal from './EditProductLevel1Modal';
 import EditProductLevel2Modal from './EditProductLevel2Modal';
 import EditProductLevel3Modal from './EditProductLevel3Modal';
+import EditSaleInfoModal from './EditSaleInfoModal';
 // reducer
 const initialState = {
     productsFetch: [],
@@ -39,6 +40,7 @@ const initialState = {
     visible_edit_product_level_2_modal: false,
     visible_edit_product_level_3_modal: false,
     product_edit_level: null,
+    visible_edit_sale_info: false,
 }
 
 const reducer = (state, action) => {
@@ -103,6 +105,8 @@ const reducer = (state, action) => {
             return { ...state, visible_edit_product_level_3_modal: action.payload }
         case 'SET_PRODUCT_EDIT_LEVEL':
             return { ...state, product_edit_level: action.payload }
+        case 'SET_VISIBLE_EDIT_SALE_INFO':
+            return { ...state, visible_edit_sale_info: action.payload }
         default:
             return state;
     }
@@ -128,6 +132,11 @@ const ProductTable =
                 key: '2',
                 label: 'Phân loại',
                 onClick: () => handleVisbleEditProductModal(index)
+            },
+            {
+                key: '3',
+                label: 'Thông tin bán hàng',
+                onClick: () => handleVisbleEditSaleInfoModal(index)
             }
         ];
 
@@ -147,10 +156,16 @@ const ProductTable =
             }
         }
 
+        const handleVisbleEditSaleInfoModal = (index) => {
+            dispatch({ type: 'SET_VISIBLE_EDIT_SALE_INFO', payload: true });
+            dispatch({ type: 'SET_PRODUCT_EDIT_LEVEL', payload: state.productsFetch[index] });
+        }
+
         const handleCancleEditProductModal = () => {
             dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_1_MODAL', payload: false });
             dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_2_MODAL', payload: false });
             dispatch({ type: 'SET_VISIBLE_EDIT_PRODUCT_LEVEL_3_MODAL', payload: false });
+            dispatch({ type: 'SET_VISIBLE_EDIT_SALE_INFO', payload: false });
             dispatch({ type: 'SET_PRODUCT_EDIT_LEVEL', payload: null });
             modalRef.current.resetState();
         }
@@ -659,6 +674,14 @@ const ProductTable =
                         />
                     )
                 }
+
+                <EditSaleInfoModal 
+                    ref={modalRef}
+                    visible={state.visible_edit_sale_info}
+                    onCancel={handleCancleEditProductModal}
+                    product={state.product_edit_level}
+                    resetDataSource={resetDataSource}
+                />
 
             </div>
 

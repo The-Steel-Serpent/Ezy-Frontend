@@ -448,7 +448,7 @@ export const addSomeClassify = async (payload) => {
     try {
         const url = `${URL}add-some-classify`;
         const response = await axios.post(url, payload);
-        return response.data; 
+        return response.data;
     } catch (error) {
         console.log("Error when adding some classify:", error);
 
@@ -667,5 +667,145 @@ export const addSomeProductVarientsByClassifies = async (payload) => {
             errorMessage = "Network error or server is unreachable.";
         }
         return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const addSomeProductImages = async (payload) => {
+    try {
+        const url = `${URL}add-some-product-images`;
+        const response = await axios.post(url, payload);
+        return response.data;
+    } catch (error) {
+        console.log("Error when adding some product images:", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "Invalid input data";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const deleteSomeProductImages = async (product_imgs_ids) => {
+    try {
+        const url = `${URL}delete-some-product-images`;
+        const response = await axios.post(url, { product_imgs_ids });
+        return response.data;
+    } catch (error) {
+        console.log("Error when deleting some product images:", error);
+
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "A non-empty array of product_imgs_ids is required";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+
+        return { success: false, message: errorMessage, status: error.response?.status };
+    }
+}
+
+export const updateBasicInfoProduct = async (payload) => {
+    try {
+        const url = `${URL}update-basic-info-product`;
+        const response = await axios.post(url, payload);
+        return response.data;
+    } catch (error) {
+        console.log("Error when updating basic info of product:", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = error.response.data.message;
+                    break;
+                case 404:
+                    errorMessage = "Product not found";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const updateShippingInfo = async (payload) => {
+    try {
+        const url = `${URL}update-shipping-info`;
+        const response = await axios.post(url, payload);
+        return response.data;
+    } catch (error) {
+        console.log("Error when updating shipping info:", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "product_id is required";
+                    break;
+                case 404:
+                    errorMessage = "Product not found";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const updateSomeSaleInfoProductVarients = async (payload) => {
+    try {
+        const url = `${URL}update-some-sale-info-product-varients`;
+        const response = await axios.post(url, payload);
+        return response.data;
+    } catch (error) {
+        console.log("Error when updating some sale info of product varients:", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "product_varients_ids is required";
+                    break;
+                case 404:
+                    errorMessage = "Product varients not found";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
     }
 }

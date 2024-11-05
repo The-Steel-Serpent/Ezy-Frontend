@@ -334,7 +334,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             if (updatePromises.length > 0) {
                 await Promise.all(updatePromises);
                 console.log("All updates completed successfully.");
-                message.success("Cập nhật thành công " + updatePromises.length + " phân loại");
+                message.info("Cập nhật thành công " + updatePromises.length + " phân loại");
                 return true;
             } else {
                 console.log("No updates were made.");
@@ -361,7 +361,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             if (updatePromises.length > 0) {
                 await Promise.all(updatePromises);
                 console.log("All updates completed successfully.");
-                message.success("Cập nhật thành công " + updatePromises.length + " phân loại");
+                message.info("Cập nhật thành công " + updatePromises.length + " phân loại");
                 return true;
             } else {
                 console.log("No updates were made.");
@@ -383,7 +383,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             const deteleClassifyResult = await deleteSomeProductClassify(product_classify_ids);
             if (deteleClassifyResult.success) {
                 console.log("Delete product classify successfully");
-                message.success("Xóa thành công " + product_classify_ids.length + " phân loại");
+                message.info("Xóa thành công " + product_classify_ids.length + " phân loại");
                 return true;
             } else {
                 console.error("Delete product classify failed");
@@ -441,7 +441,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                 });
                 if (addSomeProductVarientLevel3Result.success) {
                     console.log("Add product varient successfully", addSomeProductVarientLevel3Result.data);
-                    message.success("Thêm thành công " + addSomeClassifyResult.data.length + " phân loại");
+                    message.info("Thêm thành công " + addSomeClassifyResult.data.length + " phân loại");
                     return true;
                 } else {
                     console.error("Add product varient failed", addSomeProductVarientLevel3Result);
@@ -482,7 +482,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                 });
                 if (addSomeProductVarientLevel3Result.success) {
                     console.log("Add product varient successfully", addSomeProductVarientLevel3Result.data);
-                    message.success("Thêm thành công " + addSomeSizeResult.data.length + " phân loại");
+                    message.info("Thêm thành công " + addSomeSizeResult.data.length + " phân loại");
                     return true;
                 } else {
                     console.error("Add product varient failed", addSomeProductVarientLevel3Result);
@@ -506,7 +506,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             const deleteSomeProductSizeResult = await deleteSomeProductSize(product_size_ids);
             if (deleteSomeProductSizeResult.success) {
                 console.log("Delete product size successfully");
-                message.success("Xóa thành công " + product_size_ids.length + " phân loại");
+                message.info("Xóa thành công " + product_size_ids.length + " phân loại");
                 return true;
             } else {
                 console.error("Delete product size failed");
@@ -537,7 +537,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
         });
         if (updateSomeProductSizeResult.success) {
             console.log("Update product size successfully");
-            message.success("Cập nhật thành công " + product_size_ids.length + " phân loại");
+            message.info("Cập nhật thành công " + product_size_ids.length + " phân loại");
             return true;
         } else {
             console.error("Update product size failed");
@@ -658,7 +658,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             const result = await addProductVarient(payload);
             if (result.success) {
                 console.log('Add product varient successfully');
-                message.success('Xóa thành công phân loại');
+                message.info('Xóa thành công phân loại');
                 return resetDataSourceAndCancel();
             } else {
                 console.error('Add product varient failed');
@@ -686,7 +686,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
                 const down_to_level_2_result = await addSomeProductVarientsByClassifies(payload);
                 if (down_to_level_2_result.success) {
                     console.log('Add product varient successfully');
-                    message.success('Xóa thành công phân loại 2');
+                    message.info('Xóa thành công phân loại 2');
                 } else {
                     console.error('Add product varient failed');
                     return resetDataSourceAndCancel();
@@ -739,7 +739,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
 
             if (update_type_name_result.success) {
                 console.log('Update type name successfully');
-                message.success('Cập nhật tên phân loại 1 thành công');
+                message.info('Cập nhật tên phân loại 1 thành công');
             } else {
                 console.error('Update type name failed');
                 // message.error('Cập nhật phân loại thất bại');
@@ -757,7 +757,7 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
 
             if (update_type_name_result.success) {
                 console.log('Update type name successfully');
-                message.success('Cập nhật tên phân loại 2 thành công');
+                message.info('Cập nhật tên phân loại 2 thành công');
             } else {
                 console.error('Update type name failed');
                 // message.error('Cập nhật phân loại thất bại');
@@ -765,6 +765,8 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
             }
         }
 
+
+        message.success('Cập nhật phân loại thành công');
         // Reset state and close modal
         dispatch({ type: 'SET_SUBMIT_LOADING', payload: false });
         resetDataSource();
@@ -829,10 +831,10 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
 
     useEffect(() => {
         if (product && product?.ProductVarients[0]?.ProductClassify) {
-            console.log('Nhan level 3 duoc roi nha cam on:', product);
+            // console.log('Nhan level 3 duoc roi nha cam on:', product);
             // classify
             dispatch({ type: 'SET_CLASSIFY_TYPE', payload: product.ProductVarients[0]?.ProductClassify?.type_name });
-            console.log('Type:', product.ProductVarients[0]?.ProductClassify?.type_name);
+            // console.log('Type:', product.ProductVarients[0]?.ProductClassify?.type_name);
 
             const classify_name_set = new Set(); // Set to track unique classify names
             const classify_rows = [];
@@ -886,8 +888,8 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
 
             dispatch({ type: 'SET_VARIENT_ROWS', payload: varient_rows });
             dispatch({ type: 'SET_INITIAL_DATA', payload: { classify_rows, varient_rows } })
-            console.log('Classify Rows:', classify_rows);
-            console.log('Varient Rows:', varient_rows);
+            // console.log('Classify Rows:', classify_rows);
+            // console.log('Varient Rows:', varient_rows);
 
         }
     }, [product]);

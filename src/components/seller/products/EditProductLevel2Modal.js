@@ -311,7 +311,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             if (updatePromises.length > 0) {
                 await Promise.all(updatePromises);
                 console.log("All updates completed successfully.");
-                message.success("Cập nhật thành công " + updatePromises.length + " phân loại");
+                message.info("Cập nhật thành công " + updatePromises.length + " phân loại");
                 return true;
             } else {
                 console.log("No updates were made.");
@@ -436,7 +436,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
         }
 
         console.log("All adds completed successfully");
-        message.success("Thêm thành công " + product_classify_ids.length + " phân loại");
+        message.info("Thêm thành công " + product_classify_ids.length + " phân loại");
         return true;
     };
 
@@ -656,7 +656,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             }
             else {
                 console.error('Update type name failed');
-                message.error('Cập nhật phân loại thất bại');
+                // message.error('Cập nhật phân loại thất bại');
                 resetDataSource();
                 onCancel();
             }
@@ -717,7 +717,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
 
     useEffect(() => {
         if (product && product?.ProductVarients[0]?.ProductClassify && product.ProductVarients[0]?.ProductSize == null) {
-            console.log('Nhan level 2 duoc roi nha cam on:', product);
+            // console.log('Nhan level 2 duoc roi nha cam on:', product);
             dispatch({ type: 'SET_CLASSIFY_TYPE', payload: product.ProductVarients[0]?.ProductClassify?.type_name })
             let classify_name = [];
             let classify_image = [];
