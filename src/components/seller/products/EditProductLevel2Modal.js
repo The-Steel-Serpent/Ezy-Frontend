@@ -311,7 +311,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
             if (updatePromises.length > 0) {
                 await Promise.all(updatePromises);
                 console.log("All updates completed successfully.");
-                message.success("Cập nhật thành công " + updatePromises.length + " phân loại");
+                message.info("Cập nhật thành công " + updatePromises.length + " phân loại");
                 return true;
             } else {
                 console.log("No updates were made.");
@@ -436,7 +436,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
         }
 
         console.log("All adds completed successfully");
-        message.success("Thêm thành công " + product_classify_ids.length + " phân loại");
+        message.info("Thêm thành công " + product_classify_ids.length + " phân loại");
         return true;
     };
 
