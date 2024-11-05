@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Select, Button, Typography, Input, Space, DatePicker } from 'antd';
+import { Modal, Form, Select, Button, Typography, Input, DatePicker, message, Table } from 'antd';
 import axios from 'axios';
-import { message } from 'antd';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -13,24 +12,33 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
     const [vouchers, setVouchers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [noCategoriesAvailable, setNoCategoriesAvailable] = useState(false);
+    const [eventStart, setEventStart] = useState(null);
+    const [eventEnd, setEventEnd] = useState(null);
+    const [originalVouchers, setOriginalVouchers] = useState([]);
+    const [vouchersToDelete, setVouchersToDelete] = useState([]);
 
     useEffect(() => {
         if (visible) {
-            fetchCategories();
-            resetForm();
-            fetchEventCategories();
-            fetchEventVouchers();
+            initializeForm();
         }
     }, [visible, eventId]);
+
+    const initializeForm = () => {
+        fetchCategories();
+        resetForm();
+        fetchEventCategories();
+        fetchEventVouchers();
+        fetchEventDates();
+    };
 
     const fetchCategories = async () => {
         setLoading(true);
         try {
             const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/categories`);
-            setCategories(res.data.categories);
+            setCategories(res.data.categories || []);
         } catch (error) {
-            console.error('Error fetching categories:', error);
             message.error('Failed to load categories. Please try again later.');
+            console.error('Error fetching categories:', error);
         } finally {
             setLoading(false);
         }
@@ -41,23 +49,31 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             setLoading(true);
             try {
                 const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/get-categories/${eventId}`);
-                
-                if (res.data.success === false) {
+                if (res.data.success) {
+                    settingForm.setFieldsValue({ categories: res.data.data });
+                } else {
                     setNoCategoriesAvailable(true);
                     settingForm.setFieldsValue({ categories: [] });
-                } else {
-                    const categoryIds = res.data.data;
-                    settingForm.setFieldsValue({ categories: categoryIds });
-                    setNoCategoriesAvailable(false);
                 }
             } catch (error) {
+                message.error('Failed to fetch event categories.');
                 console.error('Error fetching event categories:', error);
             } finally {
                 setLoading(false);
             }
-        } else {
-            setNoCategoriesAvailable(false);
-            settingForm.setFieldsValue({ categories: [] });
+        }
+    };
+
+    const fetchEventDates = async () => {
+        try {
+            const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/get-event-by-id/${eventId}`);
+            if (res.data.success) {
+                setEventStart(dayjs(res.data.data.started_at));
+                setEventEnd(dayjs(res.data.data.ended_at));
+            }
+        } catch (error) {
+            message.error('Failed to load event dates. Please try again later.');
+            console.error('Error fetching event dates:', error);
         }
     };
 
@@ -68,20 +84,28 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/get-vouchers/${eventId}`);
                 if (res.data.success) {
                     const formattedVouchers = res.data.vouchers.map(voucher => ({
-                        id: voucher.discount_voucher_id,
+                        key: voucher.discount_voucher_id,
                         code: voucher.discount_voucher_code,
+                        name: voucher.discount_voucher_name,
+                        description: voucher.description || '',
+                        discountVoucherTypeId: String(voucher.discount_voucher_type_id) || '',
                         discountValue: voucher.discount_value,
                         minOrderValue: voucher.min_order_value,
-                        discountType: voucher.discount_type.includes('PHẦN TRĂM') ? 'percentage' : 'fixed',
+                        discountMaxValue: voucher.discount_max_value,
+                        discountType:
+                        voucher.discount_type === 'THEO PHẦN TRĂM' ? 'THEO PHẦN TRĂM' :
+                        voucher.discount_type === 'KHÔNG THEO PHẦN TRĂM' ? 'KHÔNG THEO PHẦN TRĂM' :
+                        voucher.discount_type === 'MIỄN PHÍ VẬN CHUYỂN' ? 'MIỄN PHÍ VẬN CHUYỂN' : 'unknown',
                         quantity: voucher.quantity,
-                        startedAt: voucher.started_at ? moment(voucher.started_at) : null,
-                        endedAt: voucher.ended_at ? moment(voucher.ended_at) : null,
+                        startedAt: voucher.started_at ? dayjs(voucher.started_at) : null,
+                        endedAt: voucher.ended_at ? dayjs(voucher.ended_at) : null,
                     }));
                     setVouchers(formattedVouchers);
+                    setOriginalVouchers(JSON.parse(JSON.stringify(formattedVouchers)));
                 }
             } catch (error) {
-                console.error('Error fetching event vouchers:', error);
                 message.error('Failed to load vouchers. Please try again later.');
+                console.error('Error fetching event vouchers:', error);
             } finally {
                 setLoading(false);
             }
@@ -94,137 +118,225 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
         setNoCategoriesAvailable(false);
     };
 
-    const handleSettingModalOk = async (values) => {
-        if (eventId) {
-            try {
-                await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/set-categories/${eventId}`, {
-                    category_ids: values.categories,
-                });
-
-                await Promise.all(vouchers.map(voucher =>
-                    axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/voucher/add-voucher-by-event-id/${eventId}`, {
-                        event_id: eventId,
-                        voucher_code: voucher.code,
-                        discount_value: voucher.discountValue,
-                        min_order_value: voucher.minOrderValue,
-                        discount_type: voucher.discountType,
-                        quantity: voucher.quantity,
-                        started_at: voucher.startedAt ? voucher.startedAt.toISOString() : null,
-                        ended_at: voucher.endedAt ? voucher.endedAt.toISOString() : null,
-                    })
-                ));
-                
-                message.success('Cài đặt thành công');
-                onSetupComplete(); 
-                onCancel(); 
-            } catch (error) {
-                message.error('Lỗi khi cài đặt cho sự kiện.');
-            }
+    const handleVoucherChange = (key, field, value) => {
+        if (['discountValue', 'minOrderValue', 'quantity'].includes(field) && value < 0) {
+            value = 0;
+        }
+        setVouchers(prevVouchers =>
+            prevVouchers.map(voucher =>
+                voucher.key === key ? { ...voucher, [field]: value } : voucher
+            )
+        );
+        if (field === 'discountVoucherTypeId') {
+            setVouchers(prevVouchers =>
+                prevVouchers.map(voucher =>
+                    voucher.key === key
+                        ? {
+                              ...voucher,
+                              discountType: value === "1" ? "MIỄN PHÍ VẬN CHUYỂN" : "THEO PHẦN TRĂM", // Default selection
+                          }
+                        : voucher
+                )
+            );
         }
     };
 
     const addVoucher = () => {
-        setVouchers([...vouchers, { id: Date.now(), code: '', discountValue: '', minOrderValue: '', discountType: 'fixed', quantity: '', startedAt: null, endedAt: null }]);
+        const newVoucher = {
+            key: Date.now(),
+            code: '',
+            name: '',
+            description: '',
+            discountVoucherTypeId: '',
+            discountValue: '',
+            minOrderValue: '',
+            discountType: 'MIỄN PHÍ VẬN CHUYỂN',
+            quantity: '',
+            startedAt: null,
+            endedAt: null,
+            isNew: true,
+        };
+        setVouchers([...vouchers, newVoucher]);
     };
 
-    const handleVoucherChange = (index, field, value) => {
-        const newVouchers = [...vouchers];
-        if (field === 'startedAt' || field === 'endedAt') {
-            newVouchers[index][field] = value ? moment(value) : null;
-        } else {
-            newVouchers[index][field] = value;
+    const handleSettingModalOk = async () => {
+        try {
+            await settingForm.validateFields();
+            const selectedCategories = settingForm.getFieldValue('categories');
+    
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/set-categories/${eventId}`, {
+                category_ids: selectedCategories,
+            });
+    
+            const newVouchers = vouchers.filter(voucher => voucher.isNew);
+            const modifiedVouchers = vouchers.filter(voucher => {
+                const original = originalVouchers.find(orig => orig.key === voucher.key);
+                return original && JSON.stringify(voucher) !== JSON.stringify(original);
+            });
+
+            const newVoucherPromises = newVouchers.map(voucher => axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/api/voucher/add-voucher-by-event-id/${eventId}`,
+                {
+                    sale_events_id: eventId,
+                    discount_voucher_type_id: voucher.discountVoucherTypeId || '',
+                    discount_voucher_code: voucher.code || '',
+                    discount_voucher_name: voucher.name || '',
+                    description: voucher.description || '',
+                    discount_type: voucher.discountType,  
+                    min_order_value: voucher.minOrderValue || 0,
+                    discount_value: voucher.discountValue || 0,
+                    discount_max_value: voucher.discountMaxValue || 0,
+                    quantity: voucher.quantity || 1,
+                    started_at: voucher.startedAt ? voucher.startedAt.format('YYYY-MM-DD HH:mm:ss') : null,
+                    ended_at: voucher.endedAt ? voucher.endedAt.format('YYYY-MM-DD HH:mm:ss') : null,
+                }
+            ));
+
+            const updateVoucherPromises = modifiedVouchers.map(voucher => {
+                const updatedFields = {
+                    sale_events_id: eventId,
+                    discount_voucher_type_id: voucher.discountVoucherTypeId || '',
+                    discount_voucher_code: voucher.code || '',
+                    discount_voucher_name: voucher.name || '',
+                    description: voucher.description || '',
+                    discount_type: voucher.discountType,
+                    min_order_value: voucher.minOrderValue || 0,
+                    discount_value: voucher.discountValue || 0,
+                    discount_max_value: voucher.discountMaxValue || 0,
+                    quantity: voucher.quantity || 1,
+                    started_at: voucher.startedAt ? voucher.startedAt.format('YYYY-MM-DD HH:mm:ss') : null,
+                    ended_at: voucher.endedAt ? voucher.endedAt.format('YYYY-MM-DD HH:mm:ss') : null,
+                };
+
+                return axios.put(
+                    `${process.env.REACT_APP_BACKEND_URL}/api/voucher/update-voucher/${voucher.key}`,
+                    updatedFields
+                );
+            });
+            const deleteVoucherPromises = vouchersToDelete.map(voucherId => 
+                axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/voucher/delete-voucher/${voucherId}`)
+            );
+
+            await Promise.all([...newVoucherPromises, ...updateVoucherPromises, ...deleteVoucherPromises]);
+    
+            message.success('Cài đặt thành công');
+            onSetupComplete();
+            onCancel();
+    
+            fetchEventVouchers();
+        } catch (error) {
+            message.error('Lỗi khi cài đặt cho sự kiện.');
+            console.error('Error saving vouchers or categories:', error.response ? error.response.data : error.message);
         }
-        setVouchers(newVouchers);
+
+        
     };
+
+    const handleDeleteVoucher = (voucherId) => {
+        setVouchersToDelete(prev => [...prev, voucherId]);
+    
+        setVouchers(prevVouchers => prevVouchers.filter(voucher => voucher.key !== voucherId));
+    };
+    
+    const columns = [
+        { title: 'Mã Voucher', dataIndex: 'code', width: 140, render: (text, record) => <Input value={text} onChange={e => handleVoucherChange(record.key, 'code', e.target.value)} /> },
+        { title: 'Tên Voucher', dataIndex: 'name', width: 160, render: (text, record) => <Input value={text} onChange={e => handleVoucherChange(record.key, 'name', e.target.value)} /> },
+        { title: 'Mô tả', dataIndex: 'description', width: 200, render: (text, record) => <Input value={text} onChange={e => handleVoucherChange(record.key, 'description', e.target.value)} /> },
+        {
+            title: 'Loại Voucher', dataIndex: 'discountVoucherTypeId', width: 160,
+            render: (value, record) => (
+                <Select value={value} onChange={val => handleVoucherChange(record.key, 'discountVoucherTypeId', val)} style={{ width: '100%' }}>
+                    <Option value="1">Miễn phí vận chuyển</Option>
+                    <Option value="2">Giảm giá đơn hàng</Option>
+                </Select>
+            ),
+        },
+        {
+            title: 'Loại giảm giá', dataIndex: 'discountType', width: 160,
+            render: (value, record) => (
+                <Select
+                    value={value}
+                    onChange={val => handleVoucherChange(record.key, 'discountType', val)}
+                    style={{ width: '100%' }}
+                >
+                    {record.discountVoucherTypeId === "1" && <Option value="MIỄN PHÍ VẬN CHUYỂN">Free Ship</Option>}
+                    <Option value="THEO PHẦN TRĂM">Giảm theo phần trăm</Option>
+                    <Option value="KHÔNG THEO PHẦN TRĂM">Giảm theo số tiền</Option>
+                </Select>
+            ),
+        },
+        { title: 'Giá trị giảm', dataIndex: 'discountValue', width: 160, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'discountValue', e.target.value)} /> },
+        { title: 'Giá trị đơn hàng tối thiểu', dataIndex: 'minOrderValue', width: 180, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'minOrderValue', e.target.value)} /> },
+        {
+            title: 'Giá trị giảm tối đa',
+            dataIndex: 'discountMaxValue',
+            width: 160,
+            render: (text, record) => (
+                <Input
+                    type="number"
+                    value={text}
+                    onChange={e => handleVoucherChange(record.key, 'discountMaxValue', e.target.value)}
+                    disabled={record.discountType !== 'THEO PHẦN TRĂM'} // Khóa nếu không phải giảm "Theo Phần Trăm"
+                />
+            ),
+        },
+        { title: 'Số lượng', dataIndex: 'quantity', width: 125, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'quantity', e.target.value)} /> },
+        {
+            title: 'Ngày bắt đầu', dataIndex: 'startedAt', width: 180,
+            render: (value, record) => (
+                <DatePicker
+                    value={value}
+                    onChange={date => handleVoucherChange(record.key, 'startedAt', date)}
+                    disabledDate={current => current && (current < eventStart || current > eventEnd)}
+                    format="YYYY-MM-DD HH:mm"
+                    showTime={{ format: 'HH:mm' }}
+                />
+            ),
+        },
+        {
+            title: 'Ngày kết thúc', dataIndex: 'endedAt', width: 180,
+            render: (value, record) => (
+                <DatePicker
+                    value={value}
+                    onChange={date => handleVoucherChange(record.key, 'endedAt', date)}
+                    disabledDate={current => current && (current < eventStart || current > eventEnd)}
+                    format="YYYY-MM-DD HH:mm"
+                    showTime={{ format: 'HH:mm' }}
+                />
+            ),
+        },
+        {
+            title: 'Hành động',
+            dataIndex: 'actions',
+            width: 100,
+            render: (_, record) => (
+                <Button type="primary" danger onClick={() => handleDeleteVoucher(record.key)}>
+                    Xóa
+                </Button>
+            ),
+        },
+    ];
+    
 
     return (
-        <Modal
-            title="Thiết lập danh mục cho sự kiện"
-            visible={visible}
-            onCancel={onCancel}
-            width={1200}
-            footer={null}
-            confirmLoading={loading}
-        >
+        <Modal title="Thiết lập cho sự kiện" visible={visible} onCancel={onCancel} width={1400} footer={null} confirmLoading={loading}>
             <Form form={settingForm} layout="vertical" onFinish={handleSettingModalOk}>
-                <Form.Item
-                    label="Chọn danh mục"
-                    name="categories"
-                    rules={[{ required: !noCategoriesAvailable, message: 'Vui lòng chọn ít nhất một danh mục!' }]}
-                >
+                <Form.Item label="Chọn danh mục" name="categories" rules={[{ required: !noCategoriesAvailable, message: 'Vui lòng chọn ít nhất một danh mục!' }]}>
                     <Select mode="multiple" placeholder="Chọn danh mục" loading={loading} disabled={noCategoriesAvailable}>
-                        {Array.isArray(categories) && categories.length > 0 ? (
-                            categories.map((category) => (
-                                <Option key={category.category_id} value={category.category_id}>
-                                    {category.category_name}
-                                </Option>
-                            ))
-                        ) : (
-                            <Option disabled>No categories available</Option>
-                        )}
+                        {categories.map(category => (
+                            <Option key={category.category_id} value={category.category_id}>{category.category_name}</Option>
+                        ))}
                     </Select>
                 </Form.Item>
-                {noCategoriesAvailable && (
-                    <Text type="danger">Không có danh mục nào cho sự kiện này.</Text>
-                )}
-                <Form.Item label="Các Voucher đã có">
-                    {vouchers.map((voucher, index) => (
-                        <Space key={voucher.id} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                            <Input 
-                                placeholder="Mã Voucher" 
-                                value={voucher.code} 
-                                onChange={(e) => handleVoucherChange(index, 'code', e.target.value)} 
-                            />
-                            <Input 
-                                placeholder="Giá trị giảm" 
-                                type="number" 
-                                value={voucher.discountValue} 
-                                onChange={(e) => handleVoucherChange(index, 'discountValue', e.target.value)} 
-                            />
-                            <Input 
-                                placeholder="Giá trị đơn hàng tối thiểu" 
-                                type="number" 
-                                value={voucher.minOrderValue} 
-                                onChange={(e) => handleVoucherChange(index, 'minOrderValue', e.target.value)} 
-                            />
-                            <Select 
-                                value={voucher.discountType} 
-                                onChange={(value) => handleVoucherChange(index, 'discountType', value)} 
-                                placeholder="Loại giảm giá"
-                            >
-                                <Option value="fixed">Giảm giá cố định</Option>
-                                <Option value="percentage">Giảm theo phần trăm</Option>
-                            </Select>
-                            <Input 
-                                placeholder="Số lượng" 
-                                type="number" 
-                                value={voucher.quantity} 
-                                onChange={(e) => handleVoucherChange(index, 'quantity', e.target.value)} 
-                            />
-                            <DatePicker 
-                                placeholder="Ngày bắt đầu" 
-                                value={voucher.startedAt} 
-                                onChange={(date) => handleVoucherChange(index, 'startedAt', date)} 
-                                showTime={{ format: 'HH:mm' }} 
-                                format="YYYY-MM-DD HH:mm" 
-                            />
-                            <DatePicker 
-                                placeholder="Ngày kết thúc" 
-                                value={voucher.endedAt} 
-                                onChange={(date) => handleVoucherChange(index, 'endedAt', date)} 
-                                showTime={{ format: 'HH:mm' }} 
-                                format="YYYY-MM-DD HH:mm" 
-                            />
-                        </Space>
-                    ))}
-                    <Button type="dashed" onClick={addVoucher} style={{ width: '100%' }}>
-                        Thêm Voucher
-                    </Button>
+                {noCategoriesAvailable && <Text type="danger">Không có danh mục nào cho sự kiện này.</Text>}
+                <Form.Item label="Danh sách Voucher">
+                    <Table columns={columns} dataSource={vouchers} pagination={false} scroll={{ x: 'max-content', y: 400 }} />
+                    <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                        <Button type="dashed" onClick={addVoucher} style={{ width: '200px' }}>Thêm Voucher</Button>
+                    </div>
                 </Form.Item>
                 <Form.Item>
-                    <Button type="primary" htmlType="submit" loading={loading}>
-                        Lưu cài đặt
-                    </Button>
+                    <Button type="primary" htmlType="submit" loading={loading}>Lưu cài đặt</Button>
                 </Form.Item>
             </Form>
         </Modal>
