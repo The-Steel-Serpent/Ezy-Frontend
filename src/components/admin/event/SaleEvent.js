@@ -5,6 +5,10 @@ import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import AddSaleEvent from './AddSaleEvent';
 import SaleEventDetail from './SaleEventDetail';
 import SettingSaleEvent from './SettingSaleEvent';
+import EditSaleEvent from './EditSaleEvent';
+import io from 'socket.io-client';
+
+const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 const SaleEvent = () => {
     const [saleEvents, setSaleEvents] = useState([]);
@@ -13,9 +17,18 @@ const SaleEvent = () => {
     const [selectedEventId, setSelectedEventId] = useState(null);
     const [eventDetailVisible, setEventDetailVisible] = useState(false);
     const [isSettingModalVisible, setIsSettingModalVisible] = useState(false);
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
     useEffect(() => {
         fetchSaleEvents();
+
+        socket.on('eventStatusUpdate', (updatedEvents) => {
+            setSaleEvents(updatedEvents);
+        });
+
+        return () => {
+            socket.off('eventStatusUpdate');
+        };
     }, []);
 
     const fetchSaleEvents = async () => {
@@ -24,7 +37,6 @@ const SaleEvent = () => {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/get-event`);
             setSaleEvents(response.data.data);
         } catch (error) {
-            console.error('Error fetching sale events:', error);
             message.error('Failed to load sale events. Please try again later.');
         } finally {
             setLoading(false);
@@ -34,11 +46,7 @@ const SaleEvent = () => {
     const handleDeleteEvent = (id) => {
         Modal.confirm({
             title: 'Xác nhận xóa sự kiện',
-            content: (
-                <div>
-                    <p style={{ color: 'red', fontWeight: 'bold' }}>Bạn có chắc chắn muốn xóa sự kiện này?</p>
-                </div>
-            ),
+            content: 'Bạn có chắc chắn muốn xóa sự kiện này?',
             okText: 'Có, xóa ngay',
             okType: 'danger',
             cancelText: 'Không, quay lại',
@@ -51,17 +59,10 @@ const SaleEvent = () => {
                     message.success('Xóa sự kiện thành công');
                     fetchSaleEvents();
                 } catch (error) {
-                    message.error('Lỗi khi xóa sự kiện.');
+                    message.error(error.response.data.message || 'Xóa sự kiện thất bại.');
                 } finally {
                     setLoading(false);
                 }
-            },
-            okButtonProps: {
-                style: {
-                    backgroundColor: 'red',
-                    borderColor: 'red',
-                    color: 'white',
-                },
             },
         });
     };
@@ -69,12 +70,17 @@ const SaleEvent = () => {
     const handleOpenSettingModal = (eventId) => {
         setSelectedEventId(eventId);
         setIsSettingModalVisible(true);
-        
     };
+
     const handleOpenDetailModal = (eventId) => {
         setSelectedEventId(eventId);
         setEventDetailVisible(true);
-    }
+    };
+
+    const handleOpenEditModal = (eventId) => {
+        setSelectedEventId(eventId);
+        setIsEditModalVisible(true);
+    };
 
     const columns = [
         {
@@ -106,6 +112,12 @@ const SaleEvent = () => {
             render: (date) => new Date(date).toLocaleDateString(),
         },
         {
+            title: 'Trạng thái',
+            dataIndex: 'is_actived',
+            key: 'is_actived',
+            render: (isActive) => isActive ? 'Đang hoạt động' : 'Không hoạt động',
+        },
+        {
             title: 'Hành động',
             key: 'action',
             render: (text, record) => (
@@ -113,26 +125,13 @@ const SaleEvent = () => {
                     <Button
                         type="primary"
                         onClick={() => handleOpenSettingModal(record.sale_events_id)}
+                        disabled={record.is_actived}
                     >
                         Thiết lập
                     </Button>
-                    <Button
-                        type="primary"
-                        onClick={() => {
-                            handleOpenDetailModal(record.sale_events_id);
-                        }}
-                        style={{ marginLeft: '8px' }}
-                    >
-                        Chi tiết
-                    </Button>
-                    <Button
-                        type="primary"
-                        danger
-                        onClick={() => handleDeleteEvent(record.sale_events_id)}
-                        style={{ marginLeft: '8px' }}
-                    >
-                        Xóa
-                    </Button>
+                    <Button type="primary" onClick={() => handleOpenDetailModal(record.sale_events_id)} style={{ marginLeft: '8px' }}>Chi tiết</Button>
+                    <Button type="primary" onClick={() => handleOpenEditModal(record.sale_events_id)} style={{ marginLeft: '8px' }}>Chỉnh sửa</Button>
+                    <Button type="primary" danger onClick={() => handleDeleteEvent(record.sale_events_id)} style={{ marginLeft: '8px' }}>Xóa</Button>
                 </>
             ),
         }
@@ -176,6 +175,13 @@ const SaleEvent = () => {
                     setSelectedEventId(null);
                 }}
                 onSetupComplete={fetchSaleEvents}
+            />
+
+            <EditSaleEvent
+                visible={isEditModalVisible}
+                onClose={() => { setIsEditModalVisible(false); setSelectedEventId(null); }}
+                eventId={selectedEventId}
+                onSuccess={fetchSaleEvents}
             />
         </div>
     );

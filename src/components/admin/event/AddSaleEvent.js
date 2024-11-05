@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Form, Input, DatePicker, Button, Upload, message } from 'antd';
 import uploadFile from '../../../helpers/uploadFile';
 import axios from 'axios';
+import dayjs from 'dayjs';
 
 const AddSaleEvent = ({ visible, onClose, onSuccess }) => {
     const [form] = Form.useForm();
@@ -10,10 +11,10 @@ const AddSaleEvent = ({ visible, onClose, onSuccess }) => {
 
     const handleCreateEvent = async (values) => {
         try {
-            const startDate = values.started_at;
-            const endDate = values.ended_at;
+            const startDate = dayjs(values.started_at).format('YYYY-MM-DD HH:mm:ss');
+            const endDate = dayjs(values.ended_at).format('YYYY-MM-DD HH:mm:ss');
 
-            if (endDate.isBefore(startDate)) {
+            if (dayjs(values.ended_at).isBefore(dayjs(values.started_at))) {
                 message.error('Ngày kết thúc phải sau ngày bắt đầu.');
                 return;
             }
@@ -28,8 +29,8 @@ const AddSaleEvent = ({ visible, onClose, onSuccess }) => {
             await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/add-event`, {
                 sale_events_name: values.sale_events_name,
                 thumbnail: thumbnailUrl,
-                started_at: startDate.toISOString(),
-                ended_at: endDate.toISOString(),
+                started_at: startDate,
+                ended_at: endDate,
             });
 
             message.success('Tạo sự kiện thành công');
@@ -69,7 +70,6 @@ const AddSaleEvent = ({ visible, onClose, onSuccess }) => {
     };
 
     return (
-        <>
         <Modal
             title="Tạo sự kiện khuyến mãi"
             visible={visible}
@@ -127,8 +127,6 @@ const AddSaleEvent = ({ visible, onClose, onSuccess }) => {
                 </Form.Item>
             </Form>
         </Modal>
-        </>
-
     );
 };
 
