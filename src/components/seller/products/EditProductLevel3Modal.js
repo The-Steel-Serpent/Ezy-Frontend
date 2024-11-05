@@ -831,10 +831,10 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
 
     useEffect(() => {
         if (product && product?.ProductVarients[0]?.ProductClassify) {
-            console.log('Nhan level 3 duoc roi nha cam on:', product);
+            // console.log('Nhan level 3 duoc roi nha cam on:', product);
             // classify
             dispatch({ type: 'SET_CLASSIFY_TYPE', payload: product.ProductVarients[0]?.ProductClassify?.type_name });
-            console.log('Type:', product.ProductVarients[0]?.ProductClassify?.type_name);
+            // console.log('Type:', product.ProductVarients[0]?.ProductClassify?.type_name);
 
             const classify_name_set = new Set(); // Set to track unique classify names
             const classify_rows = [];
@@ -888,8 +888,8 @@ const EditProductLevel3Modal = forwardRef(({ visible, onCancel, product, resetDa
 
             dispatch({ type: 'SET_VARIENT_ROWS', payload: varient_rows });
             dispatch({ type: 'SET_INITIAL_DATA', payload: { classify_rows, varient_rows } })
-            console.log('Classify Rows:', classify_rows);
-            console.log('Varient Rows:', varient_rows);
+            // console.log('Classify Rows:', classify_rows);
+            // console.log('Varient Rows:', varient_rows);
 
         }
     }, [product]);

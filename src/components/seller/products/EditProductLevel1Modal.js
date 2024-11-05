@@ -502,8 +502,8 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product, resetDa
 
 
   useEffect(() => {
-    console.log('classify_rows:', state.classify_rows);
-    console.log('varient_rows:', state.varient_rows);
+    // console.log('classify_rows:', state.classify_rows);
+    // console.log('varient_rows:', state.varient_rows);
   }, [
     state.classify_rows,
     state.classify_type,
@@ -515,7 +515,7 @@ const EditProductLevel1Modal = forwardRef(({ visible, onCancel, product, resetDa
 
   useEffect(() => {
     if (product && product?.ProductVarients[0]?.ProductClassify == null) {
-      console.log('Nhan level 1 duoc roi nha cam on:', product);
+      // console.log('Nhan level 1 duoc roi nha cam on:', product);
     }
   }, [product])
   return (

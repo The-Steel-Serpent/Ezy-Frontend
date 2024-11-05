@@ -735,7 +735,7 @@ export const updateBasicInfoProduct = async (payload) => {
         if (error.response) {
             switch (error.response.status) {
                 case 400:
-                    errorMessage = "product_id is required";
+                    errorMessage = error.response.data.message;
                     break;
                 case 404:
                     errorMessage = "Product not found";
@@ -779,5 +779,33 @@ export const updateShippingInfo = async (payload) => {
             errorMessage = "Network error or server is unreachable.";
         }
         return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const updateSomeSaleInfoProductVarients = async (payload) => {
+    try {
+        const url = `${URL}update-some-sale-info-product-varients`;
+        const response = await axios.post(url, payload);
+        return response.data;
+    } catch (error) {
+        console.log("Error when updating some sale info of product varients:", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "product_varients_ids is required";
+                    break;
+                case 404:
+                    errorMessage = "Product varients not found";
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
     }
 }
