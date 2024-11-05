@@ -15,25 +15,30 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
     const [eventStart, setEventStart] = useState(null);
     const [eventEnd, setEventEnd] = useState(null);
     const [originalVouchers, setOriginalVouchers] = useState([]);
+    const [vouchersToDelete, setVouchersToDelete] = useState([]);
 
     useEffect(() => {
         if (visible) {
-            fetchCategories();
-            resetForm();
-            fetchEventCategories();
-            fetchEventVouchers();
-            fetchEventDates();
+            initializeForm();
         }
     }, [visible, eventId]);
+
+    const initializeForm = () => {
+        fetchCategories();
+        resetForm();
+        fetchEventCategories();
+        fetchEventVouchers();
+        fetchEventDates();
+    };
 
     const fetchCategories = async () => {
         setLoading(true);
         try {
             const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/categories`);
-            setCategories(res.data.categories);
+            setCategories(res.data.categories || []);
         } catch (error) {
-            console.error('Error fetching categories:', error);
             message.error('Failed to load categories. Please try again later.');
+            console.error('Error fetching categories:', error);
         } finally {
             setLoading(false);
         }
@@ -45,13 +50,13 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             try {
                 const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/get-categories/${eventId}`);
                 if (res.data.success) {
-                    const categoryIds = res.data.data;
-                    settingForm.setFieldsValue({ categories: categoryIds });
+                    settingForm.setFieldsValue({ categories: res.data.data });
                 } else {
                     setNoCategoriesAvailable(true);
                     settingForm.setFieldsValue({ categories: [] });
                 }
             } catch (error) {
+                message.error('Failed to fetch event categories.');
                 console.error('Error fetching event categories:', error);
             } finally {
                 setLoading(false);
@@ -67,8 +72,8 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 setEventEnd(dayjs(res.data.data.ended_at));
             }
         } catch (error) {
-            console.error('Error fetching event dates:', error);
             message.error('Failed to load event dates. Please try again later.');
+            console.error('Error fetching event dates:', error);
         }
     };
 
@@ -86,17 +91,21 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                         discountVoucherTypeId: String(voucher.discount_voucher_type_id) || '',
                         discountValue: voucher.discount_value,
                         minOrderValue: voucher.min_order_value,
-                        discountType: voucher.discount_type === 'PHẦN TRĂM' ? 'percentage' : 'fixed', // Map correctly
+                        discountMaxValue: voucher.discount_max_value,
+                        discountType:
+                        voucher.discount_type === 'THEO PHẦN TRĂM' ? 'THEO PHẦN TRĂM' :
+                        voucher.discount_type === 'KHÔNG THEO PHẦN TRĂM' ? 'KHÔNG THEO PHẦN TRĂM' :
+                        voucher.discount_type === 'MIỄN PHÍ VẬN CHUYỂN' ? 'MIỄN PHÍ VẬN CHUYỂN' : 'unknown',
                         quantity: voucher.quantity,
                         startedAt: voucher.started_at ? dayjs(voucher.started_at) : null,
                         endedAt: voucher.ended_at ? dayjs(voucher.ended_at) : null,
                     }));
                     setVouchers(formattedVouchers);
-                    setOriginalVouchers(JSON.parse(JSON.stringify(formattedVouchers))); // deep copy to track original values
+                    setOriginalVouchers(JSON.parse(JSON.stringify(formattedVouchers)));
                 }
             } catch (error) {
-                console.error('Error fetching event vouchers:', error);
                 message.error('Failed to load vouchers. Please try again later.');
+                console.error('Error fetching event vouchers:', error);
             } finally {
                 setLoading(false);
             }
@@ -111,16 +120,25 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
 
     const handleVoucherChange = (key, field, value) => {
         if (['discountValue', 'minOrderValue', 'quantity'].includes(field) && value < 0) {
-            value = 0; // Prevent negative values for numeric fields
+            value = 0;
         }
-
-        console.log(`Changing voucher ${key} field ${field} to:`, value);
-
         setVouchers(prevVouchers =>
             prevVouchers.map(voucher =>
                 voucher.key === key ? { ...voucher, [field]: value } : voucher
             )
         );
+        if (field === 'discountVoucherTypeId') {
+            setVouchers(prevVouchers =>
+                prevVouchers.map(voucher =>
+                    voucher.key === key
+                        ? {
+                              ...voucher,
+                              discountType: value === "1" ? "MIỄN PHÍ VẬN CHUYỂN" : "THEO PHẦN TRĂM", // Default selection
+                          }
+                        : voucher
+                )
+            );
+        }
     };
 
     const addVoucher = () => {
@@ -132,7 +150,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             discountVoucherTypeId: '',
             discountValue: '',
             minOrderValue: '',
-            discountType: 'fixed', // Default to fixed
+            discountType: 'MIỄN PHÍ VẬN CHUYỂN',
             quantity: '',
             startedAt: null,
             endedAt: null,
@@ -190,15 +208,16 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     ended_at: voucher.endedAt ? voucher.endedAt.format('YYYY-MM-DD HH:mm:ss') : null,
                 };
 
-                console.log(`Updating voucher ${voucher.key} with fields:`, updatedFields);
-
                 return axios.put(
                     `${process.env.REACT_APP_BACKEND_URL}/api/voucher/update-voucher/${voucher.key}`,
                     updatedFields
                 );
             });
+            const deleteVoucherPromises = vouchersToDelete.map(voucherId => 
+                axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/voucher/delete-voucher/${voucherId}`)
+            );
 
-            await Promise.all([...newVoucherPromises, ...updateVoucherPromises]);
+            await Promise.all([...newVoucherPromises, ...updateVoucherPromises, ...deleteVoucherPromises]);
     
             message.success('Cài đặt thành công');
             onSetupComplete();
@@ -206,11 +225,19 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
     
             fetchEventVouchers();
         } catch (error) {
-            console.error('Error saving vouchers or categories:', error.response ? error.response.data : error.message);
             message.error('Lỗi khi cài đặt cho sự kiện.');
+            console.error('Error saving vouchers or categories:', error.response ? error.response.data : error.message);
         }
+
+        
     };
 
+    const handleDeleteVoucher = (voucherId) => {
+        setVouchersToDelete(prev => [...prev, voucherId]);
+    
+        setVouchers(prevVouchers => prevVouchers.filter(voucher => voucher.key !== voucherId));
+    };
+    
     const columns = [
         { title: 'Mã Voucher', dataIndex: 'code', width: 140, render: (text, record) => <Input value={text} onChange={e => handleVoucherChange(record.key, 'code', e.target.value)} /> },
         { title: 'Tên Voucher', dataIndex: 'name', width: 160, render: (text, record) => <Input value={text} onChange={e => handleVoucherChange(record.key, 'name', e.target.value)} /> },
@@ -224,15 +251,33 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 </Select>
             ),
         },
-        { title: 'Giá trị giảm', dataIndex: 'discountValue', width: 160, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'discountValue', e.target.value)} /> },
-        { title: 'Giá trị đơn hàng tối thiểu', dataIndex: 'minOrderValue', width: 180, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'minOrderValue', e.target.value)} /> },
         {
             title: 'Loại giảm giá', dataIndex: 'discountType', width: 160,
             render: (value, record) => (
-                <Select value={value} onChange={val => handleVoucherChange(record.key, 'discountType', val)} style={{ width: '100%' }}>
-                    <Option value="fixed">Giảm giá cố định</Option>
-                    <Option value="percentage">Giảm theo phần trăm</Option>
+                <Select
+                    value={value}
+                    onChange={val => handleVoucherChange(record.key, 'discountType', val)}
+                    style={{ width: '100%' }}
+                >
+                    {record.discountVoucherTypeId === "1" && <Option value="MIỄN PHÍ VẬN CHUYỂN">Free Ship</Option>}
+                    <Option value="THEO PHẦN TRĂM">Giảm theo phần trăm</Option>
+                    <Option value="KHÔNG THEO PHẦN TRĂM">Giảm theo số tiền</Option>
                 </Select>
+            ),
+        },
+        { title: 'Giá trị giảm', dataIndex: 'discountValue', width: 160, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'discountValue', e.target.value)} /> },
+        { title: 'Giá trị đơn hàng tối thiểu', dataIndex: 'minOrderValue', width: 180, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'minOrderValue', e.target.value)} /> },
+        {
+            title: 'Giá trị giảm tối đa',
+            dataIndex: 'discountMaxValue',
+            width: 160,
+            render: (text, record) => (
+                <Input
+                    type="number"
+                    value={text}
+                    onChange={e => handleVoucherChange(record.key, 'discountMaxValue', e.target.value)}
+                    disabled={record.discountType !== 'THEO PHẦN TRĂM'} // Khóa nếu không phải giảm "Theo Phần Trăm"
+                />
             ),
         },
         { title: 'Số lượng', dataIndex: 'quantity', width: 125, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'quantity', e.target.value)} /> },
@@ -260,7 +305,18 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 />
             ),
         },
+        {
+            title: 'Hành động',
+            dataIndex: 'actions',
+            width: 100,
+            render: (_, record) => (
+                <Button type="primary" danger onClick={() => handleDeleteVoucher(record.key)}>
+                    Xóa
+                </Button>
+            ),
+        },
     ];
+    
 
     return (
         <Modal title="Thiết lập cho sự kiện" visible={visible} onCancel={onCancel} width={1400} footer={null} confirmLoading={loading}>
