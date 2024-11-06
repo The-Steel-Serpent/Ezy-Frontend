@@ -846,7 +846,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
                     </Row>
                 ))}
                 {
-                    !state.down_to_level_1 === 0 && (
+                    !state.down_to_level_1  && (
                         <CiSquarePlus
                             size={30}
                             onClick={handleAddClassifyRow}
