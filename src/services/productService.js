@@ -807,5 +807,35 @@ export const updateSomeSaleInfoProductVarients = async (payload) => {
         } else {
             errorMessage = "Network error or server is unreachable.";
         }
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const deleteSomeProducts = async (product_ids) => {
+    try {
+        const url = `${URL}delete-some-products`;
+        const response = await axios.post(url, { product_ids });
+        return response.data;
+    } catch (error) {
+        console.log("Error when deleting some products:", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = "A non-empty array of product_ids is required";
+                    break;
+                case 404:
+                    errorMessage = "No products found to delete";
+                    break;
+                case 409:
+                    errorMessage = "Cannot delete product as it is referenced by other records.";
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        }
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
     }
 }
