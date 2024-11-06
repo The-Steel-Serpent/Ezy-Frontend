@@ -109,20 +109,25 @@ const EditSaleInfoModal = forwardRef(({ visible, onCancel, product, resetDataSou
     }
 
     useEffect(() => {
-        // Check if there is any error in the prices, stocks, sale_percents (!== '')
-        const errors_prices = state.errors_prices.map((item) => item !== '');
-        const errors_stocks = state.errors_stocks.map((item) => item !== '');
-        const errors_sale_percents = state.errors_sale_percents.map((item) => item !== '');
+        // Check if there are any errors in the prices, stocks, or sale_percents
+        const hasErrors = [
+            ...state.errors_prices,
+            ...state.errors_stocks,
+            ...state.errors_sale_percents
+        ].some((error) => error !== '' && error !== undefined);
 
-        if (errors_prices.includes(true) || errors_stocks.includes(true) || errors_sale_percents.includes(true)) {
-            dispatch({ type: 'SET_ENABLE_SUBMIT', payload: false });
-        } else {
-            dispatch({ type: 'SET_ENABLE_SUBMIT', payload: true });
-        }
+        dispatch({ type: 'SET_ENABLE_SUBMIT', payload: !hasErrors });
+
+        console.log('errors_prices:', state.errors_prices);
+        console.log('errors_stocks:', state.errors_stocks);
+        console.log('errors_sale_percents:', state.errors_sale_percents);
     }, [
         state.errors_prices,
         state.errors_sale_percents,
-        state.errors_stocks
+        state.errors_stocks,
+        state.prices,
+        state.sale_percents,
+        state.stocks
     ]);
 
     const disableApplyAll = () => {
@@ -250,6 +255,9 @@ const EditSaleInfoModal = forwardRef(({ visible, onCancel, product, resetDataSou
     }
 
     const resetState = () => {
+        dispatch({ type: 'SET_APPLY_ALL_STOCK', payload: '' });
+        dispatch({ type: 'SET_APPLY_ALL_PRICE', payload: '' });
+        dispatch({ type: 'SET_APPLY_ALL_SALE_PERCENT', payload: '' });
         dispatch({ type: 'RESET' })
     }
 
