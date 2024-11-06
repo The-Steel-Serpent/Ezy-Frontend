@@ -75,6 +75,9 @@ const AllRole = withSuspense(
 const AllShop = withSuspense(
   lazy(() => import("../pages/admin/shop_management/AllShop"))
 );
+const AllFlashSale = withSuspense(
+  lazy(() => import("../pages/admin/flashsale_management/AllFlashSale"))
+);
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
@@ -467,6 +470,14 @@ const router = createBrowserRouter([
         element: (
           <AdminAuthLayout>
             <AllShop />
+          </AdminAuthLayout>
+        ),
+      },
+      {
+        path: "/admin/flash-sale/all-flash-sale",
+        element: (
+          <AdminAuthLayout>
+            <AllFlashSale />
           </AdminAuthLayout>
         ),
       }
