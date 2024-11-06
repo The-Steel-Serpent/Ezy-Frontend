@@ -55,12 +55,6 @@ const AdminSidebar = ({ role_id }) => {
                     icon: <GiftOutlined />, 
                     label: 'Sự kiện khuyến mãi', roles: [3, 4] 
                 },
-                { 
-                    key: '/admin/event-management/sale-event/flash-sale', 
-                    icon: <ThunderboltOutlined />, 
-                    label: 'Flash Sale', 
-                    roles: [3, 4] 
-                },
                 {
                     key: '/admin/event-management/sale-event/discount-voucher',
                     icon: <TagOutlined />,
@@ -71,7 +65,13 @@ const AdminSidebar = ({ role_id }) => {
             ],
         },
         {
-            key: '5',
+            key: '/admin/flash-sale/all-flash-sale',
+            icon: <ThunderboltOutlined />,
+            label: 'Quản lý Flash Sale',
+            roles: [3,4],
+        },
+        {
+            key: '6',
             icon: <UserOutlined />,
             label: 'Quản lý người dùng',
             roles: [3], 
@@ -81,7 +81,7 @@ const AdminSidebar = ({ role_id }) => {
             ],
         },
         {
-            key: '6',
+            key: '7',
             icon: <BarChartOutlined />,
             label: 'Thống kê',
             roles: [3, 4], 
