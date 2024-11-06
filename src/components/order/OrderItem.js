@@ -1,16 +1,28 @@
-import { Avatar, Button, Image, List, Popover } from "antd";
+import { Avatar, Button, Image, List, message, Popover } from "antd";
 import React, { memo } from "react";
 import { useMessages } from "../../providers/MessagesProvider";
 import { CaretDownFilled, ShopFilled } from "@ant-design/icons";
 import OrderDetailsItem from "./OrderDetailsItem";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { formatDate } from "date-fns";
+import { checkoutOrder } from "../../services/orderService";
 
 const OrderItem = (props) => {
   const { order } = props;
   const { handleUserSelected } = useMessages();
   const handleViewShop = () => {
     window.location.href = `/shop/${order?.Shop?.UserAccount?.username}`;
+  };
+  const handleCheckoutOrder = async () => {
+    try {
+      const res = await checkoutOrder(order.user_order_id);
+      if (res.success) {
+        window.location.href = res.paymentUrl;
+      }
+    } catch (error) {
+      console.log("Error when checkout order", error);
+      message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
+    }
   };
 
   const statusDescriptions = {
@@ -146,6 +158,7 @@ const OrderItem = (props) => {
                 <Button
                   size="large"
                   className="bg-primary text-white hover:opacity-80"
+                  onClick={handleCheckoutOrder}
                 >
                   Thanh Toán
                 </Button>

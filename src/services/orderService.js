@@ -34,3 +34,15 @@ export const getOrders = async (
     throw new Error(error);
   }
 };
+
+export const checkoutOrder = async (user_order_id) => {
+  try {
+    const response = await axios.post(`${url}checkout-order`, {
+      user_order_id,
+    });
+    return response.data;
+  } catch (error) {
+    console.log("Error when checkoutOrder", error);
+    throw new Error(error);
+  }
+};
