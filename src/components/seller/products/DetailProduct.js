@@ -609,16 +609,19 @@ const DetailProduct = () => {
             <div ref={shippingInfoRef} className="section bg-white mt-3 border rounded p-5">
                 <ShippingProductInformation onData={handleShippingInfo} />
             </div>
-            <div className='flex gap-3 mt-5 justify-end'>
+            <div className='flex gap-3 mt-5 justify-start'>
                 <Button
-                    type="primary"
                     onClick={() => navigate('/seller/product-management/all')}
-                >Hủy</Button>
+                >
+                    Hủy
+                </Button>
                 <Button
                     onClick={handleSubmit}
-                    type="primary"
+                    className='bg-primary text-white hover:bg-white hover:text-primary hover:border-primary'
                     disabled={!state.enable_submit}
-                >Lưu</Button>
+                >
+                    Lưu
+                </Button>
             </div>
             <LoadingModal visible={state.loading} />
         </div>

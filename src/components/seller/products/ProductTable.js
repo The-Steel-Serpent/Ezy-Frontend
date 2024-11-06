@@ -1,7 +1,7 @@
 import { Button, Checkbox, Dropdown, Image, message, Modal, Table } from 'antd'
 import React, { useEffect, useReducer, useRef } from 'react'
 import { useSelector } from 'react-redux'
-import { getShopProducts, searchShopProducts, updateProductStatus } from '../../../services/productService'
+import { deleteSomeProducts, getShopProducts, searchShopProducts, updateProductStatus } from '../../../services/productService'
 import { MdOutlineSell } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 import EditProductLevel1Modal from './EditProductLevel1Modal';
@@ -41,6 +41,8 @@ const initialState = {
     visible_edit_product_level_3_modal: false,
     product_edit_level: null,
     visible_edit_sale_info: false,
+    visible_delete_product_modal: false,
+    loading_delete_product: false,
 }
 
 const reducer = (state, action) => {
@@ -107,6 +109,10 @@ const reducer = (state, action) => {
             return { ...state, product_edit_level: action.payload }
         case 'SET_VISIBLE_EDIT_SALE_INFO':
             return { ...state, visible_edit_sale_info: action.payload }
+        case 'SET_VISIBLE_DELETE_PRODUCT_MODAL':
+            return { ...state, visible_delete_product_modal: action.payload }
+        case 'SET_LOADING_DELETE_PRODUCT':
+            return { ...state, loading_delete_product: action.payload }
         default:
             return state;
     }
@@ -528,16 +534,6 @@ const ProductTable =
                     message.success('Cập nhật trạng thái sản phẩm thành công');
                     // reset data source
                     dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
-                    // fetch products
-                    const shop_id = shop.shop_id;
-                    // getShopProducts(shop_id, product_status, state.current_page, state.page_size)
-                    //     .then(products => {
-                    //         console.log("Fetched products:", products);
-                    //         dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
-                    //         handleSetFetchProducts(products);
-                    //     });
-                    // // clear selected row
-                    // dispatch({ type: 'SET_SELECTED_ROW_KEYS', payload: [] });
                     resetDataSource();
                 });
             } catch (error) {
@@ -549,6 +545,29 @@ const ProductTable =
                 dispatch({ type: 'OPEN_BOTTOM', payload: false });
             }
         };
+
+        const handleDeleteProduct = async () => {
+            const product_ids = state.selected_products_id;
+            dispatch({ type: 'SET_LOADING_DELETE_PRODUCT', payload: true });
+            console.log('Selected products id:', product_ids);
+            const res = await deleteSomeProducts(product_ids);
+            if (res.success) {
+                message.success('Xóa thành công ' + product_ids.length + ' sản phẩm');
+            } else {
+                if (res?.status === 409) {
+                    if(product_ids.length === 1){
+                        message.error('Sản phẩm đã được sử dụng không thể xóa');
+                    }
+                    else{
+                        message.error('Có sản phẩm đã được sử dụng không thể xóa');
+                    }
+                }
+            }
+            dispatch({ type: 'SET_LOADING_DELETE_PRODUCT', payload: false });
+            dispatch({ type: 'SET_VISIBLE_DELETE_PRODUCT_MODAL', payload: false });
+            dispatch({ type: 'OPEN_BOTTOM', payload: false });
+            resetDataSource();
+        }
 
         const resetDataSource = () => {
             dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
@@ -586,7 +605,7 @@ const ProductTable =
                 </div>
                 <div className={
                     state.open_bottom ?
-                        'w-full flex justify-between rounded-sm px-5 mb-10 bottom-0 sticky bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.15)] h-14' :
+                        'w-[80%] flex justify-between rounded-sm mx-auto px-5 mb-10 bottom-0 sticky bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.15)] h-14 mt-2' :
                         'hidden'}>
                     <Checkbox
                         className='my-auto'
@@ -596,6 +615,11 @@ const ProductTable =
                     </Checkbox>
                     <div className='flex gap-3 items-center'>
                         <div>{state.selected_products_id.length} sản phẩm đã được chọn</div>
+                        <Button
+                            onClick={() => dispatch({ type: 'SET_VISIBLE_DELETE_PRODUCT_MODAL', payload: true })}
+                        >
+                            Xóa
+                        </Button>
                         {state.count_active_products > 0 && (
                             <Button
                                 onClick={handleModalHideProduct}
@@ -603,14 +627,16 @@ const ProductTable =
                                 Ẩn
                             </Button>
                         )}
+
                         {state.count_hide_products > 0 && (
                             <Button
-                                className='bg-primary text-white'
+                                className='bg-primary text-white hover:bg-white hover:text-primary'
                                 onClick={handleModalActiveProduct}
                             >
                                 Hiển thị
                             </Button>
                         )}
+
                     </div>
                 </div>
                 {/* Hide / Active confirm modal */}
@@ -625,7 +651,7 @@ const ProductTable =
                             onClick={() => dispatch({ type: 'SET_VISIBLE_MODAL', payload: false })}
                             loading={state.loading_update_product_status}
                         >
-                            Cancel
+                            Hủy
                         </Button>,
                         <Button
                             key="confirm"
@@ -633,11 +659,36 @@ const ProductTable =
                             loading={state.loading_update_product_status}
                             onClick={handleSubmitUpdateProductStatus}
                         >
-                            Confirm
+                            Xác nhận
                         </Button>
                     ]}
                 >
                     <p>{state.content_modal}</p>
+                </Modal>
+                <Modal
+                    title="Xóa sản phẩm"
+                    open={state.visible_delete_product_modal}
+                    centered={true}
+                    onCancel={() => dispatch({ type: 'SET_VISIBLE_DELETE_PRODUCT_MODAL', payload: false })}
+                    footer={[
+                        <Button
+                            key="cancel"
+                            onClick={() => dispatch({ type: 'SET_VISIBLE_DELETE_PRODUCT_MODAL', payload: false })}
+                            loading={state.loading_delete_product}
+                        >
+                            Hủy
+                        </Button>,
+                        <Button
+                            key="confirm"
+                            type="primary"
+                            loading={state.loading_delete_product}
+                            onClick={handleDeleteProduct}
+                        >
+                            Xác nhận
+                        </Button>
+                    ]}
+                >
+                    <p>Bạn có chắc chắn muốn xóa {state.selected_products_id.length} sản phẩm đã chọn? Lưu ý: Sau khi xóa, bạn không thể hoàn tác hay khôi phục sản phẩm.</p>
                 </Modal>
                 {
                     state?.product_edit_level?.ProductVarients[0]?.ProductClassify == null && (
@@ -675,7 +726,7 @@ const ProductTable =
                     )
                 }
 
-                <EditSaleInfoModal 
+                <EditSaleInfoModal
                     ref={modalRef}
                     visible={state.visible_edit_sale_info}
                     onCancel={handleCancleEditProductModal}
