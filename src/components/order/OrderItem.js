@@ -105,7 +105,7 @@ const OrderItem = (props) => {
             <span className="text-sm">Thành Tiền:</span>
             <span className="text-2xl font-semibold text-primary">
               <sup>đ</sup>
-              {order.total_price.toLocaleString("vi-vn")}
+              {order.final_price.toLocaleString("vi-vn")}
             </span>
           </div>
           <div className="flex justify-between items-center gap-2">

@@ -12,15 +12,22 @@ export const getOrderStatus = async () => {
   }
 };
 
-export const getOrders = async (user_id, status_id, page, limit) => {
-  console.log("getOrders", user_id, status_id, page, limit);
+export const getOrders = async (
+  user_id,
+  status_id,
+  page,
+  limit,
+  searchText
+) => {
   try {
     const response = await axios.post(`${url}get_orders`, {
       user_id,
       status_id,
       page,
       limit,
+      searchText,
     });
+
     return response.data;
   } catch (error) {
     console.log("Error when getOrders", error);
