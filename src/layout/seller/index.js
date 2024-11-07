@@ -48,12 +48,12 @@ const items = [
     icon: <MailOutlined />,
     children: [
       {
-        key: "/seller/order/all",
+        key: "/seller/order/shop-orders?status-id=-1",
         label: "Tất cả",
       },
       {
-        key: "/seller/order/ordercancelled",
-        label: "Đơn hủy",
+        key: "/seller/order/orders-return",
+        label: "Đơn trả hàng",
       },
     ],
   },

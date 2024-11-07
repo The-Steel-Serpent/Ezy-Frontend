@@ -325,7 +325,9 @@ const ProductTable =
                         </div >,
                     prices:
                         state.prices[index].map((price, index) => (
-                            <div key={index} className='text-center'>{price}</div>
+                            <div key={index} className='text-center'>
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)}
+                            </div>
                         )),
                     stocks:
                         state.stocks[index].map((stock, index) => (
