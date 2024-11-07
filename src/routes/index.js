@@ -91,11 +91,8 @@ const SellerEditProfileTax = withSuspense(
 const SuggestProduct = withSuspense(
   lazy(() => import("../pages/buyer/product-pages/SuggestProduct"))
 );
-const AllOrders = withSuspense(
-  lazy(() => import("../pages/seller/orders/AllOrders"))
-);
-const OrderCancelled = withSuspense(
-  lazy(() => import("../pages/seller/orders/OrderCancelled"))
+const ShopOrders = withSuspense(
+  lazy(() => import("../pages/seller/orders/ShopOrders"))
 );
 const AllProduct = withSuspense(
   lazy(() => import("../pages/seller/product_management/AllProduct"))
@@ -348,18 +345,10 @@ const router = createBrowserRouter([
       },
       //seller/order
       {
-        path: "seller/order/all",
+        path: "seller/order/shop-orders",
         element: (
           <SellerAuthLayout>
-            <AllOrders />
-          </SellerAuthLayout>
-        ),
-      },
-      {
-        path: "seller/order/ordercancelled",
-        element: (
-          <SellerAuthLayout>
-            <OrderCancelled />
+            <ShopOrders />
           </SellerAuthLayout>
         ),
       },

@@ -27,3 +27,18 @@ export const getOrders = async (user_id, status_id, page, limit) => {
     throw new Error(error);
   }
 };
+
+export const getShopOrders = async (shop_id, status_id, page, limit) => {
+  try {
+    const response = await axios.post(`${url}get_shop_orders`, {
+      shop_id,
+      status_id,
+      page,
+      limit,
+    });
+    return response.data;
+  } catch (error) {
+    console.log("Error when getShopOrders", error);
+    throw new Error(error);
+  }
+}
