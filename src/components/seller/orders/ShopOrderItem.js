@@ -9,10 +9,6 @@ import ShopOrderDetaiItem from "./ShopOrderDetaiItem";
 const ShopOrderItem = (props) => {
     const { order } = props;
     const { handleUserSelected } = useMessages();
-    const handleViewShop = () => {
-        window.location.href = `/shop/${order?.Shop?.UserAccount?.username}`;
-    };
-
     const statusDescriptions = {
         ready_to_pick: "Người bán đang chuẩn bị hàng",
         picking: "Đang lấy hàng",
@@ -112,31 +108,28 @@ const ShopOrderItem = (props) => {
                         {/** Order Status */}
                         {order?.OrderStatus?.order_status_id === 1 && (
                             <div className="text-[12px] w-[40%] text-neutral-500">
-                                Đơn hàng của bạn chưa thanh toán. Vui lòng thanh toán để tiếp
-                                tục
+                                Đơn hàng đang chờ người mua thanh toán.
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 2 && (
                             <div className="text-[12px] w-[40%] text-neutral-500">
-                                Bạn có thể hủy đơn hàng trong vòng 24h sau khi đặt hàng.
+                                Đơn hàng mới cần được xác nhận.
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 3 && (
                             <div className="text-[12px] w-[40%] text-neutral-500">
-                                Đơn hàng sẽ được chuẩn bị và giao cho bạn trong thời gian sớm
-                                nhất.
+                                Đơn hàng đã được chuẩn bị và đang chờ đơn vị vận chuyển lấy hàng.
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 4 && (
                             <div className="text-[12px] w-[40%] text-neutral-500">
-                                Vui lòng chỉ nhấn "Đã nhận được hàng" khi đơn hàng đã được giao
-                                đến bạn và sản phẩm nhận được không có vấn đề nào.
+                                Đơn vị vận chuyển đã lấy hàng và đang vận chuyển đến người mua.
                             </div>
                         )}
 
                         {order?.OrderStatus?.order_status_id === 5 && (
                             <div className="text-[12px] w-[40%] text-neutral-500">
-                                Đánh giá sản phẩm giúp người mua khác hiểu rõ hơn về sản phẩm.
+                                Đon hàng đã được giao thành công.
                             </div>
                         )}
 
@@ -144,27 +137,8 @@ const ShopOrderItem = (props) => {
                         {order?.OrderStatus?.order_status_id === 1 && (
                             <div className="w-[100%] flex gap-3 justify-end">
                                 <Button
-                                    size="large"
-                                    className="bg-primary text-white hover:opacity-80"
-                                >
-                                    Thanh Toán
-                                </Button>
-                                <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
-                                    onClick={() =>
-                                        handleUserSelected(order.UserAccount.user_id)
-                                    }
-                                >
-                                    Liên Hệ Người Bán
-                                </Button>
-                            </div>
-                        )}
-                        {order?.OrderStatus?.order_status_id === 2 && (
-                            <div className="w-[100%] flex gap-3 justify-end">
-                                <Button
-                                    size="large"
-                                    className="bg-primary text-white hover:opacity-80"
                                 >
                                     Hủy Đơn Hàng
                                 </Button>
@@ -175,17 +149,48 @@ const ShopOrderItem = (props) => {
                                         handleUserSelected(order.UserAccount.user_id)
                                     }
                                 >
-                                    Liên Hệ Người Bán
+                                    Liên Hệ Người Mua
+                                </Button>
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
+                                >
+                                    Chi Tiết Đơn Hàng
+                                </Button>
+                            </div>
+                        )}
+                        {order?.OrderStatus?.order_status_id === 2 && (
+                            <div className="w-[100%] flex gap-3 justify-end">
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
+                                >
+                                    Hủy Đơn Hàng
+                                </Button>
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
+                                    onClick={() =>
+                                        handleUserSelected(order.UserAccount.user_id)
+                                    }
+                                >
+                                    Liên Hệ Người Mua
+                                </Button>
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
+                                >
+                                    Chi Tiết Đơn Hàng
                                 </Button>
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 3 && (
                             <div className="w-[100%] flex gap-3 justify-end">
                                 <Button
+                                    className="bg-white text-primary hover:opacity-80"
                                     size="large"
-                                    className="bg-primary text-white hover:opacity-80"
                                 >
-                                    Yêu Cầu Hủy Đơn
+                                    Hủy Đơn Hàng
                                 </Button>
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
@@ -194,28 +199,32 @@ const ShopOrderItem = (props) => {
                                         handleUserSelected(order.UserAccount.user_id)
                                     }
                                 >
-                                    Liên Hệ Người Bán
+                                    Liên Hệ Người Mua
+                                </Button>
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
+                                >
+                                    Chi Tiết Đơn Hàng
                                 </Button>
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 4 && (
                             <div className="w-[60%] flex gap-3 justify-end">
                                 <Button
-                                    size="large"
-                                    className="bg-primary text-white hover:opacity-80"
-                                    disabled={order.ghn_status !== "delivered"}
-                                >
-                                    Đã Nhận Hàng
-                                </Button>
-
-                                <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
                                     onClick={() =>
                                         handleUserSelected(order.UserAccount.user_id)
                                     }
                                 >
-                                    Liên Hệ Người Bán
+                                    Liên Hệ Người Mua
+                                </Button>
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
+                                >
+                                    Chi Tiết Đơn Hàng
                                 </Button>
                             </div>
                         )}
@@ -223,50 +232,20 @@ const ShopOrderItem = (props) => {
                             <div className="w-[100%] flex gap-3 justify-end">
                                 <Button
                                     size="large"
-                                    className="bg-primary text-white hover:opacity-80"
-                                >
-                                    Đánh Giá
-                                </Button>
-                                <Button
-                                    size="large"
                                     className="bg-secondary border-secondary text-white hover:opacity-80"
                                 >
                                     Trả Hàng/Hoàn Tiền
                                 </Button>
-                                <Popover
-                                    content={
-                                        <div className="flex flex-col">
-                                            <span
-                                                className="hover:bg-slate-100 cursor-pointer"
-                                                onClick={() =>
-                                                    handleUserSelected(order.UserAccount.user_id)
-                                                }
-                                            >
-                                                Liên Hệ Người Bán
-                                            </span>
-                                            <span className="hover:bg-slate-100 cursor-pointer">
-                                                Mua Lại
-                                            </span>
-                                        </div>
-                                    }
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
                                 >
-                                    <Button
-                                        size="large"
-                                        className="bg-white text-primary hover:opacity-80"
-                                    >
-                                        Thêm <CaretDownFilled />
-                                    </Button>
-                                </Popover>
+                                    Chi Tiết Đơn Hàng
+                                </Button>
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 6 && (
                             <div className="w-[100%] flex gap-3 justify-end">
-                                <Button
-                                    size="large"
-                                    className="bg-primary text-white hover:opacity-80 w-[180px]"
-                                >
-                                    Mua Lại
-                                </Button>
                                 <Button
                                     size="large"
                                     className="bg-white text-primary hover:opacity-80"
@@ -280,7 +259,13 @@ const ShopOrderItem = (props) => {
                                         handleUserSelected(order.UserAccount.user_id)
                                     }
                                 >
-                                    Liên Hệ Người Bán
+                                    Liên Hệ Người Mua
+                                </Button>
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
+                                >
+                                    Chi Tiết Đơn Hàng
                                 </Button>
                             </div>
                         )}

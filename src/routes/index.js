@@ -123,6 +123,9 @@ const CheckoutPage = withSuspense(
   lazy(() => import("../pages/buyer/cart-pages/CheckoutPage"))
 );
 
+const OrdersReturn = withSuspense(
+  lazy(() => import("../pages/seller/orders/OrdersReturn"))
+);
 const router = createBrowserRouter([
   {
     path: "/",
@@ -352,6 +355,14 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <ShopOrders />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/order/orders-return",
+        element: (
+          <SellerAuthLayout>
+            <OrdersReturn />
           </SellerAuthLayout>
         ),
       },

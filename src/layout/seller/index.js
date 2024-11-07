@@ -43,9 +43,19 @@ const { Header, Content, Sider } = Layout;
 
 const items = [
   {
-    key: "/seller/order/shop-orders?status-id=-1",
+    key: "sub1",
     label: "Quản Lý Đơn Hàng",
     icon: <MailOutlined />,
+    children: [
+      {
+        key: "/seller/order/shop-orders?status-id=-1",
+        label: "Tất cả",
+      },
+      {
+        key: "/seller/order/orders-return",
+        label: "Đơn trả hàng",
+      },
+    ],
   },
   {
     key: "sub2",
