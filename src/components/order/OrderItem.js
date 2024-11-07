@@ -1,19 +1,113 @@
-import { Avatar, Button, Image, List, message, Popover } from "antd";
-import React, { memo } from "react";
+import {
+  Avatar,
+  Button,
+  Image,
+  List,
+  message,
+  Modal,
+  Popover,
+  Radio,
+} from "antd";
+import React, { memo, useEffect, useReducer } from "react";
 import { useMessages } from "../../providers/MessagesProvider";
 import { CaretDownFilled, ShopFilled } from "@ant-design/icons";
 import OrderDetailsItem from "./OrderDetailsItem";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { formatDate } from "date-fns";
-import { checkoutOrder } from "../../services/orderService";
+import {
+  cancelOrder,
+  checkoutOrder,
+  checkoutOrderEzyWallet,
+  completeOrder,
+} from "../../services/orderService";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchWallet } from "../../redux/walletSlice";
+import { set } from "lodash";
+import ModalOTP from "../user/ModalOTP";
+const vnpay = require("../../assets/vnpay.png");
+const walletImg = require("../../assets/wallet.png");
 
 const OrderItem = (props) => {
   const { order } = props;
+  const dispatch = useDispatch();
+  const token = localStorage.getItem("token");
+  const wallet = useSelector((state) => state.wallet.wallet);
+  const user = useSelector((state) => state.user);
   const { handleUserSelected } = useMessages();
+
+  const [localState, setLocalState] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "SET_LOADING": {
+          return { ...state, loading: action.payload };
+        }
+        case "SET_SELECTED_PAYMENT_METHOD": {
+          return { ...state, selectedPaymentMethod: action.payload };
+        }
+        case "SET_OPEN_MODAL_PAYMENT_METHOD": {
+          return { ...state, openModalPaymentMethod: action.payload };
+        }
+        case "SET_OPEN_MODAL_OTP": {
+          return { ...state, openModalOTP: action.payload };
+        }
+        case "SET_MODAL": {
+          return { ...state, modal: action.payload };
+        }
+        case "verifyOTP":
+          return { ...state, verifyOTP: action.payload };
+
+        default:
+          return state;
+      }
+    },
+    {
+      loading: false,
+      verifyOTP: false,
+      selectedPaymentMethod: 3,
+      openModalPaymentMethod: false,
+      openModalOTP: false,
+      modal: {
+        openModalConfirm: false,
+        type: "",
+      },
+    }
+  );
+  // Effects
+  useEffect(() => {
+    if (token && localState.openModalPaymentMethod) {
+      dispatch(fetchWallet(token));
+    }
+  }, [token, dispatch, localState.openModalPaymentMethod]);
+  useEffect(() => {
+    const checkout = async () => {
+      if (localState.selectedPaymentMethod === 3) {
+        await handleCheckoutWithVnpay();
+      } else {
+        await handleCheckoutWithWallet();
+      }
+    };
+    if (localState.verifyOTP) {
+      checkout();
+    }
+  }, [localState.verifyOTP]);
+
+  // Handlers
   const handleViewShop = () => {
     window.location.href = `/shop/${order?.Shop?.UserAccount?.username}`;
   };
   const handleCheckoutOrder = async () => {
+    setLocalState({ type: "SET_OPEN_MODAL_PAYMENT_METHOD", payload: true });
+  };
+  const handleCloseModalOTP = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_OTP", payload: false });
+  };
+  const handleCloseModalCheckout = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_PAYMENT_METHOD", payload: false });
+    setLocalState({ type: "SET_LOADING", payload: false });
+    setLocalState({ type: "SET_SELECTED_PAYMENT_METHOD", payload: 3 });
+  };
+
+  const handleCheckoutWithVnpay = async () => {
     try {
       const res = await checkoutOrder(order.user_order_id);
       if (res.success) {
@@ -24,7 +118,45 @@ const OrderItem = (props) => {
       message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
     }
   };
+  const handleOnVerifyOTP = () => {
+    setLocalState({ type: "verifyOTP", payload: true });
+  };
+  const handleCheckoutWithWallet = async () => {
+    try {
+      const res = await checkoutOrderEzyWallet(
+        order.user_order_id,
+        wallet.user_wallet_id
+      );
+      if (res.success) {
+        message.success("Thanh toán thành công");
+        setLocalState({
+          type: "SET_OPEN_MODAL_PAYMENT_METHOD",
+          payload: false,
+        });
+        setTimeout(
+          () => (window.location.href = "/user/purchase?status-id=2"),
+          2000
+        );
+      }
+    } catch (error) {
+      console.log("Error when checkout order", error);
+      message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
+    }
+  };
+  const onPaymentMethodChange = (e) => {
+    setLocalState({
+      type: "SET_SELECTED_PAYMENT_METHOD",
+      payload: e.target.value,
+    });
+  };
 
+  const onSubmitPayment = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_OTP", payload: true });
+    console.log("onSubmitPayment");
+    setLocalState({ type: "SET_LOADING", payload: true });
+  };
+
+  // Arrays
   const statusDescriptions = {
     ready_to_pick: "Người bán đang chuẩn bị hàng",
     picking: "Đang lấy hàng",
@@ -48,6 +180,71 @@ const OrderItem = (props) => {
     exception: "Đơn hàng ngoại lệ không nằm trong quy trình",
     damage: "Hàng bị hư hỏng",
     lost: "Hàng bị mất",
+  };
+
+  const PaymentMethodArray = [
+    {
+      name: "Ví VNPay",
+      value: 3,
+      image: vnpay,
+    },
+    {
+      name: "Ví EzyPay ",
+      value: 4,
+      image: walletImg,
+      balance: wallet.balance,
+    },
+  ];
+
+  const handleOpenModalConfirm = (type) => {
+    setLocalState({
+      type: "SET_MODAL",
+      payload: { openModalConfirm: true, type: type },
+    });
+  };
+  const handleCloseModalConfirm = () => {
+    setLocalState({
+      type: "SET_MODAL",
+      payload: { openModalConfirm: false, type: "" },
+    });
+  };
+  const formatCurrency = (balance) => {
+    return new Intl.NumberFormat("vi-VN").format(balance) + "đ";
+  };
+
+  //Order Handlers
+  const handleCancelOrder = async () => {
+    try {
+      const res = await cancelOrder(order.user_order_id);
+      if (res.success) {
+        message.success("Hủy đơn hàng thành công");
+        handleCloseModalConfirm();
+        setTimeout(
+          () => (window.location.href = "/user/purchase?status-id=6"),
+          2000
+        );
+      }
+    } catch (error) {
+      console.log("Error when cancel order", error);
+      message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
+    }
+  };
+
+  const handleCompleteOrder = async () => {
+    try {
+      const res = await completeOrder(order.user_order_id);
+      if (res.success) {
+        message.success("Đã nhận hàng thành công");
+        handleCloseModalConfirm();
+        setTimeout(
+          () => (window.location.href = "/user/purchase?status-id=5"),
+          2000
+        );
+      }
+    } catch (error) {
+      console.log("Error when complete order", error);
+      message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
+    }
   };
   return (
     <>
@@ -178,6 +375,7 @@ const OrderItem = (props) => {
                 <Button
                   size="large"
                   className="bg-primary text-white hover:opacity-80"
+                  onClick={() => handleOpenModalConfirm("cancel-order")}
                 >
                   Hủy Đơn Hàng
                 </Button>
@@ -217,6 +415,7 @@ const OrderItem = (props) => {
                   size="large"
                   className="bg-primary text-white hover:opacity-80"
                   disabled={order.ghn_status !== "delivered"}
+                  onClick={() => handleOpenModalConfirm("complete-order")}
                 >
                   Đã Nhận Hàng
                 </Button>
@@ -300,6 +499,102 @@ const OrderItem = (props) => {
           </div>
         </div>
       </div>
+
+      {/* Modal Payment Method*/}
+      <Modal
+        open={localState.openModalPaymentMethod}
+        title={<span className="text-lg">Phương Thức Thanh Toán</span>}
+        onCancel={handleCloseModalCheckout}
+        onClose={handleCloseModalCheckout}
+        footer={
+          <div className="w-full flex justify-end items-center gap-3">
+            <Button
+              size="large"
+              className="border-secondary text-secondary bg-white hover:bg-secondary hover:text-white"
+              onClick={handleCloseModalCheckout}
+            >
+              Hủy
+            </Button>
+            <Button
+              size="large"
+              className="bg-primary text-white hover:opacity-80"
+              onClick={onSubmitPayment}
+            >
+              Xác Nhận
+            </Button>
+          </div>
+        }
+      >
+        <Radio.Group
+          className="flex flex-col gap-3"
+          defaultValue={1}
+          onChange={onPaymentMethodChange}
+        >
+          {PaymentMethodArray.map((item) => (
+            <Radio
+              value={item.value}
+              disabled={item?.balance < order?.final_price && true}
+            >
+              <div className="w-full flex items-center gap-2">
+                <img src={item.image} alt="" className="w-11" />
+                <div className="flex flex-col">
+                  <span>{item.name}</span>
+                  {item?.balance !== undefined && (
+                    <span>Số dư: ({formatCurrency(item?.balance)})</span>
+                  )}
+                </div>
+              </div>
+            </Radio>
+          ))}
+        </Radio.Group>
+      </Modal>
+
+      {/* Modal OTP */}
+      <ModalOTP
+        onVerify={handleOnVerifyOTP}
+        user={user}
+        openOTPModal={localState.openModalOTP}
+        handleCancelOTP={handleCloseModalOTP}
+      />
+
+      {/* Modal Confirm */}
+      <Modal
+        title={<span className="text-2xl">Thông Báo Xác Nhận</span>}
+        open={localState.modal.openModalConfirm}
+        onCancel={handleCloseModalConfirm}
+        onClose={handleCloseModalConfirm}
+        footer={
+          <div className="w-full flex gap-3 justify-end items-center">
+            <Button
+              size="large"
+              className="border-secondary text-secondary bg-white hover:bg-secondary hover:text-white"
+              onClick={handleCloseModalConfirm}
+            >
+              Hủy
+            </Button>
+            <Button
+              size="large"
+              className="bg-primary text-white hover:opacity-80"
+              onClick={
+                localState.modal.type === "cancel-order"
+                  ? handleCancelOrder
+                  : localState.modal.type === "complete-order"
+                  ? handleCompleteOrder
+                  : null
+              }
+            >
+              Xác Nhận
+            </Button>
+          </div>
+        }
+      >
+        <div className="text-lg">
+          {localState.modal.type === "cancel-order" &&
+            "Bạn có chắc chắn muốn hủy đơn hàng này không?"}
+          {localState.modal.type === "complete-order" &&
+            'Ezy Sẽ thanh toán số tiền trên cho Người bán. Bạn vui lòng chỉ nhấn "Đã nhận được hàng" khi đơn hàng đã được giao đến bạn và sản phẩm nhận được không có vấn đề nào.'}
+        </div>
+      </Modal>
     </>
   );
 };
