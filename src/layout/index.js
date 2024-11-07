@@ -126,6 +126,10 @@ const AuthLayout = ({ children }) => {
       socket.emit("cancelOrder", data);
     });
 
+    socket.on("unBlockOrder", (data) => {
+      socket.emit("updateBlockStatus", data);
+    });
+
     return () => {
       socket.disconnect();
     };
