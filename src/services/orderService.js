@@ -46,3 +46,42 @@ export const checkoutOrder = async (user_order_id) => {
     throw new Error(error);
   }
 };
+
+export const checkoutOrderEzyWallet = async (user_order_id, user_wallet_id) => {
+  try {
+    console.log("user_order_id", user_order_id);
+    console.log("user_wallet_id", user_wallet_id);
+    const response = await axios.post(`${url}checkout-order-ezy-wallet`, {
+      user_order_id,
+      user_wallet_id,
+    });
+    return response.data;
+  } catch (error) {
+    console.log("Error when checkoutOrderEzyWallet", error);
+    throw new Error(error);
+  }
+};
+
+export const cancelOrder = async (user_order_id) => {
+  try {
+    const response = await axios.post(`${url}cancel-order`, {
+      user_order_id,
+    });
+    return response.data;
+  } catch (error) {
+    console.log("Error when cancelOrder", error);
+    throw new Error(error);
+  }
+};
+
+export const completeOrder = async (user_order_id) => {
+  try {
+    const response = await axios.post(`${url}complete-order`, {
+      user_order_id,
+    });
+    return response.data;
+  } catch (error) {
+    console.log("Error when completeOrder", error);
+    throw new Error(error);
+  }
+};
