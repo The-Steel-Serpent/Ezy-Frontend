@@ -1,18 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Table, message, Button, Popconfirm } from 'antd';
+import { Table, message, Button, Popconfirm, DatePicker } from 'antd';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import AddFlashSale from './AddFlashSale'; // Import modal thêm Flash Sale
-import EditFlashSale from './EditFlashSale'; // Import modal chỉnh sửa Flash Sale
+import AddFlashSale from './AddFlashSale';
+import EditFlashSale from './EditFlashSale';
+
+// Cấu hình plugin cho dayjs
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 const FlashSale = () => {
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [currentFlashSale, setCurrentFlashSale] = useState(null); // Dữ liệu Flash Sale đang chỉnh sửa
+  const [currentFlashSale, setCurrentFlashSale] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
-  // Cấu hình các cột cho bảng
   const columns = [
     {
       title: 'ID',
@@ -28,13 +36,13 @@ const FlashSale = () => {
       title: 'Thời gian bắt đầu',
       dataIndex: 'started_at',
       key: 'started_at',
-      render: (text) => dayjs(text).format('HH:mm:ss DD/MM/YYYY'), // Hiển thị theo giờ địa phương
+      render: (text) => dayjs(text).format('HH:mm:ss DD/MM/YYYY'),
     },
     {
       title: 'Thời gian kết thúc',
       dataIndex: 'ended_at',
       key: 'ended_at',
-      render: (text) => dayjs(text).format('HH:mm:ss DD/MM/YYYY'), // Hiển thị theo giờ địa phương
+      render: (text) => dayjs(text).format('HH:mm:ss DD/MM/YYYY'),
     },
     {
       title: 'Mô tả',
@@ -51,9 +59,9 @@ const FlashSale = () => {
       key: 'action',
       render: (text, record) => (
         <>
-          <Button 
-            icon={<EditOutlined />} 
-            onClick={() => showEditFlashSaleModal(record)} 
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => showEditFlashSaleModal(record)}
             style={{ marginRight: 8 }}
           >
             Chỉnh sửa
@@ -64,7 +72,10 @@ const FlashSale = () => {
             okText="Có"
             cancelText="Không"
           >
-            <Button icon={<DeleteOutlined />} type="danger">
+            <Button
+              icon={<DeleteOutlined />}
+              style={{ backgroundColor: 'red', color: 'white', borderColor: 'red' }}
+            >
               Xóa
             </Button>
           </Popconfirm>
@@ -73,12 +84,12 @@ const FlashSale = () => {
     },
   ];
 
-  // Hàm gọi API để lấy danh sách Flash Sale
   const fetchData = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/flash-sales/get-all`);
       if (response.data.success) {
         setData(response.data.data);
+        setFilteredData(response.data.data);
       } else {
         message.error('Không thể tải dữ liệu flash sale');
       }
@@ -92,82 +103,84 @@ const FlashSale = () => {
     fetchData();
   }, []);
 
-  // Hàm hiển thị modal thêm Flash Sale
   const showAddFlashSaleModal = () => {
     setIsAddModalVisible(true);
   };
 
-  // Hàm hiển thị modal chỉnh sửa Flash Sale
   const showEditFlashSaleModal = (flashSale) => {
     setCurrentFlashSale(flashSale);
     setIsEditModalVisible(true);
   };
 
-  // Hàm đóng modal thêm Flash Sale
-  const handleAddModalClose = () => {
-    setIsAddModalVisible(false);
-  };
-
-  // Hàm đóng modal chỉnh sửa Flash Sale
-  const handleEditModalClose = () => {
-    setIsEditModalVisible(false);
-    setCurrentFlashSale(null); // Reset dữ liệu chỉnh sửa
-  };
-
-  // Hàm gọi lại API sau khi thêm Flash Sale thành công
-  const handleAddSuccess = () => {
-    fetchData();
-    handleAddModalClose(); // Đóng modal thêm
-  };
-
-  const handleEditSuccess = () => {
-    fetchData();
-    handleEditModalClose(); // Đóng modal chỉnh sửa
-  };
-
-  // Hàm xóa Flash Sale
   const handleDeleteFlashSale = async (id) => {
     try {
       const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/flash-sales/delete/${id}`);
       if (response.data.success) {
         message.success('Xóa Flash Sale thành công');
-        fetchData(); // Làm mới danh sách sau khi xóa
+        fetchData();
       } else {
         message.error('Xóa Flash Sale thất bại');
       }
     } catch (error) {
-      message.error('Lỗi khi xóa Flash Sale');
+      message.error(error.response?.data?.message || 'Có lỗi xảy ra');
       console.error('Lỗi khi gọi API', error);
+    }
+  };
+
+  const handleFilter = () => {
+    if (startDate && endDate) {
+      const filtered = data.filter((item) => {
+        const startedAt = dayjs(item.started_at);
+        const endedAt = dayjs(item.ended_at);
+
+        return (
+          (startedAt.isSameOrAfter(startDate, 'day') && startedAt.isSameOrBefore(endDate, 'day')) ||
+          (endedAt.isSameOrAfter(startDate, 'day') && endedAt.isSameOrBefore(endDate, 'day')) ||
+          (startedAt.isBefore(startDate, 'day') && endedAt.isAfter(endDate, 'day'))
+        );
+      });
+      setFilteredData(filtered);
+    } else {
+      message.warning('Vui lòng chọn cả ngày bắt đầu và ngày kết thúc');
     }
   };
 
   return (
     <div>
-      <Button 
-        type="primary" 
-        icon={<PlusOutlined />}
-        style={{ marginBottom: 16 }}
-        onClick={showAddFlashSaleModal} // Gọi modal khi bấm nút
-      >
-        Thêm Flash Sale
-      </Button>
+      <h1 style={{ marginBottom: 16, fontSize:20 }}>Quản lý Flash Sale</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <DatePicker placeholder="Ngày bắt đầu" onChange={(date) => setStartDate(date ? dayjs(date) : null)} />
+          <DatePicker placeholder="Ngày kết thúc" onChange={(date) => setEndDate(date ? dayjs(date) : null)} />
+          <Button type="primary" onClick={handleFilter}>
+            Lọc
+          </Button>
+        </div>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={showAddFlashSaleModal}
+        >
+          Thêm Flash Sale
+        </Button>
+      </div>
 
-      <Table 
-        columns={columns} 
-        dataSource={data} 
+      <Table
+        columns={columns}
+        dataSource={filteredData}
         rowKey="flash_sales_id"
       />
 
-      <AddFlashSale 
+      <AddFlashSale
         visible={isAddModalVisible}
-        onClose={handleAddModalClose}
-        onAddSuccess={handleAddSuccess}
+        onClose={() => setIsAddModalVisible(false)}
+        onAddSuccess={() => fetchData()}
       />
 
-      <EditFlashSale 
+      <EditFlashSale
         visible={isEditModalVisible}
-        onClose={handleEditModalClose}
-        onEditSuccess={handleEditSuccess} 
+        onClose={() => setIsEditModalVisible(false)}
+        onEditSuccess={() => fetchData()}
         flashSaleData={currentFlashSale}
       />
     </div>

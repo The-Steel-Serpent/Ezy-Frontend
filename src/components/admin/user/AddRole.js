@@ -20,7 +20,7 @@ const AddRole = ({ onAdd }) => {
       }
     } catch (error) {
       console.error("Lỗi khi thêm role:", error);
-      message.error('Có lỗi xảy ra khi thêm role.');
+      message.error(error.response?.data?.message || 'Có lỗi xảy ra khi thêm role.');
     }
   };
 

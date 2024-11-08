@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import AddRole from './AddRole';
+import EditRole from './EditRole';
 
 const Role = () => {
   const [roleData, setRoleData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState(null);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [roleToEdit, setRoleToEdit] = useState(null);
 
   useEffect(() => {
     fetchRoles();
@@ -26,7 +30,7 @@ const Role = () => {
   const handleAddRole = (newRole) => {
     setRoleData((prevData) => [...prevData, newRole]);
     message.success('Role đã được thêm thành công!');
-    handleCloseModal(); 
+    handleCloseModal();
   };
 
   const handleOpenModal = () => {
@@ -48,11 +52,11 @@ const Role = () => {
       onOk: () => handleDeleteRole(role.role_id),
       okButtonProps: {
         style: {
-            backgroundColor: 'red',
-            borderColor: 'red',
-            color: 'white',
+          backgroundColor: 'red',
+          borderColor: 'red',
+          color: 'white',
         },
-    },
+      },
     });
   };
 
@@ -70,6 +74,16 @@ const Role = () => {
     }
   };
 
+  const handleEditRole = (role) => {
+    setRoleToEdit(role);
+    setIsEditModalVisible(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalVisible(false);
+    setRoleToEdit(null);
+  };
+
   const columns = [
     {
       title: 'ID',
@@ -85,9 +99,14 @@ const Role = () => {
       title: 'Thao tác',
       key: 'action',
       render: (text, record) => (
-        <Button type="primary" danger onClick={() => showDeleteConfirm(record)}>
-          Xóa
-        </Button>
+        <>
+          <Button type="primary" style={{ marginRight: 8 }} onClick={() => handleEditRole(record)}>
+            Cập nhật
+          </Button>
+          <Button type="primary" danger onClick={() => showDeleteConfirm(record)}>
+            Xóa
+          </Button>
+        </>
       ),
     },
   ];
@@ -95,7 +114,12 @@ const Role = () => {
   return (
     <div>
       <div>
-        <Button type="primary" onClick={handleOpenModal}>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleOpenModal}
+          style={{ marginBottom: 16, float: 'right' }}
+        >
           Thêm Role
         </Button>
       </div>
@@ -117,6 +141,17 @@ const Role = () => {
       >
         <AddRole onAdd={handleAddRole} />
       </Modal>
+
+      <EditRole
+        role={roleToEdit}
+        isVisible={isEditModalVisible}
+        onClose={handleCloseEditModal}
+        onUpdate={(updatedRole) => {
+          setRoleData((prevData) => prevData.map((role) =>
+            role.role_id === updatedRole.role_id ? updatedRole : role
+          ));
+        }}
+      />
     </div>
   );
 };

@@ -125,12 +125,25 @@ const SaleEvent = () => {
                     <Button
                         type="primary"
                         onClick={() => handleOpenSettingModal(record.sale_events_id)}
-                        disabled={record.is_actived}
+                        disabled={record.is_actived || new Date(record.ended_at) < new Date()}
                     >
                         Thiết lập
                     </Button>
-                    <Button type="primary" onClick={() => handleOpenDetailModal(record.sale_events_id)} style={{ marginLeft: '8px' }}>Chi tiết</Button>
-                    <Button type="primary" onClick={() => handleOpenEditModal(record.sale_events_id)} style={{ marginLeft: '8px' }}>Chỉnh sửa</Button>
+                    <Button 
+                        type="primary" 
+                        onClick={() => handleOpenDetailModal(record.sale_events_id)}
+                        style={{ marginLeft: '8px' }}
+                    >
+                        Chi tiết
+                    </Button>
+                    <Button 
+                        type="primary" 
+                        onClick={() => handleOpenEditModal(record.sale_events_id)} 
+                        style={{ marginLeft: '8px' }}
+                        disabled={record.is_actived || new Date(record.ended_at) < new Date()}
+                    >
+                        Chỉnh sửa
+                    </Button>
                     <Button type="primary" danger onClick={() => handleDeleteEvent(record.sale_events_id)} style={{ marginLeft: '8px' }}>Xóa</Button>
                 </>
             ),
@@ -140,7 +153,12 @@ const SaleEvent = () => {
     return (
         <div>
             <h1>Sự kiện khuyến mãi</h1>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddModalVisible(true)}>
+            <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                onClick={() => setIsAddModalVisible(true)}
+                style={{ float: 'right', marginBottom: '20px' }}
+            >
                 Tạo sự kiện mới
             </Button>
 
