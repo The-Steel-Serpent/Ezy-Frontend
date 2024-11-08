@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import backgroundShop from "../../../assets/backgroundShop.jpg";
 import axios from "axios";
 import { BiChat, BiListPlus } from "react-icons/bi";
-import { Button, Carousel, Menu } from "antd";
+import { Button, Carousel, Menu, Modal } from "antd";
 import { AiOutlineShop } from "react-icons/ai";
 import { FaRegStar } from "react-icons/fa";
 import { IoChatboxEllipsesOutline } from "react-icons/io5";
@@ -230,203 +230,231 @@ const ShopDetails = () => {
   return (
     <>
       {shop ? (
-        <section>
-          <div className="w-full bg-white">
-            <div className="max-w-[1200px] mx-auto pt-10">
-              <div className="grid grid-cols-12">
-                <div className="col-span-3">
-                  <div className="relative w-full bg-background-Shop bg-cover rounded bg-center  ">
-                    <div className="p-4 flex w-full gap-2 inset-0  backdrop-blur-sm items-center">
-                      <img
-                        className="size-16 rounded-full border-[2px] border-solid"
-                        src={shop?.logo_url}
-                      />
-                      <div className="flex flex-col gap-1">
-                        <span className="text-white text-lg font-semibold">
-                          {shop?.shop_name}
-                        </span>
-                        <Button
-                          className="border-white text-white"
-                          onClick={() =>
-                            handleUserSelected(shop.UserAccount.user_id)
-                          }
-                        >
-                          <BiChat />
-                          Chat Ngay
-                        </Button>
+        <>
+          <section>
+            <div className="w-full bg-white">
+              <div className="max-w-[1200px] mx-auto pt-10">
+                <div className="grid grid-cols-12">
+                  <div className="col-span-3">
+                    <div className="relative w-full bg-background-Shop bg-cover rounded bg-center  ">
+                      <div className="p-4 flex w-full gap-2 inset-0  backdrop-blur-sm items-center">
+                        <img
+                          className="size-16 rounded-full border-[2px] border-solid"
+                          src={shop?.logo_url}
+                        />
+                        <div className="flex flex-col gap-1">
+                          <span className="text-white text-lg font-semibold">
+                            {shop?.shop_name}
+                          </span>
+                          <Button
+                            className="border-white text-white"
+                            onClick={() =>
+                              handleUserSelected(shop.UserAccount.user_id)
+                            }
+                          >
+                            <BiChat />
+                            Chat Ngay
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <div className="col-span-9 text-slate-700 ">
+                    <section className="flex">
+                      <div className="w-full px-7 flex flex-col flex-nowrap gap-2">
+                        <div className="py-1 flex gap-2 text-sm">
+                          <div className="flex items-center gap-1">
+                            <AiOutlineShop />
+                            <span>Sản Phẩm: </span>
+                          </div>
+                          <span className="text-primary">
+                            {shop?.total_product || 0}
+                          </span>
+                        </div>
+                        <div className="py-1 flex gap-2 text-sm">
+                          <div className="flex items-center gap-1">
+                            <FaRegStar />
+                            <span>Đánh Giá: </span>
+                          </div>
+                          <span className="text-primary">
+                            {shop?.total_ratings || 0}
+                          </span>
+                        </div>
+                        <div className="py-1 flex gap-2 text-sm">
+                          <div className="flex items-center gap-1">
+                            <IoChatboxEllipsesOutline />
+                            <span>Lượt Đánh Giá: </span>
+                          </div>
+                          <span className="text-primary">
+                            {shop?.total_reviews || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-full px-7 flex flex-col flex-nowrap gap-2">
+                        <div className="py-1 flex gap-2 text-sm">
+                          <div className="flex items-center gap-1">
+                            <FaUserAstronaut />
+                            <span>Tham Gia: </span>
+                          </div>
+                          <span className="text-primary">
+                            {shop?.created_at
+                              ? formatDistanceToNow(new Date(shop.created_at), {
+                                  addSuffix: true,
+                                  locale: vi,
+                                })
+                              : "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
                 </div>
-                <div className="col-span-9 text-slate-700 ">
-                  <section className="flex">
-                    <div className="w-full px-7 flex flex-col flex-nowrap gap-2">
-                      <div className="py-1 flex gap-2 text-sm">
-                        <div className="flex items-center gap-1">
-                          <AiOutlineShop />
-                          <span>Sản Phẩm: </span>
-                        </div>
-                        <span className="text-primary">
-                          {shop?.total_product || 0}
-                        </span>
-                      </div>
-                      <div className="py-1 flex gap-2 text-sm">
-                        <div className="flex items-center gap-1">
-                          <FaRegStar />
-                          <span>Đánh Giá: </span>
-                        </div>
-                        <span className="text-primary">
-                          {shop?.total_ratings || 0}
-                        </span>
-                      </div>
-                      <div className="py-1 flex gap-2 text-sm">
-                        <div className="flex items-center gap-1">
-                          <IoChatboxEllipsesOutline />
-                          <span>Lượt Đánh Giá: </span>
-                        </div>
-                        <span className="text-primary">
-                          {shop?.total_reviews || 0}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="w-full px-7 flex flex-col flex-nowrap gap-2">
-                      <div className="py-1 flex gap-2 text-sm">
-                        <div className="flex items-center gap-1">
-                          <FaUserAstronaut />
-                          <span>Tham Gia: </span>
-                        </div>
-                        <span className="text-primary">
-                          {shop?.created_at
-                            ? formatDistanceToNow(new Date(shop.created_at), {
-                                addSuffix: true,
-                                locale: vi,
-                              })
-                            : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </section>
+                <div className="w-full mt-3">
+                  <Menu
+                    mode="horizontal"
+                    items={menuItems}
+                    selectedKeys={"1"}
+                  />
                 </div>
-              </div>
-              <div className="w-full mt-3">
-                <Menu mode="horizontal" items={menuItems} selectedKeys={"1"} />
               </div>
             </div>
-          </div>
-          <div className="max-w-[1200px] mx-auto py-5">
-            {/**Gợi ý sản phẩm */}
-            {suggestProduct.length > 0 && (
-              <section className="">
-                <div className="flex justify-between text-sm mt-6">
-                  <span className="text-slate-600">GỢI Ý CHO BẠN</span>
-                  <a
-                    href={`/shop/shop_recommendations/${shop?.shop_id}`}
-                    className="text-primary"
-                  >
-                    Xem Tất Cả <RightOutlined />
-                  </a>
-                </div>
-                <div className="grid grid-cols-12">
-                  {suggestProduct?.map((product) => {
-                    return <ProductCard value={product} itemsPerRow={6} />;
-                  })}
-                </div>
-              </section>
-            )}
-            {/**CarouselBanner*/}
-            {shop?.CustomizeShops.length > 0 && (
-              <section className="w-full flex flex-col gap-4 mt-10">
-                {shop?.CustomizeShops?.map((banner) => {
-                  return (
-                    <div className="shop-carousel">
-                      <Carousel arrows={true} infinite={true} autoplay={true}>
-                        {banner?.ImgCustomizeShops?.length > 0 &&
-                          banner?.ImgCustomizeShops?.map((img) => {
-                            return (
-                              <img
-                                className="w-[1200px] object-contain"
-                                src={img.img_url}
-                              />
-                            );
-                          })}
-                      </Carousel>
-                    </div>
-                  );
-                })}
-              </section>
-            )}
-            {/**Sản phẩm*/}
-            <section id="productList" className="my-10 max-h-[1200px]">
-              <div className="grid grid-cols-12 w-full">
-                {/**Danh mục */}
-                <div className="col-span-2">
-                  <div className="w-[90%] mb-2">
-                    <div className=" text-lg text-black font-bold h-[3.125rem] flex justify-start items-center gap-3 mb-[0.625rem] border-b-slate-300 border-b-[1px] border-solid">
-                      <TfiMenuAlt />
-                      Danh Mục
-                    </div>
-                    <ul
-                      className={`flex flex-col gap-3 transition-all overflow-hidden duration-700`}
+            <div className="max-w-[1200px] mx-auto py-5">
+              {/**Gợi ý sản phẩm */}
+              {suggestProduct.length > 0 && (
+                <section className="">
+                  <div className="flex justify-between text-sm mt-6">
+                    <span className="text-slate-600">GỢI Ý CHO BẠN</span>
+                    <a
+                      href={`/shop/shop_recommendations/${shop?.shop_id}`}
+                      className="text-primary"
                     >
-                      <li
-                        onClick={() =>
-                          navigate(`?sub_category_id=-1#productList`)
-                        }
-                        className={`${
-                          parseInt(sub_category_id) === -1
-                            ? "text-primary pl-1"
-                            : "hover:text-primary text-black pl-4 "
-                        }   cursor-pointer text-sm`}
+                      Xem Tất Cả <RightOutlined />
+                    </a>
+                  </div>
+                  <div className="grid grid-cols-12">
+                    {suggestProduct?.map((product) => {
+                      return <ProductCard value={product} itemsPerRow={6} />;
+                    })}
+                  </div>
+                </section>
+              )}
+              {/**CarouselBanner*/}
+              {shop?.CustomizeShops.length > 0 && (
+                <section className="w-full flex flex-col gap-4 mt-10">
+                  {shop?.CustomizeShops?.map((banner) => {
+                    return (
+                      <div className="shop-carousel">
+                        <Carousel arrows={true} infinite={true} autoplay={true}>
+                          {banner?.ImgCustomizeShops?.length > 0 &&
+                            banner?.ImgCustomizeShops?.map((img) => {
+                              return (
+                                <img
+                                  className="w-[1200px] object-contain"
+                                  src={img.img_url}
+                                />
+                              );
+                            })}
+                        </Carousel>
+                      </div>
+                    );
+                  })}
+                </section>
+              )}
+              {/**Sản phẩm*/}
+              <section id="productList" className="my-10 max-h-[1200px]">
+                <div className="grid grid-cols-12 w-full">
+                  {/**Danh mục */}
+                  <div className="col-span-2">
+                    <div className="w-[90%] mb-2">
+                      <div className=" text-lg text-black font-bold h-[3.125rem] flex justify-start items-center gap-3 mb-[0.625rem] border-b-slate-300 border-b-[1px] border-solid">
+                        <TfiMenuAlt />
+                        Danh Mục
+                      </div>
+                      <ul
+                        className={`flex flex-col gap-3 transition-all overflow-hidden duration-700`}
                       >
-                        {parseInt(sub_category_id) === -1 && (
-                          <CaretRightFilled />
-                        )}
-                        Sản phẩm
-                      </li>
-                      {subCategory.map((item) => (
                         <li
                           onClick={() =>
-                            navigate(
-                              `?sub_category_id=${item.sub_category_id}#productList`
-                            )
+                            navigate(`?sub_category_id=-1#productList`)
                           }
                           className={`${
-                            item.sub_category_id === parseInt(sub_category_id)
+                            parseInt(sub_category_id) === -1
                               ? "text-primary pl-1"
-                              : "hover:text-primary text-black pl-4"
+                              : "hover:text-primary text-black pl-4 "
                           }   cursor-pointer text-sm`}
                         >
-                          {item.sub_category_id ===
-                            parseInt(sub_category_id) && <CaretRightFilled />}
-                          <span>{item.sub_category_name}</span>
+                          {parseInt(sub_category_id) === -1 && (
+                            <CaretRightFilled />
+                          )}
+                          Sản phẩm
                         </li>
-                      ))}
-                    </ul>
+                        {subCategory.map((item) => (
+                          <li
+                            onClick={() =>
+                              navigate(
+                                `?sub_category_id=${item.sub_category_id}#productList`
+                              )
+                            }
+                            className={`${
+                              item.sub_category_id === parseInt(sub_category_id)
+                                ? "text-primary pl-1"
+                                : "hover:text-primary text-black pl-4"
+                            }   cursor-pointer text-sm`}
+                          >
+                            {item.sub_category_id ===
+                              parseInt(sub_category_id) && <CaretRightFilled />}
+                            <span>{item.sub_category_name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  {/**Sản phẩm */}
+                  <div className="col-span-10">
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <SortBar
+                        listProductByCategory={productBySub}
+                        currentPage={currentPage}
+                        totalPage={totalPage}
+                        filter={filter}
+                        onPageChange={(page) =>
+                          dispatch({ type: "SET_CURRENT_PAGE", payload: page })
+                        }
+                        onFilterChange={(filter) => {
+                          dispatch({ type: "SET_FILTER", payload: filter });
+                          dispatch({ type: "SET_CURRENT_PAGE", payload: 1 });
+                          console.log("filter", filter);
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 </div>
-                {/**Sản phẩm */}
-                <div className="col-span-10">
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <SortBar
-                      listProductByCategory={productBySub}
-                      currentPage={currentPage}
-                      totalPage={totalPage}
-                      filter={filter}
-                      onPageChange={(page) =>
-                        dispatch({ type: "SET_CURRENT_PAGE", payload: page })
-                      }
-                      onFilterChange={(filter) => {
-                        dispatch({ type: "SET_FILTER", payload: filter });
-                        dispatch({ type: "SET_CURRENT_PAGE", payload: 1 });
-                        console.log("filter", filter);
-                      }}
-                    />
-                  </Suspense>
+              </section>
+            </div>
+          </section>
+          {shop.shop_status === 0 && (
+            <Modal
+              open={true}
+              centered={true}
+              closable={false}
+              footer={
+                <div className="w-full flex justify-center items-center">
+                  <Button
+                    className="bg-primary text-white border-primary hover:opacity-80"
+                    size="large"
+                    onClick={() => navigate("/")}
+                  >
+                    Trở về trang chủ
+                  </Button>
                 </div>
+              }
+            >
+              <div className="text-2xl text-center">
+                Cửa Hàng Ngưng Hoạt Động
               </div>
-            </section>
-          </div>
-        </section>
+            </Modal>
+          )}
+        </>
       ) : (
         <section className="py-20 gap-2 flex flex-col justify-center items-center text-2xl text-slate-600">
           <div className="">

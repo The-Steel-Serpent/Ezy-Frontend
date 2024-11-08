@@ -83,6 +83,20 @@ export const CheckoutProvider = ({ children }) => {
 
         case "isUpdatedTotalPayment":
           return { ...state, isUpdatedTotalPayment: action.payload };
+
+        case "selectedService":
+          const existingShopOfServiceIndex = state.selectedService.findIndex(
+            (service) => service.shop_id === action.payload.shop_id
+          );
+          let updatedService;
+          if (existingShopOfServiceIndex !== -1) {
+            updatedService = [...state.selectedService];
+            updatedService[existingShopOfServiceIndex] = action.payload;
+          } else {
+            updatedService = [...state.selectedService, action.payload];
+          }
+          return { ...state, selectedService: updatedService };
+
         default:
           return state;
       }
@@ -119,9 +133,20 @@ export const CheckoutProvider = ({ children }) => {
       },
       isUpdatedTotalPayment: false,
       selectedPaymentMethod: 1,
+      selectedService: [],
     }
   );
-
+  const handleUpdateSelectedService = useCallback((service) => {
+    const { shop_id, service_id, service_type_id } = service;
+    setState({
+      type: "selectedService",
+      payload: {
+        shop_id,
+        service_id,
+        service_type_id,
+      },
+    });
+  }, []);
   const handleUpdateTotalPayment = useCallback((total) => {
     setState({
       type: "updateTotalPayment",
@@ -332,6 +357,9 @@ export const CheckoutProvider = ({ children }) => {
     setState({ type: "setUID", payload: userID });
     setState({ type: "openModalOTP", payload: true });
   };
+  useEffect(() => {
+    console.log("selectedService: ", state.selectedService);
+  }, [state.selectedService]);
 
   useEffect(() => {
     const checkoutMethod = async () => {
@@ -342,6 +370,7 @@ export const CheckoutProvider = ({ children }) => {
         validCart: state.cartListWithoutInvalidItems,
         address: state.defaultAddress,
         voucher: state.selectedVoucher || {},
+        selectedService: state.selectedService,
       };
       // console.log("Data: ", data);
       try {
@@ -392,6 +421,7 @@ export const CheckoutProvider = ({ children }) => {
         onPaymentMethodChange,
         handleCloseModalOTP,
         handleOnVerifyOTP,
+        handleUpdateSelectedService,
       }}
     >
       {children}
