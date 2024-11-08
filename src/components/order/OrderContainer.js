@@ -124,7 +124,7 @@ const OrderContainer = (props) => {
           )}
 
           {localState.order.map((item) => (
-            <OrderItem order={item} />
+            <OrderItem order={item} onUpdateOrder={fetchOrder} />
           ))}
 
           <Pagination

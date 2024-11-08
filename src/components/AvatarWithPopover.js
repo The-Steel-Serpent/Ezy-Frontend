@@ -40,23 +40,11 @@ const AvatarWithPopover = (props) => {
   const items = [
     {
       key: "1",
-      label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="/user/account?type=profile"
-        >
-          Tài Khoản Của Tôi
-        </a>
-      ),
+      label: <a href="/user/account?type=profile">Tài Khoản Của Tôi</a>,
     },
     {
       key: "2",
-      label: (
-        <a target="_blank" rel="noopener noreferrer" href="/user/purchase">
-          Đơn Mua
-        </a>
-      ),
+      label: <a href="/user/purchase?status-id=-1">Đơn Mua</a>,
     },
     {
       key: "3",
