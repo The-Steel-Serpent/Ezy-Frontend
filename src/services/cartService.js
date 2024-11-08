@@ -226,8 +226,15 @@ export const removeItem = async (cart_item_id) => {
 
 export const checkOut = async (data, type) => {
   try {
-    const { user_id, totalPayment, address, validCart, voucher, totalPerItem } =
-      data;
+    const {
+      user_id,
+      totalPayment,
+      address,
+      validCart,
+      voucher,
+      totalPerItem,
+      selectedService,
+    } = data;
     const urlCheckout = `${process.env.REACT_APP_BACKEND_URL}/api/checkout/${type}`;
     const res = await axios.post(urlCheckout, {
       user_id,
@@ -236,6 +243,7 @@ export const checkOut = async (data, type) => {
       address,
       voucher,
       totalPerItem,
+      selectedService,
     });
     return res.data;
   } catch (error) {

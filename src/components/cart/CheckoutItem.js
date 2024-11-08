@@ -14,6 +14,7 @@ const CheckoutItem = (props) => {
     setState,
     handleUpdateTotalPayment,
     calculateVoucherDiscounts,
+    handleUpdateSelectedService,
   } = useCheckout();
   const { handleUserSelected } = useMessages();
 
@@ -158,6 +159,11 @@ const CheckoutItem = (props) => {
   useEffect(() => {
     if (serviceList.length > 0) {
       setLocalState({ type: "defaultService", payload: serviceList[0] });
+      handleUpdateSelectedService({
+        shop_id: item?.Shop?.shop_id,
+        service_id: serviceList[0]?.service_id,
+        service_type_id: serviceList[0]?.service_type_id,
+      });
       setLocalState({
         type: "totalPriceWithShipping",
         payload: item?.total_price + serviceList[0]?.fee?.total_fee,
@@ -262,6 +268,11 @@ const CheckoutItem = (props) => {
   };
   const handleSelectService = (service) => {
     setLocalState({ type: "defaultService", payload: service });
+    handleUpdateSelectedService({
+      shop_id: item?.Shop?.shop_id,
+      service_id: service?.service_id,
+      service_type_id: service?.service_type_id,
+    });
     setLocalState({
       type: "totalPriceWithShipping",
       payload: item?.total_price + service?.fee?.total_fee,

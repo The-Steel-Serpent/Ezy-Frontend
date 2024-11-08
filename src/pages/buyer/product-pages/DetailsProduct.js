@@ -6,6 +6,7 @@ import {
   Divider,
   Dropdown,
   InputNumber,
+  Modal,
   notification,
   Pagination,
   Skeleton,
@@ -19,7 +20,7 @@ import ReactStars from "react-rating-star-with-type";
 import formatNumber from "../../../helpers/formatNumber";
 import { useNavigate, useNavigation, useParams } from "react-router-dom";
 import axios from "axios";
-import { IoCheckmarkDone } from "react-icons/io5";
+import { IoCheckmarkDone, IoFastFood } from "react-icons/io5";
 import { TiShoppingCart } from "react-icons/ti";
 import { TbTruckReturn } from "react-icons/tb";
 import { MdArrowForwardIos } from "react-icons/md";
@@ -93,7 +94,9 @@ const DetailsProduct = () => {
         setSuccess(false);
       }
     };
-    fetchProductDetails();
+    if (id) {
+      fetchProductDetails();
+    }
   }, [id]);
   useEffect(() => {
     const fetchProductReviews = async () => {
@@ -106,7 +109,7 @@ const DetailsProduct = () => {
         console.log("Lỗi khi lấy dữ liệu Review: ", error);
       }
     };
-    if (detailsProduct != {}) {
+    if (detailsProduct !== null) {
       fetchProductReviews();
     }
   }, [page, ratingFilter]);
@@ -137,7 +140,8 @@ const DetailsProduct = () => {
     if (detailsProduct != {}) {
       fetchProductVarient();
     }
-  }, [detailsProduct.product_id, selectedClassify]);
+    console.log(detailsProduct);
+  }, [detailsProduct, selectedClassify]);
 
   useEffect(() => {
     const fetchShopProducts = async () => {
@@ -152,7 +156,7 @@ const DetailsProduct = () => {
     if (detailsProduct) {
       fetchShopProducts();
     }
-  }, [detailsProduct?.Shop?.shop_id]);
+  }, [detailsProduct]);
   //Handle
   const handleMouseEnter = (thumbnail) => {
     setCurrentImageUrl(thumbnail);
@@ -885,6 +889,31 @@ const DetailsProduct = () => {
         </div>
       ) : (
         <ProductNotFounded />
+      )}
+      {(detailsProduct?.product_status === 0 ||
+        detailsProduct?.Shop?.shop_status === 0) && (
+        <Modal
+          open={true}
+          centered={true}
+          closable={false}
+          footer={
+            <div className="w-full flex justify-center items-center">
+              <Button
+                className="bg-primary text-white border-primary hover:opacity-80"
+                size="large"
+                onClick={() => navigate("/")}
+              >
+                Trở về trang chủ
+              </Button>
+            </div>
+          }
+        >
+          <div className="text-2xl text-center">
+            {detailsProduct?.product_status === 0
+              ? " Sản Phẩm Tạm Thời Ngưng Hoạt Động"
+              : "Shop Tạm Ngưng Hoạt Động"}
+          </div>
+        </Modal>
       )}
     </>
   );
