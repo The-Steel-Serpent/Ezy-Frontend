@@ -1,14 +1,31 @@
 import { Avatar, Button, Image, List, Popover } from "antd";
-import React, { memo } from "react";
+import React, { memo, useEffect, useReducer } from "react";
 import { CaretDownFilled, ShopFilled } from "@ant-design/icons";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { formatDate } from "date-fns";
 import { useMessages } from "../../../providers/MessagesProvider";
 import ShopOrderDetaiItem from "./ShopOrderDetaiItem";
+import ConfirmOrderModal from "./ConfirmOrderModal";
 
 const ShopOrderItem = (props) => {
     const { order } = props;
     const { handleUserSelected } = useMessages();
+
+    const [localState, setLocalState] = useReducer(
+        (state, action) => {
+            switch (action.type) {
+                case "SET_VISIBLE_CONFIRM_ORDER_MODAL":
+                    return { ...state, visible_confirm_order_modal: action.payload, };
+                default:
+                    return state;
+            }
+        },
+        {
+            visible_confirm_order_modal: false,
+        }
+    );
+
+
     const statusDescriptions = {
         ready_to_pick: "Người bán đang chuẩn bị hàng",
         picking: "Đang lấy hàng",
@@ -33,6 +50,11 @@ const ShopOrderItem = (props) => {
         damage: "Hàng bị hư hỏng",
         lost: "Hàng bị mất",
     };
+    useEffect(() => {
+        if (order) {
+            console.log("order neeee", order);
+        }
+    }, [order]);
     return (
         <>
             <div className="mb-5">
@@ -113,7 +135,7 @@ const ShopOrderItem = (props) => {
                         )}
                         {order?.OrderStatus?.order_status_id === 2 && (
                             <div className="text-[12px] w-[40%] text-neutral-500">
-                                Đơn hàng mới cần được xác nhận.
+                                Chuẩn bị hàng để giao cho đơn vị vận chuyển.
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 3 && (
@@ -181,6 +203,13 @@ const ShopOrderItem = (props) => {
                                     size="large"
                                 >
                                     Chi Tiết Đơn Hàng
+                                </Button>
+                                <Button
+                                    className="bg-primary text-white hover:opacity-80"
+                                    size="large"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_CONFIRM_ORDER_MODAL", payload: true })}
+                                >
+                                    Xác nhận đơn hàng
                                 </Button>
                             </div>
                         )}
@@ -261,16 +290,16 @@ const ShopOrderItem = (props) => {
                                 >
                                     Liên Hệ Người Mua
                                 </Button>
-                                <Button
-                                    className="bg-white text-primary hover:opacity-80"
-                                    size="large"
-                                >
-                                    Chi Tiết Đơn Hàng
-                                </Button>
                             </div>
                         )}
                     </div>
                 </div>
+
+                <ConfirmOrderModal
+                    visible={localState.visible_confirm_order_modal}
+                    onCancel={() => setLocalState({ type: "SET_VISIBLE_CONFIRM_ORDER_MODAL", payload: false })}
+                    order={order}
+                />
             </div>
         </>
     );

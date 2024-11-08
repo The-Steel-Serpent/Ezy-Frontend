@@ -99,3 +99,14 @@ export const completeOrder = async (user_order_id) => {
     throw new Error(error);
   }
 };
+
+
+export const comfirmOrder = async (payload) => {
+  try {
+    const response = await axios.post(`${url}confirm-order`, payload);
+    return response.data;
+  } catch (error) {
+    console.log("Error when comfirmOrder", error);
+    throw new Error(error);
+  }
+}
