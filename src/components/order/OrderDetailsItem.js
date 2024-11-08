@@ -3,9 +3,7 @@ import React, { memo } from "react";
 
 const OrderDetailsItem = (props) => {
   const { item } = props;
-  const handleViewProduct = () => {
-    window.location.href = `/product-details/${item.ProductVarient.product_id}`;
-  };
+
   return (
     <div
       className="grid grid-cols-12 w-full cursor-pointer"

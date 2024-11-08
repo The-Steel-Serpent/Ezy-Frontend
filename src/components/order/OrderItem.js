@@ -15,6 +15,7 @@ import OrderDetailsItem from "./OrderDetailsItem";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { formatDate } from "date-fns";
 import {
+  buyOrderAgain,
   cancelOrder,
   checkoutOrder,
   checkoutOrderEzyWallet,
@@ -24,11 +25,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchWallet } from "../../redux/walletSlice";
 import { set } from "lodash";
 import ModalOTP from "../user/ModalOTP";
+import { fetchMiniCartData } from "../../redux/cartSlice";
+import ModalReview from "./ModalReview";
 const vnpay = require("../../assets/vnpay.png");
 const walletImg = require("../../assets/wallet.png");
 
 const OrderItem = (props) => {
-  const { order } = props;
+  const { order, onUpdateOrder } = props;
   const dispatch = useDispatch();
   const token = localStorage.getItem("token");
   const wallet = useSelector((state) => state.wallet.wallet);
@@ -40,6 +43,9 @@ const OrderItem = (props) => {
       switch (action.type) {
         case "SET_LOADING": {
           return { ...state, loading: action.payload };
+        }
+        case "SET_ORDER_ITEM": {
+          return { ...state, orderItem: action.payload };
         }
         case "SET_SELECTED_PAYMENT_METHOD": {
           return { ...state, selectedPaymentMethod: action.payload };
@@ -53,6 +59,9 @@ const OrderItem = (props) => {
         case "SET_MODAL": {
           return { ...state, modal: action.payload };
         }
+        case "SET_OPEN_MODAL_REVIEW": {
+          return { ...state, openModalReview: action.payload };
+        }
         case "verifyOTP":
           return { ...state, verifyOTP: action.payload };
 
@@ -62,6 +71,7 @@ const OrderItem = (props) => {
     },
     {
       loading: false,
+      orderItem: [],
       verifyOTP: false,
       selectedPaymentMethod: 3,
       openModalPaymentMethod: false,
@@ -70,6 +80,7 @@ const OrderItem = (props) => {
         openModalConfirm: false,
         type: "",
       },
+      openModalReview: false,
     }
   );
   // Effects
@@ -90,7 +101,9 @@ const OrderItem = (props) => {
       checkout();
     }
   }, [localState.verifyOTP]);
-
+  useEffect(() => {
+    setLocalState({ type: "SET_ORDER_ITEM", payload: order });
+  }, [order]);
   // Handlers
   const handleViewShop = () => {
     window.location.href = `/shop/${order?.Shop?.UserAccount?.username}`;
@@ -105,6 +118,13 @@ const OrderItem = (props) => {
     setLocalState({ type: "SET_OPEN_MODAL_PAYMENT_METHOD", payload: false });
     setLocalState({ type: "SET_LOADING", payload: false });
     setLocalState({ type: "SET_SELECTED_PAYMENT_METHOD", payload: 3 });
+  };
+
+  const handleOpenModalReview = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_REVIEW", payload: true });
+  };
+  const handleCloseModalReview = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_REVIEW", payload: false });
   };
 
   const handleCheckoutWithVnpay = async () => {
@@ -246,6 +266,20 @@ const OrderItem = (props) => {
       message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
     }
   };
+  const handleBuyAgain = async () => {
+    try {
+      const res = await buyOrderAgain(order.user_order_id);
+      if (res.success) {
+        message.success("Thêm vào giỏ hàng thành công");
+        dispatch(fetchMiniCartData(user?.user_id));
+        setTimeout(() => (window.location.href = "/cart"), 2000);
+      }
+    } catch (error) {
+      console.log("Error when buy again", error);
+      message.error(error.message);
+    }
+  };
+
   return (
     <>
       <div className="mb-5">
@@ -435,16 +469,27 @@ const OrderItem = (props) => {
               <div className="w-[100%] flex gap-3 justify-end">
                 <Button
                   size="large"
-                  className="bg-primary text-white hover:opacity-80"
+                  className={`${
+                    order?.is_reviewed !== 1
+                      ? "bg-primary text-white hover:opacity-80"
+                      : "bg-neutral-200"
+                  }`}
+                  onClick={handleOpenModalReview}
+                  disabled={order?.is_reviewed === 1}
                 >
-                  Đánh Giá
+                  {order?.is_reviewed === 0 ? "Đánh Giá" : "Đã Đánh Giá"}
                 </Button>
-                <Button
-                  size="large"
-                  className="bg-secondary border-secondary text-white hover:opacity-80"
-                >
-                  Trả Hàng/Hoàn Tiền
-                </Button>
+
+                {order?.return_expiration_date &&
+                  order?.return_expiration_date !== new Date() && (
+                    <Button
+                      size="large"
+                      className="bg-secondary border-secondary text-white hover:opacity-80"
+                    >
+                      Trả Hàng/Hoàn Tiền
+                    </Button>
+                  )}
+
                 <Popover
                   content={
                     <div className="flex flex-col">
@@ -456,9 +501,17 @@ const OrderItem = (props) => {
                       >
                         Liên Hệ Người Bán
                       </span>
-                      <span className="hover:bg-slate-100 cursor-pointer">
+                      <span
+                        className="hover:bg-slate-100 cursor-pointer"
+                        onClick={handleBuyAgain}
+                      >
                         Mua Lại
                       </span>
+                      {order?.is_reviewed === 1 && (
+                        <span className="hover:bg-slate-100 cursor-pointer">
+                          Xem Đánh Giá
+                        </span>
+                      )}
                     </div>
                   }
                 >
@@ -476,6 +529,7 @@ const OrderItem = (props) => {
                 <Button
                   size="large"
                   className="bg-primary text-white hover:opacity-80 w-[180px]"
+                  onClick={handleBuyAgain}
                 >
                   Mua Lại
                 </Button>
@@ -595,6 +649,14 @@ const OrderItem = (props) => {
             'Ezy Sẽ thanh toán số tiền trên cho Người bán. Bạn vui lòng chỉ nhấn "Đã nhận được hàng" khi đơn hàng đã được giao đến bạn và sản phẩm nhận được không có vấn đề nào.'}
         </div>
       </Modal>
+
+      {/* Modal Review */}
+      <ModalReview
+        orders={order}
+        openModalReview={localState.openModalReview}
+        onCloseModalReview={handleCloseModalReview}
+        onUpdateOrder={onUpdateOrder}
+      />
     </>
   );
 };

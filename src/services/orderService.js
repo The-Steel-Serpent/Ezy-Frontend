@@ -48,7 +48,7 @@ export const getShopOrders = async (shop_id, status_id, page, limit) => {
     console.log("Error when getShopOrders", error);
     throw new Error(error);
   }
-}
+};
 export const checkoutOrder = async (user_order_id) => {
   try {
     const response = await axios.post(`${url}checkout-order`, {
@@ -126,3 +126,29 @@ export const comfirmOrder = async (payload) => {
     return { success: false, message: errorMessage, status: error.response?.status || 0 };
   }
 }
+
+export const buyOrderAgain = async (user_order_id) => {
+  try {
+    const response = await axios.post(`${url}buy-again`, {
+      user_order_id,
+    });
+    return response.data;
+  } catch (error) {
+    console.log("Error when buyOrderAgain", error);
+    throw new Error(error);
+  }
+};
+
+export const reviewOrder = async (user_order_id, user_id, ratingList) => {
+  try {
+    const response = await axios.post(`${url}review-order`, {
+      user_order_id,
+      user_id,
+      ratingList,
+    });
+    return response.data;
+  } catch (error) {
+    console.log("Error when reviewOrder", error);
+    throw new Error(error);
+  }
+};
