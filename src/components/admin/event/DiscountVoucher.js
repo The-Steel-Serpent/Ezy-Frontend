@@ -1,24 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Table, message, Button, Modal, Form, Input, Select, DatePicker, TimePicker } from 'antd';
+import { Table, message, Button, Modal, Form, Input, DatePicker, TimePicker } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
-const { Option } = Select;
+// Mở rộng dayjs với các plugin
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 const DiscountVoucher = () => {
   const [vouchers, setVouchers] = useState([]);
+  const [filteredVouchers, setFilteredVouchers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
-  const [events, setEvents] = useState([]);
-  const [voucherTypes, setVoucherTypes] = useState([]);
-  const [selectedEventId, setSelectedEventId] = useState(null);
-  const [selectedVoucherTypeId, setSelectedVoucherTypeId] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   useEffect(() => {
     fetchVouchers();
-    fetchEvents();
-    fetchVoucherTypes();
   }, []);
 
   const fetchVouchers = async () => {
@@ -27,6 +29,7 @@ const DiscountVoucher = () => {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/voucher/get-all-voucher`);
       if (response.data.success) {
         setVouchers(response.data.vouchers);
+        setFilteredVouchers(response.data.vouchers);
       } else {
         message.error('Failed to load vouchers');
       }
@@ -37,41 +40,33 @@ const DiscountVoucher = () => {
     }
   };
 
-  const fetchEvents = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/get-event`);
-      if (response.data.success) {
-        setEvents(response.data.data || []);
-      } else {
-        message.error('Failed to load events');
-      }
-    } catch (error) {
-      message.error('Failed to fetch events');
+  const handleFilter = () => {
+    if (!startDate && !endDate) {
+      setFilteredVouchers(vouchers);
+      return;
     }
-  };
 
-  const fetchVoucherTypes = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/voucher/types`);
-      if (response.data.success) {
-        setVoucherTypes(response.data.voucherTypes || []);
-      } else {
-        message.error('Failed to load voucher types');
-      }
-    } catch (error) {
-      message.error('Failed to fetch voucher types');
-    }
+    const filtered = vouchers.filter((voucher) => {
+      const voucherStartDate = dayjs(voucher.started_at);
+      const voucherEndDate = dayjs(voucher.ended_at);
+
+      const isDateInRange =
+        (!startDate || voucherStartDate.isSameOrAfter(startDate, 'day')) &&
+        (!endDate || voucherEndDate.isSameOrBefore(endDate, 'day'));
+
+      return isDateInRange;
+    });
+
+    setFilteredVouchers(filtered);
   };
 
   const handleAddVoucher = async (values) => {
     try {
-      const startedAt = moment(`${values.started_at.format('YYYY-MM-DD')} ${values.started_at_time.format('HH:mm:ss')}`);
-      const endedAt = moment(`${values.ended_at.format('YYYY-MM-DD')} ${values.ended_at_time.format('HH:mm:ss')}`);
+      const startedAt = dayjs(`${values.started_at.format('YYYY-MM-DD')} ${values.started_at_time.format('HH:mm:ss')}`);
+      const endedAt = dayjs(`${values.ended_at.format('YYYY-MM-DD')} ${values.ended_at_time.format('HH:mm:ss')}`);
 
       const formattedValues = {
         ...values,
-        sale_events_id: selectedEventId,
-        discount_voucher_type_id: selectedVoucherTypeId,
         started_at: startedAt.toISOString(),
         ended_at: endedAt.toISOString(),
       };
@@ -96,26 +91,10 @@ const DiscountVoucher = () => {
   };
 
   const columns = [
-    {
-      title: 'Mã voucher',
-      dataIndex: 'discount_voucher_code',
-      key: 'discount_voucher_code',
-    },
-    {
-      title: 'Tên voucher',
-      dataIndex: 'discount_voucher_name',
-      key: 'discount_voucher_name',
-    },
-    {
-      title: 'Mô tả',
-      dataIndex: 'description',
-      key: 'description',
-    },
-    {
-      title: 'Loại',
-      dataIndex: 'discount_type',
-      key: 'discount_type',
-    },
+    { title: 'Mã voucher', dataIndex: 'discount_voucher_code', key: 'discount_voucher_code' },
+    { title: 'Tên voucher', dataIndex: 'discount_voucher_name', key: 'discount_voucher_name' },
+    { title: 'Mô tả', dataIndex: 'description', key: 'description' },
+    { title: 'Loại', dataIndex: 'discount_type', key: 'discount_type' },
     {
       title: 'Giá trị tối thiểu',
       dataIndex: 'min_order_value',
@@ -134,167 +113,85 @@ const DiscountVoucher = () => {
       key: 'discount_value',
       render: (value) => `${value.toLocaleString()} đ`,
     },
-    {
-      title: 'Số lượng',
-      dataIndex: 'quantity',
-      key: 'quantity',
-    },
-    {
-      title: 'Bắt đầu',
-      dataIndex: 'started_at',
-      key: 'started_at',
-      render: (date) => new Date(date).toLocaleString(),
-    },
-    {
-      title: 'Kết thúc',
-      dataIndex: 'ended_at',
-      key: 'ended_at',
-      render: (date) => new Date(date).toLocaleString(),
-    },
+    { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
+    { title: 'Bắt đầu', dataIndex: 'started_at', key: 'started_at', render: (date) => dayjs(date).format('YYYY-MM-DD HH:mm:ss') },
+    { title: 'Kết thúc', dataIndex: 'ended_at', key: 'ended_at', render: (date) => dayjs(date).format('YYYY-MM-DD HH:mm:ss') },
   ];
 
   return (
     <div>
-      <Button type="primary" onClick={() => setIsModalVisible(true)} style={{ marginBottom: '20px' }}>
-        Thêm Voucher
-      </Button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <DatePicker
+            placeholder="Ngày bắt đầu"
+            onChange={(date) => setStartDate(date ? dayjs(date) : null)}
+            format="YYYY-MM-DD"
+          />
+          <DatePicker
+            placeholder="Ngày kết thúc"
+            onChange={(date) => setEndDate(date ? dayjs(date) : null)}
+            format="YYYY-MM-DD"
+          />
+          <Button 
+            type="primary" 
+            onClick={handleFilter}
+          >
+            Lọc
+          </Button>
+
+        </div>
+        <Button 
+          type="primary" 
+          onClick={() => setIsModalVisible(true)} 
+          style={{ marginBottom: '20px' }}
+          icon={<PlusOutlined />}
+        >
+          Thêm Voucher
+        </Button>
+      </div>
+
+
       <Table
         columns={columns}
-        dataSource={vouchers}
+        dataSource={filteredVouchers}
         loading={loading}
         rowKey="discount_voucher_id"
         pagination={{ pageSize: 10 }}
         scroll={{ x: 1200 }}
       />
-      
+
       <Modal
         title="Thêm Voucher"
         visible={isModalVisible}
-        onCancel={handleCancel} 
+        onCancel={handleCancel}
         footer={null}
       >
         <Form form={form} onFinish={handleAddVoucher}>
-          <Form.Item
-            name="discount_voucher_code"
-            label="Mã voucher"
-            rules={[{ required: true, message: 'Vui lòng nhập mã voucher!' }]}
-          >
+          <Form.Item name="discount_voucher_code" label="Mã voucher" rules={[{ required: true, message: 'Vui lòng nhập mã voucher!' }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="discount_voucher_name"
-            label="Tên voucher"
-            rules={[{ required: true, message: 'Vui lòng nhập tên voucher!' }]}
-          >
+          <Form.Item name="discount_voucher_name" label="Tên voucher" rules={[{ required: true, message: 'Vui lòng nhập tên voucher!' }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="description"
-            label="Mô tả"
-            rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
-          >
+          <Form.Item name="description" label="Mô tả" rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="discount_type"
-            label="Loại"
-            rules={[{ required: true, message: 'Vui lòng chọn loại!' }]}
-          >
-            <Select placeholder="Chọn loại" onChange={setSelectedVoucherTypeId}>
-              {Array.isArray(voucherTypes) && voucherTypes.length > 0 ? (
-                voucherTypes.map(type => (
-                  <Option key={type.discount_voucher_type_id} value={type.discount_voucher_type_id}>
-                    {type.discount_voucher_type_name}
-                  </Option>
-                ))
-              ) : (
-                <Option disabled>Không có loại nào</Option>
-              )}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="sale_events_id"
-            label="Sự kiện áp dụng"
-            rules={[{ required: true, message: 'Vui lòng chọn sự kiện!' }]}
-          >
-            <Select placeholder="Chọn sự kiện" onChange={setSelectedEventId}>
-              {Array.isArray(events) && events.length > 0 ? (
-                events.map(event => (
-                  <Option key={event.sale_events_id} value={event.sale_events_id}>
-                    {event.sale_events_name}
-                  </Option>
-                ))
-              ) : (
-                <Option disabled>Không có sự kiện nào</Option>
-              )}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="min_order_value"
-            label="Giá trị tối thiểu"
-            rules={[{ required: true, message: 'Vui lòng nhập giá trị tối thiểu!' }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            name="discount_value"
-            label="Giá trị giảm"
-            rules={[{ required: true, message: 'Vui lòng nhập giá trị giảm!' }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            name="discount_max_value"
-            label="Giá trị tối đa"
-            rules={[{ required: true, message: 'Vui lòng nhập giá trị tối đa!' }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            name="quantity"
-            label="Số lượng"
-            rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            label="Thời gian áp dụng"
-            required
-          >
+          <Form.Item label="Thời gian áp dụng" required>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <Form.Item
-                name="started_at"
-                style={{ marginBottom: 0 }}
-                rules={[{ required: true, message: 'Vui lòng nhập ngày bắt đầu!' }]}
-              >
+              <Form.Item name="started_at" style={{ marginBottom: 0 }} rules={[{ required: true, message: 'Vui lòng nhập ngày bắt đầu!' }]}>
                 <DatePicker format="YYYY-MM-DD" placeholder="Chọn ngày bắt đầu" />
               </Form.Item>
-              <Form.Item
-                name="started_at_time"
-                style={{ marginBottom: 0 }}
-                rules={[{ required: true, message: 'Vui lòng nhập giờ bắt đầu!' }]}
-              >
+              <Form.Item name="started_at_time" style={{ marginBottom: 0 }} rules={[{ required: true, message: 'Vui lòng nhập giờ bắt đầu!' }]}>
                 <TimePicker format="HH:mm:ss" placeholder="Chọn giờ bắt đầu" />
               </Form.Item>
             </div>
           </Form.Item>
-          <Form.Item
-            label="Thời gian kết thúc"
-            required
-          >
+          <Form.Item label="Thời gian kết thúc" required>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <Form.Item
-                name="ended_at"
-                style={{ marginBottom: 0 }}
-                rules={[{ required: true, message: 'Vui lòng nhập ngày kết thúc!' }]}
-              >
+              <Form.Item name="ended_at" style={{ marginBottom: 0 }} rules={[{ required: true, message: 'Vui lòng nhập ngày kết thúc!' }]}>
                 <DatePicker format="YYYY-MM-DD" placeholder="Chọn ngày kết thúc" />
               </Form.Item>
-              <Form.Item
-                name="ended_at_time"
-                style={{ marginBottom: 0 }}
-                rules={[{ required: true, message: 'Vui lòng nhập giờ kết thúc!' }]}
-              >
+              <Form.Item name="ended_at_time" style={{ marginBottom: 0 }} rules={[{ required: true, message: 'Vui lòng nhập giờ kết thúc!' }]}>
                 <TimePicker format="HH:mm:ss" placeholder="Chọn giờ kết thúc" />
               </Form.Item>
             </div>
