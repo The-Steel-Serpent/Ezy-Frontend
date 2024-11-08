@@ -29,7 +29,7 @@ auth.useDeviceLanguage();
 export const startTokenRefreshListener = () => {
   onIdTokenChanged(auth, async (user) => {
     if (user) {
-      const token = await user.getIdToken(true); // Bắt buộc cấp token mới
+      const token = await user.getIdToken(true);
       localStorage.setItem("token", token);
     }
   });
