@@ -6,6 +6,7 @@ import { formatDate } from "date-fns";
 import { useMessages } from "../../../providers/MessagesProvider";
 import ShopOrderDetaiItem from "./ShopOrderDetaiItem";
 import ConfirmOrderModal from "./ConfirmOrderModal";
+import DetailOrderModal from "./DetailOrderModal";
 
 const ShopOrderItem = (props) => {
     const { order } = props;
@@ -16,14 +17,21 @@ const ShopOrderItem = (props) => {
             switch (action.type) {
                 case "SET_VISIBLE_CONFIRM_ORDER_MODAL":
                     return { ...state, visible_confirm_order_modal: action.payload, };
+                case "SET_VISIBLE_DETAIL_ORDER_MODAL":
+                    return { ...state, visible_detail_order_modal: action.payload, };
                 default:
                     return state;
             }
         },
         {
             visible_confirm_order_modal: false,
+            visible_detail_order_modal: false,
         }
     );
+
+    const handleReLoad = () => {
+        window.location.reload();
+    }
 
 
     const statusDescriptions = {
@@ -176,6 +184,7 @@ const ShopOrderItem = (props) => {
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: true })}
                                 >
                                     Chi Tiết Đơn Hàng
                                 </Button>
@@ -201,6 +210,7 @@ const ShopOrderItem = (props) => {
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: true })}
                                 >
                                     Chi Tiết Đơn Hàng
                                 </Button>
@@ -233,6 +243,7 @@ const ShopOrderItem = (props) => {
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: true })}
                                 >
                                     Chi Tiết Đơn Hàng
                                 </Button>
@@ -252,6 +263,7 @@ const ShopOrderItem = (props) => {
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: true })}
                                 >
                                     Chi Tiết Đơn Hàng
                                 </Button>
@@ -268,6 +280,7 @@ const ShopOrderItem = (props) => {
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: true })}
                                 >
                                     Chi Tiết Đơn Hàng
                                 </Button>
@@ -298,6 +311,13 @@ const ShopOrderItem = (props) => {
                 <ConfirmOrderModal
                     visible={localState.visible_confirm_order_modal}
                     onCancel={() => setLocalState({ type: "SET_VISIBLE_CONFIRM_ORDER_MODAL", payload: false })}
+                    order={order}
+                    handleReLoad={handleReLoad}
+                />
+
+                <DetailOrderModal 
+                    visible={localState.visible_detail_order_modal}
+                    onCancel={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: false })}
                     order={order}
                 />
             </div>

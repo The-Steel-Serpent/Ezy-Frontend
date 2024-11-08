@@ -107,6 +107,22 @@ export const comfirmOrder = async (payload) => {
     return response.data;
   } catch (error) {
     console.log("Error when comfirmOrder", error);
-    throw new Error(error);
+    let errorMessage;
+    if (error.response) {
+      switch (error.response.status) {
+        case 400:
+          errorMessage = error.response.data.message;
+          break;
+        case 404:
+          errorMessage = "Order not found";
+          break;
+        case 500:
+          errorMessage = "Server error.";
+          break;
+        default:
+          errorMessage = error.response.data.message || "An unexpected error occurred.";
+      }
+    }
+    return { success: false, message: errorMessage, status: error.response?.status || 0 };
   }
 }

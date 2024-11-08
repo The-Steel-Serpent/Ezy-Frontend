@@ -1,9 +1,10 @@
-import { Button, Col, Modal, Popconfirm, Row, Select, Table } from 'antd'
+import { Button, Col, message, Modal, Popconfirm, Row, Select, Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
 import { getDistricts, getProvinces, getWards } from '../../../services/ghnService';
+import { comfirmOrder } from '../../../services/orderService';
 const { Option } = Select;
 
-const ConfirmOrderModal = ({ visible, onCancel, order }) => {
+const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
 
     const [modalState, setModalState] = useReducer(
         (state, action) => {
@@ -16,6 +17,8 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
                     return { ...state, from_ward_name: action.payload };
                 case 'SET_REQUIRED_NOTE':
                     return { ...state, required_note: action.payload };
+                case 'SET_CONFIRM_LOADING':
+                    return { ...state, confirm_loading: action.payload };
                 default:
                     return state;
 
@@ -26,6 +29,7 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
             from_district_name: "",
             from_ward_name: "",
             required_note: "KHONGCHOXEMHANG",
+            confirm_loading: false
         }
     );
 
@@ -35,12 +39,6 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
             dataIndex: 'product_name',
             key: 'product_name',
             render: (_, record) => record.ProductVarient.Product.product_name,
-        },
-        {
-            title: 'Giá',
-            dataIndex: 'price',
-            key: 'price',
-            render: (_, record) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(record.ProductVarient.price),
         },
         {
             title: 'Số lượng',
@@ -53,15 +51,21 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
         { value: 'CHOXEMHANGKHONGTHU', label: 'Cho xem hàng không thử' },
         { value: 'CHOXEMHANGTHU', label: 'Cho xem hàng và thử hàng' },
     ];
+
+    const handleRequiredNoteChange = (value) => {
+        setModalState({ type: "SET_REQUIRED_NOTE", payload: value });
+    }
+
     const handleConfirmOrder = async () => {
+        setModalState({ type: "SET_CONFIRM_LOADING", payload: true });
         const items = order.UserOrderDetails.map(item => {
             return {
                 name: item.ProductVarient.Product.product_name,
+                quantity: item.quantity,
                 weight: item.ProductVarient.weight,
                 length: item.ProductVarient.length,
                 width: item.ProductVarient.width,
                 height: item.ProductVarient.height,
-                quantity: item.quantity,
                 price: item.ProductVarient.price
             }
         });
@@ -69,6 +73,13 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
         const sum_length = items.reduce((acc, item) => acc + item.length, 0);
         const sum_width = items.reduce((acc, item) => acc + item.width, 0);
         const sum_height = items.reduce((acc, item) => acc + item.height, 0);
+        const user_address_id_string = order.user_address_id_string;
+
+
+        const province_id = user_address_id_string.split(",")[0];
+        const to_district_id = parseInt(user_address_id_string.split(",")[1], 10);
+        const to_ward_code = user_address_id_string.split(",")[2];
+        const service_type_id = parseInt(user_address_id_string.split(",")[4], 10);
         const payload = {
             shopId: order.shop_id,
             user_order_id: order.user_order_id,
@@ -89,8 +100,8 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
             to_name: order.UserAccount.full_name, // required
             to_phone: order.UserAccount.phone_number, // required
             to_address: order.user_address_string, // required
-            // to_ward_code, // required !!!!!!
-            // to_district_id, // required !!!!!!!!
+            to_ward_code: to_ward_code, // required !!!!!!
+            to_district_id: to_district_id, // required !!!!!!!!
             // content,
             weight: sum_weight, // required 
             length: sum_length, // required
@@ -99,13 +110,26 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
             // pick_station_id,
             // deliver_station_id,
             // service_id,
-            // service_type_id, // required !!!!!!!!
+            service_type_id: service_type_id, // required !!!!!!!!
             // coupon,
             // pick_shift,
             items: items,
         }
 
-        console.log("payload confirm", payload);
+        const comfirmOrderResult = await comfirmOrder(payload);
+        if (comfirmOrderResult.success) {
+            console.log("Confirm order success", comfirmOrderResult);
+            message.success("Xác nhận đơn hàng thành công");
+            setTimeout(() => {
+                handleReLoad();
+            }, 1200);
+        }
+        else {
+            console.error("Confirm order error:", comfirmOrderResult);
+            message.error("Xác nhận đơn hàng thất bại");
+        }
+        setModalState({ type: "SET_CONFIRM_LOADING", payload: false });
+
     }
 
 
@@ -142,18 +166,20 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
                     <Button
                         key="cancel"
                         onClick={onCancel}
-                    // loading={state.submit_loading}
+                        loading={modalState.confirm_loading}
                     >
                         Hủy
                     </Button>,
                     <Popconfirm
                         description="Khi xác nhận đơn hàng, đơn vị vận chuyển sẽ tiếp nhận và giao hàng cho khách hàng"
                         onConfirm={handleConfirmOrder}
+                        loading={modalState.confirm_loading}
                         key={'confirm'}
                     >
                         <Button
                             // disabled={!state.enable_submit}
                             // loading={state.submit_loading}
+                            loading={modalState.confirm_loading}
                             type="primary">
                             Xác nhận
                         </Button>
@@ -192,8 +218,8 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
                             <p className='text-lg font-semibold'>Yêu cầu ghi chú</p>
                             <Select
                                 defaultValue={requireNoteOptions[0].value}
-                                style={{ width: 200 }}
-                                onChange={(value) => setModalState({ type: "SET_REQUIRED NOTE", payload: value })}
+
+                                onChange={(value) => handleRequiredNoteChange(value)}
                             >
                                 {requireNoteOptions.map(option => (
                                     <Option key={option.value} value={option.value}>
@@ -202,6 +228,23 @@ const ConfirmOrderModal = ({ visible, onCancel, order }) => {
                                 ))}
                             </Select>
                         </Col>
+                    </Row>
+                    <Row className='mt-2 w-full'>
+                        <Row className='w-full flex justify-end'>
+                            <p className='text-[15px]'><span className='font-semibold'>Giảm giá: </span>{order.discount_price} đ</p>
+                        </Row>
+                        <Row className='w-full justify-end'>
+                            <p className='text-[15px]'><span className='font-semibold'>Giá gốc: </span>{order.final_price} đ</p>
+                        </Row>
+                        <Row className='w-full justify-end'>
+                            <p className='text-[15px]'><span className='font-semibold'>Phí ship: </span>{order.shipping_fee} đ</p>
+                        </Row>
+                        <Row className='w-full justify-end'>
+                            <p className='text-[15px]'><span className='font-semibold'>Giảm phí ship: </span>{order.discount_shipping_fee} đ</p>
+                        </Row>
+                        <Row className='w-full justify-end'>
+                            <p className='text-[15px]'><span className='font-semibold'>Thành tiền: </span>{order.total_price} đ</p>
+                        </Row>
                     </Row>
                 </div>
             </Modal>
