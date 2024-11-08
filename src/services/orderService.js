@@ -100,6 +100,33 @@ export const completeOrder = async (user_order_id) => {
   }
 };
 
+
+export const comfirmOrder = async (payload) => {
+  try {
+    const response = await axios.post(`${url}confirm-order`, payload);
+    return response.data;
+  } catch (error) {
+    console.log("Error when comfirmOrder", error);
+    let errorMessage;
+    if (error.response) {
+      switch (error.response.status) {
+        case 400:
+          errorMessage = error.response.data.message;
+          break;
+        case 404:
+          errorMessage = "Order not found";
+          break;
+        case 500:
+          errorMessage = "Server error.";
+          break;
+        default:
+          errorMessage = error.response.data.message || "An unexpected error occurred.";
+      }
+    }
+    return { success: false, message: errorMessage, status: error.response?.status || 0 };
+  }
+}
+
 export const buyOrderAgain = async (user_order_id) => {
   try {
     const response = await axios.post(`${url}buy-again`, {

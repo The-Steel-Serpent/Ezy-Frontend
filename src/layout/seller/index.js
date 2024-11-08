@@ -53,7 +53,7 @@ const items = [
       },
       {
         key: "/seller/order/orders-return",
-        label: "Đơn trả hàng",
+        label: "Đơn trả hàng / Hoàn tiền",
       },
     ],
   },
@@ -422,7 +422,7 @@ const SellerAuthLayout = ({ children }) => {
               trigger={null}
               collapsible
               collapsed={collapsed}
-              className="bg-white w-fit h-full shadow-xl sticky-sider"
+              className="bg-white w-fit h-full shadow-xl"
             >
               <div className="demo-logo-vertical" />
               <Menu
@@ -431,7 +431,7 @@ const SellerAuthLayout = ({ children }) => {
                 theme="light"
                 items={items}
                 onClick={handleNavigate}
-                className="custom-menu text-slate-500 font-[400] lg:w-48 "
+                className="custom-menu text-slate-500 font-[400] lg:w-52"
               />
             </Sider>
           )}
