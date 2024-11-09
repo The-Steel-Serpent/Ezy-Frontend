@@ -8,7 +8,6 @@ import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import AddFlashSale from './AddFlashSale';
 import EditFlashSale from './EditFlashSale';
 
-// Cấu hình plugin cho dayjs
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 

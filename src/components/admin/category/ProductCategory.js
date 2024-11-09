@@ -4,9 +4,12 @@ import { Form, Input, Button, Modal, Table, Upload, message } from 'antd';
 import { RiImageAddFill } from "react-icons/ri";
 import uploadFile from '../../../helpers/uploadFile';
 import ModalProductSubCategory from './ModalProductSubCategory';
+import { PlusOutlined } from '@ant-design/icons';
 
 function ProductCategory() {
     const [categories, setCategories] = useState([]);
+    const [filteredCategories, setFilteredCategories] = useState([]);
+    const [searchKeyword, setSearchKeyword] = useState('');
     const [thumbnail, setThumbnail] = useState(null);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -39,6 +42,7 @@ function ProductCategory() {
         try {
             const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/categories`);
             setCategories(res.data.categories);
+            setFilteredCategories(res.data.categories);
         } catch (error) {
             console.error(error);
         } finally {
@@ -49,6 +53,35 @@ function ProductCategory() {
     useEffect(() => {
         fetchCategories();
     }, []);
+
+    useEffect(() => {
+        const filtered = categories.filter(category =>
+            category.category_name.toLowerCase().includes(searchKeyword.toLowerCase())
+        );
+        setFilteredCategories(filtered);
+    }, [searchKeyword, categories]);
+
+    const handleSearch = (e) => {
+        const keyword = e.target.value;
+        setSearchKeyword(keyword);
+
+        setLoading(true);
+
+        setTimeout(() => {
+            if (!keyword) {
+                setFilteredCategories(categories);
+                setLoading(false);
+                return;
+            }
+
+            const filtered = categories.filter(category =>
+                category.category_name.toLowerCase().includes(keyword.toLowerCase())
+            );
+
+            setFilteredCategories(filtered);
+            setLoading(false);
+        }, 500);
+    };
 
     const handleAddCategory = async (values) => {
         try {
@@ -242,6 +275,7 @@ function ProductCategory() {
             setThumbnail(file);
         }
     };
+
     const handleManageSubCategory = (categoryId) => {
         setCurrentCategoryId(categoryId);
         setIsSubCategoryModalVisible(true);
@@ -249,6 +283,25 @@ function ProductCategory() {
 
     return (
         <div>
+            <h1 style={{ marginBottom: 16, fontSize: 20 }}>Quản lý danh mục sản phẩm</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <Input
+                        placeholder="Tìm kiếm danh mục..."
+                        value={searchKeyword}
+                        onChange={handleSearch}
+                        style={{ marginBottom: '16px', width: '300px' }}
+                    />
+                </div>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setIsAddModalVisible(true)}
+                    style={{ marginBottom: '16px' }}
+                >
+                    Thêm danh mục
+                </Button>
+            </div>
             <ModalProductSubCategory
                 categoryId={currentCategoryId}
                 visible={isSubCategoryModalVisible}
@@ -290,13 +343,10 @@ function ProductCategory() {
                     </Form.Item>
                 </Form>
             </Modal>
-            <Button type="primary" onClick={() => setIsAddModalVisible(true)} style={{ marginBottom: '16px' }}>
-                Thêm danh mục
-            </Button>
             <Table
                 loading={loading}
                 columns={columns}
-                dataSource={categories}
+                dataSource={filteredCategories}
                 pagination={{ pageSize: 5 }}
                 rowKey="category_id"
             />
