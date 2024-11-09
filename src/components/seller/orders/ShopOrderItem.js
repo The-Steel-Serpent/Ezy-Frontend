@@ -58,6 +58,22 @@ const ShopOrderItem = (props) => {
         damage: "Hàng bị hư hỏng",
         lost: "Hàng bị mất",
     };
+
+
+    const statusEnableReturn = [
+        "ready_to_pick",
+        "picking",
+        "money_collect_picking",
+        "picked",
+        "storing",
+        "transporting",
+        "sorting",
+        "delivering",
+        "transporting",
+        "transporting",
+
+    ] 
+
     useEffect(() => {
         if (order) {
             console.log("order neeee", order);
@@ -291,6 +307,7 @@ const ShopOrderItem = (props) => {
                                 <Button
                                     size="large"
                                     className="bg-white text-primary hover:opacity-80"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: true })}
                                 >
                                     Xem Chi Tiết Đơn Hủy
                                 </Button>

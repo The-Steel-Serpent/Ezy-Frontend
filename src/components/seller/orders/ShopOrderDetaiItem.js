@@ -34,14 +34,14 @@ const ShopOrderDetaiItem = (props) => {
                 </Tag>
             </div>
             <div className="col-span-2 flex justify-end items-center gap-2">
+                <span className="line-through text-neutral-400">
+                    {"đ" + item.totalPrice.toLocaleString("vi-VN")}
+                </span>
                 {item.discountPrice > 0 && (
-                    <span className="line-through text-neutral-400">
+                    <span className="text-primary font-semibold">
                         {"đ" + item.discountPrice.toLocaleString("vi-VN")}
                     </span>
                 )}
-                <span className="text-primary font-semibold">
-                    {"đ" + item.totalPrice.toLocaleString("vi-VN")}
-                </span>
             </div>
         </div>
     );
