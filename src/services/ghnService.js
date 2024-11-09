@@ -15,7 +15,8 @@ export const getProvinces = async () => {
     return res.data;
   } catch (error) {
     console.log("Error fetch provinces:", error);
-    throw new Error(error.message);
+    // throw new Error(error.message);
+    return error;
   }
 };
 export const getDistricts = async (ProvinceID) => {
@@ -35,7 +36,9 @@ export const getDistricts = async (ProvinceID) => {
     return res.data;
   } catch (error) {
     // console.log("Error fetch DISTRICTS:", error);
-    throw new Error(error.message);
+    // throw new Error(error.message);
+    return error;
+
   }
 };
 
@@ -55,7 +58,9 @@ export const getWards = async (DistrictID) => {
     });
     return res.data;
   } catch (error) {
-    throw new Error(error.message);
+    // throw new Error(error.message);
+    return error;
+
   }
 };
 

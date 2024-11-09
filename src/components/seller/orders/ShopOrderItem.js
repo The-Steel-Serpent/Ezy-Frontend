@@ -1,4 +1,4 @@
-import { Avatar, Button, Image, List, Popover } from "antd";
+import { Avatar, Button, Image, List, message, Popconfirm, Popover } from "antd";
 import React, { memo, useEffect, useReducer } from "react";
 import { CaretDownFilled, ShopFilled } from "@ant-design/icons";
 import { FaRegCircleQuestion } from "react-icons/fa6";
@@ -7,6 +7,7 @@ import { useMessages } from "../../../providers/MessagesProvider";
 import ShopOrderDetaiItem from "./ShopOrderDetaiItem";
 import ConfirmOrderModal from "./ConfirmOrderModal";
 import DetailOrderModal from "./DetailOrderModal";
+import { shopCancelOrder } from "../../../services/orderService";
 
 const ShopOrderItem = (props) => {
     const { order } = props;
@@ -58,6 +59,44 @@ const ShopOrderItem = (props) => {
         damage: "Hàng bị hư hỏng",
         lost: "Hàng bị mất",
     };
+
+
+    const statusEnableReturn = [
+        "ready_to_pick",
+        "picking",
+        "money_collect_picking",
+        "picked",
+        "storing",
+        "transporting",
+        "sorting",
+        "delivering",
+        "transporting",
+        "transporting",
+        "delivery_fail",
+    ]
+
+    const handleCancelOrder = async () => {
+        const payload = {
+            user_order_id: order.user_order_id,
+            shop_id: order.shop_id,
+            order_codes: [order.order_code],
+        }
+
+        console.log("payload", payload);
+
+        const response = await shopCancelOrder(payload);
+        if(response.success) {
+            message.info("Đơn hàng đã được hủy thành công");
+            setTimeout(() => {
+                handleReLoad();
+            }, 1200);
+        }
+        else {
+            message.error("Hủy đơn hàng thất bại");
+            console.log("Error cancle order", response);
+        }
+    }
+
     useEffect(() => {
         if (order) {
             console.log("order neeee", order);
@@ -166,12 +205,19 @@ const ShopOrderItem = (props) => {
                         {/** Button*/}
                         {order?.OrderStatus?.order_status_id === 1 && (
                             <div className="w-[100%] flex gap-3 justify-end">
-                                <Button
-                                    className="bg-white text-primary hover:opacity-80"
-                                    size="large"
+                                <Popconfirm
+                                    description="Bạn có chắc chắn muốn hủy đơn hàng này không?"
+                                    onConfirm={handleCancelOrder}
                                 >
-                                    Hủy Đơn Hàng
-                                </Button>
+                                    <Button
+                                        className="bg-white text-primary hover:opacity-80"
+                                        size="large"
+                                    >
+                                        Hủy Đơn Hàng
+                                    </Button>
+                                </Popconfirm>
+                             
+
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
@@ -192,12 +238,17 @@ const ShopOrderItem = (props) => {
                         )}
                         {order?.OrderStatus?.order_status_id === 2 && (
                             <div className="w-[100%] flex gap-3 justify-end">
-                                <Button
-                                    className="bg-white text-primary hover:opacity-80"
-                                    size="large"
+                                <Popconfirm
+                                    description="Bạn có chắc chắn muốn hủy đơn hàng này không?"
+                                    onConfirm={handleCancelOrder}
                                 >
-                                    Hủy Đơn Hàng
-                                </Button>
+                                    <Button
+                                        className="bg-white text-primary hover:opacity-80"
+                                        size="large"
+                                    >
+                                        Hủy Đơn Hàng
+                                    </Button>
+                                </Popconfirm>
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
@@ -225,12 +276,19 @@ const ShopOrderItem = (props) => {
                         )}
                         {order?.OrderStatus?.order_status_id === 3 && (
                             <div className="w-[100%] flex gap-3 justify-end">
-                                <Button
-                                    className="bg-white text-primary hover:opacity-80"
-                                    size="large"
-                                >
-                                    Hủy Đơn Hàng
-                                </Button>
+                                {statusEnableReturn.includes(order?.ghn_status) && (
+                                    <Popconfirm
+                                        description="Bạn có chắc chắn muốn hủy đơn hàng này không?"
+                                        onConfirm={handleCancelOrder}
+                                    >
+                                        <Button
+                                            className="bg-white text-primary hover:opacity-80"
+                                            size="large"
+                                        >
+                                            Hủy Đơn Hàng
+                                        </Button>
+                                    </Popconfirm>
+                                )}
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
@@ -251,6 +309,19 @@ const ShopOrderItem = (props) => {
                         )}
                         {order?.OrderStatus?.order_status_id === 4 && (
                             <div className="w-[60%] flex gap-3 justify-end">
+                                {statusEnableReturn.includes(order?.ghn_status) && (
+                                    <Popconfirm
+                                        description="Bạn có chắc chắn muốn hủy đơn hàng này không?"
+                                        onConfirm={handleCancelOrder}
+                                    >
+                                        <Button
+                                            className="bg-white text-primary hover:opacity-80"
+                                            size="large"
+                                        >
+                                            Hủy Đơn Hàng
+                                        </Button>
+                                    </Popconfirm>
+                                )}
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
@@ -291,6 +362,7 @@ const ShopOrderItem = (props) => {
                                 <Button
                                     size="large"
                                     className="bg-white text-primary hover:opacity-80"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: true })}
                                 >
                                     Xem Chi Tiết Đơn Hủy
                                 </Button>
@@ -315,7 +387,7 @@ const ShopOrderItem = (props) => {
                     handleReLoad={handleReLoad}
                 />
 
-                <DetailOrderModal 
+                <DetailOrderModal
                     visible={localState.visible_detail_order_modal}
                     onCancel={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: false })}
                     order={order}
