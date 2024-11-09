@@ -144,23 +144,25 @@ const cartSlice = createSlice({
 
           0
         );
+        console.log(action.payload?.cartShop);
         const discountPrice = action.payload?.cartShop?.reduce(
           (total, shop) =>
+            total +
             shop?.CartItems?.reduce(
-              (total, cartItem) =>
+              (subtotal, cartItem) =>
                 cartItem.selected === 1
-                  ? total +
+                  ? subtotal +
                     (cartItem.ProductVarient.price *
                       cartItem.ProductVarient.sale_percents) /
                       100
-                  : total,
+                  : subtotal,
               0
             ),
           0
         );
         state.totalItems = totalItems;
         state.totalPrice = totalPrice;
-        state.discountPrice = discountPrice * totalItems;
+        state.discountPrice = discountPrice;
       })
       .addCase(fetchCartData.rejected, (state, action) => {
         state.status = "failed";
