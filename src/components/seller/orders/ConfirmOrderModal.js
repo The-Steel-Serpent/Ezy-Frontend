@@ -38,12 +38,50 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
             title: 'Sản phẩm',
             dataIndex: 'product_name',
             key: 'product_name',
-            render: (_, record) => record.ProductVarient.Product.product_name,
+            width: 200,
+            render: (_, record) => (
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                    {record.ProductVarient.Product.product_name}
+                </span>
+            ),
+            ellipsis: true,
+        },
+        {
+            title: 'Phân loại',
+            dataIndex: 'classify',
+            key: 'classify',
+            width: 150,
+            render: (_, record) => (
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                    {record.classify}
+                </span>
+            ),
         },
         {
             title: 'Số lượng',
             dataIndex: 'quantity',
             key: 'quantity',
+
+        },
+        {
+            title: 'Đơn giá',
+            dataIndex: 'ProductVarient.price',
+            key: 'ProductVarient.price',
+            render: (_, record) => record.ProductVarient.price,
+
+        },
+        {
+            title: 'Giảm giá',
+            dataIndex: 'ProductVarient.sale_percents',
+            key: 'ProductVarient.sale_percents',
+            render: (_, record) => record.ProductVarient.sale_percents + "%",
+
+        },
+        {
+            title: 'Thành tiền',
+            dataIndex: 'totalPrice',
+            key: 'totalPrice',
+
         },
     ];
     const requireNoteOptions = [
@@ -169,6 +207,7 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
                 title="Thông tin xác nhận đơn hàng"
                 open={visible}
                 onCancel={onCancel}
+                width={window.innerWidth > 768 ? "50%" : "100%"}
                 footer={[
                     <Button
                         key="cancel"
@@ -239,9 +278,6 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
                     <Row className='mt-2 w-full'>
                         <Row className='w-full justify-end'>
                             <p className='text-[15px]'><span className='font-semibold'>Thành tiền: </span>{order.total_price} đ</p>
-                        </Row>
-                        <Row className='w-full flex justify-end'>
-                            <p className='text-[15px]'><span className='font-semibold'>Giảm giá: </span>{order.discount_price} đ</p>
                         </Row>
                         <Row className='w-full justify-end'>
                             <p className='text-[15px]'><span className='font-semibold'>Phí vận chuyển: </span>{order.shipping_fee} đ</p>

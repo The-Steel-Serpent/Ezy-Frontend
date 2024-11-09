@@ -31,19 +31,29 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
             title: 'Sản phẩm',
             dataIndex: 'product_name',
             key: 'product_name',
-            render: (_, record) => record.ProductVarient.Product.product_name,
-            with: '30%',
+            width: 200,
+            render: (_, record) => (
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                    {record.ProductVarient.Product.product_name}
+                </span>
+            ),
+            ellipsis: true,
         },
         {
             title: 'Phân loại',
             dataIndex: 'classify',
             key: 'classify',
+            width: 150,
+            render: (_, record) => (
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                    {record.classify}
+                </span>
+            ),
         },
         {
             title: 'Số lượng',
             dataIndex: 'quantity',
             key: 'quantity',
-            with: '14%',
 
         },
         {
@@ -51,7 +61,6 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
             dataIndex: 'ProductVarient.price',
             key: 'ProductVarient.price',
             render: (_, record) => record.ProductVarient.price,
-            with: '14%',
 
         },
         {
@@ -59,18 +68,16 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
             dataIndex: 'ProductVarient.sale_percents',
             key: 'ProductVarient.sale_percents',
             render: (_, record) => record.ProductVarient.sale_percents + "%",
-            with: '14%',
 
         },
         {
             title: 'Thành tiền',
             dataIndex: 'totalPrice',
             key: 'totalPrice',
-            with: '14%',
 
         },
     ];
-    
+
     useEffect(() => {
         const fetchAndSetProvinces = async () => {
             if (order) {
@@ -105,6 +112,13 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
                 open={visible}
                 onOk={onCancel}
                 onCancel={onCancel}
+                footer={[
+                    <Button key="back" onClick={onCancel}>
+                        Đóng
+                    </Button>,
+                ]}
+                // make width responsive
+                width={window.innerWidth > 768 ? "50%" : "100%"}
             >
                 <div>
                     <Row gutter={12}>
@@ -136,9 +150,6 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
                     <Row className='mt-2 w-full'>
                         <Row className='w-full justify-end'>
                             <p className='text-[15px]'><span className='font-semibold'>Thành tiền: </span>{order.total_price} đ</p>
-                        </Row>
-                        <Row className='w-full flex justify-end'>
-                            <p className='text-[15px]'><span className='font-semibold'>Giảm giá: </span>{order.discount_price} đ</p>
                         </Row>
                         <Row className='w-full justify-end'>
                             <p className='text-[15px]'><span className='font-semibold'>Phí vận chuyển: </span>{order.shipping_fee} đ</p>

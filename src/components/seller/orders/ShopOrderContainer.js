@@ -46,11 +46,11 @@ const ShopOrderContainer = (props) => {
           3
         );
         console.log(res);
-        console.log("Shop orders: ",shop.shop_id, order_status_id, localState.page, 3);
+        console.log("Shop orders: ", shop.shop_id, order_status_id, localState.page, 3);
         if (res.success) {
           setLocalState({ type: "SET_ORDER", payload: res.orders });
           setLocalState({ type: "SET_TOTAL_PAGES", payload: res.totalPages });
-          console.log("Shop orders: ",res.orders);
+          console.log("Shop orders: ", res.orders);
         }
       } catch (error) {
         console.log("Lỗi khi getOrderStatus", error);
@@ -61,7 +61,11 @@ const ShopOrderContainer = (props) => {
     if (shop?.shop_id && status_id) {
       fetchOrder();
     }
-  }, [shop, status_id]);
+  }, [shop, status_id, localState.page]);
+
+  const handlePageChange = (page) => {
+    setLocalState({ type: "SET_PAGE", payload: page });
+  };
 
   return (
     <>
@@ -94,6 +98,7 @@ const ShopOrderContainer = (props) => {
             pageSize={3}
             showSizeChanger={false}
             hideOnSinglePage={localState.order.length <= 3 ? true : false}
+            onChange={handlePageChange}
           />
         </div>
       )}

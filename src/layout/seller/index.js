@@ -53,7 +53,7 @@ const items = [
       },
       {
         key: "/seller/order/orders-return",
-        label: "Đơn trả hàng / Hoàn tiền",
+        label: "Trả hàng / Hoàn tiền",
       },
     ],
   },
