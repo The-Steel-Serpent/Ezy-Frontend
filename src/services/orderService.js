@@ -100,7 +100,6 @@ export const completeOrder = async (user_order_id) => {
   }
 };
 
-
 export const comfirmOrder = async (payload) => {
   try {
     const response = await axios.post(`${url}confirm-order`, payload);
@@ -120,12 +119,17 @@ export const comfirmOrder = async (payload) => {
           errorMessage = "Server error.";
           break;
         default:
-          errorMessage = error.response.data.message || "An unexpected error occurred.";
+          errorMessage =
+            error.response.data.message || "An unexpected error occurred.";
       }
     }
-    return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    return {
+      success: false,
+      message: errorMessage,
+      status: error.response?.status || 0,
+    };
   }
-}
+};
 
 export const buyOrderAgain = async (user_order_id) => {
   try {
@@ -149,6 +153,39 @@ export const reviewOrder = async (user_order_id, user_id, ratingList) => {
     return response.data;
   } catch (error) {
     console.log("Error when reviewOrder", error);
+    throw new Error(error);
+  }
+};
+
+export const getReviewOrder = async (user_order_id) => {
+  try {
+    const response = await axios.get(
+      `${url}get-reviews?user_order_id=${user_order_id}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.log("Error when getReviewOrder", error);
+    throw new Error(error);
+  }
+};
+
+export const getReasons = async (type) => {
+  try {
+    const response = await axios.get(`${url}get-reasons?type=${type}`);
+    return response.data;
+  } catch (error) {
+    console.log("Error when getReasons", error);
+    throw new Error(error);
+  }
+};
+
+export const sendRequest = async (payload) => {
+  try {
+    const response = await axios.post(`${url}send-request`, payload);
+    return response.data;
+  } catch (error) {
+    console.log("Error when sendRequest", error);
     throw new Error(error);
   }
 };

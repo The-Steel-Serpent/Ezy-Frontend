@@ -8,10 +8,9 @@ import {
   Popover,
   Radio,
 } from "antd";
-import React, { memo, useEffect, useReducer } from "react";
+import React, { lazy, memo, useEffect, useReducer } from "react";
 import { useMessages } from "../../providers/MessagesProvider";
 import { CaretDownFilled, ShopFilled } from "@ant-design/icons";
-import OrderDetailsItem from "./OrderDetailsItem";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { formatDate } from "date-fns";
 import {
@@ -23,10 +22,24 @@ import {
 } from "../../services/orderService";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWallet } from "../../redux/walletSlice";
-import { set } from "lodash";
-import ModalOTP from "../user/ModalOTP";
+import withSuspenseNonFallback from "../../hooks/HOC/withSuspenseNonFallback";
 import { fetchMiniCartData } from "../../redux/cartSlice";
-import ModalReview from "./ModalReview";
+
+const ModalOTP = withSuspenseNonFallback(
+  lazy(() => import("../user/ModalOTP"))
+);
+const ModalReview = withSuspenseNonFallback(
+  lazy(() => import("./ModalReview"))
+);
+const ModalGetReview = withSuspenseNonFallback(
+  lazy(() => import("./ModalGetReview"))
+);
+const ModalSendRequest = withSuspenseNonFallback(
+  lazy(() => import("./ModalSendRequest"))
+);
+const OrderDetailsItem = withSuspenseNonFallback(
+  lazy(() => import("./OrderDetailsItem"))
+);
 const vnpay = require("../../assets/vnpay.png");
 const walletImg = require("../../assets/wallet.png");
 
@@ -62,6 +75,12 @@ const OrderItem = (props) => {
         case "SET_OPEN_MODAL_REVIEW": {
           return { ...state, openModalReview: action.payload };
         }
+        case "SET_OPEN_MODAL_GET_REVIEW": {
+          return { ...state, openModalGetReview: action.payload };
+        }
+        case "SET_OPEN_MODAL_SEND_REQUEST": {
+          return { ...state, modalSendRequest: action.payload };
+        }
         case "verifyOTP":
           return { ...state, verifyOTP: action.payload };
 
@@ -76,6 +95,11 @@ const OrderItem = (props) => {
       selectedPaymentMethod: 3,
       openModalPaymentMethod: false,
       openModalOTP: false,
+      openModalGetReview: false,
+      modalSendRequest: {
+        type: "",
+        openModalSendRequest: false,
+      },
       modal: {
         openModalConfirm: false,
         type: "",
@@ -125,6 +149,27 @@ const OrderItem = (props) => {
   };
   const handleCloseModalReview = () => {
     setLocalState({ type: "SET_OPEN_MODAL_REVIEW", payload: false });
+  };
+
+  const handleOpenModalGetReview = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_GET_REVIEW", payload: true });
+  };
+
+  const handleCloseModalGetReview = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_GET_REVIEW", payload: false });
+  };
+
+  const handleOpenModalSendRequest = (type) => {
+    setLocalState({
+      type: "SET_OPEN_MODAL_SEND_REQUEST",
+      payload: { type: type, openModalSendRequest: true },
+    });
+  };
+  const handleCloseModalSendRequest = () => {
+    setLocalState({
+      type: "SET_OPEN_MODAL_SEND_REQUEST",
+      payload: { type: "", openModalSendRequest: false },
+    });
   };
 
   const handleCheckoutWithVnpay = async () => {
@@ -429,6 +474,7 @@ const OrderItem = (props) => {
                 <Button
                   size="large"
                   className="bg-primary text-white hover:opacity-80"
+                  onClick={() => handleOpenModalSendRequest("cancel-request")}
                 >
                   Yêu Cầu Hủy Đơn
                 </Button>
@@ -485,6 +531,9 @@ const OrderItem = (props) => {
                     <Button
                       size="large"
                       className="bg-secondary border-secondary text-white hover:opacity-80"
+                      onClick={() =>
+                        handleOpenModalSendRequest("refund-request")
+                      }
                     >
                       Trả Hàng/Hoàn Tiền
                     </Button>
@@ -508,7 +557,10 @@ const OrderItem = (props) => {
                         Mua Lại
                       </span>
                       {order?.is_reviewed === 1 && (
-                        <span className="hover:bg-slate-100 cursor-pointer">
+                        <span
+                          className="hover:bg-slate-100 cursor-pointer"
+                          onClick={handleOpenModalGetReview}
+                        >
                           Xem Đánh Giá
                         </span>
                       )}
@@ -655,6 +707,18 @@ const OrderItem = (props) => {
         orders={order}
         openModalReview={localState.openModalReview}
         onCloseModalReview={handleCloseModalReview}
+        onUpdateOrder={onUpdateOrder}
+      />
+      <ModalGetReview
+        orders={order}
+        openModalGetReview={localState.openModalGetReview}
+        onCloseModalGetReview={handleCloseModalGetReview}
+      />
+      <ModalSendRequest
+        userOrderId={order.user_order_id}
+        type={localState.modalSendRequest.type}
+        openModalSendRequest={localState.modalSendRequest.openModalSendRequest}
+        onCloseModalSendRequest={handleCloseModalSendRequest}
         onUpdateOrder={onUpdateOrder}
       />
     </>
