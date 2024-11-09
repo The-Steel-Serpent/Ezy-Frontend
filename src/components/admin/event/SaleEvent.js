@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Table, message, Modal, Button } from 'antd';
+import { Table, message, Modal, Button, Input, DatePicker } from 'antd';
 import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import AddSaleEvent from './AddSaleEvent';
 import SaleEventDetail from './SaleEventDetail';
@@ -12,6 +12,10 @@ const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 const SaleEvent = () => {
     const [saleEvents, setSaleEvents] = useState([]);
+    const [filteredEvents, setFilteredEvents] = useState([]);
+    const [searchKeyword, setSearchKeyword] = useState('');
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
     const [loading, setLoading] = useState(false);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState(null);
@@ -24,6 +28,7 @@ const SaleEvent = () => {
 
         socket.on('eventStatusUpdate', (updatedEvents) => {
             setSaleEvents(updatedEvents);
+            setFilteredEvents(updatedEvents);
         });
 
         return () => {
@@ -36,12 +41,59 @@ const SaleEvent = () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/get-event`);
             setSaleEvents(response.data.data);
+            setFilteredEvents(response.data.data);
         } catch (error) {
             message.error('Failed to load sale events. Please try again later.');
         } finally {
             setLoading(false);
         }
     };
+
+    const handleSearch = (e) => {
+        const keyword = e.target.value;
+        setSearchKeyword(keyword);
+        applyFilters(saleEvents, keyword, startDate, endDate);
+    };
+
+    const handleStartDateChange = (date) => {
+        setStartDate(date);
+        applyFilters(saleEvents, searchKeyword, date, endDate);
+    };
+
+    const handleEndDateChange = (date) => {
+        setEndDate(date);
+        applyFilters(saleEvents, searchKeyword, startDate, date);
+    };
+
+    const applyFilters = (events, keyword, start, end) => {
+        setLoading(true);
+    
+        setTimeout(() => {
+            let filtered = events;
+    
+            if (keyword) {
+                filtered = filtered.filter(event =>
+                    event.sale_events_name.toLowerCase().includes(keyword.toLowerCase())
+                );
+            }
+    
+            if (start && end) {
+                filtered = filtered.filter(event => {
+                    const eventStart = new Date(event.started_at);
+                    const eventEnd = new Date(event.ended_at);
+                    return (
+                        (eventStart >= start && eventStart <= end) ||
+                        (eventEnd >= start && eventEnd <= end) ||
+                        (eventStart <= start && eventEnd >= end)
+                    );
+                });
+            }
+    
+            setFilteredEvents(filtered);
+            setLoading(false);
+        }, 500);
+    };
+    
 
     const handleDeleteEvent = (id) => {
         Modal.confirm({
@@ -153,6 +205,22 @@ const SaleEvent = () => {
     return (
         <div>
             <h1>Sự kiện khuyến mãi</h1>
+            <Input
+                placeholder="Tìm kiếm sự kiện..."
+                value={searchKeyword}
+                onChange={handleSearch}
+                style={{ marginBottom: '20px', width: '300px' }}
+            />
+            <DatePicker
+                placeholder="Chọn ngày bắt đầu"
+                onChange={handleStartDateChange}
+                style={{ marginBottom: '20px', marginLeft: '10px' }}
+            />
+            <DatePicker
+                placeholder="Chọn ngày kết thúc"
+                onChange={handleEndDateChange}
+                style={{ marginBottom: '20px', marginLeft: '10px' }}
+            />
             <Button 
                 type="primary" 
                 icon={<PlusOutlined />} 
@@ -163,7 +231,7 @@ const SaleEvent = () => {
             </Button>
 
             <Table
-                dataSource={saleEvents}
+                dataSource={filteredEvents}
                 columns={columns}
                 loading={loading}
                 rowKey="sale_events_id"

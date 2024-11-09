@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Table, message, Button, Modal, Form, Input, DatePicker, TimePicker } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
-// Mở rộng dayjs với các plugin
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
@@ -18,6 +17,7 @@ const DiscountVoucher = () => {
   const [form] = Form.useForm();
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   useEffect(() => {
     fetchVouchers();
@@ -41,23 +41,47 @@ const DiscountVoucher = () => {
   };
 
   const handleFilter = () => {
-    if (!startDate && !endDate) {
-      setFilteredVouchers(vouchers);
-      return;
-    }
+    setLoading(true); // Bắt đầu loading khi bắt đầu lọc
 
-    const filtered = vouchers.filter((voucher) => {
-      const voucherStartDate = dayjs(voucher.started_at);
-      const voucherEndDate = dayjs(voucher.ended_at);
+    setTimeout(() => {
+      if (!searchKeyword && !startDate && !endDate) {
+        setFilteredVouchers(vouchers);
+        setLoading(false);
+        return;
+      }
 
-      const isDateInRange =
-        (!startDate || voucherStartDate.isSameOrAfter(startDate, 'day')) &&
-        (!endDate || voucherEndDate.isSameOrBefore(endDate, 'day'));
+      const filtered = vouchers.filter((voucher) => {
+        const voucherStartDate = dayjs(voucher.started_at);
+        const voucherEndDate = dayjs(voucher.ended_at);
 
-      return isDateInRange;
-    });
+        const isDateInRange =
+          (!startDate || voucherStartDate.isSameOrAfter(startDate, 'day')) &&
+          (!endDate || voucherEndDate.isSameOrBefore(endDate, 'day'));
 
-    setFilteredVouchers(filtered);
+        const matchesSearchKeyword =
+          voucher.discount_voucher_code.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+          voucher.discount_voucher_name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+          voucher.discount_type.toLowerCase().includes(searchKeyword.toLowerCase());
+
+        return isDateInRange && matchesSearchKeyword;
+      });
+
+      setFilteredVouchers(filtered);
+      setLoading(false);
+    }, 500); 
+  };
+
+
+  const handleSearchChange = (e) => {
+    setSearchKeyword(e.target.value);
+  };
+
+  const handleStartDateChange = (date) => {
+    setStartDate(date ? dayjs(date) : null);
+  };
+
+  const handleEndDateChange = (date) => {
+    setEndDate(date ? dayjs(date) : null);
   };
 
   const handleAddVoucher = async (values) => {
@@ -122,34 +146,36 @@ const DiscountVoucher = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <Input
+            placeholder="Tìm kiếm theo mã, tên, loại"
+            value={searchKeyword}
+            onChange={handleSearchChange}
+            prefix={<SearchOutlined />}
+            style={{ width: 250 }}
+          />
           <DatePicker
             placeholder="Ngày bắt đầu"
-            onChange={(date) => setStartDate(date ? dayjs(date) : null)}
+            onChange={handleStartDateChange}
             format="YYYY-MM-DD"
           />
           <DatePicker
             placeholder="Ngày kết thúc"
-            onChange={(date) => setEndDate(date ? dayjs(date) : null)}
+            onChange={handleEndDateChange}
             format="YYYY-MM-DD"
           />
-          <Button 
-            type="primary" 
-            onClick={handleFilter}
-          >
-            Lọc
+          <Button type="primary" onClick={handleFilter}>
+            Tìm
           </Button>
-
         </div>
-        <Button 
-          type="primary" 
-          onClick={() => setIsModalVisible(true)} 
+        <Button
+          type="primary"
+          onClick={() => setIsModalVisible(true)}
           style={{ marginBottom: '20px' }}
           icon={<PlusOutlined />}
         >
           Thêm Voucher
         </Button>
       </div>
-
 
       <Table
         columns={columns}
