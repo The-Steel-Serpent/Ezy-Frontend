@@ -38,17 +38,21 @@ const PaymentMethodSection = (props) => {
       name: "Thanh Toán Khi Nhận Hàng",
       value: 1,
       image: cod,
+      disabled: totalPayment?.final > 5000000 || totalPayment?.final === 0,
     },
     {
       name: "Ví VNPay",
       value: 3,
       image: vnpay,
+      disabled: totalPayment?.final === 0,
     },
     {
       name: "Ví EzyPay ",
       value: 4,
       image: walletImg,
       balance: wallet.balance,
+      disabled:
+        wallet.balance < totalPayment?.final || totalPayment?.final === 0,
     },
   ];
 
@@ -73,10 +77,7 @@ const PaymentMethodSection = (props) => {
                 onChange={onPaymentMethodChange}
               >
                 {PaymentMethodArray.map((item) => (
-                  <Radio
-                    value={item.value}
-                    disabled={item?.balance < totalPayment?.final && true}
-                  >
+                  <Radio value={item.value} disabled={item.disabled}>
                     <div className="w-full flex items-center gap-2">
                       <img src={item.image} alt="" className="w-11" />
                       <div className="flex flex-col">

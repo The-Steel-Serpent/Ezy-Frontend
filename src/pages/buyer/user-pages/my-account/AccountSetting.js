@@ -15,6 +15,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ImPencil2 } from "react-icons/im";
 import { LuWallet } from "react-icons/lu";
+
+const OrderDetailsSection = lazy(() =>
+  import("../../../../components/order/OrderDetailsSection")
+);
 const WalletSection = lazy(() =>
   import("../../../../components/wallet/WalletSection")
 );
@@ -146,10 +150,17 @@ const AccountSetting = () => {
     if (type) {
       setState({ type: "SELECTED_KEYS", payload: type });
     } else {
-      setState({
-        type: "SELECTED_KEYS",
-        payload: location.pathname.split("/").pop(),
-      });
+      if (location.pathname.startsWith("/user/purchase/order")) {
+        setState({
+          type: "SELECTED_KEYS",
+          payload: "purchase",
+        });
+      } else {
+        setState({
+          type: "SELECTED_KEYS",
+          payload: location.pathname.split("/").pop(),
+        });
+      }
     }
   }, [location.pathname, location.search]);
   const renderContent = () => {
@@ -216,6 +227,12 @@ const AccountSetting = () => {
       return (
         <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
           <WalletSection />
+        </Suspense>
+      );
+    } else if (location.pathname.startsWith("/user/purchase/order")) {
+      return (
+        <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
+          <OrderDetailsSection />
         </Suspense>
       );
     } else {

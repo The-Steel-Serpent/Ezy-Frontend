@@ -174,6 +174,16 @@ const router = createBrowserRouter([
                 <AccountSetting />
               </AuthLayout>
             ),
+            children: [
+              {
+                path: "order/:order_id",
+                element: (
+                  <AuthLayout>
+                    <AccountSetting />
+                  </AuthLayout>
+                ),
+              },
+            ],
           },
           {
             path: "notification",
@@ -502,7 +512,7 @@ const router = createBrowserRouter([
             <AllFlashSale />
           </AdminAuthLayout>
         ),
-      }
+      },
     ],
   },
 ]);

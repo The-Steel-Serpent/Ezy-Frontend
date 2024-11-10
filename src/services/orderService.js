@@ -216,3 +216,15 @@ export const shopCancelOrder = async (payload) => {
     }
   }
 };
+
+export const getOrderDetails = async (user_order_id) => {
+  try {
+    const response = await axios.get(
+      `${url}order-details?user_order_id=${user_order_id}`
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Error when getOrderDetails", error);
+    throw new Error(error);
+  }
+};
