@@ -189,3 +189,29 @@ export const sendRequest = async (payload) => {
     throw new Error(error);
   }
 };
+
+export const shopCancelOrder = async (payload) => {
+  try {
+    const response = await axios.post(`${url}shop-cancel-order`, payload);
+    return response.data;
+  } catch (error) {
+    console.log("Error when shopCancelOrder", error);
+    let errorMessage;
+    if (error.response) {
+      switch (error.response.status) {
+        case 400:
+          errorMessage = error.response.data.message;
+          break;
+        case 404:
+          errorMessage = "Order not found";
+          break;
+        case 500:
+          errorMessage = "Server error.";
+          break;
+        default:
+          errorMessage =
+            error.response.data.message || "An unexpected error occurred.";
+      }
+    }
+  }
+};

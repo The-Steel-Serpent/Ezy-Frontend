@@ -3,7 +3,7 @@ import React, { useEffect, useReducer } from 'react'
 import { getDistricts, getProvinces, getWards } from '../../../services/ghnService';
 const { Option } = Select;
 
-const DetailOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
+const DetailOrderModal = ({ visible, onCancel, order }) => {
 
     const [modalState, setModalState] = useReducer(
         (state, action) => {
@@ -31,41 +31,94 @@ const DetailOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
             title: 'Sản phẩm',
             dataIndex: 'product_name',
             key: 'product_name',
-            render: (_, record) => record.ProductVarient.Product.product_name,
+            width: 200,
+            render: (_, record) => (
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                    {record.ProductVarient.Product.product_name}
+                </span>
+            ),
+            ellipsis: true,
+        },
+        {
+            title: 'Phân loại',
+            dataIndex: 'classify',
+            key: 'classify',
+            width: 150,
+            render: (_, record) => (
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                    {record.classify}
+                </span>
+            ),
         },
         {
             title: 'Số lượng',
             dataIndex: 'quantity',
             key: 'quantity',
+
+        },
+        {
+            title: 'Đơn giá',
+            dataIndex: 'ProductVarient.price',
+            key: 'ProductVarient.price',
+            render: (_, record) => record.ProductVarient.price,
+
+        },
+        {
+            title: 'Giảm giá',
+            dataIndex: 'ProductVarient.sale_percents',
+            key: 'ProductVarient.sale_percents',
+            render: (_, record) => record.ProductVarient.sale_percents + "%",
+
+        },
+        {
+            title: 'Thành tiền',
+            dataIndex: 'totalPrice',
+            key: 'totalPrice',
+
         },
     ];
 
     useEffect(() => {
         const fetchAndSetProvinces = async () => {
             if (order) {
-                const provinces = await getProvinces();
-                const districts = await getDistricts(order.Shop.province_id);
-                const wards = await getWards(order.Shop.district_id);
-                // get province name by province_id
-                const shop_province = provinces.data.find(province => province.ProvinceID === order.Shop.province_id);
-                const shop_district = districts.data.find(district => district.DistrictID === order.Shop.district_id);
-                const shop_ward = wards.data.find(ward => ward.WardCode === order.Shop.ward_code);
+                try {
+                    const provinces = await getProvinces();
+                    const districts = await getDistricts(order.Shop.province_id);
+                    const wards = await getWards(order.Shop.district_id);
 
-                setModalState({ type: "SET_FROM_PROVINCE_NAME", payload: shop_province.ProvinceName });
-                setModalState({ type: "SET_FROM_DISTRICT_NAME", payload: shop_district.DistrictName });
-                setModalState({ type: "SET_FROM_WARD_NAME", payload: shop_ward.WardName });
+                    if (provinces.data && districts.data && wards.data) {
+                        const shop_province = provinces.data.find(province => province.ProvinceID === order.Shop.province_id);
+                        const shop_district = districts.data.find(district => district.DistrictID === order.Shop.district_id);
+                        const shop_ward = wards.data.find(ward => ward.WardCode === order.Shop.ward_code);
 
+                        setModalState({ type: "SET_FROM_PROVINCE_NAME", payload: shop_province?.ProvinceName || "" });
+                        setModalState({ type: "SET_FROM_DISTRICT_NAME", payload: shop_district?.DistrictName || "" });
+                        setModalState({ type: "SET_FROM_WARD_NAME", payload: shop_ward?.WardName || "" });
+                    } else {
+                        console.error("Failed to fetch provinces, districts, or wards data");
+                    }
+                } catch (error) {
+                    console.error("Error fetching provinces, districts, or wards:", error);
+                }
             }
         };
         fetchAndSetProvinces();
-    }, [order])
+    }, [order]);
 
     return (
         <div>
             <Modal
                 title="Thông tin đơn hàng"
                 open={visible}
+                onOk={onCancel}
                 onCancel={onCancel}
+                footer={[
+                    <Button key="back" onClick={onCancel}>
+                        Đóng
+                    </Button>,
+                ]}
+                // make width responsive
+                width={window.innerWidth > 768 ? "50%" : "100%"}
             >
                 <div>
                     <Row gutter={12}>
@@ -90,24 +143,22 @@ const DetailOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
                                 dataSource={order.UserOrderDetails}
                                 rowKey="product_varient_id"
                                 pagination={false}
+                                className='w-full'
                             />
                         </Col>
                     </Row>
                     <Row className='mt-2 w-full'>
-                        <Row className='w-full flex justify-end'>
-                            <p className='text-[15px]'><span className='font-semibold'>Giảm giá: </span>{order.discount_price} đ</p>
-                        </Row>
-                        <Row className='w-full justify-end'>
-                            <p className='text-[15px]'><span className='font-semibold'>Giá gốc: </span>{order.final_price} đ</p>
-                        </Row>
-                        <Row className='w-full justify-end'>
-                            <p className='text-[15px]'><span className='font-semibold'>Phí ship: </span>{order.shipping_fee} đ</p>
-                        </Row>
-                        <Row className='w-full justify-end'>
-                            <p className='text-[15px]'><span className='font-semibold'>Giảm phí ship: </span>{order.discount_shipping_fee} đ</p>
-                        </Row>
                         <Row className='w-full justify-end'>
                             <p className='text-[15px]'><span className='font-semibold'>Thành tiền: </span>{order.total_price} đ</p>
+                        </Row>
+                        <Row className='w-full justify-end'>
+                            <p className='text-[15px]'><span className='font-semibold'>Phí vận chuyển: </span>{order.shipping_fee} đ</p>
+                        </Row>
+                        <Row className='w-full justify-end'>
+                            <p className='text-[15px]'><span className='font-semibold'>Phí vận chuyển được giảm: </span>{order.discount_shipping_fee} đ</p>
+                        </Row>
+                        <Row className='w-full justify-end'>
+                            <p className='text-[15px]'><span className='font-semibold'>Tổng cộng: </span>{order.final_price} đ</p>
                         </Row>
                     </Row>
                 </div>
