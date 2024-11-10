@@ -122,6 +122,7 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
             shopId: order.shop_id,
             user_order_id: order.user_order_id,
             payment_method_id: order.payment_method_id,
+            shipping_fee: order.shipping_fee,
             note: order.order_note,
             required_note: modalState.required_note, // required_note: "CHOTHUHANG, CHOXEMHANGKHONGTHU, KHONGCHOXEMHANG",
             from_name: order.Shop.full_name, // required

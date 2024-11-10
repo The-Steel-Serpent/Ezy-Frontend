@@ -16,7 +16,6 @@ import {
   FloatButton,
 } from "antd";
 import { TfiWallet } from "react-icons/tfi";
-import { BsShopWindow } from "react-icons/bs";
 import { FaUserCircle } from "react-icons/fa";
 import { CiShop } from "react-icons/ci";
 import { SlLogout } from "react-icons/sl";
@@ -83,30 +82,7 @@ const items = [
       },
       {
         key: "10",
-        label: "Số dư TK Shopee",
-      },
-      {
-        key: "11",
-        label: "Tài khoản ngân hàng",
-      },
-    ],
-  },
-  {
-    key: "sub4",
-    label: "Quản Lý Shop",
-    icon: <BsShopWindow />,
-    children: [
-      {
-        key: "9",
-        label: "Doanh thu",
-      },
-      {
-        key: "10",
-        label: "Số dư TK Shopee",
-      },
-      {
-        key: "11",
-        label: "Tài khoản ngân hàng",
+        label: "Ví Ezy",
       },
     ],
   },
