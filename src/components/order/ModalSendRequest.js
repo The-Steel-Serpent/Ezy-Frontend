@@ -1,12 +1,16 @@
 import { Button, message, Modal, Radio } from "antd";
 import React, { memo, useEffect, useReducer } from "react";
-import { getReasons, sendRequest } from "../../services/orderService";
+import {
+  cancelOrder,
+  getReasons,
+  sendRequest,
+} from "../../services/orderService";
 import TextArea from "antd/es/input/TextArea";
 import { set } from "lodash";
 
 const ModalSendRequest = (props) => {
   const {
-    userOrderId,
+    order,
     type,
     openModalSendRequest,
     onCloseModalSendRequest,
@@ -24,6 +28,8 @@ const ModalSendRequest = (props) => {
           return { ...state, selectedReason: action.payload };
         case "note":
           return { ...state, note: action.payload };
+        case "error":
+          return { ...state, error: action.payload };
         default:
           return state;
       }
@@ -33,12 +39,17 @@ const ModalSendRequest = (props) => {
       reasons: [],
       selectedReason: null,
       note: "",
+      error: {
+        selectedReason: "",
+        note: "",
+      },
     }
   );
   const handleCloseModalSendRequest = () => {
     onCloseModalSendRequest();
     setLocalState({ type: "selectedReason", payload: null });
     setLocalState({ type: "note", payload: "" });
+    setLocalState({ type: "error", payload: { selectedReason: "", note: "" } });
   };
 
   const handleOnNoteChange = (e) => {
@@ -71,23 +82,58 @@ const ModalSendRequest = (props) => {
   }, [openModalSendRequest]);
 
   const handleSendRequest = async () => {
-    const payload = {
-      user_order_id: userOrderId,
-      return_type_id: type === "cancel-request" ? 1 : 2,
-      return_reason_id: localState.selectedReason,
-      note: localState.note,
-      status: 1,
+    let localErrors = {
+      selectedReason: "",
+      note: "",
     };
-    try {
-      const res = await sendRequest(payload);
-      if (res.success) {
-        message.success("Gửi yêu cầu thành công");
-        handleCloseModalSendRequest();
-        onUpdateOrder();
+    if (!localState.selectedReason) {
+      localErrors.selectedReason = "Vui lòng chọn lý do";
+    }
+    if (localState.note.length > 0 && localState.note.length < 30) {
+      localErrors.note = "Ghi chú tối thiểu 30 ký tự";
+    } else if (localState.note.length > 120) {
+      localErrors.note = "Ghi chú không được quá 120 ký tự";
+    }
+
+    const hasErrors = Object.values(localErrors).some((error) => error !== "");
+    if (hasErrors) {
+      setLocalState({ type: "error", payload: localErrors });
+      return;
+    }
+    if (order.ghn_status === "ready_to_pick") {
+      try {
+        const res = await cancelOrder(order.user_order_id, 1);
+        if (res.success) {
+          message.success("Hủy đơn hàng thành công");
+          handleCloseModalSendRequest();
+          setTimeout(
+            () => (window.location.href = "/user/purchase?status-id=6"),
+            2000
+          );
+        }
+      } catch (error) {
+        console.log("Error when cancel order", error);
+        message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
       }
-    } catch (error) {
-      console.log("Error when handleSendRequest", error);
-      message.error("Có lỗi xảy ra, vui lòng thử lại sau");
+    } else {
+      const payload = {
+        user_order_id: order.user_order_id,
+        return_type_id: type === "cancel-request" ? 1 : 2,
+        return_reason_id: localState.selectedReason,
+        note: localState.note,
+        status_id: 1,
+      };
+      try {
+        const res = await sendRequest(payload);
+        if (res.success) {
+          message.success("Gửi yêu cầu thành công");
+          handleCloseModalSendRequest();
+          onUpdateOrder();
+        }
+      } catch (error) {
+        console.log("Error when handleSendRequest", error);
+        message.error("Có lỗi xảy ra, vui lòng thử lại sau");
+      }
     }
   };
   return (
@@ -103,7 +149,7 @@ const ModalSendRequest = (props) => {
       onClose={handleCloseModalSendRequest}
       open={openModalSendRequest}
       footer={
-        <div className="w-full flex justify-end gap-3 items-center">
+        <div className="w-full flex justify-end gap-3 items-center mt-3">
           <Button
             size="large"
             className="text-secondary border-secondary hover:text-white hover:bg-secondary"
@@ -121,7 +167,7 @@ const ModalSendRequest = (props) => {
         </div>
       }
     >
-      <div className="w-full flex flex-col gap-3">
+      <div className="w-full flex flex-col gap-3 pb-3">
         <div className="flex flex-col gap-2">
           <span className="text-lg font-semibold text-neutral-500">
             Lý do:{" "}
@@ -137,6 +183,9 @@ const ModalSendRequest = (props) => {
               </Radio>
             ))}
           </Radio.Group>
+          <span className="text-red-500">
+            {localState.error.selectedReason}
+          </span>
         </div>
         <div className="flex flex-col gap-2">
           <span className="text-lg font-semibold text-neutral-500">
@@ -149,9 +198,14 @@ const ModalSendRequest = (props) => {
             }}
             value={localState.note}
             onChange={handleOnNoteChange}
+            count={{
+              show: true,
+              max: 120,
+            }}
             className="text-base"
             placeholder="Nếu có, vui lòng ghi rõ lý do cụ thể"
           />
+          <span className="text-red-500">{localState.error.note}</span>
         </div>
       </div>
     </Modal>

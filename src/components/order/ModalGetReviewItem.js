@@ -29,9 +29,11 @@ const ModalGetReviewItem = ({ item }) => {
           <span className="text-base font-semibold line-clamp-2 text-ellipsis">
             {item.varient_name}
           </span>
-          <span className="text-sm text-neutral-500">
-            Phân Loại Hàng: {item.classify}
-          </span>
+          {item.classify !== "" && (
+            <span className="text-sm text-neutral-500">
+              Phân Loại Hàng: {item.classify}
+            </span>
+          )}
         </div>
       </div>
       <div className="flex flex-row gap-3">

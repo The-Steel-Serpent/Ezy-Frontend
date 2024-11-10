@@ -9,13 +9,44 @@ const ModalReview = (props) => {
 
   const [resetTrigger, setResetTrigger] = useState(false);
   const reviewsRef = useRef([]);
+  const validateRef = useRef([]);
   const handleCloseModalReview = useCallback(() => {
     setResetTrigger((prev) => !prev);
     onCloseModalReview();
+    reviewsRef.current = [];
+    validateRef.current = [];
   }, [onCloseModalReview]);
 
   const handleConfirmReview = useCallback(async () => {
-    console.log(reviewsRef.current);
+    const tempValidate = [];
+    if (reviewsRef.current.length === 0) {
+      message.warning("Vui lòng đánh giá sản phẩm");
+      return;
+    }
+    reviewsRef.current.forEach((review, index) => {
+      const errors = {};
+      if (review.rating === 0) {
+        errors.rating = "Vui lòng đánh giá sản phẩm";
+      }
+      if (review.review === "") {
+        errors.review = "Vui lòng nhập đánh giá";
+      } else if (review.review.length < 30) {
+        errors.review = "Đánh giá phải từ 30 ký tự trở lên";
+      } else if (review.review.length > 120) {
+        errors.review = "Đánh giá phải từ 120 ký tự trở xuống";
+      }
+
+      if (Object.keys(errors).length > 0) {
+        tempValidate[index] = errors;
+      }
+    });
+    console.log(tempValidate);
+    if (tempValidate.length > 0) {
+      validateRef.current = tempValidate;
+      message.error("Vui lòng kiểm tra lại thông tin đánh giá");
+      return;
+    }
+    validateRef.current = [];
     try {
       const res = await reviewOrder(
         orders.user_order_id,
@@ -65,8 +96,8 @@ const ModalReview = (props) => {
       <List>
         <VirtualList
           data={orders?.UserOrderDetails}
-          itemHeight={388}
-          height={430}
+          itemHeight={400}
+          height={450}
         >
           {(item, index) => (
             <List.Item>
@@ -74,6 +105,7 @@ const ModalReview = (props) => {
                 item={item}
                 resetTrigger={resetTrigger}
                 onSave={(data) => (reviewsRef.current[index] = data)}
+                validateRef={validateRef.current[index]}
               />
             </List.Item>
           )}

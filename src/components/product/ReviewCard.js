@@ -44,15 +44,19 @@ const ReviewCard = ({ value }) => {
           isEdit={false}
           size={13}
         />
-        <div className="flex flex-row items-center justify-center">
+        <div className="flex flex-row items-center justify-start">
           <div className="text-xs text-slate-500">{formattedDate}</div>
-          <Divider className="border-s-slate-400 h-4 top-0" type="vertical" />
-          <div className="text-xs text-slate-500">
-            Phân loại hàng:{" "}
-            {value?.ProductVarient?.ProductClassify?.product_classify_name +
-              " " +
-              value?.ProductVarient?.ProductSize?.product_size_name}
-          </div>
+          {value?.classify !== "" && (
+            <>
+              <Divider
+                className="border-s-slate-400 h-4 top-0"
+                type="vertical"
+              />
+              <div className="text-xs text-slate-500">
+                Phân loại hàng: {value?.classify}
+              </div>
+            </>
+          )}
         </div>
         <div className="mt-2">{value?.review_content}</div>
       </div>

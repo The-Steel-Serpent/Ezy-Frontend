@@ -3,7 +3,7 @@ import TextArea from "antd/es/input/TextArea";
 import React, { memo, useCallback, useEffect, useReducer } from "react";
 const desc = ["Tệ", "Không Hài Lòng", "Bình Thường", "Hài Lòng", "Tuyệt Vời"];
 const ModalReviewItem = (props) => {
-  const { item, resetTrigger, onSave } = props;
+  const { item, resetTrigger, onSave, validateRef } = props;
 
   const [localState, setLocalState] = useReducer(
     (state, action) => {
@@ -12,6 +12,8 @@ const ModalReviewItem = (props) => {
           return { ...state, rating: action.payload };
         case "review":
           return { ...state, review: action.payload };
+        case "error":
+          return { ...state, error: action.payload };
         default:
           return state;
       }
@@ -19,6 +21,10 @@ const ModalReviewItem = (props) => {
     {
       rating: 5,
       review: "",
+      error: {
+        review: "",
+        rating: "",
+      },
     }
   );
 
@@ -46,9 +52,11 @@ const ModalReviewItem = (props) => {
       product_varients_id: item.ProductVarient.product_varients_id,
       rating: localState.rating,
       review: localState.review,
+      classify: item.classify,
     });
   }, [
     item.ProductVarient.product_varients_id,
+    item.classify,
     localState.rating,
     localState.review,
     onSave,
@@ -69,9 +77,11 @@ const ModalReviewItem = (props) => {
           <span className="text-base font-semibold line-clamp-2 text-ellipsis">
             {item.varient_name}
           </span>
-          <span className="text-sm text-neutral-500">
-            Phân Loại Hàng: {item.classify}
-          </span>
+          {item.classify !== "" && (
+            <span className="text-sm text-neutral-500">
+              Phân Loại Hàng: {item.classify}
+            </span>
+          )}
         </div>
       </div>
       <div className="flex justify-start items-center gap-5">
@@ -91,17 +101,26 @@ const ModalReviewItem = (props) => {
           {localState.rating ? desc[localState.rating - 1] : ""}
         </span>
       </div>
+      <span className="text-red-500">{validateRef?.rating}</span>
 
       <TextArea
         autoSize={{
           minRows: 8,
           maxRows: 12,
         }}
+        count={{
+          show: true,
+          max: 120,
+        }}
+        status={
+          (validateRef?.review.length > 0 || localState.review > 120) && "error"
+        }
         value={localState.review}
         onChange={handleOnTextAreaChange}
         className="text-lg"
         placeholder="Hãy chia sẻ những điều bạn thích về những người mua khác nhé"
       />
+      <span className="text-red-500">{validateRef?.review}</span>
     </div>
   );
 };

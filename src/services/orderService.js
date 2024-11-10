@@ -76,10 +76,11 @@ export const checkoutOrderEzyWallet = async (user_order_id, user_wallet_id) => {
   }
 };
 
-export const cancelOrder = async (user_order_id) => {
+export const cancelOrder = async (user_order_id, is_canceled_by) => {
   try {
     const response = await axios.post(`${url}cancel-order`, {
       user_order_id,
+      is_canceled_by,
     });
     return response.data;
   } catch (error) {

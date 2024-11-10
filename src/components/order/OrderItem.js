@@ -280,7 +280,7 @@ const OrderItem = (props) => {
   //Order Handlers
   const handleCancelOrder = async () => {
     try {
-      const res = await cancelOrder(order.user_order_id);
+      const res = await cancelOrder(order.user_order_id, 1);
       if (res.success) {
         message.success("Hủy đơn hàng thành công");
         handleCloseModalConfirm();
@@ -473,10 +473,26 @@ const OrderItem = (props) => {
               <div className="w-[100%] flex gap-3 justify-end">
                 <Button
                   size="large"
-                  className="bg-primary text-white hover:opacity-80"
+                  className={
+                    order?.ghn_status !== "picked" &&
+                    order?.return_request_status === 0 &&
+                    "bg-primary text-white hover:opacity-80"
+                  }
                   onClick={() => handleOpenModalSendRequest("cancel-request")}
+                  disabled={
+                    order?.ghn_status === "picked" ||
+                    order?.return_request_status === 1 ||
+                    order?.return_request_status === 2 ||
+                    order?.return_request_status === 3
+                  }
                 >
-                  Yêu Cầu Hủy Đơn
+                  {order?.return_request_status === 0
+                    ? "Yêu Cầu Hủy Đơn"
+                    : order?.return_request_status === 1
+                    ? "Đã Gửi Yêu Cầu"
+                    : order?.return_request_status === 2
+                    ? "Chận Nhận Yêu Cầu"
+                    : "Từ Chối Yêu Cầu"}
                 </Button>
                 <Button
                   className="bg-white text-primary hover:opacity-80"
@@ -494,11 +510,40 @@ const OrderItem = (props) => {
                 <Button
                   size="large"
                   className="bg-primary text-white hover:opacity-80"
-                  disabled={order.ghn_status !== "delivered"}
+                  disabled={
+                    order.ghn_status !== "delivered" ||
+                    order?.return_request_status === 1
+                  }
                   onClick={() => handleOpenModalConfirm("complete-order")}
                 >
                   Đã Nhận Hàng
                 </Button>
+                {order?.return_expiration_date &&
+                  order?.return_expiration_date !== new Date() && (
+                    <Button
+                      size="large"
+                      className={
+                        order?.return_request_status === 0 &&
+                        "bg-secondary border-secondary text-white hover:opacity-80"
+                      }
+                      onClick={() =>
+                        handleOpenModalSendRequest("refund-request")
+                      }
+                      disabled={
+                        order?.return_request_status === 1 ||
+                        order?.return_request_status === 2 ||
+                        order?.return_request_status === 3
+                      }
+                    >
+                      {order?.return_request_status === 0
+                        ? "Yêu Cầu Trả Hàng"
+                        : order?.return_request_status === 1
+                        ? "Đã Gửi Yêu Cầu"
+                        : order?.return_request_status === 2
+                        ? "Chận Nhận Yêu Cầu"
+                        : "Từ Chối Yêu Cầu"}
+                    </Button>
+                  )}
 
                 <Button
                   className="bg-white text-primary hover:opacity-80"
@@ -511,6 +556,7 @@ const OrderItem = (props) => {
                 </Button>
               </div>
             )}
+
             {order?.OrderStatus?.order_status_id === 5 && (
               <div className="w-[100%] flex gap-3 justify-end">
                 <Button
@@ -530,12 +576,26 @@ const OrderItem = (props) => {
                   order?.return_expiration_date !== new Date() && (
                     <Button
                       size="large"
-                      className="bg-secondary border-secondary text-white hover:opacity-80"
+                      className={
+                        order?.return_request_status === 0 &&
+                        "bg-secondary border-secondary text-white hover:opacity-80"
+                      }
                       onClick={() =>
                         handleOpenModalSendRequest("refund-request")
                       }
+                      disabled={
+                        order?.return_request_status === 1 ||
+                        order?.return_request_status === 2 ||
+                        order?.return_request_status === 3
+                      }
                     >
-                      Trả Hàng/Hoàn Tiền
+                      {order?.return_request_status === 0
+                        ? "Yêu Cầu Trả Hàng"
+                        : order?.return_request_status === 1
+                        ? "Đã Gửi Yêu Cầu"
+                        : order?.return_request_status === 2
+                        ? "Chận Nhận Yêu Cầu"
+                        : "Từ Chối Yêu Cầu"}
                     </Button>
                   )}
 
@@ -715,7 +775,7 @@ const OrderItem = (props) => {
         onCloseModalGetReview={handleCloseModalGetReview}
       />
       <ModalSendRequest
-        userOrderId={order.user_order_id}
+        order={order}
         type={localState.modalSendRequest.type}
         openModalSendRequest={localState.modalSendRequest.openModalSendRequest}
         onCloseModalSendRequest={handleCloseModalSendRequest}

@@ -152,9 +152,10 @@ const cartSlice = createSlice({
               (subtotal, cartItem) =>
                 cartItem.selected === 1
                   ? subtotal +
-                    (cartItem.ProductVarient.price *
+                    ((cartItem.ProductVarient.price *
                       cartItem.ProductVarient.sale_percents) /
-                      100
+                      100) *
+                      cartItem.quantity
                   : subtotal,
               0
             ),
