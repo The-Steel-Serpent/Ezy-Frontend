@@ -72,6 +72,12 @@ const AllUserAccount = withSuspense(
 const AllRole = withSuspense(
   lazy(() => import("../pages/admin/user_management/AllRole"))
 );
+const AllViolation = withSuspense(
+  lazy(() => import("../pages/admin/user_management/AllViolation"))
+);
+const AllShopViolaiton = withSuspense(
+  lazy(() => import("../pages/admin/shop_management/AllShopViolaiton"))
+);
 const AllShop = withSuspense(
   lazy(() => import("../pages/admin/shop_management/AllShop"))
 );
@@ -466,10 +472,26 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/admin/user-management/violation",
+        element: (
+          <AdminAuthLayout>
+            <AllViolation />
+          </AdminAuthLayout>
+        ),
+      },
+      {
         path: "/admin/shop-management/all-shop",
         element: (
           <AdminAuthLayout>
             <AllShop />
+          </AdminAuthLayout>
+        ),
+      },
+      {
+        path: "/admin/shop-management/all-shop-violation",
+        element: (
+          <AdminAuthLayout>
+            <AllShopViolaiton />
           </AdminAuthLayout>
         ),
       },
