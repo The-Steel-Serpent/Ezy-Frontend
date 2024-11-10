@@ -56,10 +56,10 @@ const UserAccount = () => {
       key: 'role_name',
     },
     {
-      title: 'Đã xác thực',
+      title: 'Xác thực',
       dataIndex: 'isVerified',
       key: 'isVerified',
-      render: (isVerified) => (isVerified ? 'Yes' : 'No'),
+      render: (isVerified) => (isVerified ? 'Đã xác thục' : 'Chưa xác thực'),
     },
   ];
 

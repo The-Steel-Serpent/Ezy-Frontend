@@ -11,7 +11,8 @@ import {
     KeyOutlined, 
     TeamOutlined ,
     ThunderboltOutlined,
-    TagOutlined
+    TagOutlined,
+    WarningOutlined
 } from '@ant-design/icons';
 
 const AdminSidebar = ({ role_id }) => {
@@ -42,6 +43,12 @@ const AdminSidebar = ({ role_id }) => {
                     label: 'Tất cả cửa hàng', 
                     roles: [3, 5] 
                 },
+                {
+                    key: '/admin/shop-management/all-shop-violation',
+                    icon: <WarningOutlined />,
+                    label: 'Cửa hàng vi phạm',
+                    roles: [3, 5] 
+                }
             ],
         },
         {
@@ -78,6 +85,7 @@ const AdminSidebar = ({ role_id }) => {
             children: [
                 { key: '/admin/user-management/all-user', icon: <TeamOutlined />, label: 'Tất cả', roles: [3] },
                 { key: '/admin/user-management/roles', icon: <KeyOutlined />, label: 'Role', roles: [3] },
+                { key: '/admin/user-management/violation', icon:<WarningOutlined /> ,label: 'Xử lý vi phạm', roles: [3] },
             ],
         },
         {
