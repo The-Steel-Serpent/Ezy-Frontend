@@ -3,11 +3,13 @@ import React, { memo } from "react";
 
 const OrderDetailsItem = (props) => {
   const { item } = props;
-
+  const handleViewOrder = () => {
+    window.location.href = `/user/purchase/order/${item.user_order_id}`;
+  };
   return (
     <div
       className="grid grid-cols-12 w-full cursor-pointer"
-      //   onClick={handleViewProduct}
+      onClick={handleViewOrder}
     >
       <div className="col-span-1">
         <img
