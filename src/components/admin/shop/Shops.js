@@ -8,7 +8,7 @@ const Shops = () => {
     const [filteredData, setFilteredData] = useState([]);
     const [selectedShop, setSelectedShop] = useState(null);
     const [searchKeyword, setSearchKeyword] = useState('');
-    const [loading, setLoading] = useState(false); // Khai báo biến loading
+    const [loading, setLoading] = useState(false); 
 
     const fetchData = async () => {
         try {
@@ -16,7 +16,7 @@ const Shops = () => {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/search-shop`);
             if (response.data.success) {
                 setShopData(response.data.shops);
-                setFilteredData(response.data.shops); // Hiển thị ban đầu
+                setFilteredData(response.data.shops); 
             }
         } catch (error) {
             console.error("Lỗi khi fetch dữ liệu:", error);

@@ -246,3 +246,14 @@ export const redeliveryOrder = async (payload) => {
     return { success: false, message: errorMessage, status: error.response?.status || 0 };
   }
 }
+export const getOrderDetails = async (user_order_id) => {
+  try {
+    const response = await axios.get(
+      `${url}order-details?user_order_id=${user_order_id}`
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Error when getOrderDetails", error);
+    throw new Error(error);
+  }
+};

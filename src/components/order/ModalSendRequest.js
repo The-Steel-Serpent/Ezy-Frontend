@@ -100,40 +100,23 @@ const ModalSendRequest = (props) => {
       setLocalState({ type: "error", payload: localErrors });
       return;
     }
-    if (order.ghn_status === "ready_to_pick") {
-      try {
-        const res = await cancelOrder(order.user_order_id, 1);
-        if (res.success) {
-          message.success("Hủy đơn hàng thành công");
-          handleCloseModalSendRequest();
-          setTimeout(
-            () => (window.location.href = "/user/purchase?status-id=6"),
-            2000
-          );
-        }
-      } catch (error) {
-        console.log("Error when cancel order", error);
-        message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
+    const payload = {
+      user_order_id: order.user_order_id,
+      return_type_id: type === "cancel-request" ? 1 : 2,
+      return_reason_id: localState.selectedReason,
+      note: localState.note,
+      ghn_status: order.ghn_status,
+    };
+    try {
+      const res = await sendRequest(payload);
+      if (res.success) {
+        message.success("Gửi yêu cầu thành công");
+        handleCloseModalSendRequest();
+        onUpdateOrder();
       }
-    } else {
-      const payload = {
-        user_order_id: order.user_order_id,
-        return_type_id: type === "cancel-request" ? 1 : 2,
-        return_reason_id: localState.selectedReason,
-        note: localState.note,
-        status_id: 1,
-      };
-      try {
-        const res = await sendRequest(payload);
-        if (res.success) {
-          message.success("Gửi yêu cầu thành công");
-          handleCloseModalSendRequest();
-          onUpdateOrder();
-        }
-      } catch (error) {
-        console.log("Error when handleSendRequest", error);
-        message.error("Có lỗi xảy ra, vui lòng thử lại sau");
-      }
+    } catch (error) {
+      console.log("Error when handleSendRequest", error);
+      message.error("Có lỗi xảy ra, vui lòng thử lại sau");
     }
   };
   return (

@@ -427,6 +427,17 @@ const OrderItem = (props) => {
                 Đánh giá sản phẩm giúp người mua khác hiểu rõ hơn về sản phẩm.
               </div>
             )}
+            {order?.OrderStatus?.order_status_id === 6 && (
+              <div className="text-[12px] w-[40%] text-neutral-500">
+                Đơn hàng đã bị hủy bởi{" "}
+                {order?.is_canceled_by === 1
+                  ? "Bạn"
+                  : order?.is_canceled_by === 2
+                  ? "Người bán"
+                  : "Hệ Thống"}
+                .
+              </div>
+            )}
 
             {/** Button*/}
             {order?.OrderStatus?.order_status_id === 1 && (
@@ -454,7 +465,7 @@ const OrderItem = (props) => {
                 <Button
                   size="large"
                   className="bg-primary text-white hover:opacity-80"
-                  onClick={() => handleOpenModalConfirm("cancel-order")}
+                  onClick={() => handleOpenModalSendRequest("cancel-request")}
                 >
                   Hủy Đơn Hàng
                 </Button>
@@ -742,9 +753,7 @@ const OrderItem = (props) => {
               size="large"
               className="bg-primary text-white hover:opacity-80"
               onClick={
-                localState.modal.type === "cancel-order"
-                  ? handleCancelOrder
-                  : localState.modal.type === "complete-order"
+                localState.modal.type === "complete-order"
                   ? handleCompleteOrder
                   : null
               }
@@ -755,8 +764,6 @@ const OrderItem = (props) => {
         }
       >
         <div className="text-lg">
-          {localState.modal.type === "cancel-order" &&
-            "Bạn có chắc chắn muốn hủy đơn hàng này không?"}
           {localState.modal.type === "complete-order" &&
             'Ezy Sẽ thanh toán số tiền trên cho Người bán. Bạn vui lòng chỉ nhấn "Đã nhận được hàng" khi đơn hàng đã được giao đến bạn và sản phẩm nhận được không có vấn đề nào.'}
         </div>
