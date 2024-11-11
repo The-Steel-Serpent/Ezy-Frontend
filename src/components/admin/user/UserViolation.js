@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button } from 'antd';
+import { Table, Button, notification } from 'antd';
 import axios from 'axios';
 import ViolationList from './ViolationList';
+import ViolationHistoryModal from './ViolationHistoryModal';
+import ResolveViolationModal from './ResolveViolationModal';
 
-const Violation = () => {
+const UserViolation = () => {
   const [violationsData, setViolationsData] = useState([]);
   const [selectedUserViolations, setSelectedUserViolations] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isResolveModalVisible, setIsResolveModalVisible] = useState(false);
+  const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
+  // Hàm gọi API lấy dữ liệu vi phạm
   const fetchViolationsData = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/violations/get-reported-customers`);
@@ -28,6 +34,16 @@ const Violation = () => {
     setIsModalVisible(true);
   };
 
+  const openHistoryModal = (userId) => {
+    setSelectedUserId(userId);
+    setIsHistoryModalVisible(true);
+  };
+
+  const openResolveModal = (userId) => {
+    setSelectedUserId(userId);
+    setIsResolveModalVisible(true);
+  };
+
   const columns = [
     { title: 'Username', dataIndex: 'username', key: 'username' },
     { title: 'Họ và tên', dataIndex: 'full_name', key: 'full_name' },
@@ -38,9 +54,17 @@ const Violation = () => {
       title: 'Thao tác',
       key: 'actions',
       render: (_, record) => (
-        <Button onClick={() => showDetail(record.violations)}>
-          Chi tiết
-        </Button>
+        <>
+          <Button onClick={() => showDetail(record.violations)}>
+            Chi tiết
+          </Button>
+          <Button onClick={() => openHistoryModal(record.user_id)} style={{ marginLeft: '10px' }}>
+            Lịch sử xử lý
+          </Button>
+          <Button onClick={() => openResolveModal(record.user_id)} style={{ marginLeft: '10px' }} type="primary">
+            Xử lý
+          </Button>
+        </>
       ),
     },
   ];
@@ -61,8 +85,19 @@ const Violation = () => {
           onClose={() => setIsModalVisible(false)}
         />
       )}
+      <ViolationHistoryModal
+        visible={isHistoryModalVisible}
+        onClose={() => setIsHistoryModalVisible(false)}
+        userId={selectedUserId}
+      />
+      <ResolveViolationModal
+        visible={isResolveModalVisible}
+        onClose={() => setIsResolveModalVisible(false)}
+        userId={selectedUserId}
+        fetchViolationsData={fetchViolationsData}
+      />
     </div>
   );
 };
 
-export default Violation;
+export default UserViolation;
