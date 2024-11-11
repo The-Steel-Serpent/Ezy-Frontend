@@ -54,6 +54,10 @@ const items = [
         key: "/seller/order/orders-return",
         label: "Trả hàng / Hoàn tiền",
       },
+      {
+        key: "/seller/order/orders-cancel",
+        label: "Hủy đơn",
+      },
     ],
   },
   {

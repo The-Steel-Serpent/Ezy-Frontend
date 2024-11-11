@@ -214,7 +214,7 @@ const DetailProduct = () => {
                     stock: res.data.stock,
                     sale_percents: res.data.sale_percents,
                     height: state.shippingInfo.height,
-                    lenght: state.shippingInfo.length,
+                    length: state.shippingInfo.length,
                     width: state.shippingInfo.width,
                     weight: state.shippingInfo.weight,
                 }

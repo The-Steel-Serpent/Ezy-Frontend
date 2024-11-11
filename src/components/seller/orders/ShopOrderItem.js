@@ -184,6 +184,12 @@ const ShopOrderItem = (props) => {
     useEffect(() => {
         if (order) {
             console.log("order neeee", order);
+            if(order.log != null) {
+                const count_delivery_fail = order.log.filter(log => log.status === "delivery_fail").length;
+                setLocalState({ type: "SET_COUNT_DELIVERY_FAIL", payload: count_delivery_fail });
+                console.log("count_delivery_fail", count_delivery_fail);
+            }
+           
         }
         const fetchAndSetProvinces = async () => {
             if (order) {
@@ -446,7 +452,7 @@ const ShopOrderItem = (props) => {
                                 >
                                     Chi Tiết Đơn Hàng
                                 </Button>
-                                {order?.ghn_status === "returned" && (
+                                {order?.ghn_status === "returned" && localState.count_delivery_fail < 4 && (
                                     <Popconfirm
                                         description="Bạn có chắc chắn muốn giao lại đơn hàng này không?"
                                         onConfirm={handleReDeliverOrder}
@@ -457,7 +463,6 @@ const ShopOrderItem = (props) => {
                                             className="bg-white text-primary hover:opacity-80"
                                             size="large"
                                             loading={localState.confirm_loading}
-                                            onClick={handleReDeliverOrder}
                                         >
                                             Giao hàng lại
                                         </Button>
