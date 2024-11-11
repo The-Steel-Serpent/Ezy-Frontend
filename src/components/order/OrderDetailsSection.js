@@ -1,9 +1,11 @@
-import React, { memo, useEffect, useReducer } from "react";
+import React, { lazy, memo, useEffect, useReducer } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { RxCaretLeft } from "react-icons/rx";
 import {
+  Avatar,
   Button,
   Divider,
+  List,
   message,
   Modal,
   Popover,
@@ -26,7 +28,7 @@ import { FaRegStar } from "react-icons/fa";
 import { HiInboxArrowDown } from "react-icons/hi2";
 import { formatDate } from "date-fns";
 import { forEach } from "lodash";
-import { CaretDownFilled } from "@ant-design/icons";
+import { CaretDownFilled, ShopFilled } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useMessages } from "../../providers/MessagesProvider";
 import { fetchWallet } from "../../redux/walletSlice";
@@ -35,6 +37,9 @@ import ModalReview from "./ModalReview";
 import ModalGetReview from "./ModalGetReview";
 import ModalSendRequest from "./ModalSendRequest";
 import ModalOTP from "../user/ModalOTP";
+
+import { FaRegCircleQuestion } from "react-icons/fa6";
+import withSuspenseNonFallback from "../../hooks/HOC/withSuspenseNonFallback";
 const vnpay = require("../../assets/vnpay.png");
 const walletImg = require("../../assets/wallet.png");
 const statusDescriptions = {
@@ -61,6 +66,9 @@ const statusDescriptions = {
   damage: "Hàng bị hư hỏng",
   lost: "Hàng bị mất",
 };
+const OrderDetailsItem = withSuspenseNonFallback(
+  lazy(() => import("./OrderDetailsItem"))
+);
 const OrderDetailsSection = () => {
   const { order_id } = useParams();
   const dispatch = useDispatch();
@@ -284,7 +292,10 @@ const OrderDetailsSection = () => {
     });
   };
   const formatCurrency = (balance) => {
-    return new Intl.NumberFormat("vi-VN").format(balance) + "đ";
+    return new Intl.NumberFormat("vi-VN").format(balance);
+  };
+  const handleViewShop = () => {
+    navigate(`/shop/${localState.orderDetails?.Shop?.UserAccount?.username}`);
   };
 
   useEffect(() => {
@@ -347,13 +358,16 @@ const OrderDetailsSection = () => {
     },
   ];
 
-  const logReverse = localState.orderDetails?.log?.slice().reverse();
+  const logReverse =
+    (localState.orderDetails?.log &&
+      localState.orderDetails?.log?.slice().reverse()) ||
+    [];
   const visibleLogItem = localState.showAllLog
     ? logReverse
     : logReverse.slice(0, 3);
 
   return (
-    <div className="w-full flex flex-col gap-1">
+    <div className="w-full flex flex-col gap-1 mb-20">
       {localState.loading ? (
         <div className="flex justify-center items-center h-[300px]">
           <Spin />
@@ -385,7 +399,8 @@ const OrderDetailsSection = () => {
             </div>
           </div>
           {/* Lộ Trình của đơn*/}
-          {(localState.orderDetails?.order_status_id === 2 ||
+          {(localState.orderDetails?.order_status_id === 1 ||
+            localState.orderDetails?.order_status_id === 2 ||
             localState.orderDetails?.order_status_id === 3 ||
             localState.orderDetails?.order_status_id === 4 ||
             localState.orderDetails?.order_status_id === 5) && (
@@ -457,7 +472,8 @@ const OrderDetailsSection = () => {
                     1 && (
                     <div className="text-[12px] w-[40%] text-neutral-500">
                       Đơn hàng của bạn chưa thanh toán. Vui lòng thanh toán để
-                      tiếp tục
+                      tiếp tục. Bạn có 10 phút để hoàn tất thanh toán. Sau 10
+                      phút, đơn hàng sẽ tự động hủy.
                     </div>
                   )}
                   {localState.orderDetails?.OrderStatus?.order_status_id ===
@@ -800,69 +816,71 @@ const OrderDetailsSection = () => {
             </>
           )}
           {/* Lịch sử và địa chỉ đơn hàng*/}
-          {localState.orderDetails?.log && (
-            <div className="p-5 bg-white rounded relative">
-              <div
-                className="top-0 absolute w-full h-[3px] -left-[1px]"
-                style={{
-                  backgroundSize: "116px 3px",
-                  backgroundPositionX: "-30px",
-                  backgroundImage:
-                    "repeating-linear-gradient(45deg, #6fa6d6, #6fa6d6 33px, transparent 0, transparent 41px, #f18d9b 0, #f18d9b 74px, transparent 0, transparent 82px)",
-                }}
-              ></div>
-              <div className="text-lg font-semibold">Địa Chỉ Nhận Hàng</div>
-              <div className="grid grid-cols-12 mt-2 gap-4">
-                <div className="col-span-5 flex flex-col gap-3 border-r-[1px]">
-                  <span className="font-semibold text-neutral-500">
-                    {localState.orderDetails.user_address_order_name}
-                  </span>
-                  <span className="text-sm">
-                    {localState.orderDetails.user_address_order_phone_number}
-                  </span>
-                  <span className="text-sm">
-                    {localState.orderDetails.user_address_string}
-                  </span>
-                </div>
-                <div className="col-span-7">
-                  <Steps
-                    direction="vertical"
-                    items={visibleLogItem.map((item) => {
-                      return {
-                        title: (
-                          <span className="text-lg">
-                            {statusDescriptions[item.status]}
-                          </span>
-                        ),
-                        description: (
-                          <span className="text-neutral-500">
-                            {formatDate(
-                              item.updated_date,
-                              "dd/MM/yyyy HH:mm:ss"
-                            )}
-                          </span>
-                        ),
-                        status: "finish",
-                      };
-                    })}
-                  />
-                  {logReverse.length > 3 && (
-                    <span
-                      className="pl-12 text-blue-500 cursor-pointer"
-                      onClick={() =>
-                        setLocalState({
-                          type: "SET_SHOW_ALL_LOG",
-                          payload: !localState.showAllLog,
-                        })
-                      }
-                    >
-                      {localState.showAllLog ? "Thu gọn" : "Xem Thêm"}
+          {localState.orderDetails?.order_status_id !== 6 &&
+            localState.orderDetails?.order_status_id !== 7 &&
+            localState.orderDetails?.log && (
+              <div className="p-5 bg-white rounded relative">
+                <div
+                  className="top-0 absolute w-full h-[3px] -left-[1px]"
+                  style={{
+                    backgroundSize: "116px 3px",
+                    backgroundPositionX: "-30px",
+                    backgroundImage:
+                      "repeating-linear-gradient(45deg, #6fa6d6, #6fa6d6 33px, transparent 0, transparent 41px, #f18d9b 0, #f18d9b 74px, transparent 0, transparent 82px)",
+                  }}
+                ></div>
+                <div className="text-lg font-semibold">Địa Chỉ Nhận Hàng</div>
+                <div className="grid grid-cols-12 mt-2 gap-4">
+                  <div className="col-span-5 flex flex-col gap-3 border-r-[1px]">
+                    <span className="font-semibold text-neutral-500">
+                      {localState.orderDetails.user_address_order_name}
                     </span>
-                  )}
+                    <span className="text-sm">
+                      {localState.orderDetails.user_address_order_phone_number}
+                    </span>
+                    <span className="text-sm">
+                      {localState.orderDetails.user_address_string}
+                    </span>
+                  </div>
+                  <div className="col-span-7">
+                    <Steps
+                      direction="vertical"
+                      items={visibleLogItem.map((item) => {
+                        return {
+                          title: (
+                            <span className="text-lg">
+                              {statusDescriptions[item.status]}
+                            </span>
+                          ),
+                          description: (
+                            <span className="text-neutral-500">
+                              {formatDate(
+                                item.updated_date,
+                                "dd/MM/yyyy HH:mm:ss"
+                              )}
+                            </span>
+                          ),
+                          status: "finish",
+                        };
+                      })}
+                    />
+                    {logReverse.length > 3 && (
+                      <span
+                        className="pl-12 text-blue-500 cursor-pointer"
+                        onClick={() =>
+                          setLocalState({
+                            type: "SET_SHOW_ALL_LOG",
+                            payload: !localState.showAllLog,
+                          })
+                        }
+                      >
+                        {localState.showAllLog ? "Thu gọn" : "Xem Thêm"}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Trạng thái hủy đơn*/}
           {localState.orderDetails?.order_status_id === 6 && (
@@ -886,6 +904,207 @@ const OrderDetailsSection = () => {
               </div>
             </>
           )}
+          {/* Trạng thái trả hàng/hoàn tiền */}
+          {localState.orderDetails?.order_status_id === 7 && (
+            <>
+              <div className="rounded bg-third p-5 flex flex-col gap-1">
+                <span className="text-lg text-primary">
+                  Đã Hoàn Tiền <sup>đ</sup>
+                  {formatCurrency(localState.orderDetails?.final_price)}
+                </span>
+                <span className="text-neutral-500">
+                  vào Ví EzyPay ngày {""}
+                  {formatDate(
+                    localState.orderDetails?.updated_at,
+                    "dd/MM/yyyy HH:mm:ss"
+                  )}
+                </span>
+              </div>
+              <div className="rounded bg-white p-5">
+                Lý do:{" "}
+                {
+                  localState.orderDetails?.ReturnRequest?.ReturnReason
+                    ?.return_reason_name
+                }
+              </div>
+            </>
+          )}
+
+          {/* Thông tin đơn hàng*/}
+          <div className="w-full bg-white rounded p-5">
+            <div className="flex justify-between items-center border-b-[1px] pb-2">
+              <div className="flex items-center gap-3 ">
+                <Avatar
+                  src={localState.orderDetails?.Shop?.logo_url}
+                  size={40}
+                />
+                <span className="text-lg font-semibold">
+                  {localState.orderDetails?.Shop?.shop_name}
+                </span>
+                <div
+                  className="size-5 fill-primary cursor-pointer"
+                  onClick={() =>
+                    handleUserSelected(
+                      localState.orderDetails?.Shop?.UserAccount?.user_id
+                    )
+                  }
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M18 6.07a1 1 0 01.993.883L19 7.07v10.365a1 1 0 01-1.64.768l-1.6-1.333H6.42a1 1 0 01-.98-.8l-.016-.117-.149-1.783h9.292a1.8 1.8 0 001.776-1.508l.018-.154.494-6.438H18zm-2.78-4.5a1 1 0 011 1l-.003.077-.746 9.7a1 1 0 01-.997.923H4.24l-1.6 1.333a1 1 0 01-.5.222l-.14.01a1 1 0 01-.993-.883L1 13.835V2.57a1 1 0 011-1h13.22zm-4.638 5.082c-.223.222-.53.397-.903.526A4.61 4.61 0 018.2 7.42a4.61 4.61 0 01-1.48-.242c-.372-.129-.68-.304-.902-.526a.45.45 0 00-.636.636c.329.33.753.571 1.246.74A5.448 5.448 0 008.2 8.32c.51 0 1.126-.068 1.772-.291.493-.17.917-.412 1.246-.74a.45.45 0 00-.636-.637z"></path>
+                  </svg>
+                </div>
+                <Button size="small" onClick={handleViewShop}>
+                  <ShopFilled /> Xem Shop
+                </Button>
+              </div>
+              {localState.orderDetails?.updated_date && (
+                <div className="">
+                  <Popover
+                    content={
+                      <div>
+                        <p className="">
+                          Cập nhật mới nhất:{" "}
+                          {formatDate(
+                            localState.orderDetails?.updated_date,
+                            "dd/MM/yyyy HH:mm:ss"
+                          )}
+                        </p>
+                      </div>
+                    }
+                  >
+                    <FaRegCircleQuestion className="text-slate-500" />
+                  </Popover>
+                </div>
+              )}
+            </div>
+            {localState.orderDetails?.UserOrderDetails?.length > 0 && (
+              <List
+                dataSource={localState.orderDetails?.UserOrderDetails}
+                renderItem={(item) => (
+                  <List.Item>
+                    <OrderDetailsItem
+                      item={item}
+                      onViewItem={() =>
+                        navigate(
+                          `/product-details/${item.ProductVarient.product_id}`
+                        )
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            )}
+          </div>
+          {/* Thông tin thanh toán*/}
+          {localState.orderDetails?.PaymentMethod?.payment_method_id === 1 && (
+            <div className="p-5 border-primary bg-third text-primary">
+              Vui lòng thanh toán{" "}
+              <span className="text-xl font-semibold">
+                <sup>đ</sup>
+                {formatCurrency(localState.orderDetails?.final_price)}{" "}
+              </span>{" "}
+              khi nhận hàng.
+            </div>
+          )}
+          <table className="bg-white border-collapse">
+            {localState.orderDetails?.order_status_id !== 6 &&
+              localState.orderDetails?.order_status_id !== 7 && (
+                <>
+                  <tr>
+                    <td className="table-item">Tổng Tiền Hàng</td>
+                    <td className="table-item">
+                      <sup>đ</sup>
+                      {formatCurrency(localState.orderDetails?.total_price)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="table-item">Phí Vận Chuyển</td>
+                    <td className="table-item">
+                      {" "}
+                      <sup>đ</sup>
+                      {formatCurrency(localState.orderDetails?.shipping_fee)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="table-item">Giảm giá phí vận chuyển</td>
+                    <td className="table-item">
+                      - <sup>đ</sup>
+                      {formatCurrency(
+                        localState.orderDetails?.discount_shipping_fee
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="table-item">Voucher từ Ezy</td>
+                    <td className="table-item">
+                      - <sup>đ</sup>
+                      {formatCurrency(localState.orderDetails?.discount_price)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="table-item">Thành Tiền</td>
+                    <td className="table-item text-2xl text-primary">
+                      <sup>đ</sup>
+                      {formatCurrency(localState.orderDetails?.final_price)}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="table-item">Phương Thức Thanh Toán</td>
+                    <td className="table-item text-xl text-primary">
+                      {
+                        localState.orderDetails?.PaymentMethod
+                          ?.payment_method_name
+                      }
+                    </td>
+                  </tr>
+                </>
+              )}
+
+            {(localState.orderDetails?.order_status_id === 6 ||
+              localState.orderDetails?.order_status_id === 7) && (
+              <>
+                <tr>
+                  <td className="table-item">Yêu cầu bởi</td>
+                  <td className="table-item">
+                    {localState.orderDetails?.is_canceled_by === 1
+                      ? "Bạn"
+                      : localState.orderDetails?.is_canceled_by === 2
+                      ? "Người bán"
+                      : "Hệ Thống"}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="table-item">Phương Thức Thanh Toán</td>
+                  <td className="table-item text-xl text-primary">
+                    {
+                      localState.orderDetails?.PaymentMethod
+                        ?.payment_method_name
+                    }
+                  </td>
+                </tr>
+                {(localState.orderDetails?.PaymentMethod?.payment_method_id ===
+                  3 ||
+                  localState.orderDetails?.PaymentMethod?.payment_method_id ===
+                    4) && (
+                  <>
+                    <tr>
+                      <td className="table-item">Số tiền hoàn lại</td>
+                      <td className="table-item text-primary text-xl">
+                        <sup>đ</sup>
+                        {formatCurrency(localState.orderDetails?.final_price)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="table-item">Hoàn tiền vào</td>
+                      <td className="table-item">Ví EzyPay</td>
+                    </tr>
+                  </>
+                )}
+              </>
+            )}
+          </table>
+
           {/* Modal Payment Method*/}
           <Modal
             open={localState.openModalPaymentMethod}

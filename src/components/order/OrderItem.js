@@ -24,6 +24,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchWallet } from "../../redux/walletSlice";
 import withSuspenseNonFallback from "../../hooks/HOC/withSuspenseNonFallback";
 import { fetchMiniCartData } from "../../redux/cartSlice";
+import { useNavigate } from "react-router-dom";
 
 const ModalOTP = withSuspenseNonFallback(
   lazy(() => import("../user/ModalOTP"))
@@ -46,6 +47,7 @@ const walletImg = require("../../assets/wallet.png");
 const OrderItem = (props) => {
   const { order, onUpdateOrder } = props;
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const wallet = useSelector((state) => state.wallet.wallet);
   const user = useSelector((state) => state.user);
@@ -130,7 +132,7 @@ const OrderItem = (props) => {
   }, [order]);
   // Handlers
   const handleViewShop = () => {
-    window.location.href = `/shop/${order?.Shop?.UserAccount?.username}`;
+    navigate(`/shop/${order?.Shop?.UserAccount?.username}`);
   };
   const handleCheckoutOrder = async () => {
     setLocalState({ type: "SET_OPEN_MODAL_PAYMENT_METHOD", payload: true });
@@ -294,7 +296,9 @@ const OrderItem = (props) => {
       message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
     }
   };
-
+  const handleViewOrder = () => {
+    navigate(`/user/purchase/order/${order.user_order_id}`);
+  };
   const handleCompleteOrder = async () => {
     try {
       const res = await completeOrder(order.user_order_id);
@@ -377,16 +381,18 @@ const OrderItem = (props) => {
               </span>
             </div>
           </div>
-          {order?.UserOrderDetails?.length > 0 && (
-            <List
-              dataSource={order?.UserOrderDetails}
-              renderItem={(item) => (
-                <List.Item>
-                  <OrderDetailsItem item={item} />
-                </List.Item>
-              )}
-            />
-          )}
+          <div className="w-full" onClick={handleViewOrder}>
+            {order?.UserOrderDetails?.length > 0 && (
+              <List
+                dataSource={order?.UserOrderDetails}
+                renderItem={(item) => (
+                  <List.Item>
+                    <OrderDetailsItem item={item} />
+                  </List.Item>
+                )}
+              />
+            )}
+          </div>
         </div>
         <div className="w-full bg-third rounded flex flex-col px-5 py-4">
           <div className="w-full flex justify-end items-center py-5  gap-3">
@@ -401,7 +407,8 @@ const OrderItem = (props) => {
             {order?.OrderStatus?.order_status_id === 1 && (
               <div className="text-[12px] w-[40%] text-neutral-500">
                 Đơn hàng của bạn chưa thanh toán. Vui lòng thanh toán để tiếp
-                tục
+                tục. Bạn có 10 phút để hoàn tất thanh toán. Sau 10 phút, đơn
+                hàng sẽ tự động hủy.
               </div>
             )}
             {order?.OrderStatus?.order_status_id === 2 && (
