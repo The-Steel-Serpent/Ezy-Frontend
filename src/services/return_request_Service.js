@@ -2,10 +2,11 @@ import axios from "axios";
 
 const url = `${process.env.REACT_APP_BACKEND_URL}/api/return-request/`;
 
-export const getReturnRequest = async (shop_id, return_type_id) => {
-    console.log("check input", shop_id, return_type_id);
+export const getReturnRequest = async (payload) => {
+    console.log("checkkk Payload:", payload);
+
     try {
-        const response = await axios.get(`${url}get-return-request?shop_id=${shop_id}&return_type_id=${return_type_id}`);
+        const response = await axios.get(`${url}get-return-request`, { params: payload });
         return response.data;
     } catch (error) {
         console.log("Error when getReturnRequest", error);
