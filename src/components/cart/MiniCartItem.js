@@ -2,7 +2,7 @@ import React, { memo } from "react";
 
 const MiniCartItem = (props) => {
   const { item } = props;
-  console.log("item", item);
+
   return (
     <a
       href={`/product-details/${item?.ProductVarient?.product_id}`}

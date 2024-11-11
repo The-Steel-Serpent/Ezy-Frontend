@@ -11,6 +11,7 @@ import { logoutShop } from "../redux/shopSlice";
 import CartHeader from "../components/CartHeader";
 import { startTokenRefreshListener } from "../firebase/AuthenticationFirebase";
 import { io } from "socket.io-client";
+import { is } from "date-fns/locale";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ const AuthLayout = ({ children }) => {
                 role_id: user.role_id,
                 setup: user.setup,
                 isVerified: user.isVerified,
+                is_banned: user.is_banned,
               })
             );
 

@@ -1,9 +1,24 @@
 import React, { memo, useEffect, useReducer } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { RxCaretLeft } from "react-icons/rx";
-import { Divider, message, Spin, Steps } from "antd";
+import {
+  Button,
+  Divider,
+  message,
+  Modal,
+  Popover,
+  Radio,
+  Spin,
+  Steps,
+} from "antd";
 import { GrCopy } from "react-icons/gr";
-import { getOrderDetails } from "../../services/orderService";
+import {
+  buyOrderAgain,
+  checkoutOrder,
+  checkoutOrderEzyWallet,
+  completeOrder,
+  getOrderDetails,
+} from "../../services/orderService";
 import { CgNotes } from "react-icons/cg";
 
 import { MdLocalShipping } from "react-icons/md";
@@ -11,6 +26,17 @@ import { FaRegStar } from "react-icons/fa";
 import { HiInboxArrowDown } from "react-icons/hi2";
 import { formatDate } from "date-fns";
 import { forEach } from "lodash";
+import { CaretDownFilled } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { useMessages } from "../../providers/MessagesProvider";
+import { fetchWallet } from "../../redux/walletSlice";
+import { fetchMiniCartData } from "../../redux/cartSlice";
+import ModalReview from "./ModalReview";
+import ModalGetReview from "./ModalGetReview";
+import ModalSendRequest from "./ModalSendRequest";
+import ModalOTP from "../user/ModalOTP";
+const vnpay = require("../../assets/vnpay.png");
+const walletImg = require("../../assets/wallet.png");
 const statusDescriptions = {
   ready_to_pick: "Người bán đang chuẩn bị hàng",
   picking: "Đang lấy hàng",
@@ -37,6 +63,11 @@ const statusDescriptions = {
 };
 const OrderDetailsSection = () => {
   const { order_id } = useParams();
+  const dispatch = useDispatch();
+  const token = localStorage.getItem("token");
+  const wallet = useSelector((state) => state.wallet.wallet);
+  const user = useSelector((state) => state.user);
+  const { handleUserSelected } = useMessages();
 
   const [localState, setLocalState] = useReducer(
     (state, action) => {
@@ -51,6 +82,31 @@ const OrderDetailsSection = () => {
             ...state,
             loading: action.payload,
           };
+        case "SET_SELECTED_PAYMENT_METHOD": {
+          return { ...state, selectedPaymentMethod: action.payload };
+        }
+        case "SET_OPEN_MODAL_PAYMENT_METHOD": {
+          return { ...state, openModalPaymentMethod: action.payload };
+        }
+        case "SET_OPEN_MODAL_OTP": {
+          return { ...state, openModalOTP: action.payload };
+        }
+        case "SET_MODAL": {
+          return { ...state, modal: action.payload };
+        }
+        case "SET_OPEN_MODAL_REVIEW": {
+          return { ...state, openModalReview: action.payload };
+        }
+        case "SET_OPEN_MODAL_GET_REVIEW": {
+          return { ...state, openModalGetReview: action.payload };
+        }
+        case "SET_OPEN_MODAL_SEND_REQUEST": {
+          return { ...state, modalSendRequest: action.payload };
+        }
+        case "verifyOTP":
+          return { ...state, verifyOTP: action.payload };
+        case "SET_SHOW_ALL_LOG":
+          return { ...state, showAllLog: action.payload };
         default:
           return state;
       }
@@ -58,6 +114,21 @@ const OrderDetailsSection = () => {
     {
       orderDetails: null,
       loading: false,
+      verifyOTP: false,
+      selectedPaymentMethod: 3,
+      openModalPaymentMethod: false,
+      openModalOTP: false,
+      openModalGetReview: false,
+      modalSendRequest: {
+        type: "",
+        openModalSendRequest: false,
+      },
+      modal: {
+        openModalConfirm: false,
+        type: "",
+      },
+      openModalReview: false,
+      showAllLog: false,
     }
   );
   document.title = "Chi tiết đơn hàng";
@@ -76,23 +147,170 @@ const OrderDetailsSection = () => {
       });
   };
 
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      setLocalState({ type: "SET_LOADING", payload: true });
-      try {
-        const response = await getOrderDetails(order_id);
-        if (response.success) {
-          setLocalState({
-            type: "SET_ORDER_DETAILS",
-            payload: response.order,
-          });
-        }
-      } catch (error) {
-        console.log("Error when fetchOrderDetails", error);
-      } finally {
-        setLocalState({ type: "SET_LOADING", payload: false });
+  const handleCheckoutWithVnpay = async () => {
+    try {
+      const res = await checkoutOrder(localState.orderDetails?.user_order_id);
+      if (res.success) {
+        window.location.href = res.paymentUrl;
       }
-    };
+    } catch (error) {
+      console.log("Error when checkout order", error);
+      message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
+    }
+  };
+  const handleCheckoutWithWallet = async () => {
+    try {
+      const res = await checkoutOrderEzyWallet(
+        localState.orderDetails?.user_order_id,
+        wallet.user_wallet_id
+      );
+      if (res.success) {
+        message.success("Thanh toán thành công");
+        setLocalState({
+          type: "SET_OPEN_MODAL_PAYMENT_METHOD",
+          payload: false,
+        });
+        setTimeout(
+          () => (window.location.href = "/user/purchase?status-id=2"),
+          2000
+        );
+      }
+    } catch (error) {
+      console.log("Error when checkout order", error);
+      message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
+    }
+  };
+
+  const handleCheckoutOrder = async () => {
+    setLocalState({ type: "SET_OPEN_MODAL_PAYMENT_METHOD", payload: true });
+  };
+
+  const handleOpenModalSendRequest = (type) => {
+    setLocalState({
+      type: "SET_OPEN_MODAL_SEND_REQUEST",
+      payload: { type: type, openModalSendRequest: true },
+    });
+  };
+
+  const handleCloseModalSendRequest = () => {
+    setLocalState({
+      type: "SET_OPEN_MODAL_SEND_REQUEST",
+      payload: { type: "", openModalSendRequest: false },
+    });
+  };
+  const handleOnVerifyOTP = () => {
+    setLocalState({ type: "verifyOTP", payload: true });
+  };
+  const handleCloseModalOTP = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_OTP", payload: false });
+  };
+
+  const handleOpenModalConfirm = (type) => {
+    setLocalState({
+      type: "SET_MODAL",
+      payload: { openModalConfirm: true, type: type },
+    });
+  };
+  const handleCloseModalConfirm = () => {
+    setLocalState({
+      type: "SET_MODAL",
+      payload: { openModalConfirm: false, type: "" },
+    });
+  };
+
+  const handleOpenModalReview = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_REVIEW", payload: true });
+  };
+
+  const handleBuyAgain = async () => {
+    try {
+      const res = await buyOrderAgain(localState.orderDetails?.user_order_id);
+      if (res.success) {
+        message.success("Thêm vào giỏ hàng thành công");
+        dispatch(fetchMiniCartData(user?.user_id));
+        setTimeout(() => (window.location.href = "/cart"), 2000);
+      }
+    } catch (error) {
+      console.log("Error when buy again", error);
+      message.error(error.message);
+    }
+  };
+
+  const handleCompleteOrder = async () => {
+    try {
+      const res = await completeOrder(localState.orderDetails?.user_order_id);
+      if (res.success) {
+        message.success("Đã nhận hàng thành công");
+        handleCloseModalConfirm();
+        setTimeout(
+          () => (window.location.href = "/user/purchase?status-id=5"),
+          2000
+        );
+      }
+    } catch (error) {
+      console.log("Error when complete order", error);
+      message.error("Có lỗi xảy ra. Vui lòng thử lại sau");
+    }
+  };
+
+  const handleOpenModalGetReview = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_GET_REVIEW", payload: true });
+  };
+
+  const handleCloseModalReview = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_REVIEW", payload: false });
+  };
+
+  const handleCloseModalCheckout = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_PAYMENT_METHOD", payload: false });
+    setLocalState({ type: "SET_LOADING", payload: false });
+    setLocalState({ type: "SET_SELECTED_PAYMENT_METHOD", payload: 3 });
+  };
+
+  const handleCloseModalGetReview = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_GET_REVIEW", payload: false });
+  };
+
+  const onSubmitPayment = () => {
+    setLocalState({ type: "SET_OPEN_MODAL_OTP", payload: true });
+    console.log("onSubmitPayment");
+    setLocalState({ type: "SET_LOADING", payload: true });
+  };
+
+  const onPaymentMethodChange = (e) => {
+    setLocalState({
+      type: "SET_SELECTED_PAYMENT_METHOD",
+      payload: e.target.value,
+    });
+  };
+  const formatCurrency = (balance) => {
+    return new Intl.NumberFormat("vi-VN").format(balance) + "đ";
+  };
+
+  useEffect(() => {
+    if (token && localState.openModalPaymentMethod) {
+      dispatch(fetchWallet(token));
+    }
+  }, [token, dispatch, localState.openModalPaymentMethod]);
+
+  const fetchOrderDetails = async () => {
+    setLocalState({ type: "SET_LOADING", payload: true });
+    try {
+      const response = await getOrderDetails(order_id);
+      if (response.success) {
+        setLocalState({
+          type: "SET_ORDER_DETAILS",
+          payload: response.order,
+        });
+      }
+    } catch (error) {
+      console.log("Error when fetchOrderDetails", error);
+    } finally {
+      setLocalState({ type: "SET_LOADING", payload: false });
+    }
+  };
+
+  useEffect(() => {
     if (order_id) {
       fetchOrderDetails();
     }
@@ -102,9 +320,40 @@ const OrderDetailsSection = () => {
       console.log(localState.orderDetails);
     }
   }, [localState.orderDetails]);
+  useEffect(() => {
+    const checkout = async () => {
+      if (localState.selectedPaymentMethod === 3) {
+        await handleCheckoutWithVnpay();
+      } else {
+        await handleCheckoutWithWallet();
+      }
+    };
+    if (localState.verifyOTP) {
+      checkout();
+    }
+  }, [localState.verifyOTP]);
+
+  const PaymentMethodArray = [
+    {
+      name: "Ví VNPay",
+      value: 3,
+      image: vnpay,
+    },
+    {
+      name: "Ví EzyPay ",
+      value: 4,
+      image: walletImg,
+      balance: wallet.balance,
+    },
+  ];
+
+  const logReverse = localState.orderDetails?.log?.slice().reverse();
+  const visibleLogItem = localState.showAllLog
+    ? logReverse
+    : logReverse.slice(0, 3);
 
   return (
-    <div className="w-full flex flex-col gap-[2px]">
+    <div className="w-full flex flex-col gap-1">
       {localState.loading ? (
         <div className="flex justify-center items-center h-[300px]">
           <Spin />
@@ -135,6 +384,7 @@ const OrderDetailsSection = () => {
               </span>
             </div>
           </div>
+          {/* Lộ Trình của đơn*/}
           {(localState.orderDetails?.order_status_id === 2 ||
             localState.orderDetails?.order_status_id === 3 ||
             localState.orderDetails?.order_status_id === 4 ||
@@ -200,9 +450,421 @@ const OrderDetailsSection = () => {
                   ]}
                 />
               </div>
-              <div className="bg-third p-5 rounded"></div>
+              <div className="bg-third p-5 rounded">
+                <div className="flex justify-between items-center">
+                  {/* Title*/}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    1 && (
+                    <div className="text-[12px] w-[40%] text-neutral-500">
+                      Đơn hàng của bạn chưa thanh toán. Vui lòng thanh toán để
+                      tiếp tục
+                    </div>
+                  )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    2 && (
+                    <div className="text-[12px] w-[40%] text-neutral-500">
+                      Bạn có thể hủy đơn hàng trong vòng 24h sau khi đặt hàng.
+                    </div>
+                  )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    3 && (
+                    <div className="text-[12px] w-[40%] text-neutral-500">
+                      Đơn hàng sẽ được chuẩn bị và giao cho bạn trong thời gian
+                      sớm nhất.
+                    </div>
+                  )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    4 && (
+                    <div className="text-[12px] w-[40%] text-neutral-500">
+                      Vui lòng chỉ nhấn "Đã nhận được hàng" khi đơn hàng đã được
+                      giao đến bạn và sản phẩm nhận được không có vấn đề nào.
+                    </div>
+                  )}
+
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    5 &&
+                    localState.orderDetails.is_reviewed === 0 && (
+                      <div className="text-[12px] w-[40%] text-neutral-500">
+                        Đánh giá sản phẩm giúp người mua khác hiểu rõ hơn về sản
+                        phẩm.
+                      </div>
+                    )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    5 &&
+                    localState.orderDetails.is_reviewed === 1 && (
+                      <div className="text-[12px] w-[40%] text-neutral-500">
+                        Nếu hàng nhận được có vấn đề, bạn có thể gửi yêu cầu Trả
+                        hàng/Hoàn tiền trước ngày{" "}
+                        <span className="underline">
+                          {formatDate(
+                            localState.orderDetails?.return_expiration_date,
+                            "dd/MM/yyyy HH:mm:ss"
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    6 && (
+                    <div className="text-[12px] w-[40%] text-neutral-500">
+                      Đơn hàng đã bị hủy bởi{" "}
+                      {localState.orderDetails?.is_canceled_by === 1
+                        ? "Bạn"
+                        : localState.orderDetails?.is_canceled_by === 2
+                        ? "Người bán"
+                        : "Hệ Thống"}
+                      .
+                    </div>
+                  )}
+
+                  {/* Button*/}
+
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    1 && (
+                    <div className="w-[100%] flex gap-3 justify-end">
+                      <Button
+                        size="large"
+                        className="bg-primary text-white hover:opacity-80"
+                        onClick={handleCheckoutOrder}
+                      >
+                        Thanh Toán
+                      </Button>
+                      <Button
+                        className="bg-white text-primary hover:opacity-80"
+                        size="large"
+                        onClick={() =>
+                          handleUserSelected(
+                            localState.orderDetails.Shop.UserAccount.user_id
+                          )
+                        }
+                      >
+                        Liên Hệ Người Bán
+                      </Button>
+                    </div>
+                  )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    2 && (
+                    <div className="w-[100%] flex gap-3 justify-end">
+                      <Button
+                        size="large"
+                        className="bg-primary text-white hover:opacity-80"
+                        onClick={() =>
+                          handleOpenModalSendRequest("cancel-request")
+                        }
+                      >
+                        Hủy Đơn Hàng
+                      </Button>
+                      <Button
+                        className="bg-white text-primary hover:opacity-80"
+                        size="large"
+                        onClick={() =>
+                          handleUserSelected(
+                            localState.orderDetails.Shop.UserAccount.user_id
+                          )
+                        }
+                      >
+                        Liên Hệ Người Bán
+                      </Button>
+                    </div>
+                  )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    3 && (
+                    <div className="w-[100%] flex gap-3 justify-end">
+                      <Button
+                        size="large"
+                        className={
+                          localState.orderDetails?.ghn_status !== "picked" &&
+                          localState.orderDetails?.return_request_status ===
+                            0 &&
+                          "bg-primary text-white hover:opacity-80"
+                        }
+                        onClick={() =>
+                          handleOpenModalSendRequest("cancel-request")
+                        }
+                        disabled={
+                          localState.orderDetails?.ghn_status === "picked" ||
+                          localState.orderDetails?.return_request_status ===
+                            1 ||
+                          localState.orderDetails?.return_request_status ===
+                            2 ||
+                          localState.orderDetails?.return_request_status === 3
+                        }
+                      >
+                        {localState.orderDetails?.return_request_status === 0
+                          ? "Yêu Cầu Hủy Đơn"
+                          : localState.orderDetails?.return_request_status === 1
+                          ? "Đã Gửi Yêu Cầu"
+                          : localState.orderDetails?.return_request_status === 2
+                          ? "Chận Nhận Yêu Cầu"
+                          : "Từ Chối Yêu Cầu"}
+                      </Button>
+                      <Button
+                        className="bg-white text-primary hover:opacity-80"
+                        size="large"
+                        onClick={() =>
+                          handleUserSelected(
+                            localState.orderDetails.Shop.UserAccount.user_id
+                          )
+                        }
+                      >
+                        Liên Hệ Người Bán
+                      </Button>
+                    </div>
+                  )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    4 && (
+                    <div className="w-[60%] flex gap-3 justify-end">
+                      <Button
+                        size="large"
+                        className="bg-primary text-white hover:opacity-80"
+                        disabled={
+                          localState.orderDetails.ghn_status !== "delivered" ||
+                          localState.orderDetails?.return_request_status === 1
+                        }
+                        onClick={() => handleOpenModalConfirm("complete-order")}
+                      >
+                        Đã Nhận Hàng
+                      </Button>
+                      {localState.orderDetails?.return_expiration_date &&
+                        localState.orderDetails?.return_expiration_date !==
+                          new Date() && (
+                          <Button
+                            size="large"
+                            className={
+                              localState.orderDetails?.return_request_status ===
+                                0 &&
+                              "bg-secondary border-secondary text-white hover:opacity-80"
+                            }
+                            onClick={() =>
+                              handleOpenModalSendRequest("refund-request")
+                            }
+                            disabled={
+                              localState.orderDetails?.return_request_status ===
+                                1 ||
+                              localState.orderDetails?.return_request_status ===
+                                2 ||
+                              localState.orderDetails?.return_request_status ===
+                                3
+                            }
+                          >
+                            {localState.orderDetails?.return_request_status ===
+                            0
+                              ? "Yêu Cầu Trả Hàng"
+                              : localState.orderDetails
+                                  ?.return_request_status === 1
+                              ? "Đã Gửi Yêu Cầu"
+                              : localState.orderDetails
+                                  ?.return_request_status === 2
+                              ? "Chận Nhận Yêu Cầu"
+                              : "Từ Chối Yêu Cầu"}
+                          </Button>
+                        )}
+
+                      <Button
+                        className="bg-white text-primary hover:opacity-80"
+                        size="large"
+                        onClick={() =>
+                          handleUserSelected(
+                            localState.orderDetails.Shop.UserAccount.user_id
+                          )
+                        }
+                      >
+                        Liên Hệ Người Bán
+                      </Button>
+                    </div>
+                  )}
+
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    5 && (
+                    <div className="w-[100%] flex gap-3 justify-end">
+                      <Button
+                        size="large"
+                        className={`${
+                          localState.orderDetails?.is_reviewed !== 1
+                            ? "bg-primary text-white hover:opacity-80"
+                            : "bg-neutral-200"
+                        }`}
+                        onClick={handleOpenModalReview}
+                        disabled={localState.orderDetails?.is_reviewed === 1}
+                      >
+                        {localState.orderDetails?.is_reviewed === 0
+                          ? "Đánh Giá"
+                          : "Đã Đánh Giá"}
+                      </Button>
+
+                      {localState.orderDetails?.return_expiration_date &&
+                        localState.orderDetails?.return_expiration_date !==
+                          new Date() && (
+                          <Button
+                            size="large"
+                            className={
+                              localState.orderDetails?.return_request_status ===
+                                0 &&
+                              "bg-secondary border-secondary text-white hover:opacity-80"
+                            }
+                            onClick={() =>
+                              handleOpenModalSendRequest("refund-request")
+                            }
+                            disabled={
+                              localState.orderDetails?.return_request_status ===
+                                1 ||
+                              localState.orderDetails?.return_request_status ===
+                                2 ||
+                              localState.orderDetails?.return_request_status ===
+                                3
+                            }
+                          >
+                            {localState.orderDetails?.return_request_status ===
+                            0
+                              ? "Yêu Cầu Trả Hàng"
+                              : localState.orderDetails
+                                  ?.return_request_status === 1
+                              ? "Đã Gửi Yêu Cầu"
+                              : localState.orderDetails
+                                  ?.return_request_status === 2
+                              ? "Chận Nhận Yêu Cầu"
+                              : "Từ Chối Yêu Cầu"}
+                          </Button>
+                        )}
+
+                      <Popover
+                        content={
+                          <div className="flex flex-col">
+                            <span
+                              className="hover:bg-slate-100 cursor-pointer"
+                              onClick={() =>
+                                handleUserSelected(
+                                  localState.orderDetails.Shop.UserAccount
+                                    .user_id
+                                )
+                              }
+                            >
+                              Liên Hệ Người Bán
+                            </span>
+                            <span
+                              className="hover:bg-slate-100 cursor-pointer"
+                              onClick={handleBuyAgain}
+                            >
+                              Mua Lại
+                            </span>
+                            {localState.orderDetails?.is_reviewed === 1 && (
+                              <span
+                                className="hover:bg-slate-100 cursor-pointer"
+                                onClick={handleOpenModalGetReview}
+                              >
+                                Xem Đánh Giá
+                              </span>
+                            )}
+                          </div>
+                        }
+                      >
+                        <Button
+                          size="large"
+                          className="bg-white text-primary hover:opacity-80"
+                        >
+                          Thêm <CaretDownFilled />
+                        </Button>
+                      </Popover>
+                    </div>
+                  )}
+                  {localState.orderDetails?.OrderStatus?.order_status_id ===
+                    6 && (
+                    <div className="w-[100%] flex gap-3 justify-end">
+                      <Button
+                        size="large"
+                        className="bg-primary text-white hover:opacity-80 w-[180px]"
+                        onClick={handleBuyAgain}
+                      >
+                        Mua Lại
+                      </Button>
+                      <Button
+                        size="large"
+                        className="bg-white text-primary hover:opacity-80"
+                      >
+                        Xem Chi Tiết Đơn Hủy
+                      </Button>
+                      <Button
+                        className="bg-white text-primary hover:opacity-80"
+                        size="large"
+                        onClick={() =>
+                          handleUserSelected(
+                            localState.orderDetails.Shop.UserAccount.user_id
+                          )
+                        }
+                      >
+                        Liên Hệ Người Bán
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </>
           )}
+          {/* Lịch sử và địa chỉ đơn hàng*/}
+          {localState.orderDetails?.log && (
+            <div className="p-5 bg-white rounded relative">
+              <div
+                className="top-0 absolute w-full h-[3px] -left-[1px]"
+                style={{
+                  backgroundSize: "116px 3px",
+                  backgroundPositionX: "-30px",
+                  backgroundImage:
+                    "repeating-linear-gradient(45deg, #6fa6d6, #6fa6d6 33px, transparent 0, transparent 41px, #f18d9b 0, #f18d9b 74px, transparent 0, transparent 82px)",
+                }}
+              ></div>
+              <div className="text-lg font-semibold">Địa Chỉ Nhận Hàng</div>
+              <div className="grid grid-cols-12 mt-2 gap-4">
+                <div className="col-span-5 flex flex-col gap-3 border-r-[1px]">
+                  <span className="font-semibold text-neutral-500">
+                    {localState.orderDetails.user_address_order_name}
+                  </span>
+                  <span className="text-sm">
+                    {localState.orderDetails.user_address_order_phone_number}
+                  </span>
+                  <span className="text-sm">
+                    {localState.orderDetails.user_address_string}
+                  </span>
+                </div>
+                <div className="col-span-7">
+                  <Steps
+                    direction="vertical"
+                    items={visibleLogItem.map((item) => {
+                      return {
+                        title: (
+                          <span className="text-lg">
+                            {statusDescriptions[item.status]}
+                          </span>
+                        ),
+                        description: (
+                          <span className="text-neutral-500">
+                            {formatDate(
+                              item.updated_date,
+                              "dd/MM/yyyy HH:mm:ss"
+                            )}
+                          </span>
+                        ),
+                        status: "finish",
+                      };
+                    })}
+                  />
+                  {logReverse.length > 3 && (
+                    <span
+                      className="pl-12 text-blue-500 cursor-pointer"
+                      onClick={() =>
+                        setLocalState({
+                          type: "SET_SHOW_ALL_LOG",
+                          payload: !localState.showAllLog,
+                        })
+                      }
+                    >
+                      {localState.showAllLog ? "Thu gọn" : "Xem Thêm"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Trạng thái hủy đơn*/}
           {localState.orderDetails?.order_status_id === 6 && (
             <>
               <div className="rounded bg-third p-5 flex flex-col gap-1">
@@ -224,6 +886,121 @@ const OrderDetailsSection = () => {
               </div>
             </>
           )}
+          {/* Modal Payment Method*/}
+          <Modal
+            open={localState.openModalPaymentMethod}
+            title={<span className="text-lg">Phương Thức Thanh Toán</span>}
+            onCancel={handleCloseModalCheckout}
+            onClose={handleCloseModalCheckout}
+            footer={
+              <div className="w-full flex justify-end items-center gap-3">
+                <Button
+                  size="large"
+                  className="border-secondary text-secondary bg-white hover:bg-secondary hover:text-white"
+                  onClick={handleCloseModalCheckout}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  size="large"
+                  className="bg-primary text-white hover:opacity-80"
+                  onClick={onSubmitPayment}
+                >
+                  Xác Nhận
+                </Button>
+              </div>
+            }
+          >
+            <Radio.Group
+              className="flex flex-col gap-3"
+              defaultValue={1}
+              onChange={onPaymentMethodChange}
+            >
+              {PaymentMethodArray.map((item) => (
+                <Radio
+                  value={item.value}
+                  disabled={
+                    item?.balance < localState.orderDetails?.final_price && true
+                  }
+                >
+                  <div className="w-full flex items-center gap-2">
+                    <img src={item.image} alt="" className="w-11" />
+                    <div className="flex flex-col">
+                      <span>{item.name}</span>
+                      {item?.balance !== undefined && (
+                        <span>Số dư: ({formatCurrency(item?.balance)})</span>
+                      )}
+                    </div>
+                  </div>
+                </Radio>
+              ))}
+            </Radio.Group>
+          </Modal>
+
+          {/* Modal OTP */}
+          <ModalOTP
+            onVerify={handleOnVerifyOTP}
+            user={user}
+            openOTPModal={localState.openModalOTP}
+            handleCancelOTP={handleCloseModalOTP}
+          />
+
+          {/* Modal Confirm */}
+          <Modal
+            title={<span className="text-2xl">Thông Báo Xác Nhận</span>}
+            open={localState.modal.openModalConfirm}
+            onCancel={handleCloseModalConfirm}
+            onClose={handleCloseModalConfirm}
+            footer={
+              <div className="w-full flex gap-3 justify-end items-center">
+                <Button
+                  size="large"
+                  className="border-secondary text-secondary bg-white hover:bg-secondary hover:text-white"
+                  onClick={handleCloseModalConfirm}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  size="large"
+                  className="bg-primary text-white hover:opacity-80"
+                  onClick={
+                    localState.modal.type === "complete-order"
+                      ? handleCompleteOrder
+                      : null
+                  }
+                >
+                  Xác Nhận
+                </Button>
+              </div>
+            }
+          >
+            <div className="text-lg">
+              {localState.modal.type === "complete-order" &&
+                'Ezy Sẽ thanh toán số tiền trên cho Người bán. Bạn vui lòng chỉ nhấn "Đã nhận được hàng" khi đơn hàng đã được giao đến bạn và sản phẩm nhận được không có vấn đề nào.'}
+            </div>
+          </Modal>
+
+          {/* Modal Review */}
+          <ModalReview
+            orders={localState.orderDetails}
+            openModalReview={localState.openModalReview}
+            onCloseModalReview={handleCloseModalReview}
+            onUpdateOrder={fetchOrderDetails}
+          />
+          <ModalGetReview
+            orders={localState.orderDetails}
+            openModalGetReview={localState.openModalGetReview}
+            onCloseModalGetReview={handleCloseModalGetReview}
+          />
+          <ModalSendRequest
+            order={localState.orderDetails}
+            type={localState.modalSendRequest.type}
+            openModalSendRequest={
+              localState.modalSendRequest.openModalSendRequest
+            }
+            onCloseModalSendRequest={handleCloseModalSendRequest}
+            onUpdateOrder={fetchOrderDetails}
+          />
         </>
       ) : (
         <>
