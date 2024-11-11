@@ -113,6 +113,11 @@ const AccountSetting = () => {
           key: "wallet",
           parentKey: "notification",
         },
+        {
+          title: <span className="pl-2">Hệ Thống</span>,
+          key: "system",
+          parentKey: "notification",
+        },
       ],
     },
     {

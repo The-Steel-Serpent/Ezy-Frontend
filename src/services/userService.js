@@ -97,19 +97,10 @@ export const checkEmailExists = async (email) => {
     return false;
   } catch (error) {
     console.log(error);
-    let errorMessage;
-    switch (error?.response?.status) {
-      case 404:
-        errorMessage = "Không tìm thấy email";
-        break;
-      case 500:
-        errorMessage = "Lỗi server";
-        break;
-      default:
-        errorMessage = error.message || error;
-        break;
+    if (error?.response?.status === 404) {
+      return false;
     }
-    return false;
+    throw error;
   }
 };
 
@@ -138,8 +129,6 @@ export const updateEmail = async (userID, email) => {
     throw new Error(errorMessage);
   }
 };
-
-
 
 export const logOut = async () => {
   try {
