@@ -364,3 +364,7 @@
 .disabled {
   @apply cursor-not-allowed opacity-50;
 }
+
+.table-item {
+  @apply border-[1px] text-right p-2 text-slate-500;
+}

@@ -2,14 +2,12 @@ import { Tag } from "antd";
 import React, { memo } from "react";
 
 const OrderDetailsItem = (props) => {
-  const { item } = props;
-  const handleViewOrder = () => {
-    window.location.href = `/user/purchase/order/${item.user_order_id}`;
-  };
+  const { item, onViewItem = null } = props;
+
   return (
     <div
       className="grid grid-cols-12 w-full cursor-pointer"
-      onClick={handleViewOrder}
+      onClick={onViewItem}
     >
       <div className="col-span-1">
         <img
