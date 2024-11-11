@@ -84,7 +84,7 @@ const AdminAuthLayout = ({ children }) => {
           role_id: fetchedUser.role_id,
           setup: fetchedUser.setup,
           isVerified: fetchedUser.isVerified,
-          is_banned: user.is_banned,
+          //is_banned: user.is_banned,
         });
         dispatch(setUser(fetchedUser));
         dispatch(setToken(token));
