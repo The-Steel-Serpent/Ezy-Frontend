@@ -18,6 +18,7 @@ import {
   fetchSignInMethodsForEmail,
   updatePassword,
   onIdTokenChanged,
+  verifyBeforeUpdateEmail,
 } from "firebase/auth";
 
 import { authFirebase } from "./firebase";
@@ -177,18 +178,35 @@ export const resetPassword = async (email) => {
   }
 };
 
-export const handleSendSignInLinkToEmail = async (email) => {
-  const actionCodeSettings = {
-    url: `http://localhost:3000/user/account?type=email&step=2`,
-    handleCodeInApp: true,
-  };
+export const verifyNewEmailWithLink = async (href) => {
+  const newEmail = localStorage.getItem("newEmail");
 
+  if (newEmail && isSignInWithEmailLink(auth, href)) {
+    try {
+      await signInWithEmailLink(auth, newEmail, href);
+      console.log("Email mới đã được xác thực.");
+      return true;
+    } catch (error) {
+      console.error("Lỗi khi xác thực email:", error.message);
+      return false;
+    }
+  }
+  return false;
+};
+const actionCodeSettings = {
+  url: `http://localhost:3000/user/account?type=email&step=2`,
+  handleCodeInApp: true,
+};
+
+export const handleSendSignInLinkToEmail = async (email) => {
   try {
     const signInMethods = await fetchSignInMethodsForEmail(auth, email);
     if (signInMethods.length > 0) {
       throw new Error("Email đã được sử dụng");
     }
-    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    const user = auth.currentUser;
+    await sendEmailVerification(user, actionCodeSettings);
+    localStorage.setItem("newEmail", email);
     return true;
   } catch (error) {
     console.error(error);
@@ -216,50 +234,58 @@ export const handleSendSignInLinkToEmail = async (email) => {
   }
 };
 
-export const updateNewEmail = async (email, href, password) => {
-  const user = auth.currentUser;
-  if (email === "") {
-    throw new Error("Vui lòng nhập email mới");
-  }
-  let errorMessage;
+export const updateNewEmail = async (newEmail, currentPassword) => {
+  const user = getAuth().currentUser;
+
   if (!user) {
-    errorMessage = "Bạn cần đăng nhập trước khi thay đổi email.";
-    throw new Error(errorMessage);
+    console.error("Người dùng chưa đăng nhập.");
+    return false;
   }
-  const checkHref = await isSignInWithEmailLink(auth, href);
-  if (!checkHref) {
-    errorMessage = "Liên kết không hợp lệ";
-    throw new Error(errorMessage);
+
+  // Kiểm tra xem email mới có khác với email hiện tại không
+  const userEmail = user.email;
+  if (userEmail === newEmail) {
+    console.error("Email mới phải khác với email hiện tại.");
+    return false;
   }
+
+  // Kiểm tra định dạng email mới
+  if (!newEmail || !newEmail.includes("@")) {
+    console.error("Email mới không hợp lệ.");
+    return false;
+  }
+
+  console.log("email hiện tại", userEmail);
+  console.log("email mới", newEmail);
+  console.log("mật khẩu hiện tại", currentPassword);
 
   try {
-    const credential = EmailAuthProvider.credential(user.email, password);
+    const credential = EmailAuthProvider.credential(
+      user.email,
+      currentPassword
+    );
     await reauthenticateWithCredential(user, credential);
-    await updateEmail(user, email);
+    await verifyBeforeUpdateEmail(user, newEmail, actionCodeSettings);
     return true;
   } catch (error) {
-    switch (error.code) {
-      case "auth/quota-exceeded":
-        errorMessage = "Quá nhiều yêu cầu. Vui lòng thử lại sau một thời gian.";
-        break;
-      case "auth/invalid-email":
-        errorMessage = "Email không hợp lệ";
-        break;
-      case "auth/operation-not-allowed":
-        errorMessage = "Vui lòng xác thực trước khi thực hiện hành động.";
-        break;
-      case "auth/too-many-requests":
-        errorMessage =
-          "Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn. Vui lòng thử lại sau.";
-        break;
-      default:
-        errorMessage = "An unknown error occurred";
-        break;
+    console.error("Lỗi khi cập nhật email:", error.message);
+
+    // Xử lý lỗi cụ thể
+    if (error.code === "auth/invalid-email") {
+      console.error("Email mới không hợp lệ.");
+    } else if (error.code === "auth/email-already-in-use") {
+      console.error("Email đã được sử dụng.");
+    } else if (error.code === "auth/requires-recent-login") {
+      console.error("Bạn cần đăng nhập lại để thay đổi thông tin.");
+      // Đăng nhập lại người dùng trước khi tiếp tục
+      // Bạn có thể gọi một hàm đăng nhập lại ở đây và thực hiện lại quy trình cập nhật email
+    } else {
+      console.error("Lỗi không xác định:", error.message);
     }
-    throw new Error(error.message);
+
+    return false;
   }
 };
-
 export const changePassword = async (oldPassword, newPassword) => {
   try {
     const user = auth.currentUser;

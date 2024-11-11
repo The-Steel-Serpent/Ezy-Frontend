@@ -76,11 +76,13 @@ const ChangeEmail = () => {
       localErrors.email = "Email mới không được trùng với email hiện tại";
     } else if (!email.includes("@")) {
       localErrors.email = "Email không hợp lệ";
+    } else {
+      const checkEmail = await checkEmailExists(email);
+      if (checkEmail) {
+        localErrors.email = "Email đã tồn tại";
+      }
     }
-    const checkEmail = await checkEmailExists(email);
-    if (checkEmail) {
-      localErrors.email = "Email đã tồn tại";
-    }
+
     if (password.length === 0) {
       localErrors.password = "Vui lòng nhập mật khẩu";
     }
@@ -95,7 +97,7 @@ const ChangeEmail = () => {
       return;
     }
     try {
-      const res = await handleSendSignInLinkToEmail(email);
+      const res = await updateNewEmail(email, password);
       if (res) {
         localStorage.setItem("newEmail", email);
         setState({
@@ -122,28 +124,15 @@ const ChangeEmail = () => {
     setState({ type: "setPassword", payload: e.target.value });
   };
 
-  const handleUpdateEmail = async () => {
+  const handleUpdateEmail = async (newEmail) => {
     try {
-      // const newEmail = localStorage.getItem("newEmail");
-      const newEmail = "tungbeobede@gmail.com";
-      const res = await updateNewEmail(
-        newEmail,
-        window.location.href,
-        password
-      );
-      console.log(res);
-      if (res) {
-        const updateEmailInBackend = await updateEmail(user.user_id, newEmail);
-        console.log(updateEmailInBackend);
-        if (updateEmailInBackend.success) {
-          const newUser = updateEmailInBackend.data;
-          dispatch(setUser(newUser));
-          localStorage.removeItem("newEmail");
-          message.success("Cập nhật Email thành công");
-          setTimeout(() => {
-            navigate("/user/account?type=email&step=3");
-          }, 500);
-        }
+      const updateEmailInBackend = await updateEmail(user.user_id, newEmail);
+      console.log(updateEmailInBackend);
+      if (updateEmailInBackend.success) {
+        const newUser = updateEmailInBackend.data;
+        dispatch(setUser(newUser));
+        localStorage.removeItem("newEmail");
+        message.success("Cập nhật Email thành công");
       }
     } catch (error) {
       message.error(error?.message || "Đã có lỗi xảy ra, vui lòng thử lại sau");
@@ -172,6 +161,14 @@ const ChangeEmail = () => {
       });
     }
   }, [email, password]);
+
+  useEffect(() => {
+    const newEmail = localStorage.getItem("newEmail");
+
+    if (step === "2" && newEmail) {
+      handleUpdateEmail(newEmail);
+    }
+  }, [step]);
 
   return (
     <>
