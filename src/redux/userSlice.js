@@ -16,6 +16,7 @@ const initialState = {
   token: "",
   wallet: {},
   onlineUser: [],
+  is_banned: 0,
 };
 
 export const userSlice = createSlice({
@@ -36,6 +37,7 @@ export const userSlice = createSlice({
       state.setup = action.payload.setup;
       state.isVerified = action.payload.isVerified;
       state.wallet = action.payload.wallet;
+      state.is_banned = action.payload.is_banned;
     },
     setToken: (state, action) => {
       state.token = action.payload;
@@ -55,6 +57,7 @@ export const userSlice = createSlice({
       state.isVerified = false;
       state.token = "";
       state.wallet = {};
+      state.is_banned = 0;
     },
     setWallet: (state, action) => {
       state.wallet = action.payload;

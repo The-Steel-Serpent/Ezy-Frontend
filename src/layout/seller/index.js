@@ -255,6 +255,7 @@ const SellerAuthLayout = ({ children }) => {
                 role_id: user.role_id,
                 setup: user.setup,
                 isVerified: user.isVerified,
+                is_banned: user.is_banned,
               })
             );
             dispatchMain({ type: "SET_USER", payload: user });
@@ -294,7 +295,6 @@ const SellerAuthLayout = ({ children }) => {
     }
   }, [token]);
 
-
   useEffect(() => {
     startTokenRefreshListener();
   }, []);
@@ -329,7 +329,6 @@ const SellerAuthLayout = ({ children }) => {
       }
     }
   }, [state.authenticate]);
-
 
   const isSellerSetupPath = location.pathname === "/seller/seller-setup";
 
