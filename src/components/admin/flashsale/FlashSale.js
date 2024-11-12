@@ -7,6 +7,7 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import AddFlashSale from './AddFlashSale';
 import EditFlashSale from './EditFlashSale';
+import ManageTimeFrames from './ManageTimeFrames';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -16,6 +17,7 @@ const FlashSale = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isTimeFramesModalVisible, setIsTimeFramesModalVisible] = useState(false);
   const [currentFlashSale, setCurrentFlashSale] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -65,6 +67,9 @@ const FlashSale = () => {
           >
             Chỉnh sửa
           </Button>
+          <Button onClick={() => showTimeFramesModal(record)} style={{ marginRight: 8 }}>
+            Quản lý khung giờ
+          </Button>
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa Flash Sale này?"
             onConfirm={() => handleDeleteFlashSale(record.flash_sales_id)}
@@ -111,6 +116,11 @@ const FlashSale = () => {
     setIsEditModalVisible(true);
   };
 
+  const showTimeFramesModal = (flashSale) => {
+    setCurrentFlashSale(flashSale);
+    setIsTimeFramesModalVisible(true);
+  };
+
   const handleDeleteFlashSale = async (id) => {
     try {
       const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/flash-sales/delete/${id}`);
@@ -146,7 +156,7 @@ const FlashSale = () => {
 
   return (
     <div>
-      <h1 style={{ marginBottom: 16, fontSize:20 }}>Quản lý Flash Sale</h1>
+      <h1 style={{ marginBottom: 16, fontSize: 20 }}>Quản lý Flash Sale</h1>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           <DatePicker placeholder="Ngày bắt đầu" onChange={(date) => setStartDate(date ? dayjs(date) : null)} />
@@ -181,6 +191,14 @@ const FlashSale = () => {
         onClose={() => setIsEditModalVisible(false)}
         onEditSuccess={() => fetchData()}
         flashSaleData={currentFlashSale}
+      />
+
+      <ManageTimeFrames
+        visible={isTimeFramesModalVisible}
+        onClose={() => setIsTimeFramesModalVisible(false)}
+        flashSaleId={currentFlashSale?.flash_sales_id}
+        flashSaleStart={currentFlashSale?.started_at}
+        flashSaleEnd={currentFlashSale?.ended_at}
       />
     </div>
   );
