@@ -1,8 +1,10 @@
 import React, { useEffect, useReducer } from "react";
 import ProductsWithPanigation from "../../../components/product/ProductsWithPanigation";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const SuggestProduct = () => {
+  const user = useSelector((state) => state.user);
   const [state, dispatch] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -26,7 +28,7 @@ const SuggestProduct = () => {
   useEffect(() => {
     const fetchSuggestList = async () => {
       try {
-        const url = `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products?pageNumbers=${currentPage}`;
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products?user_id=${user?.user_id}&pageNumbers=${currentPage}`;
         const res = await axios.get(url);
         if (res.status === 200) {
           console.log("res.data", res.data);

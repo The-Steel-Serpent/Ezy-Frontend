@@ -358,23 +358,40 @@ const DetailsProduct = () => {
               items={[
                 {
                   title: (
-                    <a className="text-blue-500 hover:opacity-85" href="/">
+                    <span
+                      className="text-blue-500 hover:opacity-85 cursor-pointer"
+                      onClick={() => navigate("/")}
+                    >
                       Ezy
-                    </a>
+                    </span>
                   ),
                 },
                 {
                   title: (
-                    <a className="text-blue-500 hover:opacity-85" href="/">
+                    <span
+                      className="text-blue-500 hover:opacity-85 cursor-pointer"
+                      onClick={() =>
+                        navigate(
+                          `/categories/${detailsProduct?.SubCategory?.Category?.category_id}`
+                        )
+                      }
+                    >
                       {detailsProduct?.SubCategory?.Category?.category_name}
-                    </a>
+                    </span>
                   ),
                 },
                 {
                   title: (
-                    <a className="text-blue-500 hover:opacity-85" href="/">
+                    <span
+                      className="text-blue-500 hover:opacity-85 cursor-pointer"
+                      onClick={() =>
+                        navigate(
+                          `/categories/${detailsProduct?.SubCategory?.Category?.category_id}?facet=${detailsProduct?.SubCategory?.sub_category_id}`
+                        )
+                      }
+                    >
                       {detailsProduct?.SubCategory?.sub_category_name}
-                    </a>
+                    </span>
                   ),
                 },
                 {

@@ -3,9 +3,11 @@ import { motion } from "framer-motion";
 import React, { Suspense, useEffect, useState } from "react";
 
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const ProductCard = React.lazy(() => import("./ProductCard"));
 const ProductSuggestions = () => {
+  const user = useSelector((state) => state.user);
   const [suggestProducts, setSuggestProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -13,7 +15,7 @@ const ProductSuggestions = () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products-limit`
+          `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products-limit?user_id=${user?.user_id}`
         );
         if (res.data.success) {
           setSuggestProducts(res.data.data);

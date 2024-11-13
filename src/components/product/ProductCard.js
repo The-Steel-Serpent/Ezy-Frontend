@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { Card, Rate } from "antd";
 import Meta from "antd/es/card/Meta";
 import React from "react";
+import { FcFlashAuto } from "react-icons/fc";
+import { IoFlash } from "react-icons/io5";
 function formatNumber(num) {
   if (num >= 1000000) {
     return (num / 1000000).toFixed(1) + "M"; // Hàng triệu
@@ -14,6 +16,21 @@ function formatNumber(num) {
 const ProductCard = ({ value, loading, itemsPerRow = 6 }) => {
   const price =
     value?.base_price - (value?.base_price * value?.sale_percents) / 100;
+  const salePrice =
+    value?.flashSales?.length > 0 &&
+    value?.flashSales[0].FlashSaleTimeFrame !== null
+      ? value?.flashSales[0].flash_sale_price
+      : price;
+  const salePercent =
+    value?.flashSales?.length > 0 &&
+    value?.flashSales[0].FlashSaleTimeFrame !== null
+      ? Math.round(
+          ((value?.flashSales[0].original_price -
+            value?.flashSales[0].flash_sale_price) /
+            value?.flashSales[0].original_price) *
+            100
+        )
+      : value?.sale_percents;
   return (
     <>
       <motion.a
@@ -37,9 +54,9 @@ const ProductCard = ({ value, loading, itemsPerRow = 6 }) => {
           <div className="flex lg:flex-row flex-col w-100 items-start lg:items-center mt-4 text-ellipsis text-nowrap line-clamp-1">
             <div className="text-primary font-bold text-base mr-1">
               <sup>₫</sup>
-              {price?.toLocaleString("vi-VN")}
+              {salePrice?.toLocaleString("vi-VN")}
             </div>
-            {value?.sale_percents > 0 && (
+            {salePercent > 0 && (
               <div className="text-slate-400 line-through text-xs text-ellipsis line-clamp-1 text-nowrap">
                 <sup>₫</sup>
                 {value?.base_price?.toLocaleString("vi-VN")}
@@ -57,10 +74,14 @@ const ProductCard = ({ value, loading, itemsPerRow = 6 }) => {
             <div className="text-[10px] pt-1">
               Đã bán {formatNumber(value?.sold)}
             </div>
+            {value?.flashSales?.length > 0 &&
+              value?.flashSales[0].FlashSaleTimeFrame !== null && (
+                <IoFlash className="mr-2 text-lg text-orange-400" />
+              )}
           </div>
 
-          <div className="absolute top-0 right-0 text-xs bg-primary text-white pr-1 pl-1">
-            {value?.sale_percents > 0 && "-" + value?.sale_percents + "%"}
+          <div className="absolute top-0 right-0 text-xs bg-yellow-500 text-white pr-1 pl-1">
+            {salePercent > 0 && "-" + salePercent + "%"}
           </div>
         </Card>
       </motion.a>

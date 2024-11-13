@@ -60,22 +60,7 @@ const Home = () => {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // useEffect(() => {
-  //   const fetchUserDetails = async () => {
-  //     try {
-  //       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/user-details`;
-  //       const res = await axios({
-  //         method: "GET",
-  //         url: URL,
-  //         withCredentials: true,
-  //       });
-  //       dispatch(setUser(res.data.data));
-  //     } catch (error) {
-  //       console.log("Error", error);
-  //     }
-  //   };
-  //   fetchUserDetails();
-  // }, []);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {

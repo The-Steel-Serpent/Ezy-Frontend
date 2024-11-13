@@ -5,6 +5,8 @@ const SortBar = lazy(() => import("../../../components/sorts/SortBar"));
 const FilterBar = lazy(() => import("../../../components/sorts/FilterBar"));
 const Categories = () => {
   const { cat_id } = useParams();
+  const query = new URLSearchParams(window.location.search);
+  const facet = query.get("facet");
 
   const [state, dispatch] = useReducer(
     (state, action) => {
@@ -48,11 +50,21 @@ const Categories = () => {
 
   const { listProductByCategory, currentPage, totalPage, filter, loading } =
     state;
+  useEffect(() => {
+    if (facet) {
+      dispatch({
+        type: "SET_FILTER",
+        payload: {
+          facet: [...filter.facet, facet],
+        },
+      });
+    }
+  }, [facet]);
 
   useEffect(() => {
     const fetchProductByCategory = async () => {
       dispatch({ type: "SET_LOADING", payload: true });
-      console.log("current page: ", currentPage);
+
       const url = `${
         process.env.REACT_APP_BACKEND_URL
       }/api/product-by-sort-and-filter/${cat_id}?pageNumbers=${currentPage}&sortBy=${

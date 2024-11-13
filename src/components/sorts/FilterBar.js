@@ -77,6 +77,11 @@ const Filter = (props) => {
     maxPrice,
     ratingFilter,
   } = state;
+  useEffect(() => {
+    if (filter.facet && filter.facet.length > 0) {
+      dispatch({ type: "SET_SELECTED_CHECKBOXES", payload: filter.facet });
+    }
+  }, [filter.facet, dispatch]);
 
   //Side Effects
   useEffect(() => {
