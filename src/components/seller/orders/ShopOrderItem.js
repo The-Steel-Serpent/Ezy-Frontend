@@ -1,4 +1,4 @@
-import { Avatar, Button, Image, List, message, Popconfirm, Popover } from "antd";
+import { Avatar, Button, Image, List, message, notification, Popconfirm, Popover } from "antd";
 import React, { memo, useEffect, useReducer } from "react";
 import { CaretDownFilled, ShopFilled } from "@ant-design/icons";
 import { FaRegCircleQuestion } from "react-icons/fa6";
@@ -7,7 +7,9 @@ import { useMessages } from "../../../providers/MessagesProvider";
 import ShopOrderDetaiItem from "./ShopOrderDetaiItem";
 import ConfirmOrderModal from "./ConfirmOrderModal";
 import DetailOrderModal from "./DetailOrderModal";
-import { shopCancelOrder } from "../../../services/orderService";
+import { redeliveryOrder, shopCancelOrder } from "../../../services/orderService";
+import { getDistricts, getProvinces, getWards } from "../../../services/ghnService";
+import { createNotification } from "../../../services/notificationsService";
 
 const ShopOrderItem = (props) => {
     const { order } = props;
@@ -20,6 +22,18 @@ const ShopOrderItem = (props) => {
                     return { ...state, visible_confirm_order_modal: action.payload, };
                 case "SET_VISIBLE_DETAIL_ORDER_MODAL":
                     return { ...state, visible_detail_order_modal: action.payload, };
+                case 'SET_FROM_PROVINCE_NAME':
+                    return { ...state, from_province_name: action.payload };
+                case 'SET_FROM_DISTRICT_NAME':
+                    return { ...state, from_district_name: action.payload };
+                case 'SET_FROM_WARD_NAME':
+                    return { ...state, from_ward_name: action.payload };
+                case 'SET_REQUIRED_NOTE':
+                    return { ...state, required_note: action.payload };
+                case 'SET_CONFIRM_LOADING':
+                    return { ...state, confirm_loading: action.payload };
+                case 'SET_COUNT_DELIVERY_FAIL':
+                    return { ...state, count_delivery_fail: action.payload };
                 default:
                     return state;
             }
@@ -27,6 +41,12 @@ const ShopOrderItem = (props) => {
         {
             visible_confirm_order_modal: false,
             visible_detail_order_modal: false,
+            from_province_name: "",
+            from_district_name: "",
+            from_ward_name: "",
+            required_note: "CHOTHUHANG",
+            confirm_loading: false,
+            count_delivery_fail: 0,
         }
     );
 
@@ -85,8 +105,25 @@ const ShopOrderItem = (props) => {
         console.log("payload", payload);
 
         const response = await shopCancelOrder(payload);
-        if(response.success) {
+        if (response.success) {
             message.info("Đơn hàng đã được hủy thành công");
+            const noti_payload = {
+                user_id: order.UserAccount.user_id,
+                notifications_type: "Đơn hàng",
+                title: "Đơn hàng đã bị hủy",
+                content: `Đơn hàng đã bị hủy bởi cửa hàng`,
+                thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",  
+            }
+
+            const noti_res = await createNotification(noti_payload);
+            if (noti_res.success) {
+                console.log("Create notification success", noti_res);
+            }
+            else {
+                console.log("Create notification failed", noti_res);
+                console.log("noti_payload", noti_payload);
+            }
+
             setTimeout(() => {
                 handleReLoad();
             }, 1200);
@@ -97,10 +134,119 @@ const ShopOrderItem = (props) => {
         }
     }
 
+    const handleReDeliverOrder = async () => {
+        setLocalState({ type: "SET_CONFIRM_LOADING", payload: true });
+        const items = order.UserOrderDetails.map(item => {
+            return {
+                name: item.ProductVarient.Product.product_name,
+                quantity: item.quantity,
+                weight: item.ProductVarient.weight,
+                length: item.ProductVarient.length,
+                width: item.ProductVarient.width,
+                height: item.ProductVarient.height,
+                price: item.ProductVarient.price
+            }
+        });
+        const sum_weight = items.reduce((acc, item) => acc + item.weight, 0);
+        const sum_length = items.reduce((acc, item) => acc + item.length, 0);
+        const sum_width = items.reduce((acc, item) => acc + item.width, 0);
+        const sum_height = items.reduce((acc, item) => acc + item.height, 0);
+        const user_address_id_string = order.user_address_id_string;
+
+
+        const province_id = user_address_id_string.split(",")[0];
+        const to_district_id = parseInt(user_address_id_string.split(",")[1], 10);
+        const to_ward_code = user_address_id_string.split(",")[2];
+        const service_type_id = parseInt(user_address_id_string.split(",")[4], 10);
+        const payload = {
+            shopId: order.shop_id,
+            user_order_id: order.user_order_id,
+            payment_method_id: order.payment_method_id,
+            shipping_fee: order.shipping_fee,
+            note: order.order_note,
+            required_note: localState.required_note, // required_note: "CHOTHUHANG, CHOXEMHANGKHONGTHU, KHONGCHOXEMHANG",
+            from_name: order.Shop.full_name, // required
+            from_phone: order.Shop.phone_number, // required
+            from_address: order.Shop.shop_address, // required
+            from_ward_name: localState.from_ward_name, // required
+            from_district_name: localState.from_district_name, // required
+            from_province_name: localState.from_province_name, // required
+            to_name: order.UserAccount.full_name, // required
+            to_phone: order.UserAccount.phone_number, // required
+            to_address: order.user_address_string, // required
+            to_ward_code: to_ward_code, // required !!!!!!
+            to_district_id: to_district_id, // required !!!!!!!!
+            weight: sum_weight, // required 
+            length: sum_length, // required
+            width: sum_width, // required 
+            height: sum_height, // required
+            service_type_id: service_type_id, // required !!!!!!!!
+            items: items,
+        }
+
+        const redeliveryResult = await redeliveryOrder(payload);
+        if (redeliveryResult.success) {
+            message.info("Đơn hàng sẽ được giao lại trong thời gian sớm nhất");
+            const noti_payload = {
+                user_id: order.UserAccount.user_id,
+                notifications_type: "Đơn hàng",
+                title: "Đơn hàng sẽ được giao lại",
+                content: `Đơn hàng của bạn sẽ được giao lại trong thời gian sớm nhất`,
+                thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",
+            }
+            const noti_res = await createNotification(noti_payload);
+            if (noti_res.success) {
+                console.log("Create notification success", noti_res);
+            }
+            else {
+                console.log("Create notification failed", noti_res);
+            }
+            setTimeout(() => {
+                handleReLoad();
+            }, 1200);
+        }
+        else {
+            message.error("Giao hàng lại thất bại");
+            console.log("Error redelivery order", redeliveryResult);
+            console.log("payload", payload);
+        }
+        setLocalState({ type: "SET_CONFIRM_LOADING", payload: false });
+    }
+
     useEffect(() => {
         if (order) {
             console.log("order neeee", order);
+            if(order.log != null) {
+                const count_delivery_fail = order.log.filter(log => log.status === "delivery_fail").length;
+                setLocalState({ type: "SET_COUNT_DELIVERY_FAIL", payload: count_delivery_fail });
+                console.log("count_delivery_fail", count_delivery_fail);
+            }
+           
         }
+        const fetchAndSetProvinces = async () => {
+            if (order) {
+                try {
+                    const provinces = await getProvinces();
+                    const districts = await getDistricts(order.Shop.province_id);
+                    const wards = await getWards(order.Shop.district_id);
+
+                    if (provinces.data && districts.data && wards.data) {
+                        const shop_province = provinces.data.find(province => province.ProvinceID === order.Shop.province_id);
+                        const shop_district = districts.data.find(district => district.DistrictID === order.Shop.district_id);
+                        const shop_ward = wards.data.find(ward => ward.WardCode === order.Shop.ward_code);
+
+                        setLocalState({ type: "SET_FROM_PROVINCE_NAME", payload: shop_province?.ProvinceName || "" });
+                        setLocalState({ type: "SET_FROM_DISTRICT_NAME", payload: shop_district?.DistrictName || "" });
+                        setLocalState({ type: "SET_FROM_WARD_NAME", payload: shop_ward?.WardName || "" });
+                    } else {
+                        console.error("Failed to fetch provinces, districts, or wards data");
+                    }
+                } catch (error) {
+                    console.error("Error fetching provinces, districts, or wards:", error);
+                }
+            }
+        };
+        fetchAndSetProvinces();
     }, [order]);
     return (
         <>
@@ -216,7 +362,7 @@ const ShopOrderItem = (props) => {
                                         Hủy Đơn Hàng
                                     </Button>
                                 </Popconfirm>
-                             
+
 
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
@@ -338,16 +484,26 @@ const ShopOrderItem = (props) => {
                                 >
                                     Chi Tiết Đơn Hàng
                                 </Button>
+                                {order?.ghn_status === "returned" && localState.count_delivery_fail < 4 && (
+                                    <Popconfirm
+                                        description="Bạn có chắc chắn muốn giao lại đơn hàng này không?"
+                                        onConfirm={handleReDeliverOrder}
+                                        loading={localState.confirm_loading}
+                                        key={'confirm'}
+                                    >
+                                        <Button
+                                            className="bg-white text-primary hover:opacity-80"
+                                            size="large"
+                                            loading={localState.confirm_loading}
+                                        >
+                                            Giao hàng lại
+                                        </Button>
+                                    </Popconfirm>
+                                )}
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 5 && (
                             <div className="w-[100%] flex gap-3 justify-end">
-                                <Button
-                                    size="large"
-                                    className="bg-secondary border-secondary text-white hover:opacity-80"
-                                >
-                                    Trả Hàng/Hoàn Tiền
-                                </Button>
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"

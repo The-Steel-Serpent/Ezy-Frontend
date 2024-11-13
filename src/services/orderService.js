@@ -210,13 +210,42 @@ export const shopCancelOrder = async (payload) => {
           errorMessage = "Server error.";
           break;
         default:
-          errorMessage =
-            error.response.data.message || "An unexpected error occurred.";
+          errorMessage = error.response.data.message || "An unexpected error occurred.";
       }
+    } else {
+      errorMessage = "Network error or server is unreachable.";
     }
+    return { success: false, message: errorMessage, status: error.response?.status || 0 };
   }
 };
 
+export const redeliveryOrder = async (payload) => {
+  try {
+    const response = await axios.post(`${url}redelivery-order`, payload);
+    return response.data;
+  } catch (error) {
+    console.log("Error when redeliveryOrder", error);
+    let errorMessage;
+    if (error.response) {
+      switch (error.response.status) {
+        case 400:
+          errorMessage = error.response.data.message;
+          break;
+        case 404:
+          errorMessage = "Order not found";
+          break;
+        case 500:
+          errorMessage = "Server error.";
+          break;
+        default:
+          errorMessage = error.response.data.message || "An unexpected error occurred.";
+      }
+    } else {
+      errorMessage = "Network error or server is unreachable.";
+    }
+    return { success: false, message: errorMessage, status: error.response?.status || 0 };
+  }
+}
 export const getOrderDetails = async (user_order_id) => {
   try {
     const response = await axios.get(

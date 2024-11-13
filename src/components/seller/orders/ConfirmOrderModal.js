@@ -2,6 +2,7 @@ import { Button, Col, message, Modal, Popconfirm, Row, Select, Table } from 'ant
 import React, { useEffect, useReducer } from 'react'
 import { getDistricts, getProvinces, getWards } from '../../../services/ghnService';
 import { comfirmOrder } from '../../../services/orderService';
+import { createNotification } from '../../../services/notificationsService';
 const { Option } = Select;
 
 const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
@@ -122,6 +123,7 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
             shopId: order.shop_id,
             user_order_id: order.user_order_id,
             payment_method_id: order.payment_method_id,
+            shipping_fee: order.shipping_fee,
             note: order.order_note,
             required_note: modalState.required_note, // required_note: "CHOTHUHANG, CHOXEMHANGKHONGTHU, KHONGCHOXEMHANG",
             from_name: order.Shop.full_name, // required
@@ -158,6 +160,20 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
         if (comfirmOrderResult.success) {
             console.log("Confirm order success", comfirmOrderResult);
             message.success("Xác nhận đơn hàng thành công");
+            const noti_payload = {
+                user_id: order.UserAccount.user_id,
+                title: "Đơn hàng của bạn đã được xác nhận",
+                content: `Đơn hàng của bạn đã được xác nhận và đang chờ vận chuyển`,
+                notifications_type: "ORDER_CONFIRMED",
+                thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",  
+            }
+
+            const noti_res = await createNotification(noti_payload);
+            if(noti_res.success){
+                console.log("Create notification success", noti_res);
+            } else {
+                console.error("Create notification error:", noti_res);
+            }
             setTimeout(() => {
                 handleReLoad();
             }, 1200);
