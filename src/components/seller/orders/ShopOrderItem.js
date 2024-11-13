@@ -1,4 +1,4 @@
-import { Avatar, Button, Image, List, message, Popconfirm, Popover } from "antd";
+import { Avatar, Button, Image, List, message, notification, Popconfirm, Popover } from "antd";
 import React, { memo, useEffect, useReducer } from "react";
 import { CaretDownFilled, ShopFilled } from "@ant-design/icons";
 import { FaRegCircleQuestion } from "react-icons/fa6";
@@ -9,6 +9,7 @@ import ConfirmOrderModal from "./ConfirmOrderModal";
 import DetailOrderModal from "./DetailOrderModal";
 import { redeliveryOrder, shopCancelOrder } from "../../../services/orderService";
 import { getDistricts, getProvinces, getWards } from "../../../services/ghnService";
+import { createNotification } from "../../../services/notificationsService";
 
 const ShopOrderItem = (props) => {
     const { order } = props;
@@ -106,6 +107,23 @@ const ShopOrderItem = (props) => {
         const response = await shopCancelOrder(payload);
         if (response.success) {
             message.info("Đơn hàng đã được hủy thành công");
+            const noti_payload = {
+                user_id: order.UserAccount.user_id,
+                notifications_type: "Đơn hàng",
+                title: "Đơn hàng đã bị hủy",
+                content: `Đơn hàng đã bị hủy bởi cửa hàng`,
+                thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",  
+            }
+
+            const noti_res = await createNotification(noti_payload);
+            if (noti_res.success) {
+                console.log("Create notification success", noti_res);
+            }
+            else {
+                console.log("Create notification failed", noti_res);
+                console.log("noti_payload", noti_payload);
+            }
+
             setTimeout(() => {
                 handleReLoad();
             }, 1200);
@@ -169,6 +187,20 @@ const ShopOrderItem = (props) => {
         const redeliveryResult = await redeliveryOrder(payload);
         if (redeliveryResult.success) {
             message.info("Đơn hàng sẽ được giao lại trong thời gian sớm nhất");
+            const noti_payload = {
+                user_id: order.UserAccount.user_id,
+                notifications_type: "Đơn hàng",
+                title: "Đơn hàng sẽ được giao lại",
+                content: `Đơn hàng của bạn sẽ được giao lại trong thời gian sớm nhất`,
+                thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",
+            }
+            const noti_res = await createNotification(noti_payload);
+            if (noti_res.success) {
+                console.log("Create notification success", noti_res);
+            }
+            else {
+                console.log("Create notification failed", noti_res);
+            }
             setTimeout(() => {
                 handleReLoad();
             }, 1200);
@@ -472,12 +504,6 @@ const ShopOrderItem = (props) => {
                         )}
                         {order?.OrderStatus?.order_status_id === 5 && (
                             <div className="w-[100%] flex gap-3 justify-end">
-                                <Button
-                                    size="large"
-                                    className="bg-secondary border-secondary text-white hover:opacity-80"
-                                >
-                                    Trả Hàng/Hoàn Tiền
-                                </Button>
                                 <Button
                                     className="bg-white text-primary hover:opacity-80"
                                     size="large"
