@@ -248,17 +248,6 @@ export const checkOut = async (data, type) => {
     return res.data;
   } catch (error) {
     console.log("Lỗi khi thực hiện thanh toán: ", error);
-    let errorMessage;
-    switch (error?.response?.status) {
-      case 500:
-        errorMessage = "Lỗi server";
-        break;
-      case 400:
-        errorMessage = "Số lượng sản phẩm không đủ";
-        break;
-      default:
-        errorMessage = error.message || error;
-    }
-    throw new Error(errorMessage);
+    throw new Error(error.response.data.message || error);
   }
 };

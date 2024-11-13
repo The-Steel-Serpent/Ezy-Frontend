@@ -25,12 +25,17 @@ import { TiShoppingCart } from "react-icons/ti";
 import { TbTruckReturn } from "react-icons/tb";
 import { MdArrowForwardIos } from "react-icons/md";
 import formatAddress from "../../../helpers/formatAddress";
-import { DownOutlined } from "@ant-design/icons";
+import { ClockCircleFilled, DownOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
 import ProductNotFounded from "../../../components/product/ProductNotFounded";
 import withChildSuspense from "../../../hooks/HOC/withChildSuspense";
 import { useDispatch, useSelector } from "react-redux";
 import ReactImageGallery from "react-image-gallery";
+import flashSaleIcon from "../../../assets/flash-sale-ezy.png";
+import flashSaleIconShopee from "../../../assets/flash-sale-icon-shopee.svg";
+import FlipClockCountdown from "@leenguyen/react-flip-clock-countdown";
+import moment from "moment-timezone";
+import { formatHideCurrency } from "../../../helpers/formatCurrency";
 
 const ReviewCard = lazy(() => import("../../../components/product/ReviewCard"));
 const ShopInformationSection = lazy(() =>
@@ -67,6 +72,10 @@ const DetailsProduct = () => {
   const [detailsProduct, setDetailsProduct] = useState({});
   const [reviews, setReviews] = useState([]);
   const [shopProducts, setShopProducts] = useState([]);
+  const [time, setTime] = useState({
+    endtime: null,
+    status: "waiting",
+  });
 
   //Side Effect
   useEffect(() => {
@@ -79,6 +88,46 @@ const DetailsProduct = () => {
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/product-details/${id}`
         );
+        console.log("Varient: ", res.data.product);
+        const startTime = moment.tz(
+          res.data.product?.ShopRegisterFlashSales?.[0]?.FlashSaleTimeFrame
+            ?.started_at,
+          "Asia/Ho_Chi_Minh"
+        );
+        const endedTime = moment.tz(
+          res.data.product?.ShopRegisterFlashSales?.[0]?.FlashSaleTimeFrame
+            ?.ended_at,
+          "Asia/Ho_Chi_Minh"
+        );
+        console.log("Start time: ", startTime.format("YYYY-MM-DD HH:mm:ss"));
+        console.log("End time: ", endedTime.format("YYYY-MM-DD HH:mm:ss"));
+        console.log(
+          "Current time: ",
+          moment.tz(new Date(), "Asia/Ho_Chi_Minh")
+        );
+        const currentTime = moment.tz(new Date(), "Asia/Ho_Chi_Minh");
+        if (currentTime.isBetween(startTime, endedTime)) {
+          setTime({
+            endtime: endedTime.format("YYYY-MM-DD HH:mm:ss"),
+            status: "active",
+          });
+          console.log("Flash sale đang diễn ra.");
+        } else if (currentTime.isAfter(endedTime)) {
+          // Nếu đã kết thúc
+          setTime({
+            endtime: endedTime.format("YYYY-MM-DD HH:mm:ss"),
+            status: "ended",
+          });
+          console.log("Flash sale đã kết thúc.");
+        } else {
+          // Nếu chưa đến giờ bắt đầu
+          console.log("Countdown không hoạt động do chưa tới giờ bắt đầu.");
+          setTime({
+            endtime: startTime.format("YYYY-MM-DD HH:mm:ss"),
+            status: "waiting",
+          });
+        }
+
         setDetailsProduct(res.data.product);
         if (res?.data?.product?.ProductClassifies?.length > 0) {
           const firstClassify = res.data.product?.ProductClassifies?.find(
@@ -122,6 +171,7 @@ const DetailsProduct = () => {
         );
         if (res.data.success && Array.isArray(res.data.data)) {
           setSizes(res.data.data);
+
           const firstInStock = res.data.data.find(
             (varient) => varient.stock > 0
           );
@@ -385,31 +435,142 @@ const DetailsProduct = () => {
                 </div>
               </div>
               {/***Giá sản phẩm*/}
-              <div className="py-[15px] px-[20px] flex items-center bg-[#fafafa] mt-4 gap-2 mb-6">
-                {sale_percents > 0 && (
-                  <>
-                    <span className="text-slate-400 text-[18px] mr-[10px] line-through">
-                      <sup>₫</sup>
-                      {price?.toLocaleString("vi-VN")}
-                    </span>
-                    <span className="text-primary font-[500] text-[30px]">
-                      <sup>₫</sup>
-                      {sale_price?.toLocaleString("vi-VN")}
-                    </span>
-                    <div className="text-[12px] bg-primary items-center justify-center py-[2px] px-1 text-white ml-[15px] font-semibold text-nowrap rounded-[2px]">
-                      {sale_percents}% GIẢM
+              {detailsProduct?.ShopRegisterFlashSales?.length > 0 && (
+                <>
+                  <div className="flex flex-col">
+                    <div className=" px-[20px] py-[15px] flex justify-between items-center bg-secondary mt-4 gap-2">
+                      <div>
+                        <img src={flashSaleIconShopee} className="h-8" />
+                        {time.status === "waiting" && (
+                          <div className="py-[10px]  flex items-center gap-2">
+                            <span className="text-yellow-400 font-[500] text-[16px]">
+                              Giá chỉ từ <sup>₫</sup>
+                              {formatHideCurrency(
+                                detailsProduct?.ShopRegisterFlashSales[0]
+                                  ?.flash_sale_price
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 items-center">
+                        <span className="text-white mt-2 ">
+                          <ClockCircleFilled />{" "}
+                          {time.status === "active"
+                            ? "KẾT THÚC TRONG"
+                            : "BẮT ĐẦU SAU"}{" "}
+                        </span>
+                        <FlipClockCountdown
+                          to={time.endtime}
+                          hideOnComplete={false}
+                          showLabels={false}
+                          labelStyle={{
+                            fontSize: 10,
+                            fontWeight: 500,
+                            textTransform: "uppercase",
+                          }}
+                          className="flip-clock mt-3"
+                          digitBlockStyle={{
+                            width: 20,
+                            height: 40,
+                            fontSize: 30,
+                          }}
+                          dividerStyle={{ color: "white", height: 1 }}
+                          separatorStyle={{ color: "red", size: "6px" }}
+                          duration={0.5}
+                          renderMap={[false, true, true, true]}
+                        />
+                      </div>
                     </div>
-                  </>
-                )}
-                {sale_percents === 0 && (
-                  <>
-                    <span className="text-primary font-[500] text-[30px]">
-                      <sup>₫</sup>
-                      {price?.toLocaleString("vi-VN")}
-                    </span>
-                  </>
-                )}
-              </div>
+                    {time.status === "active" ? (
+                      <div className="py-[15px] px-[20px] flex items-center bg-[#fafafa] gap-2 mb-6">
+                        <span className="text-slate-400 text-[18px] mr-[10px] line-through">
+                          <sup>₫</sup>
+                          {detailsProduct?.ShopRegisterFlashSales[0]?.original_price?.toLocaleString(
+                            "vi-VN"
+                          )}
+                        </span>
+                        <span className="text-primary font-[500] text-[30px]">
+                          <sup>₫</sup>
+                          {detailsProduct?.ShopRegisterFlashSales[0]?.flash_sale_price?.toLocaleString(
+                            "vi-VN"
+                          )}
+                        </span>
+                        <div className="text-[12px] bg-primary items-center justify-center py-[2px] px-1 text-white ml-[15px] font-semibold text-nowrap rounded-[2px]">
+                          {Math.round(
+                            ((detailsProduct?.ShopRegisterFlashSales[0]
+                              ?.original_price -
+                              detailsProduct?.ShopRegisterFlashSales[0]
+                                ?.flash_sale_price) /
+                              detailsProduct?.ShopRegisterFlashSales[0]
+                                ?.original_price) *
+                              100
+                          )}
+                          % GIẢM
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="py-[15px] px-[20px] flex items-center bg-[#fafafa] gap-2 mb-6">
+                          {sale_percents > 0 && (
+                            <>
+                              <span className="text-slate-400 text-[18px] mr-[10px] line-through">
+                                <sup>₫</sup>
+                                {price?.toLocaleString("vi-VN")}
+                              </span>
+
+                              <span className="text-primary font-[500] text-[30px]">
+                                <sup>₫</sup>
+                                {sale_price?.toLocaleString("vi-VN")}
+                              </span>
+                              <div className="text-[12px] bg-primary items-center justify-center py-[2px] px-1 text-white ml-[15px] font-semibold text-nowrap rounded-[2px]">
+                                {sale_percents}% GIẢM
+                              </div>
+                            </>
+                          )}
+                          {sale_percents === 0 && (
+                            <>
+                              <span className="text-primary font-[500] text-[30px]">
+                                <sup>₫</sup>
+                                {price?.toLocaleString("vi-VN")}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+              {detailsProduct?.ShopRegisterFlashSales?.length === 0 && (
+                <div className="py-[15px] px-[20px] flex items-center bg-[#fafafa] mt-4 gap-2 mb-6">
+                  {sale_percents > 0 && (
+                    <>
+                      <span className="text-slate-400 text-[18px] mr-[10px] line-through">
+                        <sup>₫</sup>
+                        {price?.toLocaleString("vi-VN")}
+                      </span>
+                      <span className="text-primary font-[500] text-[30px]">
+                        <sup>₫</sup>
+                        {sale_price?.toLocaleString("vi-VN")}
+                      </span>
+                      <div className="text-[12px] bg-primary items-center justify-center py-[2px] px-1 text-white ml-[15px] font-semibold text-nowrap rounded-[2px]">
+                        {sale_percents}% GIẢM
+                      </div>
+                    </>
+                  )}
+                  {sale_percents === 0 && (
+                    <>
+                      <span className="text-primary font-[500] text-[30px]">
+                        <sup>₫</sup>
+                        {price?.toLocaleString("vi-VN")}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
               <div className="flex flex-col ">
                 {/***Trả hàng */}
                 <section className="flex flex-row mb-6 gap-1">
@@ -547,7 +708,7 @@ const DetailsProduct = () => {
                   </div>
                 </section>
                 {/***Button */}
-                <div className="flex gap-5 mt-2">
+                <div className="flex gap-5 mt-2 pb-5">
                   {currentVarient?.stock > 0 && detailsProduct?.stock > 0 && (
                     <>
                       <Button
