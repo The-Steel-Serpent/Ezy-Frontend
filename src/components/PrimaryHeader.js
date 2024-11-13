@@ -34,7 +34,7 @@ import {
 } from "antd";
 import { AiTwotoneShop } from "react-icons/ai";
 import axios from "axios";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { el } from "date-fns/locale";
 import { DownOutlined } from "@ant-design/icons";
 const CartComponent = lazy(() => import("./cart/CartComponent"));
@@ -45,6 +45,7 @@ const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const { cat_id, shop_username } = useParams();
   const keyword = queryParams.get("keyword");
@@ -139,8 +140,10 @@ const PrimaryHeader = () => {
         console.log("Lỗi khi fetch gợi ý tên sản phẩm", error);
       }
     };
-    fetchSuggestProductName();
-  }, [search]);
+    if (search.length > 0 && isFocused) {
+      fetchSuggestProductName();
+    }
+  }, [search, isFocused]);
 
   useEffect(() => {
     if (keyword) {
@@ -202,17 +205,19 @@ const PrimaryHeader = () => {
       e.preventDefault();
       if (search === "") {
         if (selectedDropdown?.key === "1") {
-          window.location.href = "/categories/1";
+          navigate("/categories/1");
         } else if (selectedDropdown?.key === "2") {
           e.preventDefault();
         }
       } else {
         if (selectedDropdown?.key === "1") {
-          window.location.href = `/search?keyword=${search}`;
+          navigate(`/search?keyword=${search}`);
         } else {
-          window.location.href = `/search?keyword=${search}&cat_id=${
-            catID ? catID : ""
-          }&shop_username=${shopUsername ? shopUsername : ""}`;
+          navigate(
+            `/search?keyword=${search}&cat_id=${
+              catID ? catID : ""
+            }&shop_username=${shopUsername ? shopUsername : ""}`
+          );
         }
       }
     },
@@ -299,7 +304,7 @@ const PrimaryHeader = () => {
         </div>
         <div className="grid grid-cols-12 m-auto max-w-[1200px] pt-4 items-center">
           <a
-            href="/"
+            onClick={() => navigate("/")}
             className="lg:col-span-2 col-span-full flex justify-center items-center lg:block mb-5"
           >
             <img src={WhitePhoto} className="pr-[30px]" />

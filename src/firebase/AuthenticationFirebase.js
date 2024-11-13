@@ -193,6 +193,7 @@ export const verifyNewEmailWithLink = async (href) => {
   }
   return false;
 };
+
 const actionCodeSettings = {
   url: `http://localhost:3000/user/account?type=email&step=2`,
   handleCodeInApp: true,

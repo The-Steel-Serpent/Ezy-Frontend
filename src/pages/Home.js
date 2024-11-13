@@ -7,7 +7,7 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout, setUser } from "../redux/userSlice";
-import { Button, Carousel, Spin } from "antd";
+import { Button, Carousel, Skeleton, Spin } from "antd";
 import event1 from "../assets/event1.png";
 import event2 from "../assets/event2.png";
 import event3 from "../assets/event3.png";
@@ -19,6 +19,11 @@ import event8 from "../assets/event8.png";
 import event9 from "../assets/event9.png";
 import backgroundEngaged from "../assets/engaged.png";
 import categoryImg1 from "../assets/category1.png";
+
+const FlashSalesSection = lazy(() =>
+  import("../components/flash-sales/FlashSalesSection")
+);
+
 const ProductSuggestions = lazy(() =>
   import("../components/product/ProductSuggestions")
 );
@@ -161,6 +166,10 @@ const Home = () => {
           })}
         </Carousel>
       </div>
+      <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
+        <FlashSalesSection />
+      </Suspense>
+
       <div className="max-w-[1200px] bg-white m-auto h-fit mt-5">
         <div className="flex flex-col mb-1">
           <div className="py-6 px-5 text-primary border-b-[1px] font-medium mb-0 flex justify-center sticky">
@@ -170,13 +179,7 @@ const Home = () => {
         </div>
       </div>
       {/***Product Carousel */}
-      <Suspense
-        fallback={
-          <div className="w-full flex justify-center items-center">
-            <Spin size="large" />
-          </div>
-        }
-      >
+      <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
         <ProductSuggestions />
       </Suspense>
     </>
