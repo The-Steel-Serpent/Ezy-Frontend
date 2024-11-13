@@ -25,14 +25,20 @@ const SaleEvent = () => {
 
     useEffect(() => {
         fetchSaleEvents();
-
-        socket.on('eventStatusUpdate', (updatedEvents) => {
-            setSaleEvents(updatedEvents);
-            setFilteredEvents(updatedEvents);
+    
+        socket.on('saleEventStarted', (data) => {
+            message.info(`Sale event ${data.saleEventId} has started.`);
+            fetchSaleEvents(); 
         });
-
+    
+        socket.on('saleEventEnded', (data) => {
+            message.warning(`Sale event ${data.saleEventId} has ended.`);
+            fetchSaleEvents();
+        });
+    
         return () => {
-            socket.off('eventStatusUpdate');
+            socket.off('saleEventStarted');
+            socket.off('saleEventEnded');
         };
     }, []);
 

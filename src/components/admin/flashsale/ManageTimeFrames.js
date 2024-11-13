@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Table, Button, DatePicker, message, Popconfirm } from 'antd';
+import { Modal, Table, Button, DatePicker, message, Popconfirm, Select } from 'antd';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+
+const { Option } = Select;
 
 const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flashSaleEnd }) => {
     const [timeFrames, setTimeFrames] = useState([]);
     const [editingTimeFrame, setEditingTimeFrame] = useState(null);
     const [startedAt, setStartedAt] = useState(null);
     const [endedAt, setEndedAt] = useState(null);
-    const [status, setStatus] = useState('');
+    const [status, setStatus] = useState('waiting'); // Default to "waiting"
 
     const fetchTimeFrames = async () => {
         console.log("Fetching time frames for flash sale ID:", flashSaleId);
@@ -23,18 +25,22 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
             }
         } catch (error) {
             console.error("Error fetching time frames:", error);
-            //message.error('Lỗi khi tải dữ liệu khung giờ');
         }
     };
 
     useEffect(() => {
         if (flashSaleId) {
+            // Clear previous data and reset form fields when flashSaleId changes
+            setTimeFrames([]);
+            setStartedAt(null);
+            setEndedAt(null);
+            setStatus('waiting');
             fetchTimeFrames();
         }
     }, [flashSaleId]);
 
     const handleAddTimeFrame = async () => {
-        if (!startedAt || !endedAt || !status) {
+        if (!startedAt || !endedAt) {
             return message.warning('Vui lòng cung cấp đầy đủ thông tin');
         }
 
@@ -47,14 +53,14 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
                 flash_sales_id: flashSaleId,
                 started_at: startedAt.toISOString(),
                 ended_at: endedAt.toISOString(),
-                status,
+                status: "waiting", // Set status to "waiting" by default
             });
             if (response.data.success) {
                 message.success('Thêm khung giờ thành công');
                 fetchTimeFrames();
                 setStartedAt(null);
                 setEndedAt(null);
-                setStatus('');
+                setStatus('waiting'); // Reset to default
             }
         } catch (error) {
             message.error('Lỗi khi thêm khung giờ');
@@ -85,7 +91,7 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
                 setEditingTimeFrame(null);
                 setStartedAt(null);
                 setEndedAt(null);
-                setStatus('');
+                setStatus('waiting'); // Reset to default for next addition
             }
         } catch (error) {
             message.error('Lỗi khi cập nhật khung giờ');
@@ -103,7 +109,6 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
             message.error('Lỗi khi xóa khung giờ');
         }
     };
-
 
     const columns = [
         {
@@ -150,9 +155,18 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
             width={800}
         >
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                <DatePicker showTime placeholder="Thời gian bắt đầu" value={startedAt} onChange={(value) => setStartedAt(value)} />
-                <DatePicker showTime placeholder="Thời gian kết thúc" value={endedAt} onChange={(value) => setEndedAt(value)} />
-                <input type="text" placeholder="Trạng thái" value={status} onChange={(e) => setStatus(e.target.value)} />
+
+                <DatePicker showTime placeholder="Chọn thời gian bắt đầu" value={startedAt} onChange={(value) => setStartedAt(value)} />
+                <DatePicker showTime placeholder="Chọn thời gian kết thúc" value={endedAt} onChange={(value) => setEndedAt(value)} />
+                {editingTimeFrame ? (
+                    <Select value={status} onChange={setStatus} placeholder="Chọn trạng thái" style={{ width: '150px' }}>
+                        <Option value="waiting">Waiting</Option>
+                        <Option value="active">Active</Option>
+                        <Option value="ended">Ended</Option>
+                    </Select>
+                ) : (
+                    <span style={{ width: '150px' }}></span> 
+                )}
                 {editingTimeFrame ? (
                     <Button type="primary" onClick={handleUpdateTimeFrame}>Cập nhật</Button>
                 ) : (
