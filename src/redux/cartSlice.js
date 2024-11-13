@@ -148,17 +148,42 @@ const cartSlice = createSlice({
         const discountPrice = action.payload?.cartShop?.reduce(
           (total, shop) =>
             total +
-            shop?.CartItems?.reduce(
-              (subtotal, cartItem) =>
-                cartItem.selected === 1
-                  ? subtotal +
-                    ((cartItem.ProductVarient.price *
+            shop?.CartItems?.reduce((subtotal, cartItem) => {
+              if (cartItem.selected === 1) {
+                const hasFlashSale =
+                  cartItem.ProductVarient?.Product?.ShopRegisterFlashSales
+                    ?.length > 0;
+
+                // Kiểm tra xem có flash sale không
+                const flashSaleData = hasFlashSale
+                  ? cartItem.ProductVarient.Product.ShopRegisterFlashSales[0]
+                  : null;
+                const flashSalePrice = flashSaleData
+                  ? flashSaleData.flash_sale_price
+                  : null;
+                const flashSalePercent =
+                  hasFlashSale &&
+                  flashSaleData.quantity - flashSaleData.sold > 0
+                    ? ((flashSaleData.original_price - flashSalePrice) /
+                        cartItem.ProductVarient.price) *
+                      100
+                    : 0;
+                console.log(flashSalePercent);
+
+                // Tính giá sau giảm giá
+                const calculatedPrice = hasFlashSale
+                  ? ((flashSaleData.original_price * flashSalePercent) / 100) *
+                    cartItem.quantity
+                  : ((cartItem.ProductVarient.price *
                       cartItem.ProductVarient.sale_percents) /
                       100) *
-                      cartItem.quantity
-                  : subtotal,
-              0
-            ),
+                    cartItem.quantity;
+
+                return subtotal + calculatedPrice;
+              } else {
+                return subtotal;
+              }
+            }, 0),
           0
         );
         state.totalItems = totalItems;

@@ -3,7 +3,6 @@ import flashSaleIcon from "../../assets/flash-sale-ezy.png";
 import { RxCaretRight } from "react-icons/rx";
 import { Carousel, Statistic } from "antd";
 import FlipClockCountdown from "@leenguyen/react-flip-clock-countdown";
-import "@leenguyen/react-flip-clock-countdown/dist/index.css";
 import FlashSaleItem from "./FlashSaleItem";
 
 import { getFlashSalesActive } from "../../services/flashSaleService";
@@ -16,12 +15,15 @@ const FlashSalesSection = () => {
       [action.type]: action.payload,
     }),
     {
-      endtime: 0,
+      time: {
+        status: "waiting",
+        endtime: null,
+      },
       flashSalesItem: [],
     }
   );
 
-  const { endtime, flashSalesItem } = localState;
+  const { time, flashSalesItem, isComplete } = localState;
   const fetchSalesItem = useCallback(async () => {
     try {
       const res = await getFlashSalesActive();
@@ -31,11 +33,43 @@ const FlashSalesSection = () => {
           type: "flashSalesItem",
           payload: data,
         });
-        const timeInVietnam = moment.utc(data[0].ended_at);
-        setLocalState({
-          type: "endtime",
-          payload: timeInVietnam.format("YYYY-MM-DD HH:mm:ss"),
-        });
+
+        const startTime = moment.tz(data[0].started_at, "Asia/Ho_Chi_Minh");
+        const endedTime = moment.tz(data[0].ended_at, "Asia/Ho_Chi_Minh");
+        const currentTime = moment.tz(new Date(), "Asia/Ho_Chi_Minh");
+        if (currentTime.isBetween(startTime, endedTime)) {
+          setLocalState({
+            type: "flashSalesItem",
+            payload: data,
+          });
+          setLocalState({
+            type: "time",
+            payload: {
+              endtime: endedTime.format("YYYY-MM-DD HH:mm:ss"),
+              status: "active",
+            },
+          });
+        } else if (currentTime.isAfter(endedTime)) {
+          // Nếu đã kết thúc
+          setLocalState({
+            type: "time",
+            payload: {
+              endtime: endedTime.format("YYYY-MM-DD HH:mm:ss"),
+              status: "ended",
+            },
+          });
+          console.log("Flash sale đã kết thúc.");
+        } else {
+          // Nếu chưa đến giờ bắt đầu
+          console.log("Countdown không hoạt động do chưa tới giờ bắt đầu.");
+          setLocalState({
+            type: "time",
+            payload: {
+              endtime: startTime.format("YYYY-MM-DD HH:mm:ss"),
+              status: "waiting",
+            }, // Thiết lập countdown thành 00:00:00
+          });
+        }
       }
     } catch (error) {
       console.log(error);
@@ -48,8 +82,8 @@ const FlashSalesSection = () => {
 
   useEffect(() => {
     console.log(flashSalesItem);
-    console.log(endtime);
-  }, [flashSalesItem, endtime]);
+    console.log(time);
+  }, [flashSalesItem, time]);
 
   return (
     <>
@@ -59,8 +93,10 @@ const FlashSalesSection = () => {
         <div className="flex justify-between items-center">
           <div className="flex justify-center items-center gap-2">
             <img src={flashSaleIcon} className="size-[100px]" alt="" />
+
             <FlipClockCountdown
-              to={endtime}
+              to={time.endtime}
+              hideOnComplete={false}
               labels={["HOURS", "MINUTES", "SECONDS"]}
               labelStyle={{
                 fontSize: 10,
@@ -74,6 +110,13 @@ const FlashSalesSection = () => {
               duration={0.5}
               renderMap={[false, true, true, true]}
             />
+            {time.status && (
+              <span className="text-lg font-semibold text-red-500">
+                {time.status === "waiting" && "Sắp diễn ra"}
+                {time.status === "active" && "Đang diễn ra"}
+                {time.status === "ended" && "Đã kết thúc"}
+              </span>
+            )}
           </div>
           <span className="text-primary cursor-pointer flex items-center gap-1">
             Xem Tất Cả <RxCaretRight className="" />
@@ -95,7 +138,7 @@ const FlashSalesSection = () => {
             focusOnSelect={true}
           >
             {flashSalesItem[0]?.ShopRegisterFlashSales?.map((value, key) => (
-              <FlashSaleItem item={value} />
+              <FlashSaleItem item={value} status={time.status} />
             ))}
           </Carousel>
         </div>

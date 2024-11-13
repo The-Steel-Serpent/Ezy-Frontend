@@ -1,5 +1,10 @@
 /* eslint-disable jsx-a11y/alt-text */
-import { DownOutlined, SearchOutlined, WarningFilled } from "@ant-design/icons";
+import {
+  ClockCircleFilled,
+  DownOutlined,
+  SearchOutlined,
+  WarningFilled,
+} from "@ant-design/icons";
 import {
   Avatar,
   Button,
@@ -9,6 +14,7 @@ import {
   Modal,
   notification,
   Popover,
+  Statistic,
 } from "antd";
 import axios from "axios";
 import React, { memo, useCallback, useEffect, useReducer } from "react";
@@ -26,13 +32,12 @@ import {
   updateCartVarients,
   updateVarientQuantity,
 } from "../../redux/cartSlice";
-
+import moment from "moment";
 const text = <span className="text-lg font-semibold">Phân loại hàng</span>;
-
+const { Countdown } = Statistic;
 const CartItem = (props) => {
   const { item, onCartItemSelectedChange, type = "valid" } = props;
   const user = useSelector((state) => state.user);
-
   const dispatch = useDispatch();
   const [state, setState] = useReducer(
     (state, action) => {
@@ -251,6 +256,19 @@ const CartItem = (props) => {
       });
     }
   };
+
+  console.log("item", item);
+  const isEnoughFlashSaleStock =
+    item?.ProductVarient?.Product?.ShopRegisterFlashSales?.length > 0 &&
+    item?.ProductVarient?.Product?.ShopRegisterFlashSales[0]?.quantity -
+      item?.ProductVarient?.Product?.ShopRegisterFlashSales[0]?.sold !==
+      0;
+  const stock =
+    item?.ProductVarient?.Product?.ShopRegisterFlashSales?.length > 0 &&
+    isEnoughFlashSaleStock
+      ? item?.ProductVarient?.Product?.ShopRegisterFlashSales[0]?.quantity -
+        item?.ProductVarient?.Product?.ShopRegisterFlashSales[0]?.sold
+      : item?.ProductVarient?.stock;
   //popover content
   const content = (
     <div className="flex flex-col gap-4">
@@ -445,7 +463,11 @@ const CartItem = (props) => {
                   <sup>₫</sup>
                   {item?.price?.toLocaleString("vi-VN")}
                 </span>
-                {item?.ProductVarient?.sale_percents > 0 && (
+
+                {((item?.ProductVarient?.sale_percents > 0 &&
+                  item?.ProductVarient?.Product?.ShopRegisterFlashSales
+                    ?.length === 0) ||
+                  isEnoughFlashSaleStock) && (
                   <span className="flex items-center text-slate-400 line-through font-garibato italic">
                     <sup>₫</sup>
                     {(
@@ -460,7 +482,7 @@ const CartItem = (props) => {
                   <InputNumber
                     prefix="Sl: "
                     min={0}
-                    max={item?.ProductVarient?.stock}
+                    max={stock}
                     defaultValue={item?.quantity}
                     value={item?.quantity}
                     onChange={handleUpdateQuantity}
@@ -482,6 +504,39 @@ const CartItem = (props) => {
               </div>
             </div>
           </div>
+        </div>
+        <div className="col-span-12 flex justify-between">
+          {item?.ProductVarient?.Product?.ShopRegisterFlashSales?.length >
+            0 && (
+            <>
+              <div className="w-fit pl-16 text-orange-500 flex gap-2 items-center">
+                <ClockCircleFilled /> Flash Sale kết thúc trong{" "}
+                <Countdown
+                  valueStyle={{
+                    color: "#ff4d4f",
+                    fontSize: "18px",
+                    fontWeight: 500,
+                  }}
+                  onFinish={() => {
+                    message.warning("Flash Sale đã kết thúc");
+                    dispatch(fetchCartData({ userID: user?.user_id }));
+                  }}
+                  value={moment(
+                    item?.ProductVarient?.Product?.ShopRegisterFlashSales[0]
+                      ?.FlashSaleTimeFrame?.ended_at
+                  )}
+                />
+              </div>
+              {stock <= 10 && (
+                <div className="flex gap-2 items-center">
+                  <span className="text-sm text-gray-400">Còn lại:</span>
+                  <span className="text-sm text-primary font-semibold">
+                    {stock} sản phẩm
+                  </span>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
       <Modal

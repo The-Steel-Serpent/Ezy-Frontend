@@ -352,7 +352,7 @@ export const CheckoutProvider = ({ children }) => {
     // console.log("Total Payment: ", state.totalPayment);
     // console.log("selectedVoucher: ", state.selectedVoucher);
     // console.log("totalPerItem: ", state.total);
-    console.log("click: ", true);
+    // console.log("click: ", true);
     setState({ type: "loading", payload: true });
     setState({ type: "setUID", payload: userID });
     setState({ type: "openModalOTP", payload: true });
@@ -392,7 +392,7 @@ export const CheckoutProvider = ({ children }) => {
           }
         }
       } catch (error) {
-        console.log("Error: ", error);
+        console.log("Error: ", error.message);
         setState({ type: "openModalCheckoutError", payload: true });
         setState({ type: "checkoutMessage", payload: error.message || error });
       }
