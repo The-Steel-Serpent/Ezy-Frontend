@@ -132,6 +132,11 @@ const CheckoutPage = withSuspense(
 const OrdersReturn = withSuspense(
   lazy(() => import("../pages/seller/orders/OrdersReturn"))
 );
+
+const OrderCancel = withSuspense(
+  lazy(() => import("../pages/seller/orders/OrderCancel"))
+);
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -379,6 +384,14 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <OrdersReturn />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/order/orders-cancel",
+        element: (
+          <SellerAuthLayout>
+            <OrderCancel />
           </SellerAuthLayout>
         ),
       },
