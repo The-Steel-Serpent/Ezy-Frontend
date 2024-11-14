@@ -122,6 +122,15 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
             >
                 <div>
                     <Row gutter={12}>
+                        {
+                            order.order_code !== null && (
+                                <Col span={12}>
+                                    <p className='text-lg'><span className='font-semibold'>Mã vận đơn</span>: {order.order_code}</p>
+                                </Col>
+                            )
+                        }
+                    </Row>
+                    <Row gutter={12}>
                         <Col span={12}>
                             <p className='text-lg font-semibold'>Thông tin người gửi</p>
                             <p><span className='font-semibold'>Người gửi</span>: {order.Shop.full_name}</p>

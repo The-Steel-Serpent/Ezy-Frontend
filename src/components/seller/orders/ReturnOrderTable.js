@@ -1,9 +1,11 @@
-import { Button, message, notification, Table } from 'antd'
+import { Button, message, notification, Popconfirm, Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
 import { useSelector } from 'react-redux';
-import { acceptReturnRequest, getReturnOrder, getReturnRequest } from '../../../services/return_request_Service';
+import { acceptReturnRequest, getReturnOrder, getReturnRequest, rejectReturnRequest } from '../../../services/return_request_Service';
 import { formatDate } from '../../../helpers/formatDate';
 import { createNotification } from '../../../services/notificationsService';
+import { set } from 'date-fns';
+import DetailOrderModal from './DetailOrderModal';
 
 const ReturnOrderTable = ({ return_type_id }) => {
     const shop = useSelector(state => state.shop);
@@ -16,6 +18,18 @@ const ReturnOrderTable = ({ return_type_id }) => {
                     return { ...state, return_requests_fetch: action.payload, };
                 case 'SET_DATA_SOURCE':
                     return { ...state, data_source: action.payload };
+                case 'SET_LOADING':
+                    return { ...state, loading: action.payload };
+                case 'SET_VISBLE_MODAL_DETAIL':
+                    return { ...state, visble_modal_detail: action.payload };
+                case 'SET_ORDER_DETAIL':
+                    return { ...state, order_detail: action.payload };
+                case 'SET_CURRENT_PAGE':
+                    return { ...state, current_page: action.payload };
+                case 'SET_PAGE_SIZE':
+                    return { ...state, page_size: action.payload };
+                case 'SET_TOTAL_ITEMS':
+                    return { ...state, totalItems: action.payload };
                 default:
                     return state;
             }
@@ -23,13 +37,46 @@ const ReturnOrderTable = ({ return_type_id }) => {
         {
             return_requests_fetch: null,
             data_source: [],
-
+            loading: false,
+            visble_modal_detail: false,
+            order_detail: null,
+            current_page: 1,
+            page_size: 8,
+            totalItems: 0,
         }
     )
+
+    const handleReLoad = async () => {
+        setTimeout(() => {
+            const fetchReturnRequest = async () => {
+                if (shop) {
+                    const payload = {
+                        shop_id: shop.shop_id,
+                        return_type_id: return_type_id,
+                        limit: localState.page_size,
+                        page: localState.current_page,
+                    };
+
+                    const return_request_result = await getReturnRequest(payload);
+                    if (return_request_result.success) {
+                        console.log("Return request result:", return_request_result);
+                        setLocalState({ type: "SET_RETURN_REQUEST", payload: return_request_result.data });
+                    }
+                    else {
+                        console.log("Return request error:", return_request_result.message);
+                    }
+                }
+            }
+            fetchReturnRequest();
+        },
+            1000);
+    }
+
     const handleAcceptReturnRequest = async (return_request_id, user_order_id) => {
+        setLocalState({ type: "SET_LOADING", payload: true });
         const return_order = await getReturnOrder(user_order_id, shop.shop_id);
-        if(return_order.success){
-            const order = return_order.data;    
+        if (return_order.success) {
+            const order = return_order.data;
 
             const items = order.UserOrderDetails.map(item => {
                 return {
@@ -80,34 +127,89 @@ const ReturnOrderTable = ({ return_type_id }) => {
                 service_type_id: service_type_id, // required !!!!!!!!
                 items: items,
             }
-            console.log("Accept return request payload:", payload);
+            // console.log("Accept return request payload:", payload);
 
             const accept_return_request = await acceptReturnRequest(payload);
-            if(accept_return_request.success){
+            if (accept_return_request.success) {
                 message.success("Chấp nhận đơn hàng trả hàng thành công");
+                console.log("Accept return request success:", accept_return_request);
                 const noti_payload = {
                     user_id: order.UserAccount.user_id,
                     notifications_type: "Đơn hàng",
                     title: "Đơn trả hàng đã được chấp nhận",
                     content: `Đơn hàng trả hàng của bạn đã được chấp nhận, vui lòng chờ nhân viên giao hàng đến lấy hàng`,
-                    thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",  
+                    thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",
                 }
                 const noti_result = await createNotification(noti_payload);
-                if(noti_result.success){
+                if (noti_result.success) {
                     console.log("Create notification success");
                 }
-                else{
-                    console.log("Create notification error:", noti_result.message);
+                else {
+                    console.log("Create notification error:", noti_result);
                 }
             }
-            else{
+            else {
                 console.log("Error when accept return request:", accept_return_request.message);
-                message.error("Có lỗi xảy ra");
+                if (accept_return_request.status === 400 && accept_return_request.message === "Order status is not valid for return") {
+                    message.error("Đơn hàng hiện tại đang ở trạng thái không thể trả hàng");
+                }
+                else
+                    message.error("Có lỗi xảy ra");
             }
         }
-        else{
+        else {
             console.log("Error when get return order:", return_order.message);
             message.error("Có lỗi xảy ra khi lấy thông tin đơn hàng");
+        }
+        setLocalState({ type: "SET_LOADING", payload: false });
+        handleReLoad();
+    }
+
+    const handleRejectReturnRequest = async (return_request_id, user_order_id) => {
+        setLocalState({ type: "SET_LOADING", payload: true });
+        const reject_return_request = await rejectReturnRequest({ return_request_id: return_request_id });
+        if (reject_return_request.success) {
+            message.success("Từ chối đơn hàng trả hàng thành công");
+            const return_order = await getReturnOrder(user_order_id, shop.shop_id);
+            if (return_order.success) {
+                const order = return_order.data;
+                const noti_payload = {
+                    user_id: order.UserAccount.user_id,
+                    notifications_type: "Đơn hàng",
+                    title: "Đơn trả hàng đã bị từ chối",
+                    content: `Đơn hàng trả hàng của bạn đã bị từ chối, vui lòng liên hệ cửa hàng để biết thêm chi tiết`,
+                    thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/uploadv1731496563/hyddw7hk56lrjefuteoh.png",
+                }
+                const noti_result = await createNotification(noti_payload);
+                if (noti_result.success) {
+                    console.log("Create notification success");
+                }
+                else {
+                    console.log("Create notification error:", noti_result);
+                }
+            }
+            console.log("Reject return request success:", reject_return_request);
+        }
+        else {
+            console.log("Error when reject return request:", reject_return_request.message);
+            message.error("Có lỗi xảy ra");
+        }
+        setLocalState({ type: "SET_LOADING", payload: false });
+        handleReLoad();
+    }
+
+    const handleDetail = async (user_order_id) => {
+        const return_order = await getReturnOrder(user_order_id, shop.shop_id);
+        if (return_order.success) {
+            const order = return_order.data;
+            setLocalState({ type: "SET_ORDER_DETAIL", payload: order });
+            console.log("Return order:", order);
+            setLocalState({ type: "SET_VISBLE_MODAL_DETAIL", payload: true });
+        }
+        else {
+            console.log("Error when get return order:", return_order.message);
+            message.error("Có lỗi xảy ra khi lấy thông tin đơn hàng");
+            setLocalState({ type: "SET_VISBLE_MODAL_DETAIL", payload: false });
         }
     }
 
@@ -120,8 +222,7 @@ const ReturnOrderTable = ({ return_type_id }) => {
             render: (text, record) => {
                 return (
                     <div className='max-w-36 flex flex-col mx-auto'>
-                        <span>{record.order_id} </span>
-                        <span>Xem đơn hàng</span>
+                        <span>{record.user_order_id} </span>
                     </div>
                 )
             }
@@ -201,19 +302,34 @@ const ReturnOrderTable = ({ return_type_id }) => {
                     record.status === 1 ? (
                         <div className='max-w-36 mx-auto flex flex-col gap-3'>
                             <div>
-                                <Button
-                                    className='bg-primary text-white w-28 hover:bg-white hover:text-primary'
-                                    onClick={() => handleAcceptReturnRequest(record.key, record.user_order_id)}
+                                <Popconfirm
+                                    description="Bạn có chấp nhận yêu cầu trả hàng này không?"
+                                    onConfirm={() => handleAcceptReturnRequest(record.key, record.user_order_id)}
+                                    loading={localState.loading}
                                 >
-                                    Chấp nhận
-                                </Button>
+                                    <Button
+                                        className='bg-primary text-white w-28 hover:bg-white hover:text-primary'
+                                        loading={localState.loading}
+                                        type="primary">
+                                        Xác nhận
+                                    </Button>
+                                </Popconfirm>
+
                             </div>
                             <div>
-                                <Button
-                                    className='bg-white text-primary w-28 hover:bg-primary hover:text-white'
+                                <Popconfirm
+                                    description="Bạn có muốn từ chối yêu cầu trả hàng này không?"
+                                    onConfirm={() => handleRejectReturnRequest(record.key, record.user_order_id)}
+                                    loading={localState.loading}
                                 >
-                                    Từ chối
-                                </Button>
+                                    <Button
+                                        className='bg-white text-primary w-28 hover:bg-primary hover:text-white'
+                                        loading={localState.loading}
+                                    >
+                                        Từ chối
+                                    </Button>
+                                </Popconfirm>
+
                             </div>
                         </div>
                     ) : (
@@ -221,6 +337,7 @@ const ReturnOrderTable = ({ return_type_id }) => {
                             <div>
                                 <Button
                                     className='bg-white text-primary w-28 hover:bg-primary hover:text-white'
+                                    onClick={() => handleDetail(record.user_order_id)}
                                 >
                                     Xem chi tiết
                                 </Button>
@@ -249,7 +366,7 @@ const ReturnOrderTable = ({ return_type_id }) => {
         return dataSouce;
     }
 
-   
+
 
     useEffect(() => {
         if (localState.return_requests_fetch) {
@@ -263,13 +380,16 @@ const ReturnOrderTable = ({ return_type_id }) => {
             if (shop) {
                 const payload = {
                     shop_id: shop.shop_id,
-                    return_type_id: return_type_id
+                    return_type_id: return_type_id,
+                    limit: localState.page_size,
+                    page: localState.current_page,
                 };
 
                 const return_request_result = await getReturnRequest(payload);
                 if (return_request_result.success) {
                     console.log("Return request result:", return_request_result.data);
                     setLocalState({ type: "SET_RETURN_REQUEST", payload: return_request_result.data });
+                    setLocalState({ type: "SET_TOTAL_ITEMS", payload: return_request_result.totalItems });
                 }
                 else {
                     console.log("Return request error:", return_request_result.message);
@@ -277,7 +397,17 @@ const ReturnOrderTable = ({ return_type_id }) => {
             }
         }
         fetchReturnRequest();
-    }, [shop])
+    }, [
+        shop,
+        return_type_id,
+        localState.page_size,
+        localState.current_page
+    ])
+
+    const onChangePage = (page, pageSize) => {
+        setLocalState({ type: "SET_CURRENT_PAGE", payload: page });
+        setLocalState({ type: "SET_PAGE_SIZE", payload: pageSize });
+    }
 
 
     return (
@@ -285,7 +415,23 @@ const ReturnOrderTable = ({ return_type_id }) => {
             <Table
                 columns={column}
                 dataSource={localState.data_source}
+                pagination={{
+                    total: localState.totalItems,
+                    current: localState.current_page,
+                    pageSize: localState.page_size,
+                    onChange: onChangePage,
+                }}
             />
+            {
+                localState.order_detail && (
+                    <DetailOrderModal
+                        visible={localState.visble_modal_detail}
+                        onCancel={() => setLocalState({ type: "SET_VISBLE_MODAL_DETAIL", payload: false })}
+                        order={localState?.order_detail}
+                    />
+                )
+            }
+          
         </div>
     )
 }

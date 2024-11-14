@@ -1,10 +1,11 @@
 import { set } from "lodash";
 import React, { memo, useEffect, useReducer } from "react";
 import { useSelector } from "react-redux";
-import { Skeleton, Spin, Pagination } from "antd";
+import { Skeleton, Spin, Pagination, Input } from "antd";
 import { TbNotesOff } from "react-icons/tb";
 import { getShopOrders } from "../../../services/orderService";
 import ShopOrderItem from "./ShopOrderItem";
+import { SearchOutlined } from "@ant-design/icons";
 // import OrderItem from "./ShopOrderItem";
 
 const ShopOrderContainer = (props) => {
@@ -22,6 +23,11 @@ const ShopOrderContainer = (props) => {
           return { ...state, page: action.payload };
         case "SET_TOTAL_PAGES":
           return { ...state, totalPages: action.payload };
+        case "SET_SEARCH":
+          return { ...state, searchText: action.payload };
+        case "search_query": {
+          return { ...state, search_query: action.payload };
+        }
         default:
           return state;
       }
@@ -31,6 +37,8 @@ const ShopOrderContainer = (props) => {
       order: [],
       page: 1,
       totalPages: 1,
+      search_query: "",
+      searchText: "",
     }
   );
 
@@ -43,7 +51,8 @@ const ShopOrderContainer = (props) => {
           shop.shop_id,
           order_status_id,
           localState.page,
-          3
+          3,
+          localState.search_query
         );
         console.log(res);
         console.log("Shop orders: ", shop.shop_id, order_status_id, localState.page, 3);
@@ -61,10 +70,28 @@ const ShopOrderContainer = (props) => {
     if (shop?.shop_id && status_id) {
       fetchOrder();
     }
-  }, [shop, status_id, localState.page]);
+  }, [
+    shop,
+    status_id,
+    localState.page,
+    localState.search_query,
+  ]);
 
   const handlePageChange = (page) => {
     setLocalState({ type: "SET_PAGE", payload: page });
+  };
+
+  const handleOnSearch = (e) => {
+    const value = e.target.value;
+    setLocalState({ type: "SET_SEARCH", payload: value });
+  };
+
+  const handleSubmitSearch = (e) => {
+    if (e.key === "Enter") {
+      setLocalState({ type: "SET_PAGE", payload: 1 });
+      setLocalState({ type: "SET_TOTAL_PAGES", payload: 1 });
+      setLocalState({ type: "search_query", payload: localState.searchText });
+    }
   };
 
   return (
@@ -75,6 +102,13 @@ const ShopOrderContainer = (props) => {
         </div>
       ) : (
         <div className="w-full pb-10">
+          <Input
+            size="large"
+            prefix={<SearchOutlined className="text-2xl text-neutral-400" />}
+            placeholder="Bạn có thể tìm kiếm theo ID đơn hàng hoặc Tên Sản Phẩm"
+            onChange={handleOnSearch}
+            onKeyDown={handleSubmitSearch}
+          />
           {localState.order.length === 0 && (
             <div className="w-full h-[500px] bg-white flex items-center justify-center mt-5">
               <p className="flex flex-col gap-2 items-center">
@@ -89,6 +123,7 @@ const ShopOrderContainer = (props) => {
           {localState.order.map((item) => (
             <ShopOrderItem order={item} />
           ))}
+
 
           <Pagination
             align="center"

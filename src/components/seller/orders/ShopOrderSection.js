@@ -33,10 +33,6 @@ const ShopOrderSection = () => {
     }
   );
 
-  const handleOnSearch = (e) => {
-    const value = e.target.value;
-    setLocalState({ type: "SET_SEARCH", payload: value });
-  };
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -75,12 +71,7 @@ const ShopOrderSection = () => {
         }))}
       />
       <div className="w-full flex flex-col gap-3">
-        <Input
-          size="large"
-          prefix={<SearchOutlined className="text-2xl text-neutral-400" />}
-          placeholder="Bạn có thể tìm kiếm theo tên Shop, ID đơn hàng hoặc Tên Sản Phẩm"
-          onChange={handleOnSearch}
-        />
+    
         <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
           <ShopOrderContainer status_id={status_id} />
         </Suspense>

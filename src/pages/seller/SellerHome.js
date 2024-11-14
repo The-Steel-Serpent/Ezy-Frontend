@@ -13,11 +13,13 @@ const SellerHome = () => {
   return (
     <>
       <div className='w-full flex gap-2'>
-        <div className='lg:min-w-[780px]'>
-          <div className='bg-white rounded m-2 p-2'>Danh sach can lam</div>
-          <div className='bg-white m-2 p-2'>Phan tich ban hang</div>
+        <div className='lg:min-w-[70%]'>
+          <div className='bg-white rounded m-2 p-2'>Danh sách cần làm</div>
+          <div className='bg-white m-2 p-2'>Phân tích bán hàng</div>
+          <div className='bg-white m-2 p-2'>Sự kiện giảm giá</div>
+          <div className='bg-white m-2 p-2'>Voucher khuyến mãi</div>
         </div>
-        <div className='bg-white max-w-[384px] w-fit hidden lg:block'>
+        <div className='w-[30%] flex items-center lg:block'>
           <Carousel arrows autoplay>
             <div>
               <img 
