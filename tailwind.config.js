@@ -26,6 +26,8 @@ module.exports = {
           "radial-gradient( circle farthest-corner at 10% 20%,  rgba(0,84,166,1) 0%, rgba(132,189,201,1) 90% )",
         "background-Shop": "url('/src/assets/backgroundShop.jpg')",
         "background-Shop-2": "url('/src/assets/view-wild-goat.jpg')",
+        "custom-gradient-2": "linear-gradient(62deg, #8EC5FC 0%, #E0C3FC 100%)",
+        "custom-gradient-3": "linear-gradient(90deg, #FAD961 0%, #F76B1C 100%)",
       },
       backdropBlur: {
         xs: "2px",

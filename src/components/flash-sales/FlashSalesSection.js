@@ -8,7 +8,9 @@ import FlashSaleItem from "./FlashSaleItem";
 import { getFlashSalesActive } from "../../services/flashSaleService";
 
 import moment from "moment-timezone";
+import { useNavigate } from "react-router-dom";
 const FlashSalesSection = () => {
+  const navigate = useNavigate();
   const [localState, setLocalState] = useReducer(
     (state, action) => ({
       ...state,
@@ -118,7 +120,14 @@ const FlashSalesSection = () => {
               </span>
             )}
           </div>
-          <span className="text-primary cursor-pointer flex items-center gap-1">
+          <span
+            className="text-primary cursor-pointer flex items-center gap-1"
+            onClick={() =>
+              navigate(
+                `/flash-sale?flash_sale_time_frame_id=${flashSalesItem[0].flash_sale_time_frame_id}&page=1`
+              )
+            }
+          >
             Xem Tất Cả <RxCaretRight className="" />
           </span>
         </div>
