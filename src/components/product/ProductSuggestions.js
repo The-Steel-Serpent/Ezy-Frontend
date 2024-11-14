@@ -10,24 +10,26 @@ const ProductSuggestions = () => {
   const user = useSelector((state) => state.user);
   const [suggestProducts, setSuggestProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSuggestList = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products-limit?user_id=${user?.user_id}`
-        );
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products?user_id=${user?.user_id}&pageNumbers=1&limit=48`;
+        const res = await axios.get(url);
         if (res.data.success) {
           setSuggestProducts(res.data.data);
         }
-        setLoading(false);
       } catch (error) {
-        console.log(error);
+        console.log("Lỗi khi fetch suggest list: ", error);
+      } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, []);
+    if (user) {
+      fetchSuggestList();
+    }
+  }, [user]);
 
   return (
     <div className="max-w-[1200px] m-auto ">

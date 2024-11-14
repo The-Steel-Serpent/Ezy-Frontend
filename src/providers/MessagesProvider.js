@@ -33,10 +33,14 @@ export const MessagesProvider = ({ children }) => {
             expandChatBox: action.payload,
           };
         case "SET_SELECTED_USER_ID":
-          console.log(action.payload);
           return {
             ...state,
             selectedUserID: action.payload,
+          };
+        case "SET_OPEN_MODAL_REPORT":
+          return {
+            ...state,
+            openModalReport: action.payload,
           };
         default:
           return state;
@@ -47,6 +51,7 @@ export const MessagesProvider = ({ children }) => {
       openChatBox: false,
       expandChatBox: true,
       selectedUserID: null,
+      openModalReport: false,
     }
   );
   const selectedUserRef = useRef(null);
@@ -87,6 +92,25 @@ export const MessagesProvider = ({ children }) => {
       payload: null,
     });
   }, []);
+
+  const handleOpenModalReport = useCallback(() => {
+    setState({
+      type: "SET_OPEN_MODAL_REPORT",
+      payload: true,
+    });
+    setState({
+      type: "SET_OPEN_CHAT_BOX",
+      payload: false,
+    });
+  }, []);
+
+  const handleOnCloseModalReport = useCallback(() => {
+    setState({
+      type: "SET_OPEN_MODAL_REPORT",
+      payload: false,
+    });
+  }, []);
+
   return (
     <MessagesContext.Provider
       value={{
@@ -98,6 +122,8 @@ export const MessagesProvider = ({ children }) => {
         handleExpandChatBox,
         handleUserSelected,
         handleUnsetUserSelected,
+        handleOpenModalReport,
+        handleOnCloseModalReport,
       }}
     >
       {children}

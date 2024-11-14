@@ -160,6 +160,10 @@ const FlashSalePage = () => {
                 moment().add(1, "day"),
                 "day"
               );
+              const isYesterday = startedAt.isSame(
+                moment().subtract(1, "day"),
+                "day"
+              );
               return (
                 <div
                   key={time.flash_sale_time_frame_id}
@@ -180,6 +184,8 @@ const FlashSalePage = () => {
                       ? "Hôm Nay"
                       : isTomorrow
                       ? "Ngày Mai"
+                      : isYesterday
+                      ? "Hôm Qua"
                       : startedAt.format("DD/MM/YYYY")}
                   </div>
                 </div>
