@@ -8,9 +8,12 @@ import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import AddFlashSale from './AddFlashSale';
 import EditFlashSale from './EditFlashSale';
 import ManageTimeFrames from './ManageTimeFrames';
+import io from 'socket.io-client';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
+
+const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 const FlashSale = () => {
   const [data, setData] = useState([]);
@@ -105,6 +108,35 @@ const FlashSale = () => {
 
   useEffect(() => {
     fetchData();
+
+    // Lắng nghe sự kiện bắt đầu và kết thúc khung giờ flash sale
+    socket.on('flashSaleTimeFrameStarted', (data) => {
+      message.info(`Flash sale ${data.timeFrameId} đã bắt đầu!`);
+      fetchData();
+    });
+
+    socket.on('flashSaleTimeFrameEnded', (data) => {
+      message.warning(`Flash sale ${data.timeFrameId} đã kết thúc.`);
+      fetchData();
+    });
+
+    // Lắng nghe sự kiện bắt đầu và kết thúc flash sale
+    socket.on('flashSaleStarted', (data) => {
+      message.info(`Flash sale ${data.flashSaleId} đã bắt đầu!`);
+      fetchData();
+    });
+
+    socket.on('flashSaleEnded', (data) => {
+      message.warning(`Flash sale ${data.flashSaleId} đã kết thúc.`);
+      fetchData();
+    });
+
+    return () => {
+      socket.off('flashSaleTimeFrameStarted');
+      socket.off('flashSaleTimeFrameEnded');
+      socket.off('flashSaleStarted');
+      socket.off('flashSaleEnded');
+    };
   }, []);
 
   const showAddFlashSaleModal = () => {

@@ -7,11 +7,10 @@ const AddFlashSale = ({ visible, onClose, onAddSuccess }) => {
 
   const onFinish = async (values) => {
     setLoading(true);
-
-    // Kiểm tra ngày bắt đầu và ngày kết thúc
+    
     const now = new Date();
-    const startedAt = values.started_at.toDate(); // Chuyển đổi từ moment.js sang Date
-    const endedAt = values.ended_at.toDate(); // Chuyển đổi từ moment.js sang Date
+    const startedAt = values.started_at.toDate(); 
+    const endedAt = values.ended_at.toDate();
 
     if (startedAt <= now) {
       message.error('Ngày bắt đầu phải lớn hơn ngày hiện tại.');
@@ -29,15 +28,15 @@ const AddFlashSale = ({ visible, onClose, onAddSuccess }) => {
       const payload = {
         flash_sales_name: values.flash_sales_name,
         description: values.description,
-        started_at: startedAt.toISOString(), // Định dạng ngày giờ
-        ended_at: endedAt.toISOString(), // Định dạng ngày giờ
-        status: values.status,
+        started_at: startedAt.toISOString(),
+        ended_at: endedAt.toISOString(),
+        status: "waiting",
       };
 
-      console.log("Dữ liệu trước khi thêm:", payload);
+      console.log("Payload before adding:", payload);
 
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/flash-sales/add`, payload);
-      
+
       if (response.data.success) {
         message.success('Thêm Flash Sale thành công');
         onAddSuccess(); 
@@ -98,14 +97,6 @@ const AddFlashSale = ({ visible, onClose, onAddSuccess }) => {
             format="HH:mm:ss DD/MM/YYYY"
             placeholder="Chọn thời gian kết thúc"
           />
-        </Form.Item>
-
-        <Form.Item
-          label="Trạng thái"
-          name="status"
-          rules={[{ required: true, message: 'Vui lòng nhập trạng thái' }]}
-        >
-          <Input placeholder="Nhập trạng thái (e.g., Diễn ra, Sắp diễn ra)" />
         </Form.Item>
 
         <Form.Item>
