@@ -4,10 +4,12 @@ import React, { Suspense, useEffect, useState } from "react";
 
 import axios from "axios";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const ProductCard = React.lazy(() => import("./ProductCard"));
 const ProductSuggestions = () => {
   const user = useSelector((state) => state.user);
+  const navigate = useNavigate();
   const [suggestProducts, setSuggestProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +52,7 @@ const ProductSuggestions = () => {
         <Button
           size="large"
           className="lg:max-w-[390px] w-full my-4"
-          onClick={() => window.location.replace("/suggest-products")}
+          onClick={() => navigate("/suggest-products")}
         >
           Xem Thêm
         </Button>

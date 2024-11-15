@@ -17,9 +17,9 @@ import { GrNotes } from "react-icons/gr";
 
 const FlashSalePage = () => {
   const query = new URLSearchParams(window.location.search);
-  const flash_sale_time_frame_id = parseInt(
-    query.get("flash_sale_time_frame_id")
-  );
+  const flash_sale_time_frame_id =
+    parseInt(query.get("flash_sale_time_frame_id")) || null;
+
   const page = parseInt(query.get("page")) || 1;
   const navigate = useNavigate();
 
@@ -30,13 +30,14 @@ const FlashSalePage = () => {
     {
       times: [],
       time: {
-        status: "waiting",
+        status: "ended",
         endtime: null,
       },
       products: [],
       loading: false,
       openModal: false,
       totalPages: 0,
+      selectedTimeFrame: null,
     }
   );
 
@@ -45,6 +46,17 @@ const FlashSalePage = () => {
       try {
         const res = await getAvailableFlashSalesTimeFrames();
         setLocalState({ type: "times", payload: res.data });
+        if (flash_sale_time_frame_id === null) {
+          setLocalState({
+            type: "selectedTimeFrame",
+            payload: res.data[0].flash_sale_time_frame_id,
+          });
+        } else {
+          setLocalState({
+            type: "selectedTimeFrame",
+            payload: flash_sale_time_frame_id,
+          });
+        }
       } catch (error) {
         console.log(error);
       }
@@ -55,22 +67,25 @@ const FlashSalePage = () => {
   useEffect(() => {
     const fetchProductByTimeFrame = async () => {
       try {
-        const res = await getProductByTimeFrame(flash_sale_time_frame_id, page);
+        const res = await getProductByTimeFrame(
+          localState.selectedTimeFrame,
+          page
+        );
         setLocalState({ type: "products", payload: res.data.products });
         setLocalState({ type: "totalPages", payload: res.data.totalPages });
       } catch (error) {
         console.log(error);
       }
     };
-    if (flash_sale_time_frame_id) {
+    if (localState.selectedTimeFrame) {
       fetchProductByTimeFrame();
     }
-  }, [flash_sale_time_frame_id, page]);
+  }, [localState.selectedTimeFrame, page]);
 
   useEffect(() => {
-    if (localState.times.length > 0 && flash_sale_time_frame_id) {
+    if (localState.times.length > 0 && localState.selectedTimeFrame) {
       const findTimeFrame = localState.times.find(
-        (time) => time.flash_sale_time_frame_id === flash_sale_time_frame_id
+        (time) => time.flash_sale_time_frame_id === localState.selectedTimeFrame
       );
       const startTime = moment.tz(
         findTimeFrame?.started_at,
@@ -104,7 +119,7 @@ const FlashSalePage = () => {
         });
       }
     }
-  }, [flash_sale_time_frame_id, localState.times]);
+  }, [localState.selectedTimeFrame, localState.times]);
 
   return (
     <>
@@ -119,12 +134,21 @@ const FlashSalePage = () => {
             <ClockCircleFilled />{" "}
             {localState.time.status === "active"
               ? "Kết Thúc Trong"
+              : localState.time.status === "ended"
+              ? "Đã Kết Thúc"
               : "Bắt Đầu Sau"}
           </span>
 
           <FlipClockCountdown
             to={localState.time.endtime}
-            hideOnComplete={false}
+            hideOnComplete={true}
+            onComplete={() => {
+              if (localState.time.status !== "ended") {
+                console.log(localState.time.status);
+                console.log("Flash sale ended");
+                setLocalState({ type: "openModal", payload: true });
+              }
+            }}
             labels={["HOURS", "MINUTES", "SECONDS"]}
             labelStyle={{
               fontSize: 10,
@@ -168,7 +192,8 @@ const FlashSalePage = () => {
                 <div
                   key={time.flash_sale_time_frame_id}
                   className={`time-frame-item ${
-                    time.flash_sale_time_frame_id === flash_sale_time_frame_id
+                    time.flash_sale_time_frame_id ===
+                    localState.selectedTimeFrame
                       ? "selected"
                       : ""
                   }`}
@@ -235,14 +260,22 @@ const FlashSalePage = () => {
         closable={false}
         footer={
           <div className="w-full flex justify-center items-center">
-            <Button size="large" onClick={() => navigate("/")}>
-              Trở về
+            <Button
+              size="large"
+              onClick={() => {
+                setLocalState({ type: "openModal", payload: false });
+                window.location.reload();
+              }}
+            >
+              {localState.time.status === "active" ? "Đóng" : "Mua Sắm Ngay"}
             </Button>
           </div>
         }
       >
         <div className="text-2xl text-center w-full font-semibold">
-          Phiên Flash Sale Đã Kết Thúc. Cảm ơn bạn đã tham gia!
+          {localState.time.status === "active"
+            ? " Phiên Flash Sale Đã Kết Thúc. Cảm ơn bạn đã tham gia!"
+            : "Phiên Flash Sale Đã Bắt Đầu. Mua sắm ngayyy!!!"}
         </div>
       </Modal>
     </>

@@ -97,7 +97,7 @@ const SearchPage = () => {
         if (response.status === 200) {
           console.log("response.data", response.data);
           if (response.data.shop !== null) {
-            dispatch({ type: "SET_SHOP", payload: response.data.shop });
+            dispatch({ type: "SET_SHOP", payload: response.data.shop[0] });
           }
           dispatch({
             type: "FETCH_PRODUCT_BY_CATEGORY",
