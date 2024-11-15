@@ -106,7 +106,7 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
                 fetchTimeFrames();
             }
         } catch (error) {
-            message.error('Lỗi khi xóa khung giờ');
+            message.error(error.response.data.message);
         }
     };
 
