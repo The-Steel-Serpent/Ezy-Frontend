@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useEffect, useMemo, useReducer } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import backgroundShop from "../../../assets/backgroundShop.jpg";
 import axios from "axios";
-import { BiChat, BiListPlus } from "react-icons/bi";
+import { BiChat, BiListPlus, BiRepost } from "react-icons/bi";
 import { Button, Carousel, Menu, Modal } from "antd";
 import { AiOutlineShop } from "react-icons/ai";
 import { FaRegStar } from "react-icons/fa";
@@ -10,12 +10,13 @@ import { IoChatboxEllipsesOutline } from "react-icons/io5";
 import { FaUserAstronaut } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
 import { tr, vi } from "date-fns/locale";
-import { MdOutlineDescription } from "react-icons/md";
-import { CaretRightFilled, RightOutlined } from "@ant-design/icons";
+import { MdOutlineDescription, MdReport } from "react-icons/md";
+import { CaretRightFilled, FlagFilled, RightOutlined } from "@ant-design/icons";
 import ProductCard from "../../../components/product/ProductCard";
 import { TfiMenuAlt } from "react-icons/tfi";
 import { FaShopSlash } from "react-icons/fa6";
 import { useMessages } from "../../../providers/MessagesProvider";
+import ModalReport from "../../../components/report-user/ModalReport";
 
 const SortBar = lazy(() => import("../../../components/sorts/SortBar"));
 
@@ -75,6 +76,8 @@ const ShopDetails = () => {
           };
         case "FETCH_SUGGEST_PRODUCT":
           return { ...state, suggestProduct: action.payload };
+        case "OPEN_MODAL_REPORT":
+          return { ...state, openModalReport: action.payload };
         default:
           return state;
       }
@@ -92,6 +95,7 @@ const ShopDetails = () => {
       filter: {
         sortBy: "pop",
       },
+      openModalReport: false,
     }
   );
   const {
@@ -104,6 +108,7 @@ const ShopDetails = () => {
     filter,
     loading,
     isFetchedProduct,
+    openModalReport,
   } = state;
   useEffect(() => {
     const fetchShop = async () => {
@@ -118,10 +123,6 @@ const ShopDetails = () => {
             type: "FETCH_SUB_CATEGORY",
             payload: res.data.subCategories,
           });
-          dispatch({
-            type: "FETCH_SUGGEST_PRODUCT",
-            payload: res.data.shop.Products,
-          });
         }
       } catch (error) {
         console.log("Lỗi khi fetch dữ liệu của shop: ", error);
@@ -129,6 +130,7 @@ const ShopDetails = () => {
     };
     fetchShop();
   }, []);
+
   useEffect(() => {
     const fetchProductBySubCategory = async () => {
       dispatch({ type: "SET_IS_FETCHED_PRODUCT", payload: false });
@@ -163,6 +165,26 @@ const ShopDetails = () => {
       fetchProductBySubCategory();
     }
   }, [sub_category_id, currentPage, filter.sortBy, shop]);
+
+  useEffect(() => {
+    const fetchShop = async () => {
+      try {
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/shop_recommendations/${shop.shop_id}?pageNumbers=1&limit=6`;
+        const res = await axios.get(url);
+        if (res.data.success) {
+          dispatch({
+            type: "FETCH_SUGGEST_PRODUCT",
+            payload: res.data.products,
+          });
+        }
+      } catch (error) {
+        console.log("Lỗi khi fetch gợi ý sản phẩm shop: ", error);
+      }
+    };
+    if (shop) {
+      fetchShop();
+    }
+  }, [shop]);
 
   useEffect(() => {
     const scrollToProductList = () => {
@@ -227,6 +249,15 @@ const ShopDetails = () => {
     [subCategory]
   );
 
+  const handleOpenModalReport = () => {
+    dispatch({ type: "OPEN_MODAL_REPORT", payload: true });
+  };
+
+  const handleCloseModalReport = () => {
+    console.log("close");
+    dispatch({ type: "OPEN_MODAL_REPORT", payload: false });
+  };
+
   return (
     <>
       {shop ? (
@@ -235,7 +266,7 @@ const ShopDetails = () => {
             <div className="w-full bg-white">
               <div className="max-w-[1200px] mx-auto pt-10">
                 <div className="grid grid-cols-12">
-                  <div className="col-span-3">
+                  <div className="col-span-4">
                     <div className="relative w-full bg-background-Shop bg-cover rounded bg-center  ">
                       <div className="p-4 flex w-full gap-2 inset-0  backdrop-blur-sm items-center">
                         <img
@@ -246,20 +277,28 @@ const ShopDetails = () => {
                           <span className="text-white text-lg font-semibold">
                             {shop?.shop_name}
                           </span>
-                          <Button
-                            className="border-white text-white"
-                            onClick={() =>
-                              handleUserSelected(shop.UserAccount.user_id)
-                            }
-                          >
-                            <BiChat />
-                            Chat Ngay
-                          </Button>
+                          <div className="flex justify-center items-center gap-3">
+                            <Button
+                              className="border-white text-white"
+                              onClick={() =>
+                                handleUserSelected(shop.UserAccount.user_id)
+                              }
+                            >
+                              <BiChat />
+                              Chat Ngay
+                            </Button>
+                            <Button
+                              className="text-white bg-red-400 border-red-400 hover:opacity-80"
+                              onClick={handleOpenModalReport}
+                            >
+                              <FlagFilled /> Tố Cáo
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-span-9 text-slate-700 ">
+                  <div className="col-span-8 text-slate-700 ">
                     <section className="flex">
                       <div className="w-full px-7 flex flex-col flex-nowrap gap-2">
                         <div className="py-1 flex gap-2 text-sm">
@@ -454,6 +493,12 @@ const ShopDetails = () => {
               </div>
             </Modal>
           )}
+          <ModalReport
+            openModal={openModalReport}
+            onCloseModal={handleCloseModalReport}
+            type="shop"
+            userId={shop?.user_id}
+          />
         </>
       ) : (
         <section className="py-20 gap-2 flex flex-col justify-center items-center text-2xl text-slate-600">
