@@ -1,74 +1,70 @@
-import React, { useState } from 'react';
-import { Modal, Select, Input, Button, notification } from 'antd';
-import axios from 'axios';
+import React from "react";
+import { Modal, Button, Typography, Space } from "antd";
+import dayjs from "dayjs";
 
-const { Option } = Select;
+const { Text, Title } = Typography;
 
-const ResolveViolationModal = ({ visible, onClose, userId, fetchViolationsData }) => {
-  const [actionType, setActionType] = useState(null);
-  const [notes, setNotes] = useState('');
-
-  const handleResolve = async () => {
-    try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/violations/handle-resolution`, {
-        userId,
-        action_type: actionType,
-        notes,
-        updated_by_id: 'admin123' 
-      });
-      notification.success({
-        message: 'Xử lý thành công',
-        description: `Vi phạm của người dùng ID ${userId} đã được xử lý.`,
-      });
-      fetchViolationsData();
-      onClose();
-      setActionType(null);
-      setNotes('');
-    } catch (error) {
-      console.error("Error resolving violation:", error);
-      notification.error({
-        message: 'Xử lý thất bại',
-        description: 'Đã xảy ra lỗi khi xử lý vi phạm.',
-      });
-    }
-  };
+const ResolveViolationModal = ({
+  visible,
+  onClose,
+  report,
+  onApprove,
+}) => {
+  if (!report) return null;
 
   return (
     <Modal
-      title="Xử lý vi phạm"
+      title="Chi tiết báo cáo"
       visible={visible}
       onCancel={onClose}
       footer={[
-        <Button key="cancel" onClick={onClose}>Hủy</Button>,
-        <Button key="resolve" type="primary" onClick={handleResolve} disabled={!actionType}>
-          Xử lý
+        <Button key="cancel" onClick={onClose}>
+          Đóng
+        </Button>,
+        <Button key="approve" type="primary" onClick={onApprove}>
+          Duyệt báo cáo
         </Button>,
       ]}
     >
-      <div style={{ marginBottom: '16px' }}>
-        <label>Loại xử lý:</label>
-        <Select
-          style={{ width: '100%' }}
-          placeholder="Chọn loại xử lý"
-          value={actionType}
-          onChange={setActionType}
-        >
-          <Option value="Cảnh cáo">Cảnh cáo</Option>
-          <Option value="Khóa 3 ngày">Khóa 3 ngày</Option>
-          <Option value="Khóa 7 ngày">Khóa 7 ngày</Option>
-          <Option value="Khóa 30 ngày">Khóa 30 ngày</Option>
-          <Option value="Khóa vĩnh viễn">Khóa vĩnh viễn</Option>
-        </Select>
-      </div>
-      <div>
-        <label>Ghi chú xử lý:</label>
-        <Input.TextArea
-          rows={4}
-          placeholder="Nhập ghi chú về xử lý vi phạm..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-      </div>
+      <Space direction="vertical" size="middle">
+        <Text strong>Loại vi phạm:</Text>
+        <Text>{report.violation_type}</Text>
+
+        <Text strong>Ngày báo cáo:</Text>
+        <Text>{dayjs(report.date_reported).format("DD/MM/YYYY HH:mm:ss")}</Text>
+
+        <Text strong>Ghi chú:</Text>
+        <Text>{report.notes || "Không có"}</Text>
+
+        {report.imgs && report.imgs.length > 0 && (
+          <Space direction="vertical" size="middle">
+            <Text strong>Hình ảnh:</Text>
+            <Space
+              size="small"
+              wrap
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginTop: "10px",
+              }}
+            >
+              {report.imgs.map((img, index) => (
+                <img
+                  key={index}
+                  src={img}
+                  alt={`Hình ảnh ${index + 1}`}
+                  style={{
+                    maxWidth: "100px",
+                    maxHeight: "100px",
+                    borderRadius: "5px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              ))}
+            </Space>
+          </Space>
+        )}
+      </Space>
     </Modal>
   );
 };
