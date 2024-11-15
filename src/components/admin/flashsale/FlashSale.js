@@ -9,6 +9,7 @@ import AddFlashSale from './AddFlashSale';
 import EditFlashSale from './EditFlashSale';
 import ManageTimeFrames from './ManageTimeFrames';
 import io from 'socket.io-client';
+import RegisteredProducts from './RegisteredProducts';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -21,6 +22,7 @@ const FlashSale = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isTimeFramesModalVisible, setIsTimeFramesModalVisible] = useState(false);
+  const [isRegisteredProductsVisible, setIsRegisteredProductsVisible] = useState(false);
   const [currentFlashSale, setCurrentFlashSale] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -73,7 +75,11 @@ const FlashSale = () => {
           <Button onClick={() => showTimeFramesModal(record)} style={{ marginRight: 8 }}>
             Quản lý khung giờ
           </Button>
+          <Button onClick={() => showRegisteredProductsModal(record.flash_sales_id)} style={{ marginRight: 8 }}>
+            Sản phẩm đăng ký
+          </Button>
           <Popconfirm
+
             title="Bạn có chắc chắn muốn xóa Flash Sale này?"
             onConfirm={() => handleDeleteFlashSale(record.flash_sales_id)}
             okText="Có"
@@ -81,7 +87,7 @@ const FlashSale = () => {
           >
             <Button
               icon={<DeleteOutlined />}
-              style={{ backgroundColor: 'red', color: 'white', borderColor: 'red' }}
+              style={{ backgroundColor: 'red', color: 'white', borderColor: 'red', marginTop: '8px' }}
             >
               Xóa
             </Button>
@@ -152,6 +158,13 @@ const FlashSale = () => {
     setCurrentFlashSale(flashSale);
     setIsTimeFramesModalVisible(true);
   };
+
+  const showRegisteredProductsModal = (flashSaleId) => {
+    console.log("Selected Flash Sale ID:", flashSaleId); // Add this line to verify ID
+    setCurrentFlashSale(flashSaleId); // Ensure this is an ID, not an object
+    setIsRegisteredProductsVisible(true);
+  };
+
 
   const handleDeleteFlashSale = async (id) => {
     try {
@@ -232,6 +245,13 @@ const FlashSale = () => {
         flashSaleStart={currentFlashSale?.started_at}
         flashSaleEnd={currentFlashSale?.ended_at}
       />
+
+      <RegisteredProducts
+        visible={isRegisteredProductsVisible}
+        onClose={() => setIsRegisteredProductsVisible(false)}
+        flashSaleId={currentFlashSale}
+      />
+
     </div>
   );
 };
