@@ -12,7 +12,8 @@ import {
     TeamOutlined ,
     ThunderboltOutlined,
     TagOutlined,
-    WarningOutlined
+    WarningOutlined,
+    SolutionOutlined
 } from '@ant-design/icons';
 
 const AdminSidebar = ({ role_id }) => {
@@ -89,7 +90,13 @@ const AdminSidebar = ({ role_id }) => {
             ],
         },
         {
-            key: '7',
+            key: '/admin/support/all',
+            icon: <SolutionOutlined />,
+            label: 'Yêu cầu hổ trợ',
+            roles: [3],
+        },
+        {
+            key: '8',
             icon: <BarChartOutlined />,
             label: 'Thống kê',
             roles: [3, 4], 
