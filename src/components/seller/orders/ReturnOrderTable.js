@@ -2,7 +2,7 @@ import { Button, message, notification, Popconfirm, Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
 import { useSelector } from 'react-redux';
 import { acceptReturnRequest, getReturnOrder, getReturnRequest, rejectReturnRequest } from '../../../services/return_request_Service';
-import { formatDate } from '../../../helpers/formatDate';
+import { format } from 'date-fns';
 import { createNotification } from '../../../services/notificationsService';
 import { set } from 'date-fns';
 import DetailOrderModal from './DetailOrderModal';
@@ -359,7 +359,8 @@ const ReturnOrderTable = ({ return_type_id }) => {
                 reason: return_request.ReturnReason.return_reason_name,
                 note: return_request.note,
                 status: return_request.status_id,
-                created_at: formatDate(return_request.createdAt),
+                created_at: format(new Date(return_request.createdAt), 'HH:mm:ss dd-MM-yyyy'),
+
             }
         })
 

@@ -484,7 +484,7 @@ const ShopOrderItem = (props) => {
                                 >
                                     Chi Tiết Đơn Hàng
                                 </Button>
-                                {order?.ghn_status === "returned" && localState.count_delivery_fail < 4 && (
+                                {/* {order?.ghn_status === "returned" && localState.count_delivery_fail < 4 && (
                                     <Popconfirm
                                         description="Bạn có chắc chắn muốn giao lại đơn hàng này không?"
                                         onConfirm={handleReDeliverOrder}
@@ -499,7 +499,7 @@ const ShopOrderItem = (props) => {
                                             Giao hàng lại
                                         </Button>
                                     </Popconfirm>
-                                )}
+                                )} */}
                             </div>
                         )}
                         {order?.OrderStatus?.order_status_id === 5 && (
