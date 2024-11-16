@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import { getShopProducts } from '../../../services/productService'
 import { MdOutlineSell } from 'react-icons/md'
 import { TiArrowBack } from "react-icons/ti";
-import { getProductShopRegisterFlashSales, registerProductToFlashSale } from '../../../services/shopRegisterFlashSaleService'
+import { getProductShopRegisterFlashSales, registerProductToFlashSale, unsubscribeFlashSale } from '../../../services/shopRegisterFlashSaleService'
 import { set } from 'lodash'
 import { MdOutlineUnsubscribe } from "react-icons/md";
 const ModalFlashSaleRegisterProduct = (props) => {
@@ -169,7 +169,8 @@ const ModalFlashSaleRegisterProduct = (props) => {
                         localState.registed_products.find((item) => item.product_id === record.product_id) ? (
                             <Popconfirm
                                 title="Bạn có chắc chắn muốn hủy đăng kí sản phẩm này?"
-
+                                loading={localState.loading}
+                                onConfirm={() => handleUnSubscribe(record)}
                             >
                                 <Button
                                     className='hover:bg-orange-500'
@@ -256,6 +257,33 @@ const ModalFlashSaleRegisterProduct = (props) => {
         } catch (error) {
             console.error("Error registering product to flash sale:", error);
             message.error("Đăng ký sản phẩm thất bại");
+        }
+        setLocalState({ type: "SET_LOADING", payload: false });
+    }
+
+    const handleUnSubscribe = async (record) => {
+        setLocalState({ type: "SET_LOADING", payload: true });
+        const payload = {
+            shop_id: shop.shop_id,
+            product_id: record.product_id,
+            flash_sale_time_frame_id: props.flash_sale_time_frame_id,
+        }
+        try {
+            const res = await unsubscribeFlashSale(payload);
+            if (res.success) {
+                message.success("Hủy đăng ký sản phẩm thành công");
+                setLocalState({ type: "SET_MODE", payload: "list" });
+                setLocalState({ type: "SET_FLASH_SALES_PRICE", payload: 0 });
+                setLocalState({ type: "SET_QUANTITY", payload: 0 });
+                setLocalState({ type: "SET_REGISTED_PRODUCTS", payload: [...localState.registed_products, payload] });
+                setLocalState({ type: "SET_SUCCESS", payload: true });
+            } else {
+                console.error("Error unregistering product to flash sale:", res.message);
+                message.error(res.message);
+            }
+        } catch (error) {
+            console.error("Error unregistering product to flash sale:", error);
+            message.error("Hủy đăng ký sản phẩm thất bại");
         }
         setLocalState({ type: "SET_LOADING", payload: false });
     }

@@ -309,7 +309,6 @@ const ReturnOrderTable = ({ return_type_id }) => {
                                 >
                                     <Button
                                         className='bg-primary text-white w-28 hover:bg-white hover:text-primary'
-                                        loading={localState.loading}
                                         type="primary">
                                         Xác nhận
                                     </Button>
@@ -324,7 +323,6 @@ const ReturnOrderTable = ({ return_type_id }) => {
                                 >
                                     <Button
                                         className='bg-white text-primary w-28 hover:bg-primary hover:text-white'
-                                        loading={localState.loading}
                                     >
                                         Từ chối
                                     </Button>
