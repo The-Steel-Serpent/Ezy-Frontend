@@ -167,10 +167,7 @@ const FlashSaleItem = () => {
                             current: localState.current_page,
                             pageSize: localState.page_size,
                             total: localState.totalItems,
-                            onChange: (page, pageSize) => {
-                                setLocalState({ type: 'SET_CURRENT_PAGE', payload: page });
-                                setLocalState({ type: 'SET_PAGE_SIZE', payload: pageSize });
-                            }
+                            onChange: onChangePage
                         }}
                     />
                 )

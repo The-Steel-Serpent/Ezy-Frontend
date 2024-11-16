@@ -10,12 +10,15 @@ const FrameTimeFlashSale = (props) => {
       switch (action.type) {
         case "SET_VISIBLE_MODAL_REGISTER":
           return { ...state, visible_modal_regiter: action.payload };
+        case "SET_FLASH_SALE_TIME_FRAME_ID":
+          return { ...state, flash_sale_time_frame_id: action.payload };
         default:
           return state;
       }
     },
     {
       visible_modal_regiter: false,
+      flash_sale_time_frame_id: null
     }
   )
 
@@ -61,6 +64,7 @@ const FrameTimeFlashSale = (props) => {
       return;
     }
     setLocalState({ type: "SET_VISIBLE_MODAL_REGISTER", payload: true });
+    setLocalState({ type: "SET_FLASH_SALE_TIME_FRAME_ID", payload: frame.flash_sale_time_frame_id });
   };
 
 
@@ -151,7 +155,9 @@ const FrameTimeFlashSale = (props) => {
           Không có khung giờ nào được chọn.
         </p>
       )}
-      <ModalFlashSaleRegisterProduct localState={localState} setLocalState={setLocalState}/>
+      <ModalFlashSaleRegisterProduct
+        localState={localState} setLocalState={setLocalState}
+        flash_sale_time_frame_id={localState.flash_sale_time_frame_id} />
     </div>
   );
 };
