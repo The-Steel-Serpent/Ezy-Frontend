@@ -35,13 +35,14 @@ export const getOrders = async (
   }
 };
 
-export const getShopOrders = async (shop_id, status_id, page, limit) => {
+export const getShopOrders = async (shop_id, status_id, page, limit, searchText) => {
   try {
     const response = await axios.post(`${url}get-shop-orders`, {
       shop_id,
       status_id,
       page,
       limit,
+      searchText
     });
     return response.data;
   } catch (error) {

@@ -1,41 +1,15 @@
 import axios from "axios";
+const URL = `${process.env.REACT_APP_BACKEND_URL}/api/shop-register-flash-sales`;
 
-const url = `${process.env.REACT_APP_BACKEND_URL}/api/return-request/`;
 
-export const getReturnRequest = async (payload) => {
+export const getProductShopRegisterFlashSales = async (payload) => {
+    console.log("checkkkkkkkkpayload", payload);
     try {
-        const response = await axios.post(`${url}get-return-request`, 
-            payload
-        );
-        console.log("response", response.data);
-        return response.data;
+        const url = URL + `/get-product`;
+        const res = await axios.get(url, { params: payload });
+        return res.data;
     } catch (error) {
-        console.log("Error when getReturnRequest", error);
-        let errorMessage;
-        if (error.response) {
-            switch (error.response.status) {
-                case 400:
-                    errorMessage = error.response.data.message;
-                    break;
-                case 500:
-                    errorMessage = "Server error.";
-                    break;
-                default:
-                    errorMessage = error.response.data.message || "An unexpected error occurred.";
-            }
-        } else {
-            errorMessage = "Network error or server is unreachable.";
-        }
-        return { success: false, message: errorMessage, status: error.response?.status || 0 };
-    }
-}
-
-export const acceptReturnRequest = async (payload) => {
-    try {
-        const response = await axios.post(`${url}accept-return-request`, payload);
-        return response.data;
-    } catch (error) {
-        console.log("Error when acceptReturnRequest", error);
+        console.log("Error in getProductShopRegisterFlashSales", error);
         let errorMessage;
         if (error.response) {
             switch (error.response.status) {
@@ -58,12 +32,13 @@ export const acceptReturnRequest = async (payload) => {
     }
 }
 
-export const rejectReturnRequest = async (payload) => {
+export const registerProductToFlashSale = async (payload) => {
     try {
-        const response = await axios.post(`${url}reject-return-request`, payload);
-        return response.data;
+        const url = URL + `/register-product`;
+        const res = await axios.post(url, payload);
+        return res.data;
     } catch (error) {
-        console.log("Error when rejectReturnRequest", error);
+        console.log("Error in registerProductToFlashSale", error);
         let errorMessage;
         if (error.response) {
             switch (error.response.status) {
@@ -86,16 +61,20 @@ export const rejectReturnRequest = async (payload) => {
     }
 }
 
-export const getReturnOrder = async (user_order_id, shop_id) => {
+export const unsubscribeFlashSale = async (payload) => {
     try {
-        const response = await axios.get(`${url}get-return-order`, { params: { user_order_id, shop_id } });
-        return response.data;
+        const url = URL + `/unsubscribe-product`;
+        const res = await axios.post(url, payload);
+        return res.data;
     } catch (error) {
-        console.log("Error when getReturnOrder", error);
+        console.log("Error in unsubscribeFlashSale", error);
         let errorMessage;
         if (error.response) {
             switch (error.response.status) {
                 case 400:
+                    errorMessage = error.response.data.message;
+                    break;
+                case 404:
                     errorMessage = error.response.data.message;
                     break;
                 case 500:

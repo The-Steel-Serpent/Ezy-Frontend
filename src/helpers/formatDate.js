@@ -1,11 +1,15 @@
 
-export const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+export const formatDate = (datetime) => {
+    const dateTime = new Date(datetime);
+
+    const year = dateTime.getUTCFullYear();
+    const month = ('0' + (dateTime.getUTCMonth() + 1)).slice(-2); // Months are zero-based
+    const day = ('0' + dateTime.getUTCDate()).slice(-2);
+    const hours = ('0' + dateTime.getUTCHours()).slice(-2);
+    const minutes = ('0' + dateTime.getUTCMinutes()).slice(-2);
+    const seconds = ('0' + dateTime.getUTCSeconds()).slice(-2);
+
+    // Format the date and time in UTC
+    const formattedDateTimeManual = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    return formattedDateTimeManual;
 }

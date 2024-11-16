@@ -211,7 +211,8 @@ const DetailProduct = () => {
                 const payload = {
                     product_id: product_id,
                     price: res.data.base_price,
-                    stock: res.data.stock,
+                    // stock: res.data.stock,
+                    stock: state.saleInfo.stock,
                     sale_percents: res.data.sale_percents,
                     height: state.shippingInfo.height,
                     length: state.shippingInfo.length,
@@ -463,7 +464,7 @@ const DetailProduct = () => {
                 thumbnail: state.thumbail_upload,
                 base_price: state.saleInfo.price,
                 sale_percents: state.saleInfo.sale_percent,
-                stock: state.saleInfo.stock,
+                // stock: state.saleInfo.stock,
             }
             if (state.uploadComplete && state.uploadThumbnailComplete) {
                 console.log("Checkkk image product uploaded:", state.list_product_images);
