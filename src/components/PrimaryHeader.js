@@ -28,6 +28,7 @@ import {
   Dropdown,
   FloatButton,
   Input,
+  Popover,
   Skeleton,
   Space,
   Typography,
@@ -36,7 +37,9 @@ import { AiTwotoneShop } from "react-icons/ai";
 import axios from "axios";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { el } from "date-fns/locale";
-import { DownOutlined } from "@ant-design/icons";
+import { CustomerServiceOutlined, DownOutlined } from "@ant-design/icons";
+import { GrSystem } from "react-icons/gr";
+
 const CartComponent = lazy(() => import("./cart/CartComponent"));
 // import FullLogo from "./FullLogo";
 const ChatBox = lazy(() => import("./chatbox/ChatBox"));
@@ -205,19 +208,17 @@ const PrimaryHeader = () => {
       e.preventDefault();
       if (search === "") {
         if (selectedDropdown?.key === "1") {
-          navigate("/categories/1");
+          window.location.href = "/categories/1";
         } else if (selectedDropdown?.key === "2") {
           e.preventDefault();
         }
       } else {
         if (selectedDropdown?.key === "1") {
-          navigate(`/search?keyword=${search}`);
+          window.location.href = `/search?keyword=${search}`;
         } else {
-          navigate(
-            `/search?keyword=${search}&cat_id=${
-              catID ? catID : ""
-            }&shop_username=${shopUsername ? shopUsername : ""}`
-          );
+          window.location.href = `/search?keyword=${search}&cat_id=${
+            catID ? catID : ""
+          }&shop_username=${shopUsername ? shopUsername : ""}`;
         }
       }
     },
@@ -304,8 +305,8 @@ const PrimaryHeader = () => {
         </div>
         <div className="grid grid-cols-12 m-auto max-w-[1200px] pt-4 items-center">
           <a
-            onClick={() => navigate("/")}
-            className="lg:col-span-2 col-span-full flex justify-center items-center lg:block mb-5"
+            href="/"
+            className="lg:col-span-2 col-span-full flex justify-center items-center lg:block mb-5 cursor-pointer"
           >
             <img src={WhitePhoto} className="pr-[30px]" />
             {/* <FullLogo className="fill-white" /> */}
@@ -424,8 +425,26 @@ const PrimaryHeader = () => {
         </div>
       </header>
       <Suspense>
-        <FloatButton.BackTop className="go-first" />
-        <ChatBox />
+        <FloatButton.Group className="bottom-16">
+          <FloatButton.BackTop className="go-first" />
+          <Popover
+            content={<div className="w-[400px] h-[300px] z-[999999999]"></div>}
+            trigger="click"
+            open={false}
+            placement="left"
+          >
+            <FloatButton
+              icon={<GrSystem className="text-blue-500" />}
+              tooltip="Tin nhắn hệ thống"
+            />
+          </Popover>
+          <ChatBox />
+
+          <FloatButton
+            icon={<CustomerServiceOutlined className="text-blue-500" />}
+            tooltip="Hỗ trợ khách hàng"
+          />
+        </FloatButton.Group>
       </Suspense>
     </>
   );

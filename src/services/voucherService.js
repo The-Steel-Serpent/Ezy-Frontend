@@ -14,6 +14,7 @@ export const getVoucherList = async (data) => {
         cart,
       },
     });
+    console.log("response.data: ", response.data);
     return response.data;
   } catch (error) {
     console.log("Failed to fetch voucher list: ", error);
