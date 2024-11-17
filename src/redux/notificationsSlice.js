@@ -3,6 +3,9 @@ import { fetchNotifications } from "../services/notificationsService";
 
 const initialState = {
   notifications: [],
+  loading: false,
+  error: "",
+  hasMore: true,
   notSeen: 0,
   status: "idle",
 };
@@ -25,15 +28,18 @@ const notificationsSlice = createSlice({
     builder
       .addCase(fetchNotificationsData.pending, (state) => {
         state.status = "loading";
+        state.loading = true;
       })
       .addCase(fetchNotificationsData.fulfilled, (state, action) => {
         state.status = "succeeded";
+        state.loading = false;
         state.notifications = action.payload.data;
         state.notSeen = action.payload.unReadCount;
       })
       .addCase(fetchNotificationsData.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
+        state.loading = false;
       });
   },
 });

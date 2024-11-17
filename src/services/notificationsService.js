@@ -32,10 +32,37 @@ export const createNotification = async (payload) => {
   }
 };
 
-export const fetchNotifications = async (user_id, page = 1, limit = 6) => {
+export const fetchNotifications = async (
+  user_id,
+  page = 1,
+  limit = 6,
+  type = ""
+) => {
   try {
     const response = await axios.get(
-      `${url}get-notifications?user_id=${user_id}&page=${page}&limit=${limit}`
+      `${url}get-notifications?user_id=${user_id}&page=${page}&limit=${limit}&type=${type}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+export const markAsRead = async (user_id, type) => {
+  try {
+    const response = await axios.get(
+      `${url}mark-as-read?user_id=${user_id}&type=${type}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+export const markNotificationAsRead = async (notification_id) => {
+  try {
+    const response = await axios.get(
+      `${url}mark-notification-as-read?notification_id=${notification_id}`
     );
     return response.data;
   } catch (error) {

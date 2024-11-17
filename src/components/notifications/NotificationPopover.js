@@ -4,11 +4,12 @@ import { IoMdNotificationsOutline } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchNotificationsData } from "../../redux/notificationsSlice";
 import NotificationMiniItem from "./NotificationMiniItem";
-
+import { useNavigate } from "react-router-dom";
 const NotificationPopover = () => {
   const user = useSelector((state) => state.user);
   const notifications = useSelector((state) => state.notifications);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [localState, setLocalState] = useReducer(
     (state, action) => {
       return { ...state, [action.type]: action.payload };
@@ -26,9 +27,7 @@ const NotificationPopover = () => {
       );
     }
   }, [dispatch, user]);
-  useEffect(() => {
-    console.log(notifications);
-  }, [notifications]);
+
   const handleOpenChange = (open) => {
     setLocalState({ type: "openPopover", payload: open });
   };
@@ -41,12 +40,21 @@ const NotificationPopover = () => {
             : []
         }
         renderItem={(item) => (
-          <List.Item className="w-fulls">
+          <List.Item
+            className={`w-full hover:bg-slate-100 cursor-pointer ${
+              item.is_read === 0 ? "bg-third" : ""
+            }`}
+          >
             <NotificationMiniItem item={item} />
           </List.Item>
         )}
       />
-      <Button className="w-full">Xem Tất Cả</Button>
+      <Button
+        className="w-full mt-5 "
+        onClick={() => navigate("/user/notification?type=order")}
+      >
+        Xem Tất Cả
+      </Button>
     </div>
   );
 
@@ -57,7 +65,10 @@ const NotificationPopover = () => {
       title="Thông báo mới nhận"
       content={content}
     >
-      <a href="#" className="flex items-center nav-link-hoverable gap-1">
+      <a
+        href="/user/notification?type=order"
+        className="flex items-center nav-link-hoverable gap-1"
+      >
         <Badge count={notifications.notSeen} size="small" showZero>
           <IoMdNotificationsOutline size={21} className="text-white" />
         </Badge>

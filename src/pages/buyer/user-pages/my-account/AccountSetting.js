@@ -17,6 +17,9 @@ import { ImPencil2 } from "react-icons/im";
 import { LuWallet } from "react-icons/lu";
 import UpdateOTP from "../../../../components/user/UpdateOTP";
 
+const NotificationSection = lazy(() =>
+  import("../../../../components/notifications/NotificationSection")
+);
 const OrderDetailsSection = lazy(() =>
   import("../../../../components/order/OrderDetailsSection")
 );
@@ -209,7 +212,7 @@ const AccountSetting = () => {
             <Suspense
               fallback={<Skeleton.Node active={true} className="w-full" />}
             >
-              <ChangePassword />
+              <NotificationSection />
             </Suspense>
           );
         case "wallet":
@@ -217,7 +220,15 @@ const AccountSetting = () => {
             <Suspense
               fallback={<Skeleton.Node active={true} className="w-full" />}
             >
-              <ChangePassword />
+              <NotificationSection />
+            </Suspense>
+          );
+        case "system":
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <NotificationSection />
             </Suspense>
           );
         case "security-password":
