@@ -167,7 +167,7 @@ const ModalOTP = ({ user, onVerify, openOTPModal = null, handleCancelOTP }) => {
   };
 
   const handleNavigateToForgotSecurityPassword = () => {
-    navigate("/user/account?type=forgot-security-password");
+    navigate("/user/account?type=security-password");
   };
 
   return (

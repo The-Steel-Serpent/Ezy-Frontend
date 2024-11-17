@@ -11,6 +11,8 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ModalForgotPassword from "../../../components/user/ModalForgotPassword";
+import { checkNumberPhone } from "../../../helpers/formatPhoneNumber";
+
 const items = [
   {
     value: "Nam",
@@ -347,7 +349,7 @@ const BuyerRegister = () => {
         payload: { name: "email", value: "" },
       });
     }
-
+    const checkPhoneNumber = checkNumberPhone(data.phoneNumber);
     //PhoneNumber
     if (data.phoneNumber === "") {
       dispatch({
@@ -357,12 +359,12 @@ const BuyerRegister = () => {
           value: "Số điện thoại không được để trống",
         },
       });
-    } else if (!/^\d{10}$/.test(data.phoneNumber)) {
+    } else if (data.phoneNumber.length === 10 && checkPhoneNumber !== "") {
       dispatch({
         type: "SET_ERROR",
         payload: {
           name: "phoneNumber",
-          value: "Số điện thoại không hợp lệ",
+          value: checkPhoneNumber,
         },
       });
     } else {

@@ -666,6 +666,7 @@ const OrderItem = (props) => {
                 <Button
                   size="large"
                   className="bg-white text-primary hover:opacity-80"
+                  onClick={handleViewOrder}
                 >
                   Xem Chi Tiết Đơn Hủy
                 </Button>

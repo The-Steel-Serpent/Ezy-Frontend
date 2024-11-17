@@ -16,7 +16,7 @@ import uploadFile from "../../helpers/uploadFile";
 import { updateProfile } from "../../services/userService";
 import { setUser } from "../../redux/userSlice";
 import { useNavigate } from "react-router-dom";
-
+import { checkNumberPhone } from "../../helpers/formatPhoneNumber";
 const EditProfile = () => {
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
@@ -235,6 +235,7 @@ const EditProfile = () => {
       phoneNumber: "",
       dob: "",
     };
+    const errorPhoneNumber = checkNumberPhone(phoneNumber);
     if (!fullName) {
       localErrors.fullName = "Tên không được để trống";
     } else if (fullName?.length > 100 && isEditing["fullName"]) {
@@ -250,10 +251,10 @@ const EditProfile = () => {
       localErrors.phoneNumber = "Số điện thoại không hợp lệ";
     } else if (
       phoneNumber?.length === 10 &&
-      !phoneNumber.startsWith("0") &&
+      errorPhoneNumber !== "" &&
       isEditing["phoneNumber"]
     ) {
-      localErrors.phoneNumber = "Số điện thoại không hợp lệ";
+      localErrors.phoneNumber = errorPhoneNumber;
     }
 
     // Validate dob

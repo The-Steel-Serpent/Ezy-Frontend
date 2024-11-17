@@ -39,6 +39,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { el } from "date-fns/locale";
 import { CustomerServiceOutlined, DownOutlined } from "@ant-design/icons";
 import { GrSystem } from "react-icons/gr";
+import NotificationPopover from "./notifications/NotificationPopover";
 
 const CartComponent = lazy(() => import("./cart/CartComponent"));
 // import FullLogo from "./FullLogo";
@@ -270,10 +271,7 @@ const PrimaryHeader = () => {
           <div className="flex-1"></div>
           <ul className="flex">
             <li className="p-1 mr-1">
-              <a href="#" className="flex items-center nav-link-hoverable">
-                <IoMdNotificationsOutline size={21} className="mr-1" /> Thông
-                báo
-              </a>
+              <NotificationPopover />
             </li>
             <li className="p-1 mr-1">
               <a href="#" className="flex items-center nav-link-hoverable">

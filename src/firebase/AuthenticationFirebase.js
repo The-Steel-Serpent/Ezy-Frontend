@@ -23,6 +23,8 @@ import {
 
 import { authFirebase } from "./firebase";
 import { TrophyFilled } from "@ant-design/icons";
+import { message } from "antd";
+import generateToken from "../helpers/randomToken";
 
 const auth = getAuth();
 auth.useDeviceLanguage();
@@ -256,10 +258,6 @@ export const updateNewEmail = async (newEmail, currentPassword) => {
     return false;
   }
 
-  console.log("email hiện tại", userEmail);
-  console.log("email mới", newEmail);
-  console.log("mật khẩu hiện tại", currentPassword);
-
   try {
     const credential = EmailAuthProvider.credential(
       user.email,
@@ -274,14 +272,18 @@ export const updateNewEmail = async (newEmail, currentPassword) => {
     // Xử lý lỗi cụ thể
     if (error.code === "auth/invalid-email") {
       console.error("Email mới không hợp lệ.");
+      message.error("Email mới không hợp lệ.");
     } else if (error.code === "auth/email-already-in-use") {
       console.error("Email đã được sử dụng.");
+      message.error("Email đã được sử dụng.");
     } else if (error.code === "auth/requires-recent-login") {
       console.error("Bạn cần đăng nhập lại để thay đổi thông tin.");
+      message.error("Bạn cần đăng nhập lại để thay đổi thông tin.");
       // Đăng nhập lại người dùng trước khi tiếp tục
       // Bạn có thể gọi một hàm đăng nhập lại ở đây và thực hiện lại quy trình cập nhật email
     } else {
       console.error("Lỗi không xác định:", error.message);
+      message.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
     }
 
     return false;
@@ -309,6 +311,42 @@ export const changePassword = async (oldPassword, newPassword) => {
         break;
       case "auth/invalid-credential":
         errorMessage = "Mật khẩu cũ không chính xác";
+        break;
+      case "auth/too-many-requests":
+        errorMessage = "Quá nhiều yêu cầu. Vui lòng thử lại sau";
+        break;
+      default:
+        errorMessage = "An unknown error occurred";
+        break;
+    }
+    throw new Error(errorMessage);
+  }
+};
+
+export const sendEmailVerificationAgain = async (password) => {
+  const randomVerifyToken = generateToken();
+  const actionCodeSettingss = {
+    url:
+      "http://localhost:3000/user/account?type=security-password&step=2&verifyToken=" +
+      randomVerifyToken,
+    handleCodeInApp: true, // Có xử lý trong ứng dụng không
+  };
+  try {
+    const user = auth.currentUser;
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+    await sendEmailVerification(user, actionCodeSettingss);
+    localStorage.setItem("verifyToken", randomVerifyToken);
+    localStorage.setItem("tokenExpiration", Date.now() + 5 * 60 * 1000);
+  } catch (error) {
+    let errorMessage;
+    console.log(error);
+    switch (error.code) {
+      case "auth/requires-recent-login":
+        errorMessage = "Vui lòng đăng nhập lại trước khi thay đổi mật khẩu";
+        break;
+      case "auth/invalid-credential":
+        errorMessage = "Mật khẩu không chính xác";
         break;
       case "auth/too-many-requests":
         errorMessage = "Quá nhiều yêu cầu. Vui lòng thử lại sau";

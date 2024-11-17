@@ -7,6 +7,8 @@ import {
 } from "../../services/orderService";
 import TextArea from "antd/es/input/TextArea";
 import { set } from "lodash";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchNotificationsData } from "../../redux/notificationsSlice";
 
 const ModalSendRequest = (props) => {
   const {
@@ -16,6 +18,8 @@ const ModalSendRequest = (props) => {
     onCloseModalSendRequest,
     onUpdateOrder,
   } = props;
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
   //user_order_id, reason_type_id, return_reason_id, note, status
   const [localState, setLocalState] = useReducer(
     (state, action) => {
@@ -113,6 +117,9 @@ const ModalSendRequest = (props) => {
         message.success("Gửi yêu cầu thành công");
         handleCloseModalSendRequest();
         onUpdateOrder();
+        dispatch(
+          fetchNotificationsData({ userID: user?.user_id, page: 1, limit: 5 })
+        );
       }
     } catch (error) {
       console.log("Error when handleSendRequest", error);
