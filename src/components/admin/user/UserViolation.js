@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Tabs, Modal, notification } from "antd";
+import { Table, Button } from "antd";
 import axios from "axios";
 import ViolationList from "./ViolationList";
-
-const { TabPane } = Tabs;
 
 const UserViolation = () => {
   const [usersWithViolations, setUsersWithViolations] = useState([]);
@@ -12,7 +10,9 @@ const UserViolation = () => {
 
   const fetchUsersWithViolations = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/violations/get-reported-customers`);
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/violations/get-reported-customers`
+      );
       if (response.data.success) {
         setUsersWithViolations(response.data.data);
       }
@@ -25,22 +25,24 @@ const UserViolation = () => {
     fetchUsersWithViolations();
   }, []);
 
-  const openViolationList = (user) => {
-    setSelectedUser(user);
-    setIsModalVisible(true);
-  };
-
   const columns = [
     { title: "Tên người dùng", dataIndex: "full_name", key: "full_name" },
     { title: "Email", dataIndex: "email", key: "email" },
-    { title: "Số lượng báo cáo", dataIndex: "violation_count", key: "violation_count" },
-    { title: "Mức cảnh báo", dataIndex: "warning_level", key: "warning_level" },
+    { title: "Chờ xử lý", dataIndex: "pending_count", key: "pending_count" },
+    { title: "Đã xử lý", dataIndex: "resolved_count", key: "resolved_count" },
+    //{ title: "Tổng số báo cáo", dataIndex: "total_violations", key: "total_violations" },
     {
       title: "Thao tác",
       key: "actions",
       render: (_, record) => (
-        <Button type="primary" onClick={() => openViolationList(record)}>
-          Duyệt báo cáo
+        <Button
+          type="primary"
+          onClick={() => {
+            setSelectedUser(record);
+            setIsModalVisible(true);
+          }}
+        >
+          Xem báo cáo
         </Button>
       ),
     },
@@ -48,12 +50,12 @@ const UserViolation = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 20, fontSize: 20 }}>Danh sách người dùng cần xử lý</h2>
+      <h2 style={{ marginBottom: 20, fontSize: 20 }}>Danh sách người dùng bị báo cáo</h2>
       <Table
         columns={columns}
         dataSource={usersWithViolations}
         rowKey="user_id"
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 10 }}
       />
       {isModalVisible && (
         <ViolationList
