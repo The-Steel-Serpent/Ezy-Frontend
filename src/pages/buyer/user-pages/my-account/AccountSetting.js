@@ -15,6 +15,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ImPencil2 } from "react-icons/im";
 import { LuWallet } from "react-icons/lu";
+import UpdateOTP from "../../../../components/user/UpdateOTP";
 
 const OrderDetailsSection = lazy(() =>
   import("../../../../components/order/OrderDetailsSection")
@@ -217,6 +218,14 @@ const AccountSetting = () => {
               fallback={<Skeleton.Node active={true} className="w-full" />}
             >
               <ChangePassword />
+            </Suspense>
+          );
+        case "security-password":
+          return (
+            <Suspense
+              fallback={<Skeleton.Node active={true} className="w-full" />}
+            >
+              <UpdateOTP />
             </Suspense>
           );
         default:

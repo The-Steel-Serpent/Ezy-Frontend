@@ -1006,49 +1006,77 @@ const OrderDetailsSection = () => {
               khi nhận hàng.
             </div>
           )}
-          <table className="bg-white border-collapse">
-            {localState.orderDetails?.order_status_id !== 6 &&
-              localState.orderDetails?.order_status_id !== 7 && (
+          {localState.orderDetails?.ReturnRequest !== null && (
+            <table className="bg-white border-collapse">
+              {localState.orderDetails?.order_status_id !== 6 &&
+                localState.orderDetails?.order_status_id !== 7 && (
+                  <>
+                    <tr>
+                      <td className="table-item">Tổng Tiền Hàng</td>
+                      <td className="table-item">
+                        <sup>đ</sup>
+                        {formatCurrency(localState.orderDetails?.total_price)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="table-item">Phí Vận Chuyển</td>
+                      <td className="table-item">
+                        {" "}
+                        <sup>đ</sup>
+                        {formatCurrency(localState.orderDetails?.shipping_fee)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="table-item">Giảm giá phí vận chuyển</td>
+                      <td className="table-item">
+                        - <sup>đ</sup>
+                        {formatCurrency(
+                          localState.orderDetails?.discount_shipping_fee
+                        )}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="table-item">Voucher từ Ezy</td>
+                      <td className="table-item">
+                        - <sup>đ</sup>
+                        {formatCurrency(
+                          localState.orderDetails?.discount_price
+                        )}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="table-item">Thành Tiền</td>
+                      <td className="table-item text-2xl text-primary">
+                        <sup>đ</sup>
+                        {formatCurrency(localState.orderDetails?.final_price)}
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td className="table-item">Phương Thức Thanh Toán</td>
+                      <td className="table-item text-xl text-primary">
+                        {
+                          localState.orderDetails?.PaymentMethod
+                            ?.payment_method_name
+                        }
+                      </td>
+                    </tr>
+                  </>
+                )}
+
+              {(localState.orderDetails?.order_status_id === 6 ||
+                localState.orderDetails?.order_status_id === 7) && (
                 <>
                   <tr>
-                    <td className="table-item">Tổng Tiền Hàng</td>
+                    <td className="table-item">Yêu cầu bởi</td>
                     <td className="table-item">
-                      <sup>đ</sup>
-                      {formatCurrency(localState.orderDetails?.total_price)}
+                      {localState.orderDetails?.is_canceled_by === 1
+                        ? "Bạn"
+                        : localState.orderDetails?.is_canceled_by === 2
+                        ? "Người bán"
+                        : "Hệ Thống"}
                     </td>
                   </tr>
-                  <tr>
-                    <td className="table-item">Phí Vận Chuyển</td>
-                    <td className="table-item">
-                      {" "}
-                      <sup>đ</sup>
-                      {formatCurrency(localState.orderDetails?.shipping_fee)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="table-item">Giảm giá phí vận chuyển</td>
-                    <td className="table-item">
-                      - <sup>đ</sup>
-                      {formatCurrency(
-                        localState.orderDetails?.discount_shipping_fee
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="table-item">Voucher từ Ezy</td>
-                    <td className="table-item">
-                      - <sup>đ</sup>
-                      {formatCurrency(localState.orderDetails?.discount_price)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="table-item">Thành Tiền</td>
-                    <td className="table-item text-2xl text-primary">
-                      <sup>đ</sup>
-                      {formatCurrency(localState.orderDetails?.final_price)}
-                    </td>
-                  </tr>
-
                   <tr>
                     <td className="table-item">Phương Thức Thanh Toán</td>
                     <td className="table-item text-xl text-primary">
@@ -1058,52 +1086,28 @@ const OrderDetailsSection = () => {
                       }
                     </td>
                   </tr>
+                  {(localState.orderDetails?.PaymentMethod
+                    ?.payment_method_id === 3 ||
+                    localState.orderDetails?.PaymentMethod
+                      ?.payment_method_id === 4) && (
+                    <>
+                      <tr>
+                        <td className="table-item">Số tiền hoàn lại</td>
+                        <td className="table-item text-primary text-xl">
+                          <sup>đ</sup>
+                          {formatCurrency(localState.orderDetails?.final_price)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="table-item">Hoàn tiền vào</td>
+                        <td className="table-item">Ví EzyPay</td>
+                      </tr>
+                    </>
+                  )}
                 </>
               )}
-
-            {(localState.orderDetails?.order_status_id === 6 ||
-              localState.orderDetails?.order_status_id === 7) && (
-              <>
-                <tr>
-                  <td className="table-item">Yêu cầu bởi</td>
-                  <td className="table-item">
-                    {localState.orderDetails?.is_canceled_by === 1
-                      ? "Bạn"
-                      : localState.orderDetails?.is_canceled_by === 2
-                      ? "Người bán"
-                      : "Hệ Thống"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="table-item">Phương Thức Thanh Toán</td>
-                  <td className="table-item text-xl text-primary">
-                    {
-                      localState.orderDetails?.PaymentMethod
-                        ?.payment_method_name
-                    }
-                  </td>
-                </tr>
-                {(localState.orderDetails?.PaymentMethod?.payment_method_id ===
-                  3 ||
-                  localState.orderDetails?.PaymentMethod?.payment_method_id ===
-                    4) && (
-                  <>
-                    <tr>
-                      <td className="table-item">Số tiền hoàn lại</td>
-                      <td className="table-item text-primary text-xl">
-                        <sup>đ</sup>
-                        {formatCurrency(localState.orderDetails?.final_price)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-item">Hoàn tiền vào</td>
-                      <td className="table-item">Ví EzyPay</td>
-                    </tr>
-                  </>
-                )}
-              </>
-            )}
-          </table>
+            </table>
+          )}
 
           {/* Modal Payment Method*/}
           <Modal

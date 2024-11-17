@@ -7,6 +7,7 @@ import {
 } from "../../services/ghnService";
 import { addAddress, updateAddress } from "../../services/addressService";
 import { useSelector } from "react-redux";
+import { checkNumberPhone } from "../../helpers/formatPhoneNumber";
 
 const AddressInforModal = (props) => {
   const user = useSelector((state) => state.user);
@@ -256,6 +257,7 @@ const AddressInforModal = (props) => {
         full_name: "Họ và tên không được quá 100 ký tự",
       };
     }
+    const checkPhoneNumber = checkNumberPhone(data.phone_number);
     if (data.phone_number?.length === 0) {
       localErrors = {
         ...localErrors,
@@ -264,11 +266,11 @@ const AddressInforModal = (props) => {
     } else if (
       data.phone_number?.length < 10 ||
       data.phone_number?.length > 10 ||
-      !data.phone_number.startsWith("0")
+      checkPhoneNumber !== ""
     ) {
       localErrors = {
         ...localErrors,
-        phone_number: "Số điện thoại không hợp lệ",
+        phone_number: checkPhoneNumber,
       };
     }
     if (data.address === "") {
