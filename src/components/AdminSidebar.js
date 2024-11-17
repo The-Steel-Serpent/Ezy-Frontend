@@ -93,13 +93,13 @@ const AdminSidebar = ({ role_id }) => {
             key: '/admin/support/all',
             icon: <SolutionOutlined />,
             label: 'Yêu cầu hổ trợ',
-            roles: [3],
+            roles: [3, 4],
         },
         {
             key: '8',
             icon: <BarChartOutlined />,
             label: 'Thống kê',
-            roles: [3, 4], 
+            roles: [3], 
         },
     ];
 
