@@ -107,23 +107,6 @@ const ShopOrderItem = (props) => {
         const response = await shopCancelOrder(payload);
         if (response.success) {
             message.info("Đơn hàng đã được hủy thành công");
-            const noti_payload = {
-                user_id: order.UserAccount.user_id,
-                notifications_type: "Đơn hàng",
-                title: "Đơn hàng đã bị hủy",
-                content: `Đơn hàng đã bị hủy bởi cửa hàng`,
-                thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",  
-            }
-
-            const noti_res = await createNotification(noti_payload);
-            if (noti_res.success) {
-                console.log("Create notification success", noti_res);
-            }
-            else {
-                console.log("Create notification failed", noti_res);
-                console.log("noti_payload", noti_payload);
-            }
-
             setTimeout(() => {
                 handleReLoad();
             }, 1200);

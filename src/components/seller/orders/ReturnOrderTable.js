@@ -133,20 +133,6 @@ const ReturnOrderTable = ({ return_type_id }) => {
             if (accept_return_request.success) {
                 message.success("Chấp nhận đơn hàng trả hàng thành công");
                 console.log("Accept return request success:", accept_return_request);
-                const noti_payload = {
-                    user_id: order.UserAccount.user_id,
-                    notifications_type: "Đơn hàng",
-                    title: "Đơn trả hàng đã được chấp nhận",
-                    content: `Đơn hàng trả hàng của bạn đã được chấp nhận, vui lòng chờ nhân viên giao hàng đến lấy hàng`,
-                    thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",
-                }
-                const noti_result = await createNotification(noti_payload);
-                if (noti_result.success) {
-                    console.log("Create notification success");
-                }
-                else {
-                    console.log("Create notification error:", noti_result);
-                }
             }
             else {
                 console.log("Error when accept return request:", accept_return_request.message);
@@ -170,24 +156,6 @@ const ReturnOrderTable = ({ return_type_id }) => {
         const reject_return_request = await rejectReturnRequest({ return_request_id: return_request_id });
         if (reject_return_request.success) {
             message.success("Từ chối đơn hàng trả hàng thành công");
-            const return_order = await getReturnOrder(user_order_id, shop.shop_id);
-            if (return_order.success) {
-                const order = return_order.data;
-                const noti_payload = {
-                    user_id: order.UserAccount.user_id,
-                    notifications_type: "Đơn hàng",
-                    title: "Đơn trả hàng đã bị từ chối",
-                    content: `Đơn hàng trả hàng của bạn đã bị từ chối, vui lòng liên hệ cửa hàng để biết thêm chi tiết`,
-                    thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/uploadv1731496563/hyddw7hk56lrjefuteoh.png",
-                }
-                const noti_result = await createNotification(noti_payload);
-                if (noti_result.success) {
-                    console.log("Create notification success");
-                }
-                else {
-                    console.log("Create notification error:", noti_result);
-                }
-            }
             console.log("Reject return request success:", reject_return_request);
         }
         else {
