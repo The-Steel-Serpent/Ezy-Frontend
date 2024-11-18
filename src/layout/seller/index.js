@@ -99,8 +99,8 @@ const items_info = [
     icon: <AiOutlineProfile size={20} className="mr-3" />,
   },
   {
-    key: "setting_shop",
-    label: "Thiết lập Shop",
+    key: "decor_shop",
+    label: "Trang trí Shop",
     icon: <CiShop size={20} className="mr-3" />,
   },
   {
@@ -202,6 +202,9 @@ const SellerAuthLayout = ({ children }) => {
     } else if (e.key == "profile_shop") {
       navigate("/seller/seller-edit-profile");
       setUpNavigate();
+    }
+    else if (e.key == "decor_shop"){
+      navigate("/seller/customize-shop");
     }
   };
 

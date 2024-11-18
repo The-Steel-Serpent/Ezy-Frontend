@@ -142,6 +142,10 @@ const OrderCancel = withSuspense(
   lazy(() => import("../pages/seller/orders/OrderCancel"))
 );
 
+const CustomShop = withSuspense(
+  lazy(() => import("../pages/seller/custom_shop/CustomShop"))
+)
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -446,6 +450,14 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <EditProduct />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/customize-shop",
+        element: (
+          <SellerAuthLayout>
+            <CustomShop />
           </SellerAuthLayout>
         ),
       },

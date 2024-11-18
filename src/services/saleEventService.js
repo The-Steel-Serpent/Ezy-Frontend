@@ -88,8 +88,8 @@ export const unSubscribeSaleEvent = async (payload) => {
 
 export const getProductsRegistedEvent = async (shop_id) => {
     try {
-        const url = URL + `/get-products-registed/${shop_id}`;
-        const res = await axios.get(url);
+        const url = URL + `/get-products-registed`;
+        const res = await axios.get(url, { params: { shop_id } });
         return res.data;
     } catch (error) {
         console.log("Error in getProductsRegistedByCategory", error);
