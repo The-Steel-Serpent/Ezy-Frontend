@@ -30,7 +30,7 @@ const AdminAuthLayout = ({ children }) => {
   const logOut = async () => {
     try {
       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
-      await axios.post(
+      const res = await axios.post(
         URL,
         {},
         {
@@ -41,11 +41,14 @@ const AdminAuthLayout = ({ children }) => {
         }
       );
       handleExpiredToken();
+      if (res.data.success) {
+        dispatch(logout());
+        localStorage.clear();
+      }
     } catch (error) {
       if (error.response?.data?.code === "auth/id-token-expired") {
         handleExpiredToken();
-      } else {
-        message.error("Đăng xuất không thành công. Vui lòng thử lại.");
+        message.error("Phiên Đăng nhập đã hết hạn");
       }
     }
   };
@@ -54,6 +57,7 @@ const AdminAuthLayout = ({ children }) => {
     setLoading(true);
     const token = localStorage.getItem("token");
     if (!token) {
+
       handleExpiredToken();
       return;
     }
