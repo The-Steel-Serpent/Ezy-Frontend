@@ -43,6 +43,7 @@ const initialState = {
     visible_edit_sale_info: false,
     visible_delete_product_modal: false,
     loading_delete_product: false,
+    products_registed_event: [],
 }
 
 const reducer = (state, action) => {
@@ -113,6 +114,8 @@ const reducer = (state, action) => {
             return { ...state, visible_delete_product_modal: action.payload }
         case 'SET_LOADING_DELETE_PRODUCT':
             return { ...state, loading_delete_product: action.payload }
+        case 'SET_PRODUCTS_REGISTED_EVENT':
+            return { ...state, products_registed_event: action.payload } 
         default:
             return state;
     }
@@ -386,6 +389,8 @@ const ProductTable =
             const products_status = products.data.map(product => product.product_status);
             dispatch({ type: 'SET_PRODUCTS_STATUS', payload: products_status });
         }
+
+
         // call api
         // fetch products
         useEffect(() => {
@@ -557,10 +562,10 @@ const ProductTable =
                 message.success('Xóa thành công ' + product_ids.length + ' sản phẩm');
             } else {
                 if (res?.status === 409) {
-                    if(product_ids.length === 1){
+                    if (product_ids.length === 1) {
                         message.error('Sản phẩm đã được sử dụng không thể xóa');
                     }
-                    else{
+                    else {
                         message.error('Có sản phẩm đã được sử dụng không thể xóa');
                     }
                 }

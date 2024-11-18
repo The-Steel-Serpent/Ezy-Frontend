@@ -1,7 +1,7 @@
 import { Menu } from 'antd'
 import React, { useReducer } from 'react'
 import FlashSaleItem from './FlashSaleItem'
-import VoucherItem from './VoucherItem'
+import SaleEventsItem from './SaleEventsItem'
 const MarketingContainer = () => {
 
     const [localState, setLocalState] = useReducer(
@@ -31,11 +31,11 @@ const MarketingContainer = () => {
                 onClick={handleMenuClick}
                 selectedKeys={[localState.currentComponent]}>
                 <Menu.Item key="flashSale" className='text-lg'>Ezy Flash Sale</Menu.Item>
-                <Menu.Item key="voucher" className='text-lg'>Chương trình mã giảm giá</Menu.Item>
+                <Menu.Item key="voucher" className='text-lg'>Chương trình giảm giá</Menu.Item>
             </Menu>
             <div>
                 {localState.currentComponent === 'flashSale' && <FlashSaleItem />}
-                {localState.currentComponent === 'voucher' && <VoucherItem />}
+                {localState.currentComponent === 'voucher' && <SaleEventsItem />}
             </div>
         </div>
     )

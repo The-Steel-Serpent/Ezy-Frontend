@@ -1,8 +1,8 @@
 import { Button, Col, message, Modal, Popconfirm, Row, Select, Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
 import { getDistricts, getProvinces, getWards } from '../../../services/ghnService';
+import { FaCopy } from "react-icons/fa";
 const { Option } = Select;
-
 const DetailOrderModal = ({ visible, onCancel, order }) => {
 
     const [modalState, setModalState] = useReducer(
@@ -104,7 +104,15 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
         };
         fetchAndSetProvinces();
     }, [order]);
-
+    const handleCopy = () => {
+        navigator.clipboard.writeText(order.order_code)
+            .then(() => {
+                message.success('Mã vận đơn đã được sao chép!');
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+    };
     return (
         <div>
             <Modal
@@ -124,8 +132,9 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
                     <Row gutter={12}>
                         {
                             order.order_code !== null && (
-                                <Col span={12}>
-                                    <p className='text-lg'><span className='font-semibold'>Mã vận đơn</span>: {order.order_code}</p>
+                                <Col span={12}className="flex gap-3 text-lg">
+                                    <span className='font-semibold'>Mã vận đơn</span>: {order.order_code}
+                                    <FaCopy onClick={handleCopy} size={20} className="cursor-pointer text-primary"  />
                                 </Col>
                             )
                         }
