@@ -61,11 +61,11 @@ const FlashSaleItem = () => {
             dataIndex: 'description',
             key: 'description',
         },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-        },
+        // {
+        //     title: 'Trạng thái',
+        //     dataIndex: 'status',
+        //     key: 'status',
+        // },
         {
             dataIndex: 'action',
             key: 'action',

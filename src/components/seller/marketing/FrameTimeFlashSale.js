@@ -60,7 +60,7 @@ const FrameTimeFlashSale = (props) => {
   const handleRegisterProduct = (frame) => {
     console.log("Đăng ký sản phẩm cho khung giờ:", frame);
     if (!checkTime(frame.started_at)) {
-      message.error("Không thể đăng ký sản phẩm cho khung giờ đã qua 30 phút");
+      message.error("Đã qua giờ đăng ký sản phẩm cho khung giờ này");
       return;
     }
     setLocalState({ type: "SET_VISIBLE_MODAL_REGISTER", payload: true });

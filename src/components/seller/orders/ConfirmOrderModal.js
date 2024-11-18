@@ -160,20 +160,6 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
         if (comfirmOrderResult.success) {
             console.log("Confirm order success", comfirmOrderResult);
             message.success("Xác nhận đơn hàng thành công");
-            const noti_payload = {
-                user_id: order.UserAccount.user_id,
-                title: "Đơn hàng của bạn đã được xác nhận",
-                content: `Đơn hàng của bạn đã được xác nhận và đang chờ vận chuyển`,
-                notifications_type: "ORDER_CONFIRMED",
-                thumbnail: "https://res.cloudinary.com/dhzjvbdnu/image/upload/v1731496563/hyddw7hk56lrjefuteoh.png",  
-            }
-
-            const noti_res = await createNotification(noti_payload);
-            if(noti_res.success){
-                console.log("Create notification success", noti_res);
-            } else {
-                console.error("Create notification error:", noti_res);
-            }
             setTimeout(() => {
                 handleReLoad();
             }, 1200);
