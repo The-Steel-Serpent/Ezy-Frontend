@@ -40,6 +40,8 @@ import { el } from "date-fns/locale";
 import { CustomerServiceOutlined, DownOutlined } from "@ant-design/icons";
 import { GrSystem } from "react-icons/gr";
 import NotificationPopover from "./notifications/NotificationPopover";
+import SupportChatbox from "./support-chatbox/SupportChatbox";
+import { useSupportMessage } from "../providers/SupportMessagesProvider";
 
 const CartComponent = lazy(() => import("./cart/CartComponent"));
 // import FullLogo from "./FullLogo";
@@ -47,6 +49,7 @@ const ChatBox = lazy(() => import("./chatbox/ChatBox"));
 
 const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);
+  const { supportMessageState, setSupportMessageState } = useSupportMessage();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const navigate = useNavigate();
@@ -425,23 +428,30 @@ const PrimaryHeader = () => {
       <Suspense>
         <FloatButton.Group className="bottom-16">
           <FloatButton.BackTop className="go-first" />
-          <Popover
-            content={<div className="w-[400px] h-[300px] z-[999999999]"></div>}
-            trigger="click"
-            open={false}
-            placement="left"
-          >
+          <Popover trigger="click" open={false} placement="left">
             <FloatButton
               icon={<GrSystem className="text-blue-500" />}
               tooltip="Tin nhắn hệ thống"
             />
           </Popover>
           <ChatBox />
-
-          <FloatButton
-            icon={<CustomerServiceOutlined className="text-blue-500" />}
-            tooltip="Hỗ trợ khách hàng"
-          />
+          <Popover
+            trigger="click"
+            content={<SupportChatbox />}
+            open={supportMessageState.openSupportChatbox}
+            onOpenChange={(newOpen) => {
+              setSupportMessageState({
+                type: "openSupportChatbox",
+                payload: newOpen,
+              });
+            }}
+            placement="leftTop"
+          >
+            <FloatButton
+              icon={<CustomerServiceOutlined className="text-blue-500" />}
+              tooltip="Hỗ trợ khách hàng"
+            />
+          </Popover>
         </FloatButton.Group>
       </Suspense>
     </>

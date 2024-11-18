@@ -60,10 +60,10 @@ const FlashSalesSection = () => {
               status: "ended",
             },
           });
-          console.log("Flash sale đã kết thúc.");
+          // console.log("Flash sale đã kết thúc.");
         } else {
           // Nếu chưa đến giờ bắt đầu
-          console.log("Countdown không hoạt động do chưa tới giờ bắt đầu.");
+          // console.log("Countdown không hoạt động do chưa tới giờ bắt đầu.");
           setLocalState({
             type: "time",
             payload: {

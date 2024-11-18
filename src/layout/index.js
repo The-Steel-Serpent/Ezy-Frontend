@@ -120,7 +120,9 @@ const AuthLayout = ({ children }) => {
     if (!user.user_id || user.user_id === "" || user.role_id !== 1) {
       return;
     }
-    const socket = io.connect(process.env.REACT_APP_BACKEND_URL);
+    const socket = io.connect(process.env.REACT_APP_BACKEND_URL, {
+      query: { user_id: user.user_id },
+    });
 
     socket.on("newOrder", (data) => {
       const { orderID, selectedVoucher, timestamp } = data;
