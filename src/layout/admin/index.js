@@ -31,6 +31,7 @@ import {
 import { io } from "socket.io-client";
 import { setSupportMessageState } from "../../redux/supportMessageSlice";
 import { connectSocket, disconnectSocket } from "../../socket/socketActions";
+import ChatBox from "../../components/chatbox/ChatBox";
 const ALLOWED_ROLES = [3, 4, 5]; // 3: Admin, 4: Event manager, 5: Shop manager
 const { Header, Sider, Content } = Layout;
 
@@ -203,12 +204,8 @@ const AdminAuthLayout = ({ children }) => {
       <Suspense>
         <FloatButton.Group className="bottom-16">
           <FloatButton.BackTop className="go-first" />
-          <Popover trigger="click" open={false} placement="left">
-            <FloatButton
-              icon={<GrSystem className="text-blue-500" />}
-              tooltip="Tin nhắn hệ thống"
-            />
-          </Popover>
+          <ChatBox />
+
           <Popover
             trigger="click"
             content={<SupportChatbox />}

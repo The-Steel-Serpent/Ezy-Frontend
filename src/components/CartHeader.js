@@ -1,15 +1,20 @@
 import React, { Suspense, useEffect, useState } from "react";
 import whiteEzy from "../assets/logo_ezy.png";
 import AvatarWithPopover from "./AvatarWithPopover";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { IoMdNotificationsOutline } from "react-icons/io";
-import { FloatButton } from "antd";
+import { FloatButton, Popover } from "antd";
 import ChatBox from "./chatbox/ChatBox";
+import SupportChatbox from "./support-chatbox/SupportChatbox";
+import { setSupportMessageState } from "../redux/supportMessageSlice";
+import { CustomerServiceOutlined } from "@ant-design/icons";
 const CartHeader = () => {
   const user = useSelector((state) => state.user);
   const userID = user?.user_id;
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const supportMessageState = useSelector((state) => state.supportMessage);
   const [isStateReady, setIsStateReady] = useState(false);
   useEffect(() => {
     // Đặt cờ isStateReady thành true khi state đã được cập nhật
@@ -58,6 +63,24 @@ const CartHeader = () => {
       <Suspense>
         <FloatButton.BackTop className="go-first" />
         <ChatBox />
+        <Popover
+          trigger="click"
+          content={<SupportChatbox />}
+          open={supportMessageState.openSupportChatbox}
+          onOpenChange={(newOpen) => {
+            dispatch(
+              setSupportMessageState({
+                openSupportChatbox: newOpen,
+              })
+            );
+          }}
+          placement="leftTop"
+        >
+          <FloatButton
+            icon={<CustomerServiceOutlined className="text-blue-500" />}
+            tooltip="Hỗ trợ khách hàng"
+          />
+        </Popover>
       </Suspense>
     </>
   );

@@ -434,12 +434,6 @@ const PrimaryHeader = () => {
       <Suspense>
         <FloatButton.Group className="bottom-16">
           <FloatButton.BackTop className="go-first" />
-          <Popover trigger="click" open={false} placement="left">
-            <FloatButton
-              icon={<GrSystem className="text-blue-500" />}
-              tooltip="Tin nhắn hệ thống"
-            />
-          </Popover>
           <ChatBox />
           <Popover
             trigger="click"

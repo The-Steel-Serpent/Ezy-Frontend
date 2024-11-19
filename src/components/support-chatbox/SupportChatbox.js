@@ -408,7 +408,7 @@ const SupportChatbox = () => {
           </Button>
         )}
         {supportMessageState.requestSupport?.status !== "processing" &&
-          user?.role_id === 1 && (
+          (user?.role_id === 1 || user?.role_id === 2) && (
             <Button
               className="absolute bottom-3 left-[42%] rounded-full"
               onClick={() => handleSendRequest(user.user_id)}
