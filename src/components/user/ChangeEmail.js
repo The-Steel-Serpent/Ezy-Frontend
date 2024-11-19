@@ -4,11 +4,15 @@ import { useDispatch, useSelector } from "react-redux";
 import ModalOTP from "./ModalOTP";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
+  checkAndUnLinkProvider,
   handleSendSignInLinkToEmail,
   updateNewEmail,
 } from "../../firebase/AuthenticationFirebase";
 import { checkEmailExists, updateEmail } from "../../services/userService";
-import { setUser } from "../../redux/userSlice";
+import { logout, setUser } from "../../redux/userSlice";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { clearCart } from "../../redux/cartSlice";
 
 const ChangeEmail = () => {
   const user = useSelector((state) => state.user);
@@ -111,17 +115,47 @@ const ChangeEmail = () => {
       }
     } catch (error) {
       console.error("Lỗi khi gửi liên kết đăng nhập: ", error);
+
+      message.error(error?.message || "Đã có lỗi xảy ra, vui lòng thử lại sau");
+    } finally {
       setState({
         type: "setLoading",
         payload: false,
       });
-      message.error(error?.message || "Đã có lỗi xảy ra, vui lòng thử lại sau");
     }
     // navigate("/user/account?type=email&step=2");
   };
 
   const handleOnPasswordChange = (e) => {
     setState({ type: "setPassword", payload: e.target.value });
+  };
+
+  const handleLogout = async () => {
+    try {
+      const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
+      const res = await axios.post(
+        URL,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      if (res.data.success) {
+        dispatch(logout());
+        dispatch(clearCart());
+        setTimeout(() => {
+          navigate("/buyer/login");
+        }, 200);
+        localStorage.clear();
+      }
+    } catch (error) {
+      if (error.response.data.code === "auth/id-token-expired") {
+        toast.error("Phiên Đăng nhập đã hết hạn");
+      }
+    }
   };
 
   const handleUpdateEmail = async (newEmail) => {
@@ -131,8 +165,10 @@ const ChangeEmail = () => {
       if (updateEmailInBackend.success) {
         const newUser = updateEmailInBackend.data;
         dispatch(setUser(newUser));
+        // await checkAndUnLinkProvider(newUser.email);
         localStorage.removeItem("newEmail");
-        message.success("Cập nhật Email thành công");
+        message.success("Cập nhật Email thành công, Vui lòng đăng nhập lại");
+        await handleLogout();
       }
     } catch (error) {
       message.error(error?.message || "Đã có lỗi xảy ra, vui lòng thử lại sau");
@@ -221,11 +257,9 @@ const ChangeEmail = () => {
               <div className="col-span-12">
                 <Result
                   status="success"
-                  title="Câp nhật Email Thành Công!"
+                  title="Câp nhật Email Thành Công! Vui lòng đăng nhập lại"
                   extra={
-                    <Button onClick={() => navigate("/")}>
-                      Trở về trang chủ
-                    </Button>
+                    <Button onClick={() => navigate("/")}>Đăng Nhập Lại</Button>
                   }
                 />
               </div>

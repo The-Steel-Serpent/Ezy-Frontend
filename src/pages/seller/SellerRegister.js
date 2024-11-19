@@ -1,5 +1,13 @@
 import React, { useEffect, useReducer, useState } from "react";
-import { Alert, Button, DatePicker, Divider, Input, message, Select } from "antd";
+import {
+  Alert,
+  Button,
+  DatePicker,
+  Divider,
+  Input,
+  message,
+  Select,
+} from "antd";
 import { FcGoogle } from "react-icons/fc";
 import { BsShop } from "react-icons/bs";
 import { HiOutlineGift } from "react-icons/hi2";
@@ -86,12 +94,12 @@ const SellerRegister = () => {
     }
   );
 
-
   const { loading, data, error, hasStartedTyping, isVisbleResetModal } = state;
   const checkRole = async (user) => {
     const user_id = user.uid;
     const email = user.email;
-    const username = email.split("@")[0];
+    const randomNumber = Math.floor(Math.random() * 1000);
+    const username = `${email.split("@")[0]}${randomNumber}`;
     const fullname = user.displayName;
     const avtUrl = user.photoURL;
 
@@ -502,7 +510,8 @@ const SellerRegister = () => {
       <div className="pt-16">
         <form
           onSubmit={handleSignUp}
-          className="lg:w-[400px] shadow-xl px-6 py-6 mb-10 bg-white flex flex-col gap-2">
+          className="lg:w-[400px] shadow-xl px-6 py-6 mb-10 bg-white flex flex-col gap-2"
+        >
           <h1 className="font-[450] text-xl mb-5">Đăng ký</h1>
           <Input
             placeholder="Tên đăng nhập"
@@ -592,8 +601,7 @@ const SellerRegister = () => {
                     type: "hasStartedTyping",
                   });
                 }}
-              >
-              </Select>
+              ></Select>
             </div>
           </div>
           <Input
@@ -633,13 +641,9 @@ const SellerRegister = () => {
             <span className="text-slate-400 text-xs">HOẶC</span>
           </Divider>
           <div className="w-full flex items-center">
-            <button
-              className="border rounded p-2 w-[165px] hover:bg-slate-100 flex justify-center items-center m-auto"
-            >
+            <button className="border rounded p-2 w-[165px] hover:bg-slate-100 flex justify-center items-center m-auto">
               <span className="gap-1 flex justify-center">
-                <FcGoogle
-                  size={23}
-                  onClick={handleGoogleSignIn} /> Google
+                <FcGoogle size={23} onClick={handleGoogleSignIn} /> Google
               </span>
             </button>
           </div>
@@ -647,19 +651,8 @@ const SellerRegister = () => {
           <div className="text-xs text-center mt-5">
             Bằng việc đăng kí, bạn đã đồng ý với Ezy về
             <br />
-            <a
-              className="text-primary"
-            >
-              {" "}
-              Điều khoản dịch vụ
-            </a>{" "}
-            &amp;
-            <a
-              className="text-primary"
-            >
-              {" "}
-              Chính sách bảo mật
-            </a>
+            <a className="text-primary"> Điều khoản dịch vụ</a> &amp;
+            <a className="text-primary"> Chính sách bảo mật</a>
           </div>
           <div className="text-sm mt-10 w-full flex justify-center">
             <span className="text-slate-400">Bạn đã có tài khoản?</span>
