@@ -19,8 +19,8 @@ import {
   updatePassword,
   onIdTokenChanged,
   verifyBeforeUpdateEmail,
+  unlink,
 } from "firebase/auth";
-
 import { authFirebase } from "./firebase";
 import { TrophyFilled } from "@ant-design/icons";
 import { message } from "antd";
@@ -97,7 +97,8 @@ export const signInWithEmailPassword = async (email, password) => {
           errorMessage = "Email không hợp lệ. Vui lòng kiểm tra lại.";
           break;
         case "auth/user-disabled":
-          errorMessage = "Tài khoản này đã bị vô hiệu hóa.";
+          errorMessage =
+            "Tài khoản của bạn đã bị vô hiệu hóa. Vui long liên hệ với Ezy Hotline 0849919901 để được hỗ trợ.";
           break;
         case "auth/user-not-found":
           errorMessage = "Không tìm thấy tài khoản với email này.";
@@ -137,9 +138,11 @@ export const signInWithGoogle = async () => {
   try {
     await setPersistence(auth, browserLocalPersistence);
     const result = await signInWithPopup(auth, provider);
+
     return result.user;
   } catch (error) {
     let errorMessage;
+    console.log(error);
     const errorCode = error.code;
     switch (errorCode) {
       case "auth/popup-closed-by-user":
@@ -150,6 +153,10 @@ export const signInWithGoogle = async () => {
         break;
       case "auth/network-request-failed":
         errorMessage = "Lỗi mạng. Hãy kiểm tra lại kết nối";
+        break;
+      case "auth/user-disabled":
+        errorMessage =
+          "Tài khoản của bạn đã bị vô hiệu hóa. Vui long liên hệ với Ezy Hotline 0849919901 để được hỗ trợ.";
         break;
       default:
         errorMessage = "An unknown error occurred: ";
@@ -279,8 +286,8 @@ export const updateNewEmail = async (newEmail, currentPassword) => {
     } else if (error.code === "auth/requires-recent-login") {
       console.error("Bạn cần đăng nhập lại để thay đổi thông tin.");
       message.error("Bạn cần đăng nhập lại để thay đổi thông tin.");
-      // Đăng nhập lại người dùng trước khi tiếp tục
-      // Bạn có thể gọi một hàm đăng nhập lại ở đây và thực hiện lại quy trình cập nhật email
+    } else if (error.code === "auth/invalid-credential") {
+      message.error("Mật khẩu không chính xác");
     } else {
       console.error("Lỗi không xác định:", error.message);
       message.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
@@ -356,5 +363,19 @@ export const sendEmailVerificationAgain = async (password) => {
         break;
     }
     throw new Error(errorMessage);
+  }
+};
+
+const checkAndUnLinkProvider = async (newEmail) => {
+  const user = auth.currentUser;
+
+  if (user.email !== newEmail) {
+    unlink(user, "google.com")
+      .then(() => {
+        console.log("Unlink successfully");
+      })
+      .catch((error) => {
+        console.error("Unlink failed", error);
+      });
   }
 };

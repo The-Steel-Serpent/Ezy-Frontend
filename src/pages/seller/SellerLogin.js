@@ -11,6 +11,8 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ModalForgotPassword from "../../components/user/ModalForgotPassword";
+import toast from "react-hot-toast";
+import { getAuth, unlink } from "firebase/auth";
 
 const SellerLogin = () => {
   document.title = "Đăng nhập";
@@ -133,7 +135,8 @@ const SellerLogin = () => {
   const checkRole = async (user) => {
     const user_id = user.uid;
     const email = user.email;
-    const username = email.split("@")[0];
+    const randomNumber = Math.floor(Math.random() * 1000);
+    const username = `${email.split("@")[0]}${randomNumber}`;
     const fullname = user.displayName;
     const avtUrl = user.photoURL;
 
@@ -186,15 +189,26 @@ const SellerLogin = () => {
 
     try {
       const user = await signInWithGoogle();
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      for (let provider of user.providerData) {
+        if (provider.email !== user.email) {
+          try {
+            await unlink(currentUser, provider.providerId);
+            console.log(`Unlinked provider: ${provider.providerId}`);
+          } catch (error) {
+            console.error("Error unlinking provider: ", error);
+          }
+        }
+      }
       if (user) {
         await checkRole(user);
       }
     } catch (error) {
       console.log("Error:", error);
+      toast.error(error?.message || "Đăng nhập thất bại");
     }
   };
-
-
 
   useEffect(() => {
     if (data?.identifier === "") {
@@ -235,7 +249,8 @@ const SellerLogin = () => {
       <div>
         <form
           onSubmit={handleOnSubmit}
-          className="lg:w-96 shadow-lg px-6 py-10 mb-10">
+          className="lg:w-96 shadow-lg px-6 py-10 mb-10"
+        >
           <h1 className="font-[450] text-xl mb-10">Đăng nhập</h1>
           <Input
             className="py-3.5 px-3 w-full border rounded"
@@ -245,9 +260,7 @@ const SellerLogin = () => {
             onChange={handleOnChange}
             type="text"
           />
-          <span className="text-red-700 text-sm">
-            {error?.identifier}
-          </span>
+          <span className="text-red-700 text-sm">{error?.identifier}</span>
           <div className="relative flex items-center mt-8">
             <Input
               placeholder="Mật khẩu"
@@ -265,9 +278,7 @@ const SellerLogin = () => {
               )}
             </button>
           </div>
-          <span className="text-red-700 text-sm">
-            {error?.password}
-          </span>
+          <span className="text-red-700 text-sm">{error?.password}</span>
           <Button
             htmlType="submit"
             className="w-full bg-primary p-3 rounded text-white hover:bg-[#f3664a] mt-8"
@@ -277,7 +288,8 @@ const SellerLogin = () => {
           <div className="w-full py-3 flex cursor-pointer">
             <span
               onClick={() => setIsVisibleResetModal(true)}
-              className="text-[15px] text-[#05a]" >
+              className="text-[15px] text-[#05a]"
+            >
               Quên mật khẩu
             </span>
           </div>

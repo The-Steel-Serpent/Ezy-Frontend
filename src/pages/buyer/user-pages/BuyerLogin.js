@@ -18,6 +18,7 @@ import {
   signInWithEmailPassword,
 } from "../../../firebase/AuthenticationFirebase";
 import ModalForgotPassword from "../../../components/user/ModalForgotPassword";
+import { getAuth, unlink } from "firebase/auth";
 const BuyerLogin = () => {
   document.title = "Đăng nhập";
 
@@ -52,12 +53,12 @@ const BuyerLogin = () => {
       if (user.emailVerified) {
         const token = await user.getIdToken();
         localStorage.setItem("token", token);
-        message.success("Đăng nhập thành công");
+        toast.success("Đăng nhập thành công");
         setTimeout(() => {
           navigate("/");
         }, 2000);
       } else {
-        message.error(
+        toast.error(
           "Tài khoản của bạn chưa xác thực vui lòng xác thực email trước khi đăng nhập"
         );
         return;
@@ -65,13 +66,13 @@ const BuyerLogin = () => {
     } catch (error) {
       console.error("Error during sign-in:", error.message);
       console.error("Error message:", error.message);
-      message.error(error.message || "Đăng nhập thất bại");
+      toast.error(error?.message || "Đăng nhập thất bại");
     }
   };
   const handleOnSubmit = async (e) => {
     e.preventDefault();
     if (!data?.identifier || !data?.password) {
-      message.error("Vui lòng nhập đầy đủ thông tin.");
+      toast.error("Vui lòng nhập đầy đủ thông tin.");
       return;
     }
     const url = `${process.env.REACT_APP_BACKEND_URL}/api/find-user-email-or-username`;
@@ -87,7 +88,7 @@ const BuyerLogin = () => {
       );
       if (response.status === 200) {
         if (response.data.user.role_id !== 1) {
-          message.error("Tài khoản của bạn không phải là tài khoản khách hàng");
+          toast.error("Tài khoản của bạn không phải là tài khoản khách hàng");
           return;
         } else {
           const email = response.data.user.email;
@@ -97,8 +98,8 @@ const BuyerLogin = () => {
       }
     } catch (error) {
       if (error.status === 404) {
-        message.error("Tài khoản không tồn tại");
-      } else message.error("Đăng nhập thất bại");
+        toast.error("Tài khoản không tồn tại");
+      } else toast.error("Đăng nhập thất bại");
     }
   };
 
@@ -137,7 +138,8 @@ const BuyerLogin = () => {
   const checkRole = async (user) => {
     const user_id = user.uid;
     const email = user.email;
-    const username = email.split("@")[0];
+    const randomNumber = Math.floor(Math.random() * 1000);
+    const username = `${email.split("@")[0]}${randomNumber}`;
     const fullname = user.displayName;
     const avtUrl = user.photoURL;
 
@@ -154,13 +156,13 @@ const BuyerLogin = () => {
       );
       if (response.status === 200) {
         if (response.data.user.role_id !== 1) {
-          message.error(
+          toast.error(
             "Đăng nhập thất bại. Tài khoản của bạn không phải là tài khoản khách hàng"
           );
           return;
         }
         localStorage.setItem("token", await user.getIdToken());
-        message.success("Đăng nhập thành công");
+        toast.success("Đăng nhập thành công");
         setTimeout(() => {
           navigate("/");
         }, 3000);
@@ -177,24 +179,37 @@ const BuyerLogin = () => {
           avtUrl: avtUrl,
           isVerified: 1,
         });
+
         console.log(rs ? "Lưu tài khoản thành công" : "Lưu tài khoản thất bại");
         localStorage.setItem("token", await user.getIdToken());
-        message.success("Đăng nhập thành công");
+        toast.success("Đăng nhập thành công");
         setTimeout(() => {
           navigate("/");
         }, 3000);
-      } else message.error("Đăng nhập thất bại");
+      } else toast.error("Đăng nhập thất bại");
     }
   };
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
     try {
       const user = await signInWithGoogle();
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      for (let provider of user.providerData) {
+        if (provider.email !== user.email) {
+          try {
+            await unlink(currentUser, provider.providerId);
+            console.log(`Unlinked provider: ${provider.providerId}`);
+          } catch (error) {
+            console.error("Error unlinking provider: ", error);
+          }
+        }
+      }
       if (user) {
         await checkRole(user);
       }
     } catch (error) {
-      console.log("Error:", error);
+      toast.error(error?.message || "Đăng nhập thất bại");
     }
   };
   useEffect(() => {

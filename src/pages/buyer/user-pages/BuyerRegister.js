@@ -90,7 +90,8 @@ const BuyerRegister = () => {
   const checkRole = async (user) => {
     const user_id = user.uid;
     const email = user.email;
-    const username = email.split("@")[0];
+    const randomNumber = Math.floor(Math.random() * 1000);
+    const username = `${email.split("@")[0]}${randomNumber}`;
     const fullname = user.displayName;
     const avtUrl = user.photoURL;
 
