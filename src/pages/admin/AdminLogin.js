@@ -6,21 +6,26 @@ import { signInWithEmailPassword } from "../../firebase/AuthenticationFirebase";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
+import { useDispatch } from "react-redux";
+import { logout } from "../../redux/userSlice";
 const ALLOWED_ROLES = [3, 4, 5];// 3: Admin, 4: Event manager, 5: Shop manager
 
 const AdminLogin = () => {
   const [hidePassword, setHidePassword] = useState(false);
   const [data, setData] = useState({ identifier: "", password: "" });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Nếu có token, thực hiện tự động đăng xuất
     const token = localStorage.getItem("token");
     if (token) {
-      message.info("Bạn đăng nhập, vui lòng đăng xuất trước khi đăng nhập lại");
-      navigate("/admin");
+      localStorage.clear(); // Xóa token khỏi localStorage
+      dispatch(logout()); // Cập nhật redux state
+      message.warning("Bạn đã được đăng xuất. Vui lòng đăng nhập lại.");
     }
-  }, [navigate]);
+  }, [dispatch]);
 
   const handleHidePassword = (e) => {
     e.preventDefault();
