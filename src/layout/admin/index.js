@@ -38,18 +38,19 @@ const { Header, Sider, Content } = Layout;
 const AdminAuthLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   // const [user, setUserState] = useState(null);
+
   const user = useSelector((state) => state.user);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const supportMessageState = useSelector((state) => state.supportMessage);
+  const token = localStorage.getItem("token");
   const handleExpiredToken = () => {
     dispatch(logout());
     localStorage.clear();
-    message.error("Vui lòng đăng nhập.");
+    message.error("Phiên đăng nhập đã hết hạn.");
     navigate("/admin/login");
   };
-  const token = localStorage.getItem("token");
 
   const logOut = async () => {
     try {
@@ -64,26 +65,21 @@ const AdminAuthLayout = ({ children }) => {
           withCredentials: true,
         }
       );
-      handleExpiredToken();
       if (res.data.success) {
         dispatch(logout());
         localStorage.clear();
       }
     } catch (error) {
-      if (error.response?.data?.code === "auth/id-token-expired") {
-        handleExpiredToken();
+      if (error.response.data.code === "auth/id-token-expired") {
         message.error("Phiên Đăng nhập đã hết hạn");
+        dispatch(logout());
+        localStorage.clear();
       }
     }
   };
 
   const fetchUserData = async () => {
     setLoading(true);
-    if (!token) {
-      handleExpiredToken();
-      return;
-    }
-
     try {
       const url = `${process.env.REACT_APP_BACKEND_URL}/api/fetch_user_data`;
       const res = await axios.post(
@@ -98,20 +94,6 @@ const AdminAuthLayout = ({ children }) => {
       const fetchedUser = res.data.user;
 
       if (ALLOWED_ROLES.includes(fetchedUser.role_id)) {
-        // setUserState({
-        //   user_id: fetchedUser.user_id,
-        //   username: fetchedUser.username,
-        //   full_name: fetchedUser.full_name,
-        //   email: fetchedUser.email,
-        //   phone_number: fetchedUser.phone_number,
-        //   gender: fetchedUser.gender,
-        //   dob: fetchedUser.dob,
-        //   avt_url: fetchedUser.avt_url,
-        //   role_id: fetchedUser.role_id,
-        //   setup: fetchedUser.setup,
-        //   isVerified: fetchedUser.isVerified,
-        //   //is_banned: user.is_banned,
-        // });
         dispatch(
           setUser({
             user_id: fetchedUser.user_id,
@@ -133,10 +115,10 @@ const AdminAuthLayout = ({ children }) => {
         message.error(
           "Tài khoản của bạn không có quyền truy cập vào trang này"
         );
-        handleExpiredToken();
       }
     } catch (error) {
       console.error("Error while fetching user data: ", error);
+      handleExpiredToken();
       if (error.response) {
         console.error("Error Response: ", error.response.data);
         if (
