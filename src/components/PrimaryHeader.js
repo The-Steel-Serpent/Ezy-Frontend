@@ -21,7 +21,7 @@ import { TfiWorld } from "react-icons/tfi";
 import WhitePhoto from "../assets/logo_ezy.png";
 import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
 import {
   Button,
@@ -40,6 +40,12 @@ import { el } from "date-fns/locale";
 import { CustomerServiceOutlined, DownOutlined } from "@ant-design/icons";
 import { GrSystem } from "react-icons/gr";
 import NotificationPopover from "./notifications/NotificationPopover";
+import SupportChatbox from "./support-chatbox/SupportChatbox";
+import {
+  SupportMessageProvider,
+  useSupportMessage,
+} from "../providers/SupportMessagesProvider";
+import { setSupportMessageState } from "../redux/supportMessageSlice";
 
 const CartComponent = lazy(() => import("./cart/CartComponent"));
 // import FullLogo from "./FullLogo";
@@ -47,6 +53,9 @@ const ChatBox = lazy(() => import("./chatbox/ChatBox"));
 
 const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);
+  const supportMessageState = useSelector((state) => state.supportMessage);
+  const dispatchEvent = useDispatch();
+
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const navigate = useNavigate();
@@ -425,23 +434,25 @@ const PrimaryHeader = () => {
       <Suspense>
         <FloatButton.Group className="bottom-16">
           <FloatButton.BackTop className="go-first" />
+          <ChatBox />
           <Popover
-            content={<div className="w-[400px] h-[300px] z-[999999999]"></div>}
             trigger="click"
-            open={false}
-            placement="left"
+            content={<SupportChatbox />}
+            open={supportMessageState.openSupportChatbox}
+            onOpenChange={(newOpen) => {
+              dispatchEvent(
+                setSupportMessageState({
+                  openSupportChatbox: newOpen,
+                })
+              );
+            }}
+            placement="leftTop"
           >
             <FloatButton
-              icon={<GrSystem className="text-blue-500" />}
-              tooltip="Tin nhắn hệ thống"
+              icon={<CustomerServiceOutlined className="text-blue-500" />}
+              tooltip="Hỗ trợ khách hàng"
             />
           </Popover>
-          <ChatBox />
-
-          <FloatButton
-            icon={<CustomerServiceOutlined className="text-blue-500" />}
-            tooltip="Hỗ trợ khách hàng"
-          />
         </FloatButton.Group>
       </Suspense>
     </>

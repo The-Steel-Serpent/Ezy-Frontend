@@ -246,7 +246,7 @@ const ModalReport = (props) => {
               onRemove={handleRemoveProductImage}
               className="custom-upload"
             >
-              {localState.imgList.length < 5 && (
+              {localState.imgList.length < 6 && (
                 <div className="flex flex-col items-center">
                   <RiImageAddFill size={20} color="#EE4D2D" />
                   <div className="text-[#EE4D2D]">

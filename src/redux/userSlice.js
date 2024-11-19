@@ -17,6 +17,7 @@ const initialState = {
   wallet: {},
   onlineUser: [],
   is_banned: 0,
+  socketConnection: null,
 };
 
 export const userSlice = createSlice({
@@ -58,6 +59,7 @@ export const userSlice = createSlice({
       state.token = "";
       state.wallet = {};
       state.is_banned = 0;
+      state.socketConnection = null;
     },
     setWallet: (state, action) => {
       state.wallet = action.payload;
@@ -67,6 +69,9 @@ export const userSlice = createSlice({
     },
     setOnlineUser: (state, action) => {
       state.onlineUser = action.payload;
+    },
+    setSocketConnection: (state, action) => {
+      state.socketConnection = action.payload;
     },
   },
 });

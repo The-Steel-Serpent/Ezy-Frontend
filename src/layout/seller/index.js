@@ -14,6 +14,7 @@ import {
   message,
   Avatar,
   FloatButton,
+  Popover,
 } from "antd";
 import { TfiWallet } from "react-icons/tfi";
 import { FaUserCircle } from "react-icons/fa";
@@ -31,15 +32,19 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   DownOutlined,
+  CustomerServiceOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { startTokenRefreshListener } from "../../firebase/AuthenticationFirebase";
+import { connectSocket, disconnectSocket } from "../../socket/socketActions";
+import { GrSystem } from "react-icons/gr";
+import SupportChatbox from "../../components/support-chatbox/SupportChatbox";
+import { setSupportMessageState } from "../../redux/supportMessageSlice";
 const ChatBox = lazy(() => import("../../components/chatbox/ChatBox"));
 
 const { Header, Content, Sider } = Layout;
-
 const items = [
   {
     key: "sub1",
@@ -143,6 +148,7 @@ const SellerAuthLayout = ({ children }) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const location = useLocation();
   const navigate = useNavigate();
+  const supportMessageState = useSelector((state) => state.supportMessage);
 
   const handleNavigate = (e) => {
     // console.log('click ', e.key);
@@ -336,7 +342,15 @@ const SellerAuthLayout = ({ children }) => {
       }
     }
   }, [state.authenticate]);
+  useEffect(() => {
+    if (user?.user_id) {
+      dispatch(connectSocket(user.user_id));
 
+      return () => {
+        dispatch(disconnectSocket());
+      };
+    }
+  }, [user, dispatch]);
   const isSellerSetupPath = location.pathname === "/seller/seller-setup";
 
   return (
@@ -442,6 +456,31 @@ const SellerAuthLayout = ({ children }) => {
       </Layout>
       <Suspense>
         <FloatButton.BackTop className="go-first" />
+        <Popover trigger="click" open={false} placement="left">
+          <FloatButton
+            icon={<GrSystem className="text-blue-500" />}
+            tooltip="Tin nhắn hệ thống"
+          />
+        </Popover>
+        <Popover
+          trigger="click"
+          content={<SupportChatbox />}
+          open={supportMessageState.openSupportChatbox}
+          onOpenChange={(newOpen) => {
+            console.log("newOpen", newOpen);
+            dispatch(
+              setSupportMessageState({
+                openSupportChatbox: newOpen,
+              })
+            );
+          }}
+          placement="leftTop"
+        >
+          <FloatButton
+            icon={<CustomerServiceOutlined className="text-blue-500" />}
+            tooltip="Hỗ trợ khách hàng"
+          />
+        </Popover>
         <ChatBox />
       </Suspense>
     </>

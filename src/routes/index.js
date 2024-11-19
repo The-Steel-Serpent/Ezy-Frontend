@@ -10,6 +10,7 @@ import withSuspenseNonFallback from "../hooks/HOC/withSuspenseNonFallback";
 import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller";
 import { CheckoutProvider } from "../providers/CheckoutProvider";
 import { MessagesProvider } from "../providers/MessagesProvider";
+import { SupportMessageProvider } from "../providers/SupportMessagesProvider";
 const FlashSalePage = withSuspense(
   lazy(() => import("../pages/buyer/flash-sales/FlashSalePage"))
 );
@@ -151,7 +152,9 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <MessagesProvider>
-        <App />
+        <SupportMessageProvider>
+          <App />
+        </SupportMessageProvider>
       </MessagesProvider>
     ),
     children: [
@@ -558,7 +561,7 @@ const router = createBrowserRouter([
             <AllRequest />
           </AdminAuthLayout>
         ),
-      }
+      },
     ],
   },
 ]);
