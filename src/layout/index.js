@@ -1,7 +1,7 @@
-import React, { lazy, useEffect } from "react";
+import React, { lazy, useEffect, useState } from "react";
 import PrimaryHeader from "../components/PrimaryHeader";
 import { useLocation, useNavigate } from "react-router-dom";
-import { setUser, setToken } from "../redux/userSlice";
+import { setUser, setToken, setSocketConnection } from "../redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { message } from "antd";
@@ -12,11 +12,14 @@ import CartHeader from "../components/CartHeader";
 import { startTokenRefreshListener } from "../firebase/AuthenticationFirebase";
 import { io } from "socket.io-client";
 import { is } from "date-fns/locale";
+import { SupportMessageProvider } from "../providers/SupportMessagesProvider";
+import { connectSocket, disconnectSocket } from "../socket/socketActions";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state.user);
   const shop = useSelector((state) => state.shop);
+  // const socketConnection = useSelector((state) => state.user.socketConnection);
   const token = localStorage.getItem("token");
   const location = useLocation();
   const useType = location.pathname.split("/")[1];
@@ -116,28 +119,40 @@ const AuthLayout = ({ children }) => {
     startTokenRefreshListener();
   }, []);
 
+  // useEffect(() => {
+  //   if (!user.user_id || user.user_id === "" || user.role_id !== 1) {
+  //     return;
+  //   }
+  //   const socket = io.connect(process.env.REACT_APP_BACKEND_URL, {
+  //     query: { user_id: user.user_id },
+  //   });
+  //   console.log("kết nối đến socket rồi nè", socket);
+
+  //   socket.on("newOrder", (data) => {
+  //     const { orderID, selectedVoucher, timestamp } = data;
+  //     console.log("new order", data);
+  //     socket.emit("cancelOrder", data);
+  //   });
+
+  //   socket.on("unBlockOrder", (data) => {
+  //     socket.emit("updateBlockStatus", data);
+  //   });
+  //   dispatch(setSocketConnection(socket));
+
+  //   return () => {
+  //     socket.disconnect();
+  //   };
+  // }, [user.user_id, user.role_id, dispatch]);
+
   useEffect(() => {
-    if (!user.user_id || user.user_id === "" || user.role_id !== 1) {
-      return;
+    if (user?.user_id) {
+      dispatch(connectSocket(user.user_id));
+
+      return () => {
+        dispatch(disconnectSocket());
+      };
     }
-    const socket = io.connect(process.env.REACT_APP_BACKEND_URL, {
-      query: { user_id: user.user_id },
-    });
-
-    socket.on("newOrder", (data) => {
-      const { orderID, selectedVoucher, timestamp } = data;
-      console.log("new order", data);
-      socket.emit("cancelOrder", data);
-    });
-
-    socket.on("unBlockOrder", (data) => {
-      socket.emit("updateBlockStatus", data);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [user]);
+  }, [user, dispatch]);
 
   return (
     <>

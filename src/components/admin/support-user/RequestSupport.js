@@ -2,15 +2,23 @@ import React, { useEffect, useState } from "react";
 import { Table, message, Button } from "antd";
 import axios from "axios";
 import { acceptRequest } from "../../../services/requestSupportService";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useSupportMessage } from "../../../providers/SupportMessagesProvider";
 import { set } from "lodash";
+import { io } from "socket.io-client";
+import {
+  isNewRequest,
+  setAcceptRequest,
+  setSupportMessageState,
+} from "../../../redux/supportMessageSlice";
 
 const RequestSupport = () => {
   const [supportRequests, setSupportRequests] = useState([]);
-  const { supportMessageState, setSupportMessageState } = useSupportMessage();
+  const supportMessageState = useSelector((state) => state.supportMessage);
   const [loading, setLoading] = useState(false);
   const user = useSelector((state) => state.user);
+  const socketConnection = useSelector((state) => state.user.socketConnection);
+  const dispatch = useDispatch();
   const fetchSupportRequests = async () => {
     setLoading(true);
     try {
@@ -19,11 +27,6 @@ const RequestSupport = () => {
       );
       if (response.data.success) {
         setSupportRequests(response.data.data);
-        setSupportMessageState({
-          type: "openSupportChatbox",
-          payload: true,
-        });
-        setSupportMessageState({});
       } else {
         message.error("Lổi fetch yêu cầu hổ trợ");
       }
@@ -38,30 +41,50 @@ const RequestSupport = () => {
     fetchSupportRequests();
   }, []);
 
+  useEffect(() => {
+    if (supportMessageState.isNewRequest || supportMessageState.isClosed) {
+      fetchSupportRequests();
+      dispatch(isNewRequest({ isNewRequest: false }));
+    }
+  }, [
+    dispatch,
+    supportMessageState.isNewRequest,
+    supportMessageState.isClosed,
+  ]);
+
+  // useEffect(() => {
+  //   if (socketConnection) {
+  //     socketConnection.on("newSupportRequest", (data) => {
+  //       fetchSupportRequests();
+  //     });
+  //   }
+  //   // socket.on("supportRequestClosed", (data) => {
+  //   //   console.log(data);
+  //   //   fetchSupportRequests();
+  //   // });
+  // }, [ user, socketConnection]);
+
   const handleAcceptRequest = async (request_support_id, user_id) => {
     try {
       const res = await acceptRequest(request_support_id, user_id);
       if (res.success) {
         message.success("Đã xử lý yêu cầu hỗ trợ");
+        localStorage.setItem("request_support_id", res.data.request_support_id);
         await fetchSupportRequests();
-        setSupportMessageState({
-          type: "openSupportChatbox",
-          payload: true,
-        });
-        setSupportMessageState({
-          type: "requestSupport",
-          payload: res.data,
-        });
+        const userId =
+          user?.role_id === 1 || user?.role_id === 2
+            ? res.supporter?.user_id
+            : res.sender?.user_id;
 
-        setSupportMessageState({
-          type: "supporter",
-          payload: res.supporter,
-        });
-
-        setSupportMessageState({
-          type: "sender",
-          payload: res.sender,
-        });
+        dispatch(
+          setAcceptRequest({
+            openSupportChatbox: true,
+            selectedUserID: userId,
+            requestSupport: res.data,
+            supporter: res.supporter,
+            sender: res.sender,
+          })
+        );
       }
     } catch (error) {
       message.error(error.message);
@@ -100,6 +123,7 @@ const RequestSupport = () => {
           onClick={() =>
             handleAcceptRequest(record.request_support_id, user.user_id)
           }
+          disabled={supportMessageState.selectedUserID}
         >
           Xử lý yêu cầu
         </Button>

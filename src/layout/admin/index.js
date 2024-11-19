@@ -24,8 +24,13 @@ import { logout, setToken, setUser } from "../../redux/userSlice";
 import { startTokenRefreshListener } from "../../firebase/AuthenticationFirebase";
 import { GrSystem } from "react-icons/gr";
 import SupportChatbox from "../../components/support-chatbox/SupportChatbox";
-import { useSupportMessage } from "../../providers/SupportMessagesProvider";
+import {
+  SupportMessageProvider,
+  useSupportMessage,
+} from "../../providers/SupportMessagesProvider";
 import { io } from "socket.io-client";
+import { setSupportMessageState } from "../../redux/supportMessageSlice";
+import { connectSocket, disconnectSocket } from "../../socket/socketActions";
 const ALLOWED_ROLES = [3, 4, 5]; // 3: Admin, 4: Event manager, 5: Shop manager
 const { Header, Sider, Content } = Layout;
 
@@ -36,7 +41,7 @@ const AdminAuthLayout = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { supportMessageState, setSupportMessageState } = useSupportMessage();
+  const supportMessageState = useSelector((state) => state.supportMessage);
   const handleExpiredToken = () => {
     dispatch(logout());
     localStorage.clear();
@@ -148,27 +153,6 @@ const AdminAuthLayout = ({ children }) => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    if (!user.user_id || user.user_id === "") {
-      return;
-    }
-    const socket = io.connect(process.env.REACT_APP_BACKEND_URL, {
-      query: { user_id: user.user_id },
-    });
-    socket.on("supportRequestClosed", (data) => {
-      console.log(data);
-      localStorage.removeItem("request_support_id");
-      setSupportMessageState({
-        type: "requestSupport",
-        payload: null,
-      });
-      setSupportMessageState({ type: "sender", payload: null });
-      setSupportMessageState({ type: "supporter", payload: null });
-    });
-    return () => {
-      socket.disconnect();
-    };
-  }, [user]);
 
   useEffect(() => {
     fetchUserData();
@@ -177,6 +161,16 @@ const AdminAuthLayout = ({ children }) => {
   useEffect(() => {
     startTokenRefreshListener();
   }, []);
+
+  useEffect(() => {
+    if (user?.user_id) {
+      dispatch(connectSocket(user.user_id));
+
+      return () => {
+        dispatch(disconnectSocket());
+      };
+    }
+  }, [user, dispatch]);
 
   return (
     <Layout>
@@ -220,10 +214,12 @@ const AdminAuthLayout = ({ children }) => {
             content={<SupportChatbox />}
             open={supportMessageState.openSupportChatbox}
             onOpenChange={(newOpen) => {
-              setSupportMessageState({
-                type: "openSupportChatbox",
-                payload: newOpen,
-              });
+              console.log("newOpen", newOpen);
+              dispatch(
+                setSupportMessageState({
+                  openSupportChatbox: newOpen,
+                })
+              );
             }}
             placement="leftTop"
           >

@@ -259,6 +259,7 @@ const RightChatBox = (props) => {
         user?.user_id,
         state.selectedUserID,
         (newMessages) => {
+          console.log("newMessages", newMessages);
           const isMessageFromSelectedUser = newMessages.every(
             (msg) =>
               (msg.sender_id === selectedUserIDRef.current &&

@@ -82,10 +82,10 @@ const FlashSalesSection = () => {
     fetchSalesItem();
   }, [fetchSalesItem]);
 
-  useEffect(() => {
-    console.log(flashSalesItem);
-    console.log(time);
-  }, [flashSalesItem, time]);
+  // useEffect(() => {
+  //   console.log(flashSalesItem);
+  //   console.log(time);
+  // }, [flashSalesItem, time]);
 
   return (
     <>

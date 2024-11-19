@@ -21,7 +21,7 @@ import { TfiWorld } from "react-icons/tfi";
 import WhitePhoto from "../assets/logo_ezy.png";
 import { IoIosSearch } from "react-icons/io";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AvatarWithPopover from "./AvatarWithPopover";
 import {
   Button,
@@ -41,7 +41,11 @@ import { CustomerServiceOutlined, DownOutlined } from "@ant-design/icons";
 import { GrSystem } from "react-icons/gr";
 import NotificationPopover from "./notifications/NotificationPopover";
 import SupportChatbox from "./support-chatbox/SupportChatbox";
-import { useSupportMessage } from "../providers/SupportMessagesProvider";
+import {
+  SupportMessageProvider,
+  useSupportMessage,
+} from "../providers/SupportMessagesProvider";
+import { setSupportMessageState } from "../redux/supportMessageSlice";
 
 const CartComponent = lazy(() => import("./cart/CartComponent"));
 // import FullLogo from "./FullLogo";
@@ -49,7 +53,9 @@ const ChatBox = lazy(() => import("./chatbox/ChatBox"));
 
 const PrimaryHeader = () => {
   const user = useSelector((state) => state?.user);
-  const { supportMessageState, setSupportMessageState } = useSupportMessage();
+  const supportMessageState = useSelector((state) => state.supportMessage);
+  const dispatchEvent = useDispatch();
+
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const navigate = useNavigate();
@@ -440,10 +446,11 @@ const PrimaryHeader = () => {
             content={<SupportChatbox />}
             open={supportMessageState.openSupportChatbox}
             onOpenChange={(newOpen) => {
-              setSupportMessageState({
-                type: "openSupportChatbox",
-                payload: newOpen,
-              });
+              dispatchEvent(
+                setSupportMessageState({
+                  openSupportChatbox: newOpen,
+                })
+              );
             }}
             placement="leftTop"
           >

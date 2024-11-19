@@ -3,66 +3,320 @@ import {
   CloseOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Avatar, Button, Input, Modal, Upload } from "antd";
-import React, { memo, useEffect } from "react";
+import {
+  Avatar,
+  Button,
+  Form,
+  Image,
+  Input,
+  message,
+  Modal,
+  Upload,
+} from "antd";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { FaImage } from "react-icons/fa";
 import { FaVideo } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import { useSupportMessage } from "../../providers/SupportMessagesProvider";
 import { RiImageAddFill } from "react-icons/ri";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
+import {
+  sendMessage,
+  subscribeToMessages,
+  uploadFile,
+} from "../../firebase/messageFirebase";
+import { getRequestById } from "../../services/requestSupportService";
+import {
+  setAcceptRequest,
+  setSupportMessageState,
+} from "../../redux/supportMessageSlice";
 
 const SupportChatbox = () => {
   const {
-    supportMessageState,
-    setSupportMessageState,
+    fileList,
+    setFileList,
     handleUploadFileListChange,
     beforeUpload,
     handleRemoveProductImage,
     handlePreview,
     handleSendRequest,
     handleCloseRequest,
+    // handleOnMessageChange,
+    handlePaste,
   } = useSupportMessage();
 
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState("");
+
   const user = useSelector((state) => state.user);
+  const supportMessageState = useSelector((state) => state.supportMessage);
+  const dispatch = useDispatch();
+  const currMessage = useRef(null);
+  const unsubscribeRef = useRef(null);
+  const loadMoreRef = useRef(null);
+  const selectedUserIDRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user.user_id || user.user_id === "") {
-      return;
-    }
-    const socket = io.connect(process.env.REACT_APP_BACKEND_URL, {
-      query: { user_id: user.user_id },
-    });
+    selectedUserIDRef.current = supportMessageState.selectedUserID;
+    console.log("selectedUserIDRef.current: ", selectedUserIDRef.current);
+    console.log(
+      "supportMessageState.selectedUserID: ",
+      supportMessageState.selectedUserID
+    );
+  }, [supportMessageState.selectedUserID]);
 
-    socket.on("supportRequestAccepted", (data) => {
-      console.log("support data: ", data);
-      localStorage.setItem(
-        "request_support_id",
-        data.requestSupport.request_support_id
+  useEffect(() => {
+    if (supportMessageState.isClosed) {
+      setMessages([]);
+      console.log(supportMessageState.selectedUserID);
+      console.log("Hủy rồi nè: ");
+    }
+  }, [supportMessageState.isClosed]);
+
+  useEffect(() => {
+    const initializeSubscription = async () => {
+      const { unsubscribe, loadMore } = await subscribeToMessages(
+        user?.user_id,
+        selectedUserIDRef.current,
+        (newMessages) => {
+          if (Array.isArray(newMessages) && newMessages.length > 0) {
+            const isMessageFromSelectedUser = newMessages.every(
+              (msg) =>
+                (msg?.sender_id === selectedUserIDRef.current &&
+                  msg?.receiver_id === user?.user_id) ||
+                (msg?.receiver_id === selectedUserIDRef.current &&
+                  msg?.sender_id === user?.user_id)
+            );
+
+            if (isMessageFromSelectedUser) {
+              setMessages((prevMessages) => {
+                const existingMessageIds = new Set(
+                  prevMessages.map((msg) => msg.id)
+                );
+                const uniqueNewMessages = newMessages.filter(
+                  (msg) =>
+                    !existingMessageIds.has(msg.id) && msg.createdAt !== null
+                );
+
+                if (uniqueNewMessages.length > 0) {
+                  currMessage.current = uniqueNewMessages[0]?.id;
+                  return [...prevMessages, ...uniqueNewMessages];
+                }
+
+                return prevMessages;
+              });
+            }
+          }
+        },
+        (moreMessages) => {
+          if (Array.isArray(moreMessages) && moreMessages.length > 0) {
+            const isMoreMessagesFromSelectedUser = moreMessages.every(
+              (msg) =>
+                (msg?.sender_id === selectedUserIDRef.current &&
+                  msg?.receiver_id === user?.user_id) ||
+                (msg?.receiver_id === selectedUserIDRef.current &&
+                  msg?.sender_id === user?.user_id)
+            );
+            if (isMoreMessagesFromSelectedUser) {
+              setMessages((prevMessages) => [...moreMessages, ...prevMessages]);
+            }
+          }
+        }
       );
-      setSupportMessageState({
-        type: "requestSupport",
-        payload: data.requestSupport,
-      });
-      setSupportMessageState({ type: "sender", payload: data.sender });
-      setSupportMessageState({ type: "supporter", payload: data.supporter });
-    });
-    socket.on("supportRequestClosed", (data) => {
-      console.log(data);
-      localStorage.removeItem("request_support_id");
-      setSupportMessageState({
-        type: "requestSupport",
-        payload: null,
-      });
-      setSupportMessageState({ type: "sender", payload: null });
-      setSupportMessageState({ type: "supporter", payload: null });
-    });
+
+      unsubscribeRef.current = unsubscribe;
+      loadMoreRef.current = loadMore;
+    };
+
+    if (
+      supportMessageState.openSupportChatbox &&
+      user?.user_id !== "" &&
+      !unsubscribeRef.current &&
+      selectedUserIDRef.current !== null
+    ) {
+      initializeSubscription();
+    }
 
     return () => {
-      socket.disconnect();
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
     };
-  }, [user]);
+  }, [
+    selectedUserIDRef,
+    supportMessageState.selectedUserID,
+    supportMessageState.openSupportChatbox,
+    user?.user_id,
+  ]);
+
+  useEffect(() => {
+    if (currMessage.current) {
+      const element = document.getElementById(currMessage.current);
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }
+    }
+  }, [messages]);
+
+  const fetchSupportRequest = useCallback(
+    async (request_support_id) => {
+      try {
+        const res = await getRequestById(request_support_id);
+        if (res.success) {
+          dispatch(
+            setAcceptRequest({
+              selectedUserID:
+                user?.role_id === 1 || user?.role_id === 2
+                  ? res.supporter?.user_id
+                  : res.sender?.user_id,
+              requestSupport: res.data,
+              sender: res.sender,
+              supporter: res.supporter,
+            })
+          );
+          // setSupportMessageState({ type: "requestSupport", payload: res.data });
+          // setSupportMessageState({ type: "supporter", payload: res.supporter });
+          // setSupportMessageState({ type: "sender", payload: res.sender });
+
+          // setSelectedUserID(
+
+          // );
+        }
+      } catch (error) {
+        console.error("Error fetching support request:", error);
+        message.error("Đang gặp lỗi, vui lòng thử lại sau");
+      }
+    },
+    [dispatch, user?.role_id]
+  );
+
+  useEffect(() => {
+    const request_support_id = localStorage.getItem("request_support_id");
+    if (request_support_id) {
+      fetchSupportRequest(request_support_id);
+    }
+  }, [fetchSupportRequest]);
+
+  const handleOnMessageChange = useCallback((e) => {
+    setMessageText(e.target.value);
+  }, []);
+  const handleScroll = async (e) => {
+    const { scrollTop } = e.target;
+
+    if (
+      scrollTop === 0 &&
+      !loading &&
+      typeof loadMoreRef.current === "function"
+    ) {
+      setLoading(true);
+      try {
+        await loadMoreRef.current();
+      } catch (error) {
+        console.error("Error loading more messages:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleSendMessage = useCallback(
+    async (e) => {
+      e.preventDefault();
+      try {
+        const sendMessages = [];
+        if (messageText.trim() !== "") {
+          console.log("Gửi tin nhắn thành công");
+          sendMessages.push(
+            sendMessage(
+              messageText.trim(),
+              "",
+              "",
+              user?.user_id,
+              selectedUserIDRef.current,
+              "support"
+            )
+          );
+        }
+        if (fileList.length > 0) {
+          for (const file of fileList) {
+            if (file && file.originFileObj.type.startsWith("image/")) {
+              console.log("file: ", file);
+              const imgUrl = await uploadFile(file.originFileObj, "image");
+              sendMessages.push(
+                sendMessage(
+                  "",
+                  "image",
+                  imgUrl,
+                  user?.user_id,
+                  selectedUserIDRef.current,
+                  "support"
+                )
+              );
+              console.log("Gửi tin nhắn thành công");
+            }
+          }
+        }
+
+        if (fileList.length > 0) {
+          for (const file of fileList) {
+            if (file && file.originFileObj.type.startsWith("video/")) {
+              const videoUrl = await uploadFile(file.originFileObj, "video");
+              sendMessages.push(
+                sendMessage(
+                  "",
+                  "video",
+                  videoUrl,
+                  user?.user_id,
+                  selectedUserIDRef.current,
+                  "support"
+                )
+              );
+            }
+          }
+        }
+
+        await Promise.all(sendMessages);
+      } catch (error) {
+        console.log("Gửi tin nhắn thất bại: ", error);
+      } finally {
+        setMessageText("");
+        setFileList([]);
+      }
+    },
+    [dispatch, fileList, messageText, user?.user_id]
+  );
+
+  const handleFormatTime = useCallback((time) => {
+    if (!time || !time.seconds || !time.nanoseconds) {
+      return ""; // Hoặc giá trị mặc định khác nếu muốn
+    }
+    const date = new Date(time.seconds * 1000 + time.nanoseconds / 1000000);
+
+    const now = new Date(); // Ngày giờ hiện tại
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    hours = hours.toString().padStart(2, "0");
+    minutes = minutes.toString().padStart(2, "0");
+    const isToday =
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
+
+    if (isToday) {
+      return `${hours}:${minutes}`;
+    } else {
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are zero-indexed
+      const year = date.getFullYear();
+      return `${hours}:${minutes} ${day}/${month}/${year}`;
+    }
+  }, []);
 
   return (
     <div className="w-[700px] h-[572px] z-[999999999]">
@@ -78,38 +332,68 @@ const SupportChatbox = () => {
         <CloseOutlined
           className="text-[26px] cursor-pointer"
           onClick={() =>
-            setSupportMessageState({
-              type: "openSupportChatbox",
-              payload: !supportMessageState.openSupportChatbox,
-            })
+            dispatch(
+              setSupportMessageState({
+                openSupportChatbox: !supportMessageState.openSupportChatbox,
+              })
+            )
           }
         />
       </div>
       <div className="w-full h-[420px] relative">
         <div
           className={`${
-            supportMessageState.fileList.length === 0 ? "h-full" : "h-[266px]"
+            fileList.length === 0 ? "h-full" : "h-[266px]"
           } overflow-y-auto flex flex-col gap-2 p-5`}
+          onScroll={handleScroll}
         >
-          <div className="flex justify-end">
-            <div className="bg-third p-2 rounded max-w-[400px] justify-start break-words flex flex-col gap-2">
-              <div className="text-primary font-semibold">Bạn</div>
-              <span className="">
-                Heheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-              </span>
-              <span className="text-neutral-500">18:48 04/11/2024</span>
-            </div>
-          </div>
-          <div className="flex justify-start">
-            <div className="bg-slate-100 w-fit p-2 rounded flex justify-end flex-col  max-w-[400px] break-words">
-              <span className="text-primary font-semibold">
-                Nhân viên{" "}
-                {supportMessageState?.supporter?.full_name?.split(" ").pop()}
-              </span>
-              <span>Hehe</span>
-              <span className="text-neutral-500">18:48 04/11/2024</span>
-            </div>
-          </div>
+          {loading && <div>Loading...</div>}
+          {Array.isArray(messages) &&
+            messages?.map((message, index) => (
+              <div
+                className={`flex ${
+                  user?.user_id === message.sender_id
+                    ? "justify-end"
+                    : "justify-start"
+                } `}
+                key={message.id}
+                id={message.id}
+              >
+                <div
+                  className={`p-2 max-w-[400px] rounded  break-words flex flex-col gap-2 ${
+                    user?.user_id === message.sender_id
+                      ? "justify-start bg-third"
+                      : "justify-end bg-slate-100"
+                  }`}
+                >
+                  <span className="text-primary font-semibold">
+                    {user?.user_id === message.sender_id
+                      ? "Bạn"
+                      : user?.user_id !== message.sender_id &&
+                        (user?.role_id === 1 || user?.role_id === 2)
+                      ? `Nhân viên ${supportMessageState?.supporter?.full_name
+                          ?.split(" ")
+                          .pop()}`
+                      : `Khách hàng ${supportMessageState?.sender?.full_name}`}
+                  </span>
+                  {message.text && <span>{message.text}</span>}
+                  {message.mediaUrl && message.mediaType === "image" && (
+                    <Image src={message.mediaUrl} className="size-32" />
+                  )}
+                  {message.mediaUrl && message.mediaType === "video" && (
+                    <video
+                      src={message.mediaUrl}
+                      controls
+                      className="size-32"
+                    />
+                  )}
+                  <span className="text-neutral-500">
+                    {" "}
+                    {handleFormatTime(message?.createdAt)}
+                  </span>
+                </div>
+              </div>
+            ))}
         </div>
         {supportMessageState.requestSupport?.status === "processing" && (
           <Button
@@ -138,12 +422,12 @@ const SupportChatbox = () => {
             </Button>
           )}
 
-        {supportMessageState.fileList.length > 0 && (
+        {fileList.length > 0 && (
           <section className="static w-full h-16 pt-2 flex bg-white border-t-[1px] border-solid border-[#e4e6e8] box-border ">
             <Upload
               listType="picture-card"
               maxCount={6}
-              fileList={supportMessageState.fileList}
+              fileList={fileList}
               onChange={handleUploadFileListChange}
               onPreview={handlePreview}
               beforeUpload={beforeUpload}
@@ -151,23 +435,47 @@ const SupportChatbox = () => {
               className="custom-upload"
               accept="image/*,video/*"
             >
-              {supportMessageState.fileList.length < 6 && (
+              {fileList.length < 6 && (
                 <div className="flex flex-col items-center">
                   <RiImageAddFill size={20} color="#EE4D2D" />
                   <div className="text-[#EE4D2D]">
-                    Thêm hình ảnh {supportMessageState.fileList.length}/6
+                    Thêm hình ảnh {fileList.length}/6
                   </div>
                 </div>
               )}
             </Upload>
+            {supportMessageState.previewImage && (
+              <Image
+                wrapperStyle={{
+                  display: "none",
+                }}
+                preview={{
+                  visible: supportMessageState.previewOpen,
+                  onVisibleChange: (visible) =>
+                    dispatch(
+                      setSupportMessageState({
+                        previewOpen: visible,
+                      })
+                    ),
+                  afterOpenChange: (visible) =>
+                    !visible &&
+                    dispatch(
+                      setSupportMessageState({
+                        previewImage: "",
+                      })
+                    ),
+                }}
+                src={supportMessageState.previewImage}
+              />
+            )}
           </section>
         )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <div className="flex justify-center items-center gap-3 text-primary">
           <Upload
             beforeUpload={beforeUpload}
-            fileList={supportMessageState.fileList}
+            fileList={fileList}
             onChange={handleUploadFileListChange}
             onRemove={handleRemoveProductImage}
             showUploadList={false}
@@ -181,7 +489,7 @@ const SupportChatbox = () => {
           <Upload
             beforeUpload={beforeUpload}
             onChange={handleUploadFileListChange}
-            fileList={supportMessageState.fileList}
+            fileList={fileList}
             onRemove={handleRemoveProductImage}
             showUploadList={false}
             accept="video/*"
@@ -192,13 +500,33 @@ const SupportChatbox = () => {
             />
           </Upload>
         </div>
-        <Input className="rounded-full" placeholder="Nhập vào tin nhắn" />
-        <div className="flex justify-center items-center text-primary">
-          <IoMdSend
-            size={27}
-            className="hover:rounded-full p-1 hover:bg-primary hover:text-white"
+        <form className="w-full flex gap-2" onSubmit={handleSendMessage}>
+          <Input
+            className="rounded-full"
+            placeholder="Nhập vào tin nhắn"
+            onChange={handleOnMessageChange}
+            onPaste={handlePaste}
+            onSubmit={handleSendMessage}
+            value={messageText}
+            disabled={supportMessageState.requestSupport?.status === "waiting"}
           />
-        </div>
+          <Button
+            className="flex justify-center items-center text-primary rounded-full w-fit"
+            htmlType="submit"
+            onSubmit={handleSendMessage}
+            disabled={
+              supportMessageState.requestSupport?.status === "waiting"
+              // ||
+              // message.trim() === "" ||
+              // fileList.length === 0
+            }
+          >
+            <IoMdSend
+              size={27}
+              className="hover:rounded-full p-1 hover:bg-primary hover:text-white"
+            />
+          </Button>
+        </form>
       </div>
     </div>
   );

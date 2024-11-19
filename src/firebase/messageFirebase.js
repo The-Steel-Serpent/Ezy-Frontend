@@ -81,14 +81,32 @@ export const getUserInfo = async (userId) => {
 
 export const uploadFile = async (file, type) => {
   const storageRef = ref(storage, `${type}/${file.name}-${Date.now()}`);
-  const snapshot = await uploadBytes(storageRef, file);
-  return await getDownloadURL(snapshot.ref);
+
+  const metadata = {
+    contentType: file.type, // Đây sẽ là 'image/jpeg' hoặc loại MIME đúng của tệp
+  };
+
+  try {
+    // Tải lên tệp với metadata
+    const snapshot = await uploadBytes(storageRef, file, metadata);
+
+    // Lấy URL tải xuống
+    return await getDownloadURL(snapshot.ref);
+  } catch (error) {
+    console.error("Upload failed:", error);
+    throw error;
+  }
 };
 
-const getOrCreateConversation = async (senderId, receiverId) => {
+const getOrCreateConversation = async (
+  senderId,
+  receiverId,
+  type = "seller-buyer"
+) => {
   const q = query(
     conversationsCollection,
-    where("participants", "array-contains", senderId)
+    where("participants", "array-contains", senderId),
+    where("type", "==", type)
   );
   const snapshot = await getDocs(q);
 
@@ -110,6 +128,7 @@ const getOrCreateConversation = async (senderId, receiverId) => {
       pinnedBy: [],
       isBlocked: false,
       createdAt: serverTimestamp(),
+      type: type,
     });
     conversation = { id: newConversationRef.id };
   }
@@ -183,7 +202,8 @@ export const subscribeToMessages = (
         });
       } else {
         // Nếu không có conversation nào, callback với mảng rỗng
-        callback([]);
+        let messages = [];
+        callback(messages);
       }
     }
   );
@@ -250,11 +270,16 @@ export const sendMessage = async (
   mediaType,
   mediaUrl,
   senderId,
-  receiverId
+  receiverId,
+  type = "seller-buyer"
 ) => {
   if ((message.trim() || mediaType.trim()) && senderId && receiverId) {
     // Kiểm tra hoặc tạo mới một conversation
-    const conversationId = await getOrCreateConversation(senderId, receiverId);
+    const conversationId = await getOrCreateConversation(
+      senderId,
+      receiverId,
+      type
+    );
 
     // Thêm tin nhắn mới vào collection messages với conversationId
     await addDoc(messagesCollection, {
@@ -289,70 +314,261 @@ export const markMessagesAsRead = async (msgIds, userId) => {
 
   await batch.commit();
 };
+// export const getChattingUsers = async (
+//   userId,
+//   filterType = "",
+//   filterText = "",
+//   type = "seller-buyer"
+// ) => {
+//   const users = new Map();
+//   // Query for sent messages
+//   const qSent = query(
+//     messagesCollection,
+//     where("sender_id", "==", userId),
+//     orderBy("createdAt", "desc")
+//   );
+//   const snapshotSent = await getDocs(qSent);
+
+//   snapshotSent.forEach((doc) => {
+//     const message = doc.data();
+//     const id = doc.id;
+//     const dataMessage = { id, ...message };
+
+//     const receiverId = message.receiver_id;
+//     if (receiverId !== userId && !users.has(receiverId)) {
+//       users.set(receiverId, {
+//         lastMessage: dataMessage,
+//         unseenCount: 0,
+//       });
+//     }
+//   });
+
+//   // Query for received messages
+//   const qReceived = query(
+//     messagesCollection,
+//     where("receiver_id", "==", userId),
+//     orderBy("createdAt", "desc")
+//   );
+//   const snapshotReceived = await getDocs(qReceived);
+
+//   snapshotReceived.forEach((doc) => {
+//     const message = doc.data();
+//     const senderId = message.sender_id;
+//     const id = doc.id;
+//     const dataMessage = { id, ...message };
+//     if (senderId !== userId) {
+//       if (!users.has(senderId)) {
+//         users.set(senderId, {
+//           lastMessage: dataMessage,
+//           unseenCount: 0,
+//         });
+//       } else {
+//         const userInfo = users.get(senderId);
+//         if (!message.isRead) {
+//           userInfo.unseenCount += 1;
+//         }
+//         if (message.createdAt > userInfo.lastMessage.createdAt) {
+//           userInfo.lastMessage = dataMessage;
+//         }
+//       }
+//     }
+//   });
+
+//   const chattingUsers = await Promise.all(
+//     Array.from(users).map(async ([otherUserId, userInfo]) => {
+//       console.log("type", type);
+
+//       const conversationQuery = query(
+//         conversationsCollection,
+//         where("type", "==", type),
+//         where("participants", "array-contains", userId)
+//       );
+//       console.log("conversationQuery", conversationQuery);
+
+//       const conversationSnapshot = await getDocs(conversationQuery);
+//       console.log("Snapshot data:", conversationSnapshot.docs);
+//       let conversationData = null;
+
+//       conversationSnapshot.forEach((doc) => {
+//         const conversation = doc.data();
+//         if (
+//           conversation.participants.includes(otherUserId) &&
+//           conversation.type === type
+//         ) {
+//           conversationData = {
+//             conversationId: doc.id,
+//             isMuted: conversation.mutedBy.includes(userId),
+//             isPinned: conversation.pinnedBy.includes(userId),
+//             isBlocked: conversation.isBlocked,
+//             createdAt: conversation.createdAt,
+//             type: conversation.type,
+//           };
+//         }
+//       });
+//       return {
+//         userInfo: await getUserInfo(otherUserId),
+//         lastMessage: userInfo.lastMessage,
+//         unseenCount: conversationData?.isMuted ? 0 : userInfo.unseenCount,
+//         ...conversationData,
+//       };
+//     })
+//   );
+//   const filteredChattingUsers = chattingUsers.filter((chatUser) => {
+//     const { userInfo, unseenCount, isPinned } = chatUser;
+
+//     // Filter based on the filterType
+//     if (filterType === "unread") {
+//       return unseenCount > 0;
+//     } else if (filterType === "pinned") {
+//       return isPinned;
+//     } else {
+//       return true;
+//     }
+//   });
+
+//   const finalFilteredChattingUsers = filterText
+//     ? filteredChattingUsers.filter((chatUser) => {
+//         const { userInfo } = chatUser;
+//         return (
+//           userInfo.Shop.shop_name
+//             .toLowerCase()
+//             .includes(filterText.toLowerCase()) ||
+//           userInfo.username.toLowerCase().includes(filterText.toLowerCase())
+//         );
+//       })
+//     : filteredChattingUsers;
+
+//   const sortedChattingUsers = finalFilteredChattingUsers.sort((a, b) => {
+//     if (a.isPinned && !b.isPinned) return -1;
+//     if (!a.isPinned && b.isPinned) return 1;
+
+//     const aCreatedAt = a.lastMessage.createdAt
+//       ? a.lastMessage.createdAt.toMillis()
+//       : 0;
+//     const bCreatedAt = b.lastMessage.createdAt
+//       ? b.lastMessage.createdAt.toMillis()
+//       : 0;
+
+//     return bCreatedAt - aCreatedAt;
+//   });
+
+//   return sortedChattingUsers;
+// };
+
 export const getChattingUsers = async (
   userId,
   filterType = "",
-  filterText = ""
+  filterText = "",
+  type = "seller-buyer"
 ) => {
   const users = new Map();
 
-  // Query for sent messages
-  const qSent = query(
-    messagesCollection,
-    where("sender_id", "==", userId),
-    orderBy("createdAt", "desc")
+  // Tìm các cuộc trò chuyện của người dùng
+  const conversationQuery = query(
+    conversationsCollection,
+    where("type", "==", type),
+    where("participants", "array-contains", userId)
   );
-  const snapshotSent = await getDocs(qSent);
+  const conversationSnapshot = await getDocs(conversationQuery);
 
-  snapshotSent.forEach((doc) => {
-    const message = doc.data();
-    const id = doc.id;
-    const dataMessage = { id, ...message };
+  // Lặp qua từng cuộc trò chuyện
+  for (const doc of conversationSnapshot.docs) {
+    const conversation = doc.data();
+    const conversationId = doc.id;
 
-    const receiverId = message.receiver_id;
-    if (receiverId !== userId && !users.has(receiverId)) {
-      users.set(receiverId, {
-        lastMessage: dataMessage,
-        unseenCount: 0,
-      });
-    }
-  });
-
-  // Query for received messages
-  const qReceived = query(
-    messagesCollection,
-    where("receiver_id", "==", userId),
-    orderBy("createdAt", "desc")
-  );
-  const snapshotReceived = await getDocs(qReceived);
-
-  snapshotReceived.forEach((doc) => {
-    const message = doc.data();
-    const senderId = message.sender_id;
-    const id = doc.id;
-    const dataMessage = { id, ...message };
-    if (senderId !== userId) {
-      if (!users.has(senderId)) {
-        users.set(senderId, {
-          lastMessage: dataMessage,
-          unseenCount: 0,
-        });
-      } else {
-        const userInfo = users.get(senderId);
-        if (!message.isRead) {
-          userInfo.unseenCount += 1;
-        }
-        if (message.createdAt > userInfo.lastMessage.createdAt) {
-          userInfo.lastMessage = dataMessage;
+    // Lặp qua các người tham gia trong mỗi cuộc trò chuyện
+    conversation.participants.forEach((otherUserId) => {
+      if (otherUserId !== userId) {
+        // Kiểm tra nếu người tham gia chưa có trong danh sách
+        if (!users.has(otherUserId)) {
+          users.set(otherUserId, {
+            conversationId,
+            lastMessage: null,
+            unseenCount: 0,
+          });
         }
       }
-    }
-  });
+    });
 
+    const qSent = query(
+      messagesCollection,
+      where("sender_id", "==", userId),
+      where("conversationId", "==", conversationId), // Thêm lọc theo conversationId
+      orderBy("createdAt", "desc")
+    );
+    const snapshotSent = await getDocs(qSent);
+
+    snapshotSent.forEach((doc) => {
+      const message = doc.data();
+      const id = doc.id;
+      const dataMessage = { id, ...message };
+
+      const receiverId = message.receiver_id;
+      if (receiverId !== userId) {
+        if (!users.has(receiverId)) {
+          users.set(receiverId, {
+            lastMessage: dataMessage,
+            unseenCount: 0,
+          });
+        } else {
+          const userInfo = users.get(receiverId);
+          if (
+            !userInfo.lastMessage ||
+            message.createdAt > userInfo.lastMessage.createdAt
+          ) {
+            userInfo.lastMessage = dataMessage;
+          }
+        }
+      }
+    });
+
+    // Query for received messages (chỉ lọc theo conversationId)
+    const qReceived = query(
+      messagesCollection,
+      where("receiver_id", "==", userId),
+      where("conversationId", "==", conversationId), // Thêm lọc theo conversationId
+      orderBy("createdAt", "desc")
+    );
+    const snapshotReceived = await getDocs(qReceived);
+
+    snapshotReceived.forEach((doc) => {
+      const message = doc.data();
+      const senderId = message.sender_id;
+      const id = doc.id;
+      const dataMessage = { id, ...message };
+
+      if (senderId !== userId) {
+        // Kiểm tra nếu người gửi chưa có trong danh sách
+        if (!users.has(senderId)) {
+          users.set(senderId, {
+            lastMessage: dataMessage,
+            unseenCount: 0,
+          });
+        } else {
+          const userInfo = users.get(senderId);
+
+          // Chỉ tăng unseenCount nếu tin nhắn chưa đọc
+          if (!message.isRead) {
+            userInfo.unseenCount += 1;
+          }
+          // Cập nhật tin nhắn cuối cùng nếu tin nhắn mới hơn
+          if (
+            !userInfo.lastMessage ||
+            message.createdAt > userInfo.lastMessage.createdAt
+          ) {
+            userInfo.lastMessage = dataMessage;
+          }
+        }
+      }
+    });
+  }
+
+  // Lấy thông tin người dùng và các cuộc trò chuyện cuối cùng
   const chattingUsers = await Promise.all(
     Array.from(users).map(async ([otherUserId, userInfo]) => {
       const conversationQuery = query(
         conversationsCollection,
+        where("type", "==", type),
         where("participants", "array-contains", userId)
       );
 
@@ -361,16 +577,21 @@ export const getChattingUsers = async (
 
       conversationSnapshot.forEach((doc) => {
         const conversation = doc.data();
-        if (conversation.participants.includes(otherUserId)) {
+        if (
+          conversation.participants.includes(otherUserId) &&
+          conversation.type === type
+        ) {
           conversationData = {
             conversationId: doc.id,
             isMuted: conversation.mutedBy.includes(userId),
             isPinned: conversation.pinnedBy.includes(userId),
             isBlocked: conversation.isBlocked,
             createdAt: conversation.createdAt,
+            type: conversation.type,
           };
         }
       });
+
       return {
         userInfo: await getUserInfo(otherUserId),
         lastMessage: userInfo.lastMessage,
@@ -379,10 +600,11 @@ export const getChattingUsers = async (
       };
     })
   );
+
   const filteredChattingUsers = chattingUsers.filter((chatUser) => {
     const { userInfo, unseenCount, isPinned } = chatUser;
 
-    // Filter based on the filterType
+    // Lọc theo filterType
     if (filterType === "unread") {
       return unseenCount > 0;
     } else if (filterType === "pinned") {
@@ -408,12 +630,8 @@ export const getChattingUsers = async (
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
 
-    const aCreatedAt = a.lastMessage.createdAt
-      ? a.lastMessage.createdAt.toMillis()
-      : 0;
-    const bCreatedAt = b.lastMessage.createdAt
-      ? b.lastMessage.createdAt.toMillis()
-      : 0;
+    const aCreatedAt = a.lastMessage?.createdAt?.toMillis() || 0;
+    const bCreatedAt = b.lastMessage?.createdAt?.toMillis() || 0;
 
     return bCreatedAt - aCreatedAt;
   });
