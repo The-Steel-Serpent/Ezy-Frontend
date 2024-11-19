@@ -20,6 +20,9 @@ import event9 from "../assets/event9.png";
 import backgroundEngaged from "../assets/engaged.png";
 import categoryImg1 from "../assets/category1.png";
 
+const TopSellingCategoriesSection = lazy(() =>
+  import("../components/sub-categories/TopSellingCategoriesSection")
+);
 const FlashSalesSection = lazy(() =>
   import("../components/flash-sales/FlashSalesSection")
 );
@@ -153,6 +156,10 @@ const Home = () => {
       </div>
       <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
         <FlashSalesSection />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton.Node active={true} className="w-full" />}>
+        <TopSellingCategoriesSection />
       </Suspense>
 
       <div className="max-w-[1200px] bg-white m-auto h-fit mt-5">

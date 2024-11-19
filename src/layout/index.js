@@ -120,31 +120,6 @@ const AuthLayout = ({ children }) => {
     startTokenRefreshListener();
   }, []);
 
-  // useEffect(() => {
-  //   if (!user.user_id || user.user_id === "" || user.role_id !== 1) {
-  //     return;
-  //   }
-  //   const socket = io.connect(process.env.REACT_APP_BACKEND_URL, {
-  //     query: { user_id: user.user_id },
-  //   });
-  //   console.log("kết nối đến socket rồi nè", socket);
-
-  //   socket.on("newOrder", (data) => {
-  //     const { orderID, selectedVoucher, timestamp } = data;
-  //     console.log("new order", data);
-  //     socket.emit("cancelOrder", data);
-  //   });
-
-  //   socket.on("unBlockOrder", (data) => {
-  //     socket.emit("updateBlockStatus", data);
-  //   });
-  //   dispatch(setSocketConnection(socket));
-
-  //   return () => {
-  //     socket.disconnect();
-  //   };
-  // }, [user.user_id, user.role_id, dispatch]);
-
   useEffect(() => {
     if (user?.user_id) {
       dispatch(connectSocket(user.user_id));
@@ -154,30 +129,6 @@ const AuthLayout = ({ children }) => {
       };
     }
   }, [user, dispatch]);
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        console.log("User logged in after email verification: ", user);
-
-        // Tiến hành unlink các provider không trùng email
-        for (let provider of user.providerData) {
-          if (provider.email !== user.email) {
-            try {
-              await unlink(auth, provider.providerId); // Xóa provider
-              console.log(`Unlinked provider: ${provider.providerId}`);
-            } catch (error) {
-              console.error("Error unlinking provider: ", error);
-            }
-          }
-        }
-      } else {
-        console.log("User is not logged in after email verification.");
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
   return (
     <>
       {useType !== "buyer" && useType !== "cart" && <PrimaryHeader />}

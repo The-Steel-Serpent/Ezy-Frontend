@@ -47,9 +47,10 @@ const NotificationSection = () => {
         const res = await fetchNotifications(user?.user_id, page, 7, type);
         console.log(res);
         if (res.success) {
+          const updatedNotifications = [...notifications, ...res.data];
           setLocalState({
             type: "notifications",
-            payload: res.data,
+            payload: updatedNotifications,
           });
           setLocalState({ type: "totalPages", payload: res.totalPages });
         }

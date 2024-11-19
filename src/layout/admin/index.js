@@ -205,7 +205,6 @@ const AdminAuthLayout = ({ children }) => {
         <FloatButton.Group className="bottom-16">
           <FloatButton.BackTop className="go-first" />
           <ChatBox />
-
           <Popover
             trigger="click"
             content={<SupportChatbox />}

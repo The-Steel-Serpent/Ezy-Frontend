@@ -22,6 +22,7 @@ import {
   setPreviewImage,
   setSupportMessageState,
 } from "../redux/supportMessageSlice";
+import { emitSocketEvent } from "../socket/socketActions";
 const SupportMessageContext = createContext();
 export const SupportMessageProvider = ({ children }) => {
   const dispatch = useDispatch();
@@ -97,18 +98,21 @@ export const SupportMessageProvider = ({ children }) => {
     });
   };
 
-  const handlePreview = useCallback(async (file) => {
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj);
-    }
-    dispatch(
-      setPreviewImage({
-        previewImage: file.url || file.preview,
-        previewVisible: true,
-        previewOpen: true,
-      })
-    );
-  }, []);
+  const handlePreview = useCallback(
+    async (file) => {
+      if (!file.url && !file.preview) {
+        file.preview = await getBase64(file.originFileObj);
+      }
+      dispatch(
+        setPreviewImage({
+          previewImage: file.url || file.preview,
+          previewVisible: true,
+          previewOpen: true,
+        })
+      );
+    },
+    [dispatch]
+  );
   const handleSendRequest = async (user_id) => {
     dispatch(sendSupportRequest(user_id));
   };

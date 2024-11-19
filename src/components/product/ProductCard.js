@@ -68,7 +68,7 @@ const ProductCard = ({ value, loading, itemsPerRow = 6 }) => {
               disabled
               allowHalf
               value={value?.avgRating || 0}
-              className="text-[11px] mr-1"
+              className="text-[11px] mr-1 top-rating"
             />
 
             <div className="text-[10px] pt-1">
