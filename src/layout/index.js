@@ -15,6 +15,7 @@ import { is } from "date-fns/locale";
 import { SupportMessageProvider } from "../providers/SupportMessagesProvider";
 import { connectSocket, disconnectSocket } from "../socket/socketActions";
 import { getAuth, onAuthStateChanged, unlink } from "firebase/auth";
+import Footer from "../components/Footer";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -134,6 +135,7 @@ const AuthLayout = ({ children }) => {
       {useType !== "buyer" && useType !== "cart" && <PrimaryHeader />}
       {useType === "cart" && <CartHeader />}
       {children}
+      <Footer />
     </>
   );
 };
