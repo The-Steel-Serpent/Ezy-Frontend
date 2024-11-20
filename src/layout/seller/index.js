@@ -42,6 +42,7 @@ import { connectSocket, disconnectSocket } from "../../socket/socketActions";
 import { GrSystem } from "react-icons/gr";
 import SupportChatbox from "../../components/support-chatbox/SupportChatbox";
 import { setSupportMessageState } from "../../redux/supportMessageSlice";
+import NotificationPopover from "../../components/notifications/NotificationPopover";
 const ChatBox = lazy(() => import("../../components/chatbox/ChatBox"));
 
 const { Header, Content, Sider } = Layout;
@@ -90,7 +91,7 @@ const items = [
         label: "Doanh thu",
       },
       {
-        key: "10",
+        key: "/seller/wallet/shop-wallet",
         label: "Ví Ezy",
       },
     ],
@@ -262,6 +263,7 @@ const SellerAuthLayout = ({ children }) => {
                 full_name: user.full_name,
                 email: user.email,
                 phone_number: user.phone_number,
+                security_password: user.security_password,
                 gender: user.gender,
                 dob: user.dob,
                 avt_url: user.avt_url,
@@ -379,7 +381,7 @@ const SellerAuthLayout = ({ children }) => {
               <GoBook color="white" size={25} />
             </div> */}
             <div className="text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block">
-              <VscBell color="white" size={25} />
+              <NotificationPopover />
             </div>
             <Divider type="vertical" variant="dotted" style={{ height: 30 }} />
             <div className="flex h-full items-center text-slate-600 gap-3 hover:bg-[#8ad3e5] py-4">

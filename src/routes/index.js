@@ -157,6 +157,14 @@ const SalesRevenue = withSuspense(
   lazy(() => import("../pages/seller/statistics/SalesRevenue"))
 )
 
+const ShopWallet = withSuspense(
+  lazy(() => import("../pages/seller/wallet/ShopWallet"))
+)
+
+const ShopNotifications = withSuspense(
+  lazy(() => import("../pages/seller/notification/ShopNotifications"))
+)
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -487,6 +495,22 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <SalesRevenue />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/wallet/shop-wallet",
+        element: (
+          <SellerAuthLayout>
+            <ShopWallet />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/notification",
+        element: (
+          <SellerAuthLayout>
+            <ShopNotifications />
           </SellerAuthLayout>
         ),
       },
