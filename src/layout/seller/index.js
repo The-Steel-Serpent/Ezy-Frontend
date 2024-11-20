@@ -86,7 +86,7 @@ const items = [
     icon: <TfiWallet />,
     children: [
       {
-        key: "9",
+        key: "/seller/statistic/sales-revenue",
         label: "Doanh thu",
       },
       {
@@ -372,12 +372,12 @@ const SellerAuthLayout = ({ children }) => {
             </div>
           </div>
           <div className="flex mx-10 items-center h-full">
-            <div className="text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block">
+            {/* <div className="text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block">
               <HiOutlineSquares2X2 color="white" size={25} />
             </div>
             <div className="text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block">
               <GoBook color="white" size={25} />
-            </div>
+            </div> */}
             <div className="text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block">
               <VscBell color="white" size={25} />
             </div>

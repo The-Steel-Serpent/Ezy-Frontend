@@ -147,6 +147,10 @@ const CustomShop = withSuspense(
   lazy(() => import("../pages/seller/custom_shop/CustomShop"))
 )
 
+const SalesRevenue = withSuspense(
+  lazy(() => import("../pages/seller/statistics/SalesRevenue"))
+)
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -461,6 +465,14 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <CustomShop />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/statistic/sales-revenue",
+        element: (
+          <SellerAuthLayout>
+            <SalesRevenue />
           </SellerAuthLayout>
         ),
       },
