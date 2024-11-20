@@ -30,6 +30,8 @@ export const CheckoutProvider = ({ children }) => {
           return { ...state, uid: action.payload };
         case "setDefaultAddress":
           return { ...state, defaultAddress: action.payload };
+        case "isFetchingAddress":
+          return { ...state, isFetchingAddress: action.payload };
         case "cartListWithoutInvalidItems":
           return { ...state, cartListWithoutInvalidItems: action.payload };
         case "openAddressModal":
@@ -105,6 +107,7 @@ export const CheckoutProvider = ({ children }) => {
       uid: null,
       loading: false,
       defaultAddress: null,
+      isFetchingAddress: false,
       verifyOTP: false,
       cartListWithoutInvalidItems: [],
       openAddressModal: false,

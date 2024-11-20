@@ -32,13 +32,7 @@ const NotificationSection = () => {
     }
   );
   const { notifications, loading, page, totalPages } = localState;
-  useEffect(() => {
-    setLocalState((prevState) => ({
-      ...prevState,
-      notifications: [],
-      page: 1,
-    }));
-  }, [type]);
+
   // Fetch initial notifications
   useEffect(() => {
     const getNotifications = async () => {
@@ -47,9 +41,10 @@ const NotificationSection = () => {
         const res = await fetchNotifications(user?.user_id, page, 7, type);
         console.log(res);
         if (res.success) {
+          const updatedNotifications = [...notifications, ...res.data];
           setLocalState({
             type: "notifications",
-            payload: res.data,
+            payload: updatedNotifications,
           });
           setLocalState({ type: "totalPages", payload: res.totalPages });
         }
@@ -63,6 +58,35 @@ const NotificationSection = () => {
       getNotifications();
     }
   }, [user, page, type]);
+
+  useEffect(() => {
+    const resetStateAndFetch = async () => {
+      // Reset mảng notifications và page trước khi fetch
+      setLocalState({ type: "notifications", payload: [] });
+      setLocalState({ type: "page", payload: 1 });
+
+      // Gọi API lấy dữ liệu mới
+      setLocalState({ type: "loading", payload: true });
+      try {
+        const res = await fetchNotifications(user?.user_id, 1, 7, type);
+        if (res.success) {
+          setLocalState({
+            type: "notifications",
+            payload: res.data,
+          });
+          setLocalState({ type: "totalPages", payload: res.totalPages });
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLocalState({ type: "loading", payload: false });
+      }
+    };
+
+    if (user?.user_id && type) {
+      resetStateAndFetch();
+    }
+  }, [type, user]);
 
   const onScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;

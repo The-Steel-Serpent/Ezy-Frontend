@@ -399,3 +399,7 @@
 .time-frame-item.selected {
   @apply bg-yellow-500 text-white;
 }
+
+.top-rating .ant-rate-star {
+  margin-inline-end: 3px !important;
+}

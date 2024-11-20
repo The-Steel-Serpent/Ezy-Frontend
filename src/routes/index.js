@@ -11,6 +11,12 @@ import PrivateRouteSeller from "../components/authentication/PrivateRouteSeller"
 import { CheckoutProvider } from "../providers/CheckoutProvider";
 import { MessagesProvider } from "../providers/MessagesProvider";
 import { SupportMessageProvider } from "../providers/SupportMessagesProvider";
+const TopSellingSubCategoriesPage = withSuspense(
+  lazy(() =>
+    import("../pages/buyer/sub-categories/TopSellingSubCategoriesPage")
+  )
+);
+
 const FlashSalePage = withSuspense(
   lazy(() => import("../pages/buyer/flash-sales/FlashSalePage"))
 );
@@ -272,6 +278,14 @@ const router = createBrowserRouter([
         element: (
           <AuthLayout>
             <Categories />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "/top-products",
+        element: (
+          <AuthLayout>
+            <TopSellingSubCategoriesPage />
           </AuthLayout>
         ),
       },

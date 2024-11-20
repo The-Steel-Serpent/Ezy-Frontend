@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Table, message, Button } from "antd";
+import { Table, message, Button, Input, DatePicker, Row, Col } from "antd";
 import axios from "axios";
 import { acceptRequest } from "../../../services/requestSupportService";
 import { useDispatch, useSelector } from "react-redux";
 import { useSupportMessage } from "../../../providers/SupportMessagesProvider";
 import { set } from "lodash";
 import { io } from "socket.io-client";
+import dayjs from "dayjs";
 import {
   isNewRequest,
   setAcceptRequest,
   setSupportMessageState,
 } from "../../../redux/supportMessageSlice";
-
+const { Search } = Input;
 const RequestSupport = () => {
   const [supportRequests, setSupportRequests] = useState([]);
   const supportMessageState = useSelector((state) => state.supportMessage);
+  const [filteredRequests, setFilteredRequests] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useSelector((state) => state.user);
   const socketConnection = useSelector((state) => state.user.socketConnection);
@@ -26,7 +31,16 @@ const RequestSupport = () => {
         `${process.env.REACT_APP_BACKEND_URL}/api/request-support/get-support-request`
       );
       if (response.data.success) {
-        setSupportRequests(response.data.data);
+        const sortedData = response.data.data.sort((a, b) => {
+          // Ưu tiên trạng thái "processing"
+          if (a.status === "Đang chờ xử lý" && b.status !== "Đang chờ xử lý") return -1;
+          if (a.status !== "Đang chờ xử lý" && b.status === "Đang chờ xử lý") return 1;
+  
+          // Nếu trạng thái giống nhau, sắp xếp theo ngày tạo
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        });
+        setSupportRequests(sortedData);
+        setFilteredRequests(sortedData);
       } else {
         message.error("Lổi fetch yêu cầu hổ trợ");
       }
@@ -90,6 +104,44 @@ const RequestSupport = () => {
       message.error(error.message);
     }
   };
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+    filterRequests(searchTerm, date, endDate);
+  };
+
+  const handleEndDateChange = (date) => {
+    setEndDate(dayjs(date).endOf("day"));
+    filterRequests(searchTerm, startDate, dayjs(date).endOf("day"));
+  };
+
+
+  const filterRequests = (term, start, end) => {
+    const lowerCaseTerm = term.toLowerCase();
+
+    const filteredData = supportRequests.filter((request) => {
+      const requestDate = dayjs(request.createdAt);
+
+      const matchesDate =
+        (!start || requestDate.isAfter(dayjs(start).startOf("day"), "second")) &&
+        (!end || requestDate.isBefore(dayjs(end).endOf("day"), "second")); // Sửa tại đây
+
+      const matchesTerm =
+        request.request_support_id.toString().includes(lowerCaseTerm) ||
+        (request.UserAccount?.full_name?.toLowerCase() || "").includes(lowerCaseTerm);
+
+      return matchesDate && matchesTerm;
+    });
+
+    setFilteredRequests(filteredData);
+  };
+
+
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    filterRequests(value, startDate, endDate);
+  };
+
 
   // Define table columns
   const columns = [
@@ -117,27 +169,56 @@ const RequestSupport = () => {
     {
       title: "Thao tác",
       key: "action",
-      render: (text, record) => (
-        <Button
-          type="primary"
-          onClick={() =>
-            handleAcceptRequest(record.request_support_id, user.user_id)
-          }
-          disabled={supportMessageState.selectedUserID}
-        >
-          Xử lý yêu cầu
-        </Button>
-      ),
-    },
+      render: (text, record) => {
+        const isActionDisabled =
+          ["closed", "done", "processing"].includes(record.status.toLowerCase());
+        return (
+          <Button
+            type="primary"
+            onClick={() =>
+              handleAcceptRequest(record.request_support_id, user.user_id)
+            }
+            disabled={isActionDisabled || supportMessageState.selectedUserID}
+          >
+            Xử lý yêu cầu
+          </Button>
+        );
+      },
+    }
   ];
 
   return (
     <div>
-      <h2 style={{ marginBottom: 20, fontSize: 20 }}>
-        Danh sách yêu cầu hổ trợ
-      </h2>
+      <h2 style={{ marginBottom: 20, fontSize: 20 }}>Danh sách yêu cầu hỗ trợ</h2>
+      <div style={{ marginBottom: 20 }}>
+        <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
+          <Col>
+            <DatePicker
+              onChange={handleStartDateChange}
+              style={{ width: "200px" }}
+              placeholder="Từ ngày"
+            />
+          </Col>
+          <Col>
+            <DatePicker
+              onChange={handleEndDateChange}
+              style={{ width: "200px" }}
+              placeholder="Đến ngày"
+            />
+          </Col>
+          <Col>
+            <Search
+              placeholder="Nhập id hoặc tên người dùng"
+              onSearch={handleSearch}
+              allowClear
+              style={{ width: "400px" }}
+            />
+          </Col>
+        </Row>
+      </div>
+
       <Table
-        dataSource={supportRequests}
+        dataSource={filteredRequests}
         columns={columns}
         rowKey="request_support_id"
         loading={loading}
