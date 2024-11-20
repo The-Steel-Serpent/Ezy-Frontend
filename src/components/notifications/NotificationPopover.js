@@ -41,9 +41,8 @@ const NotificationPopover = () => {
         }
         renderItem={(item) => (
           <List.Item
-            className={`w-full hover:bg-slate-100 cursor-pointer ${
-              item.is_read === 0 ? "bg-third" : ""
-            }`}
+            className={`w-full hover:bg-slate-100 cursor-pointer ${item.is_read === 0 ? "bg-third" : ""
+              }`}
           >
             <NotificationMiniItem item={item} />
           </List.Item>
@@ -66,7 +65,7 @@ const NotificationPopover = () => {
       content={content}
     >
       <a
-        href="/user/notification?type=order"
+        href={`/${user?.role_id === 1 ? "user" : "seller"}/notification?type=order`}
         className="flex items-center nav-link-hoverable gap-1"
       >
         <Badge count={notifications.notSeen} size="small" showZero>

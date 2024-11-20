@@ -149,6 +149,22 @@ const OrderCancel = withSuspense(
   lazy(() => import("../pages/seller/orders/OrderCancel"))
 );
 
+const CustomShop = withSuspense(
+  lazy(() => import("../pages/seller/custom_shop/CustomShop"))
+)
+
+const SalesRevenue = withSuspense(
+  lazy(() => import("../pages/seller/statistics/SalesRevenue"))
+)
+
+const ShopWallet = withSuspense(
+  lazy(() => import("../pages/seller/wallet/ShopWallet"))
+)
+
+const ShopNotifications = withSuspense(
+  lazy(() => import("../pages/seller/notification/ShopNotifications"))
+)
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -463,6 +479,38 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <EditProduct />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/customize-shop",
+        element: (
+          <SellerAuthLayout>
+            <CustomShop />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/statistic/sales-revenue",
+        element: (
+          <SellerAuthLayout>
+            <SalesRevenue />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/wallet/shop-wallet",
+        element: (
+          <SellerAuthLayout>
+            <ShopWallet />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/notification",
+        element: (
+          <SellerAuthLayout>
+            <ShopNotifications />
           </SellerAuthLayout>
         ),
       },

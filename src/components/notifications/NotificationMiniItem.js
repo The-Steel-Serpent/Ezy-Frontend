@@ -16,7 +16,9 @@ const NotificationMiniItem = (props) => {
     try {
       const res = await markNotificationAsRead(item.notification_id);
       if (res.success) {
-        navigate(item.url);
+        if (user?.role_id === 1) {
+          navigate(item.url);
+        }
         dispatch(
           fetchNotificationsData({ userID: user?.user_id, page: 1, limit: 5 })
         );

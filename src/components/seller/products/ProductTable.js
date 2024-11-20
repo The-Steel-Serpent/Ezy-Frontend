@@ -2,12 +2,13 @@ import { Button, Checkbox, Dropdown, Image, message, Modal, Table } from 'antd'
 import React, { useEffect, useReducer, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { deleteSomeProducts, getShopProducts, searchShopProducts, updateProductStatus } from '../../../services/productService'
-import { MdOutlineSell } from "react-icons/md";
+import { MdEventNote, MdOutlineSell } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 import EditProductLevel1Modal from './EditProductLevel1Modal';
 import EditProductLevel2Modal from './EditProductLevel2Modal';
 import EditProductLevel3Modal from './EditProductLevel3Modal';
 import EditSaleInfoModal from './EditSaleInfoModal';
+import { getProductsRegistedEvent } from '../../../services/saleEventService';
 // reducer
 const initialState = {
     productsFetch: [],
@@ -115,7 +116,7 @@ const reducer = (state, action) => {
         case 'SET_LOADING_DELETE_PRODUCT':
             return { ...state, loading_delete_product: action.payload }
         case 'SET_PRODUCTS_REGISTED_EVENT':
-            return { ...state, products_registed_event: action.payload } 
+            return { ...state, products_registed_event: action.payload }
         default:
             return state;
     }
@@ -244,33 +245,48 @@ const ProductTable =
                 dataIndex: 'name',
                 key: 'name',
                 render: (text, record) => (
-                    <div className='flex items-center mx-auto max-w-52 h-36 gap-3'>
+                    <div className="flex items-center mx-auto max-w-52 h-36 gap-3">
                         <Image
                             src={record.thumbnail}
                             alt={text}
-                            className='cursor-pointer min-w-20 max-w-20'
+                            className="cursor-pointer min-w-20 max-w-20"
                             preview={{
                                 mask: record.product_status === 0 ? (
-                                    <span className='text-red-500 text-center'>Đã tạm dừng</span>
+                                    <span className="text-red-500 text-center">Đã tạm dừng</span>
                                 ) : null
                             }}
                         />
-                        <div className='flex flex-col items-start'>
-                            <span className='font-semibold  max-w-36 line-clamp-2 '>{text}</span>
-                            <div className='flex w-full h-full items-center gap-2'>
-                                <div className='flex items-center'>
-                                    <MdOutlineSell size={15} className='text-slate-500' />
-                                    <div className='mt-[12px] ml-3'>
+                        <div className="flex flex-col items-start">
+                            <span className="font-semibold max-w-36 line-clamp-2">
+                                {text}
+                            </span>
+
+                            {/* "Đã đăng ký sự kiện" section */}
+                            {state.products_registed_event?.map((product, index) => {
+                                if (product.product_id === record.product_id) {
+                                    return (
+                                        <div
+                                            key={index}
+                                            className="text-red-500 flex items-center gap-2 bg-red-100 rounded-md px-2 py-1 mt-1"
+                                        >
+                                            <MdEventNote size={30} className="text-red-500" />
+                                            <span className="text-sm font-medium">Sự kiện </span>
+                                        </div>
+                                    );
+                                }
+                            })}
+
+                            <div className="flex w-full h-full items-center gap-2">
+                                <div className="flex items-center">
+                                    <MdOutlineSell size={15} className="text-slate-500" />
+                                    <div className="mt-[12px] ml-3">
                                         {record.sold}
                                     </div>
                                 </div>
                             </div>
-                            {
-                                record.product_status === 0 ? (
-                                    <div className='text-red-500'>Đã tạm dừng</div>
-                                ) : null
-                            }
-
+                            {record.product_status === 0 && (
+                                <div className="text-red-500">Đã tạm dừng</div>
+                            )}
                         </div>
                     </div>
                 )
@@ -301,7 +317,6 @@ const ProductTable =
                 key: 'action',
             }
         ]
-
         const handleNavigateToEditProduct = (product_id) => {
             navigate(`/seller/product-management/edit-product/${product_id}`);
         }
@@ -390,6 +405,24 @@ const ProductTable =
             dispatch({ type: 'SET_PRODUCTS_STATUS', payload: products_status });
         }
 
+        const handleGetProductsRegistedEvent = async (shop_id) => {
+            const products = await getProductsRegistedEvent(shop_id);
+            console.log("Products registed event:", products);
+            if (products.success) {
+                dispatch({ type: 'SET_PRODUCTS_REGISTED_EVENT', payload: products.data });
+            }
+            else {
+                console.error("Error fetching products registed event:", products.message);
+            }
+        }
+
+        useEffect(() => {
+            if(state?.products_registed_event?.length > 0){
+                console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:", state.products_registed_event);
+                console.log("bbbbbbbbbbbbbbbbbbbbbbbbbbbbb:", state.dataSource);
+
+            }
+        },[state.products_registed_event])
 
         // call api
         // fetch products
@@ -400,9 +433,10 @@ const ProductTable =
                 const shop_id = shop.shop_id;
                 try {
                     products = await getShopProducts(shop_id, product_status, state.current_page, state.page_size);
-                    console.log("Fetched products:", products);
                     dispatch({ type: 'SET_PRODUCTS_FETCH', payload: products.data });
                     handleSetFetchProducts(products);
+                    handleGetProductsRegistedEvent(shop_id);
+                    console.log("Fetched products:", products);
                 } catch (error) {
                     console.error("Error fetching shop products:", error);
                     dispatch({ type: 'SET_DATA_SOURCE', payload: [] });
@@ -423,6 +457,8 @@ const ProductTable =
             state.current_page,
             state.page_size
         ]);
+
+
 
         // set data source
         useEffect(() => {
