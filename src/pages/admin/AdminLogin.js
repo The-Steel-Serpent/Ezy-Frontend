@@ -95,7 +95,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32">
+    <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32 mb-[-40px]">
       <div className="max-w-96 px-3 my-24 hidden lg:block">
         <div className="text-primary text-3xl font-[490]">Quản lý chuyên nghiệp</div>
         <div className="text-slate-600 text-[21px] py-2">Kênh quản trị hệ thống của Ezy</div>

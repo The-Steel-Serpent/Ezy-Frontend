@@ -373,14 +373,8 @@ const SellerAuthLayout = ({ children }) => {
               </a>
             </div>
           </div>
-          <div className="flex mx-10 items-center h-full">
-            {/* <div className="text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block">
-              <HiOutlineSquares2X2 color="white" size={25} />
-            </div>
-            <div className="text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block">
-              <GoBook color="white" size={25} />
-            </div> */}
-            <div className="text-slate-600 hover:bg-[#8ad3e5] py-4 px-3 hidden lg:block">
+          <div className="flex mx-10 items-center h-full text-lg">
+            <div className="py-4 px-3 text-white text-lg hidden lg:block">
               <NotificationPopover />
             </div>
             <Divider type="vertical" variant="dotted" style={{ height: 30 }} />
@@ -402,7 +396,7 @@ const SellerAuthLayout = ({ children }) => {
                         icon={<FaUserCircle />}
                       />
                     )}
-                    <span className="text-white text-[15px]">
+                    <span className="text-white">
                       {shop.shop_name != ""
                         ? shop.shop_name
                         : state?.user?.email}
@@ -420,7 +414,7 @@ const SellerAuthLayout = ({ children }) => {
               trigger={null}
               collapsible
               collapsed={collapsed}
-              className="bg-white w-fit h-full shadow-xl"
+              className="bg-white shadow-xl h-screen overflow-y-auto"
             >
               <div className="demo-logo-vertical" />
               <Menu

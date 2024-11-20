@@ -4,6 +4,7 @@ import { Layout } from 'antd';
 import "../styles/seller.css"
 
 import { useNavigate } from 'react-router-dom';
+import Footer from '../components/Footer';
 
 
 const { Content } = Layout;
@@ -14,7 +15,7 @@ const AuthenticationLayout = ({ children }) => {
 
     return (
         <>
-            <Layout>
+            <Layout className='h-full'>
                 <header className='bg-primary w-full flex items-center lg:px-20 custom-header'>
                     <div className='flex py-2 items-center gap-2'>
                         <a href='/seller'>
@@ -35,6 +36,7 @@ const AuthenticationLayout = ({ children }) => {
                     <Content className='min-h-64'>
                         {children}
                     </Content>
+                    <Footer />
                 </Layout>
             </Layout>
         </>

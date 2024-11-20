@@ -476,7 +476,7 @@ const SellerRegister = () => {
   }, [data]);
   document.title = "Đăng Ký";
   return (
-    <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32 bg-inmg">
+    <div className="bg-white w-full mt-1 shadow-inner flex justify-center gap-32 bg-inmg mb-[-40px]">
       <div className="max-w-96 px-3 my-24 hidden lg:block">
         <div className="text-primary text-2xl font-[490]">Ezy Việt Nam</div>
         <div className="text-primary text-4xl font-[490]">
