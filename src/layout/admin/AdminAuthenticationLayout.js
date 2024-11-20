@@ -2,6 +2,7 @@ import React from 'react';
 import logo from '../../assets/image (1) (2).png';
 import { Layout } from 'antd';
 import "../../styles/admin.css";
+import Footer from '../../components/Footer';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -33,6 +34,7 @@ const AuthenticationLayout = ({ children }) => {
                         {children}
                     </Content>
                 </Layout>
+                <Footer />
             </Layout>
         </>
     )

@@ -5,7 +5,19 @@ import { RiImageAddFill } from 'react-icons/ri';
 import { CiSquarePlus, CiSquareRemove } from "react-icons/ci";
 import { MdOutlineLeakRemove } from "react-icons/md";
 import uploadFile from '../../../helpers/uploadFile';
-import { addProductClassify, addProductSize, addProductVarient, deleteAllProductVarients, deleteSomeProductClassify, deleteSomeProductVarients, findClassifiesID, getProductSize, resetProductStock, updateClassifyTypeName, updateProductClassify } from '../../../services/productService';
+import {
+    addProductClassify,
+    addProductSize,
+    addProductVarient,
+    deleteAllProductVarients,
+    deleteSomeProductClassify,
+    deleteSomeProductVarients,
+    findClassifiesID,
+    getProductSize,
+    resetProductStock,
+    updateClassifyTypeName, 
+    updateProductClassify
+} from '../../../services/productService';
 const initialState = {
     classify_type: null,
     classifies_name: [],
@@ -846,7 +858,7 @@ const EditProductLevel2Modal = forwardRef(({ visible, onCancel, product, resetDa
                     </Row>
                 ))}
                 {
-                    !state.down_to_level_1  && (
+                    !state.down_to_level_1 && (
                         <CiSquarePlus
                             size={30}
                             onClick={handleAddClassifyRow}
