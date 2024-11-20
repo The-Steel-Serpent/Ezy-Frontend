@@ -36,7 +36,7 @@ const VoucherItem = (props) => {
         </div>
         <div className="flex items-center gap-2">
           <span className="font-semibold">Đơn tối thiểu:</span>
-          <span>{formatNumber(item?.min_order_value)}</span>
+          <span>{formatNumber(item?.min_order_value)}đ</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-semibold">Tên Voucher:</span>
@@ -50,6 +50,10 @@ const VoucherItem = (props) => {
           >
             {item?.discount_voucher_code} <RiFileCopy2Line />{" "}
           </span>
+        </div>
+        <div className="flex  items-center gap-2">
+          <span className="font-semibold">Số lượt tối đa: </span>
+          <span>{item?.usage}</span>
         </div>
         <div className="flex flex-col">
           <span className="font-semibold">Điều kiện:</span>

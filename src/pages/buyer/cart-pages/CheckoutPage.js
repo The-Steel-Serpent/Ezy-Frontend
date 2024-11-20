@@ -67,12 +67,17 @@ const CheckoutPage = () => {
   } = state;
   const fetchDefaultAddress = async (userID) => {
     try {
+      setState({ type: "loading", payload: true });
+
       const res = await getDefaultAddress(userID);
       if (res.success) {
         setState({ type: "setDefaultAddress", payload: res.data });
       }
     } catch (error) {
       console.log("Lỗi khi lấy địa chỉ mặc định: ", error.message || error);
+    } finally {
+      setState({ type: "isFetchingAddress", payload: true });
+      setState({ type: "loading", payload: false });
     }
   };
 
@@ -130,9 +135,8 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (user?.user_id && user?.user_id !== "") {
       const userID = user?.user_id;
-      setState({ type: "loading", payload: true });
+
       fetchDefaultAddress(userID);
-      setState({ type: "loading", payload: false });
     }
   }, [user?.user_id]);
 
@@ -162,6 +166,13 @@ const CheckoutPage = () => {
       setState({ type: "loading", payload: true });
     }
   }, [cart]);
+
+  useEffect(() => {
+    if (defaultAddress === null && state.isFetchingAddress === true) {
+      console.log("Chưa có địa chỉ mặc định");
+      handleOpenAddressModal();
+    }
+  }, [defaultAddress, state.isFetchingAddress]);
 
   return (
     <>
