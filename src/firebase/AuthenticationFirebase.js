@@ -44,7 +44,6 @@ export const startTokenRefreshListener = () => {
   });
 };
 
-
 export const signUpWithEmailPassword = async (email, password) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(

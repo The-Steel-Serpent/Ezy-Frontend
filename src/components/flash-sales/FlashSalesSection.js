@@ -42,8 +42,10 @@ const FlashSalesSection = () => {
           payload: data,
         });
 
-        const startTime = moment.tz(data[0].started_at, "Asia/Ho_Chi_Minh");
-        const endedTime = moment.tz(data[0].ended_at, "Asia/Ho_Chi_Minh");
+        console.log(data);
+
+        const startTime = moment.tz(data[0]?.started_at, "Asia/Ho_Chi_Minh");
+        const endedTime = moment.tz(data[0]?.ended_at, "Asia/Ho_Chi_Minh");
         const currentTime = moment.tz(new Date(), "Asia/Ho_Chi_Minh");
 
         if (currentTime.isBetween(startTime, endedTime)) {

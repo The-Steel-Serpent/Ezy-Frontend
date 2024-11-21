@@ -235,6 +235,9 @@ const SupportChatbox = () => {
       try {
         const sendMessages = [];
         if (messageText.trim() !== "") {
+          console.log("messageText: ", messageText);
+          console.log("selectedUserIDRef.current: ", selectedUserIDRef.current);
+          console.log("user?.user_id: ", user?.user_id);
           console.log("Gửi tin nhắn thành công");
           sendMessages.push(
             sendMessage(
@@ -293,7 +296,7 @@ const SupportChatbox = () => {
         setFileList([]);
       }
     },
-    [dispatch, fileList, messageText, user?.user_id]
+    [fileList, messageText, setFileList, user?.user_id]
   );
 
   const handleFormatTime = useCallback((time) => {
