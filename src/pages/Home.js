@@ -8,17 +8,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout, setUser } from "../redux/userSlice";
 import { Button, Carousel, Skeleton, Spin } from "antd";
-import event1 from "../assets/event1.png";
-import event2 from "../assets/event2.png";
-import event3 from "../assets/event3.png";
-import event4 from "../assets/event4.png";
-import event5 from "../assets/event5.png";
-import event6 from "../assets/event6.png";
-import event7 from "../assets/event7.png";
-import event8 from "../assets/event8.png";
-import event9 from "../assets/event9.png";
+import event1 from "../assets/page-1.png";
+import event2 from "../assets/page-2.png";
+import event3 from "../assets/page-3.png";
+import event4 from "../assets/page-4.png";
+
 import backgroundEngaged from "../assets/engaged.png";
 import categoryImg1 from "../assets/category1.png";
+import SaleBanner from "../components/sale-banner/SaleBanner";
 
 const TopSellingCategoriesSection = lazy(() =>
   import("../components/sub-categories/TopSellingCategoriesSection")
@@ -31,17 +28,7 @@ const ProductSuggestions = lazy(() =>
   import("../components/product/ProductSuggestions")
 );
 
-const events = [
-  { img: event1, name: "Vourcher Giảm Đến 1 Triệu" },
-  { img: event2, name: "Miễn Phí Ship - Có Shopee" },
-  { img: event3, name: "Shopee Choice Mua 3 Giảm 50%" },
-  { img: event4, name: "Khung Giờ Săn Sale" },
-  { img: event5, name: "Mã Giảm Giá" },
-  { img: event6, name: "Shopee Siêu Rẻ" },
-  { img: event7, name: "Shopee Style Voucher 40%" },
-  { img: event8, name: "Quốc Tế Siêu Trợ Giá" },
-  { img: event9, name: "Nạp Thẻ, Dịch Vụ & Vé Máy Bay" },
-];
+const events = [event1, event2, event3, event4];
 
 const responsiveCateCarousel = [
   {
@@ -118,6 +105,16 @@ const Home = () => {
           </motion.div>
         </div>
       </div>
+      <Carousel
+        className="max-w-[1200px] mx-auto mt-5"
+        arrows
+        infinite={true}
+        autoplay={true}
+      >
+        {events.map((event, index) => (
+          <img key={index} src={event} className="w-full" />
+        ))}
+      </Carousel>
 
       <div className="max-w-[1200px] bg-white m-auto h-fit mt-5">
         <p className="py-6 px-5 text-[rgba(0,0,0,.54)] border-b-[1px] font-medium mb-0">

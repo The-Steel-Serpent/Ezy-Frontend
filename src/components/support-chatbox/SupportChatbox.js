@@ -180,6 +180,10 @@ const SupportChatbox = () => {
               supporter: res.supporter,
             })
           );
+          console.log("res: ", res.data);
+          if (res.data.status === "closed") {
+            localStorage.removeItem("request_support_id");
+          }
           // setSupportMessageState({ type: "requestSupport", payload: res.data });
           // setSupportMessageState({ type: "supporter", payload: res.supporter });
           // setSupportMessageState({ type: "sender", payload: res.sender });

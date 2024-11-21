@@ -75,13 +75,13 @@ const socketMiddleware = (store) => (next) => (action) => {
               isNewRequest: true,
             })
           );
-          //   store.dispatch(
-          //     emitSocketEvent("followNewSupportRequest", {
-          //       request_support_id: data.request_support_id,
-          //       requestor_id: data.requestor_id,
-          //       time: new Date(),
-          //     })
-          //   );
+          store.dispatch(
+            emitSocketEvent("followNewSupportRequest", {
+              request_support_id: data.request_support_id,
+              requestor_id: data.requestor_id,
+              time: new Date(),
+            })
+          );
         });
       }
       break;
@@ -98,7 +98,6 @@ const socketMiddleware = (store) => (next) => (action) => {
 
     // Gửi sự kiện (emit)
     case "socket/emit": {
-      console.log("emit", action.payload);
       const { event, data } = action.payload;
       if (socket) {
         socket.emit(event, data);

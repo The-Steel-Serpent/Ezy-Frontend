@@ -403,3 +403,10 @@
 .top-rating .ant-rate-star {
   margin-inline-end: 3px !important;
 }
+
+.sale-banner-modal .ant-modal-content {
+  @apply bg-transparent shadow-none p-0;
+}
+..sale-banner-modal .ant-modal-content .ant-modal-close-icon.anticon {
+  @apply text-white;
+}

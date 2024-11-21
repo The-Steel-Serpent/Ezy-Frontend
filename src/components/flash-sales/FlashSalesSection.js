@@ -9,6 +9,7 @@ import { getFlashSalesActive } from "../../services/flashSaleService";
 
 import moment from "moment-timezone";
 import { useNavigate } from "react-router-dom";
+import SaleBanner from "../sale-banner/SaleBanner";
 const FlashSalesSection = () => {
   const navigate = useNavigate();
   const [localState, setLocalState] = useReducer(
@@ -22,15 +23,20 @@ const FlashSalesSection = () => {
         endtime: null,
       },
       flashSalesItem: [],
+      flashSale: null,
     }
   );
 
-  const { time, flashSalesItem, isComplete } = localState;
+  const { time, flashSalesItem, isComplete, flashSale } = localState;
   const fetchSalesItem = useCallback(async () => {
     try {
       const res = await getFlashSalesActive();
       if (res.success) {
         const data = res.data;
+        setLocalState({
+          type: "flashSale",
+          payload: res.flashSales,
+        });
         setLocalState({
           type: "flashSalesItem",
           payload: data,
@@ -39,6 +45,7 @@ const FlashSalesSection = () => {
         const startTime = moment.tz(data[0].started_at, "Asia/Ho_Chi_Minh");
         const endedTime = moment.tz(data[0].ended_at, "Asia/Ho_Chi_Minh");
         const currentTime = moment.tz(new Date(), "Asia/Ho_Chi_Minh");
+
         if (currentTime.isBetween(startTime, endedTime)) {
           setLocalState({
             type: "flashSalesItem",
@@ -152,6 +159,12 @@ const FlashSalesSection = () => {
           </Carousel>
         </div>
       </div>
+      {flashSale && (
+        <SaleBanner
+          thumbnail={flashSale?.thumbnail}
+          status={flashSale?.status}
+        />
+      )}
     </>
   );
 };

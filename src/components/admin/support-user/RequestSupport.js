@@ -33,11 +33,13 @@ const RequestSupport = () => {
       if (response.data.success) {
         const sortedData = response.data.data.sort((a, b) => {
           // Ưu tiên trạng thái "processing"
-          if (a.status === "Đang chờ xử lý" && b.status !== "Đang chờ xử lý") return -1;
-          if (a.status !== "Đang chờ xử lý" && b.status === "Đang chờ xử lý") return 1;
-  
+          if (a.status === "Đang chờ xử lý" && b.status !== "Đang chờ xử lý")
+            return -1;
+          if (a.status !== "Đang chờ xử lý" && b.status === "Đang chờ xử lý")
+            return 1;
+
           // Nếu trạng thái giống nhau, sắp xếp theo ngày tạo
-          return new Date(a.createdAt) - new Date(b.createdAt);
+          return new Date(b.createdAt) - new Date(a.createdAt);
         });
         setSupportRequests(sortedData);
         setFilteredRequests(sortedData);
@@ -114,7 +116,6 @@ const RequestSupport = () => {
     filterRequests(searchTerm, startDate, dayjs(date).endOf("day"));
   };
 
-
   const filterRequests = (term, start, end) => {
     const lowerCaseTerm = term.toLowerCase();
 
@@ -122,12 +123,15 @@ const RequestSupport = () => {
       const requestDate = dayjs(request.createdAt);
 
       const matchesDate =
-        (!start || requestDate.isAfter(dayjs(start).startOf("day"), "second")) &&
+        (!start ||
+          requestDate.isAfter(dayjs(start).startOf("day"), "second")) &&
         (!end || requestDate.isBefore(dayjs(end).endOf("day"), "second")); // Sửa tại đây
 
       const matchesTerm =
         request.request_support_id.toString().includes(lowerCaseTerm) ||
-        (request.UserAccount?.full_name?.toLowerCase() || "").includes(lowerCaseTerm);
+        (request.UserAccount?.full_name?.toLowerCase() || "").includes(
+          lowerCaseTerm
+        );
 
       return matchesDate && matchesTerm;
     });
@@ -135,13 +139,10 @@ const RequestSupport = () => {
     setFilteredRequests(filteredData);
   };
 
-
-
   const handleSearch = (value) => {
     setSearchTerm(value);
     filterRequests(value, startDate, endDate);
   };
-
 
   // Define table columns
   const columns = [
@@ -170,8 +171,9 @@ const RequestSupport = () => {
       title: "Thao tác",
       key: "action",
       render: (text, record) => {
-        const isActionDisabled =
-          ["closed", "done", "processing"].includes(record.status.toLowerCase());
+        const isActionDisabled = ["closed", "done", "processing"].includes(
+          record.status.toLowerCase()
+        );
         return (
           <Button
             type="primary"
@@ -184,12 +186,14 @@ const RequestSupport = () => {
           </Button>
         );
       },
-    }
+    },
   ];
 
   return (
     <div>
-      <h2 style={{ marginBottom: 20, fontSize: 20 }}>Danh sách yêu cầu hỗ trợ</h2>
+      <h2 style={{ marginBottom: 20, fontSize: 20 }}>
+        Danh sách yêu cầu hỗ trợ
+      </h2>
       <div style={{ marginBottom: 20 }}>
         <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
           <Col>
