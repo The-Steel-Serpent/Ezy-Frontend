@@ -97,6 +97,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                         voucher.discount_type === 'KHÔNG THEO PHẦN TRĂM' ? 'KHÔNG THEO PHẦN TRĂM' :
                         voucher.discount_type === 'MIỄN PHÍ VẬN CHUYỂN' ? 'MIỄN PHÍ VẬN CHUYỂN' : 'unknown',
                         quantity: voucher.quantity,
+                        usage: voucher.usage,
                         startedAt: voucher.started_at ? dayjs(voucher.started_at) : null,
                         endedAt: voucher.ended_at ? dayjs(voucher.ended_at) : null,
                     }));
@@ -152,6 +153,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             minOrderValue: '',
             discountType: 'MIỄN PHÍ VẬN CHUYỂN',
             quantity: '',
+            usage: '',
             startedAt: null,
             endedAt: null,
             isNew: true,
@@ -187,6 +189,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     discount_value: voucher.discountValue || 0,
                     discount_max_value: voucher.discountMaxValue || 0,
                     quantity: voucher.quantity || 1,
+                    usage: voucher.usage || 0,
                     started_at: voucher.startedAt ? voucher.startedAt.format('YYYY-MM-DD HH:mm:ss') : null,
                     ended_at: voucher.endedAt ? voucher.endedAt.format('YYYY-MM-DD HH:mm:ss') : null,
                 }
@@ -204,6 +207,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     discount_value: voucher.discountValue || 0,
                     discount_max_value: voucher.discountMaxValue || 0,
                     quantity: voucher.quantity || 1,
+                    usage: voucher.usage || 0,
                     started_at: voucher.startedAt ? voucher.startedAt.format('YYYY-MM-DD HH:mm:ss') : null,
                     ended_at: voucher.endedAt ? voucher.endedAt.format('YYYY-MM-DD HH:mm:ss') : null,
                 };
@@ -281,6 +285,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             ),
         },
         { title: 'Số lượng', dataIndex: 'quantity', width: 125, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'quantity', e.target.value)} /> },
+        { title: 'Số lần sử dụng', dataIndex: 'usage', width: 125, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'usage', e.target.value)} /> },
         {
             title: 'Ngày bắt đầu', dataIndex: 'startedAt', width: 180,
             render: (value, record) => (

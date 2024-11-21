@@ -39,6 +39,12 @@ const FlashSale = () => {
       key: 'flash_sales_name',
     },
     {
+      title: 'Thumbnail',
+      dataIndex: 'thumbnail',
+      key: 'thumbnail',
+      render: (thumbnail) => thumbnail ? <img src={thumbnail} alt="Thumbnail" style={{ width: 100 }} /> : 'Không có ảnh',
+    },    
+    {
       title: 'Thời gian bắt đầu',
       dataIndex: 'started_at',
       key: 'started_at',
