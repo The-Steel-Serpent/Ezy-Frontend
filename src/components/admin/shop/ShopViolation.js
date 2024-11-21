@@ -1,67 +1,60 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Button } from 'antd';
-import axios from 'axios';
-import ShopViolationList from './ShopViolationList';
-import ShopViolationHistoryModal from './ShopViolationHistoryModal';
-import ResolveShopViolationModal from './ResolveShopViolationModal';
+import React, { useEffect, useState } from "react";
+import { Table, Button } from "antd";
+import axios from "axios";
+import ShopViolationList from "./ShopViolationList";
+import ViolationHistoryModal from "../user/ViolationHistoryModal";
 
 const ShopViolation = () => {
-  const [shopData, setShopData] = useState([]);
-  const [selectedShopViolations, setSelectedShopViolations] = useState([]);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [shopsWithViolations, setShopsWithViolations] = useState([]);
+  const [selectedShop, setSelectedShop] = useState(null);
+  const [isListModalVisible, setIsListModalVisible] = useState(false);
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
-  const [isResolveModalVisible, setIsResolveModalVisible] = useState(false);
-  const [selectedOwnerId, setSelectedOwnerId] = useState(null);
 
-  const fetchShopViolations = async () => {
+  const fetchShopsWithViolations = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/violations/get-shops-with-violations`);
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/violations/get-shops-with-violations`
+      );
       if (response.data.success) {
-        setShopData(response.data.data);
+        setShopsWithViolations(response.data.data);
       }
     } catch (error) {
-      console.error("Error fetching shop violations data:", error);
+      console.error("Error fetching shops with violations:", error);
     }
   };
 
   useEffect(() => {
-    fetchShopViolations();
+    fetchShopsWithViolations();
   }, []);
 
-  const showDetail = (violations) => {
-    setSelectedShopViolations(violations);
-    setIsModalVisible(true);
-  };
-
-  const openHistoryModal = (ownerId) => {
-    setSelectedOwnerId(ownerId);
-    setIsHistoryModalVisible(true);
-  };
-
-  const openResolveModal = (ownerId) => {
-    setSelectedOwnerId(ownerId);
-    setIsResolveModalVisible(true);
-  };
-
   const columns = [
-    { title: 'Tên cửa hàng', dataIndex: 'shop_name', key: 'shop_name' },
-    { title: 'Chủ sở hữu', dataIndex: 'owner_name', key: 'owner_name' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Số lượng vi phạm', dataIndex: 'violation_count', key: 'violation_count' },
-    { title: 'Mức độ cảnh báo', dataIndex: 'warning_level', key: 'warning_level' },
+    { title: "Tên cửa hàng", dataIndex: "shop_name", key: "shop_name" },
+    { title: "Chủ sở hữu", dataIndex: "owner_name", key: "owner_name" },
+    { title: "Email", dataIndex: "email", key: "email" },
+    { title: "Chờ xử lý", dataIndex: "pending_count", key: "pending_count" },
     {
-      title: 'Thao tác',
-      key: 'actions',
+      title: "Thao tác",
+      key: "actions",
       render: (_, record) => (
         <>
-          <Button onClick={() => showDetail(record.violations)}>
-            Chi tiết
+          <Button
+            type="primary"
+            style={{ marginRight: 8 }}
+            onClick={() => {
+              setSelectedShop(record);
+              setIsListModalVisible(true);
+            }}
+          >
+            Xem báo cáo
           </Button>
-          <Button onClick={() => openHistoryModal(record.owner_id)} style={{ marginLeft: '10px' }}>
-            Lịch sử xử lý
-          </Button>
-          <Button onClick={() => openResolveModal(record.owner_id)} style={{ marginLeft: '10px' }} type="primary">
-            Xử lý
+          <Button
+            type="primary"
+            onClick={() => {
+              setSelectedShop(record);
+              setIsHistoryModalVisible(true);
+            }}
+          >
+            Lịch sử xử lý vi phạm
           </Button>
         </>
       ),
@@ -70,29 +63,28 @@ const ShopViolation = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 20, fontSize: 20 }}>Danh sách cửa hàng vi phạm</h2>
+      <h2 style={{ marginBottom: 20 }}>Danh sách cửa hàng bị báo cáo</h2>
       <Table
         columns={columns}
-        dataSource={shopData}
+        dataSource={shopsWithViolations}
         rowKey="shop_id"
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 10 }}
       />
-      <ShopViolationList
-        violations={selectedShopViolations}
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-      />
-      <ShopViolationHistoryModal
-        visible={isHistoryModalVisible}
-        onClose={() => setIsHistoryModalVisible(false)}
-        userId={selectedOwnerId}
-      />
-      <ResolveShopViolationModal
-        visible={isResolveModalVisible}
-        onClose={() => setIsResolveModalVisible(false)}
-        ownerId={selectedOwnerId} 
-        fetchShopViolations={fetchShopViolations}
-      />
+      {isListModalVisible && selectedShop && (
+        <ShopViolationList
+          user={selectedShop} 
+          visible={isListModalVisible}
+          onClose={() => setIsListModalVisible(false)}
+          refreshUsers={fetchShopsWithViolations}
+        />
+      )}
+      {isHistoryModalVisible && selectedShop && (
+        <ViolationHistoryModal
+          userId={selectedShop.owner_id}
+          visible={isHistoryModalVisible}
+          onClose={() => setIsHistoryModalVisible(false)}
+        />
+      )}
     </div>
   );
 };
