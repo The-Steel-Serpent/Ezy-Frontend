@@ -32,11 +32,18 @@ auth.useDeviceLanguage();
 export const startTokenRefreshListener = () => {
   onIdTokenChanged(auth, async (user) => {
     if (user) {
-      const token = await user.getIdToken(true);
-      localStorage.setItem("token", token);
+      try {
+        const token = await user.getIdToken(); // No forced refresh
+        localStorage.setItem("token", token);
+      } catch (error) {
+        console.error("Error fetching token:", error);
+      }
+    } else {
+      localStorage.removeItem("token");
     }
   });
 };
+
 
 export const signUpWithEmailPassword = async (email, password) => {
   try {
