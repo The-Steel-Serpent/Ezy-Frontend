@@ -41,7 +41,7 @@ const DiscountVoucher = () => {
   };
 
   const handleFilter = () => {
-    setLoading(true); // Bắt đầu loading khi bắt đầu lọc
+    setLoading(true); 
 
     setTimeout(() => {
       if (!searchKeyword && !startDate && !endDate) {
@@ -201,6 +201,9 @@ const DiscountVoucher = () => {
           </Form.Item>
           <Form.Item name="description" label="Mô tả" rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}>
             <Input />
+          </Form.Item>
+          <Form.Item name="usage" label="Số lần sử dụng" rules={[{ required: true, message: 'Vui lòng nhập số lần sử dụng!' }]}>
+            <Input type="number" />
           </Form.Item>
           <Form.Item label="Thời gian áp dụng" required>
             <div style={{ display: 'flex', gap: '10px' }}>
