@@ -9,7 +9,7 @@ const { Title } = Typography;
 const ShopViolationList = ({ shop, onClose }) => {
   const [violations, setViolations] = useState([]);
   const [selectedViolation, setSelectedViolation] = useState(null);
-  const [activeTab, setActiveTab] = useState("unviewed");
+  const [activeTab, setActiveTab] = useState("Chờ xử lý");
   const [loading, setLoading] = useState(false);
 
   // Fetch violations for the selected shop
@@ -30,11 +30,17 @@ const ShopViolationList = ({ shop, onClose }) => {
 
   useEffect(() => {
     fetchViolations();
-  }, [shop]);
+  }, [activeTab]);
 
-  // Filter violations by status
-  const renderViolations = (status) =>
-    violations.filter((v) => v.status === status);
+  const renderViolations = (status) => {
+    if (status === "Chờ xử lý") {
+      return violations.filter((v) => v.status === "Chưa xử lý");
+    }
+    if (status === "Đã xem") {
+      return violations.filter((v) => v.status === "Đã xem");
+    }
+    return [];
+  };
 
   // Table columns configuration
   const columns = [
@@ -91,13 +97,13 @@ const ShopViolationList = ({ shop, onClose }) => {
       <Spin spinning={loading}>
         <Tabs
           activeKey={activeTab}
-          onChange={setActiveTab}
+          onChange={(key) => setActiveTab(key)}
           centered
           tabBarStyle={{ fontWeight: "bold" }}
         >
-          <TabPane tab="Chờ xem" key="unviewed">
+          <TabPane tab="Chờ xem" key="Chờ xử lý">
             <Table
-              dataSource={renderViolations("Chờ xem")}
+              dataSource={renderViolations("Chờ xử lý")}
               columns={columns}
               rowKey="violation_id"
               pagination={{ pageSize: 5 }}
@@ -105,7 +111,7 @@ const ShopViolationList = ({ shop, onClose }) => {
               style={{ marginTop: "16px" }}
             />
           </TabPane>
-          <TabPane tab="Đã xem" key="viewed">
+          <TabPane tab="Đã xem" key="Đã xem">
             <Table
               dataSource={renderViolations("Đã xem")}
               columns={columns}
@@ -120,7 +126,7 @@ const ShopViolationList = ({ shop, onClose }) => {
       {selectedViolation && (
         <ShopViolationDetail
           violation={selectedViolation}
-          isViewedTab={activeTab === "viewed"}
+          isViewedTab={activeTab === "Đã xem"}
           onClose={() => setSelectedViolation(null)}
         />
       )}
