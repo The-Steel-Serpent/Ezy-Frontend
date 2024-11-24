@@ -96,6 +96,9 @@ const AllFlashSale = withSuspense(
 const AllRequest = withSuspense(
   lazy(() => import("../pages/admin/request_support/AllRequest"))
 );
+const RevenueStatistic = withSuspense(
+  lazy(() => import("../pages/admin/statistics/RevenueStatistic"))
+);
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
@@ -612,6 +615,14 @@ const router = createBrowserRouter([
           </AdminAuthLayout>
         ),
       },
+      {
+        path: "/admin/statistic/revenue",
+        element: (
+          <AdminAuthLayout>
+            <RevenueStatistic />
+          </AdminAuthLayout>
+        ),
+      }
     ],
   },
 ]);

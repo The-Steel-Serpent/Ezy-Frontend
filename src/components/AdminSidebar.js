@@ -96,9 +96,9 @@ const AdminSidebar = ({ role_id }) => {
             roles: [3, 4],
         },
         {
-            key: '8',
+            key: '/admin/statistic/revenue',
             icon: <BarChartOutlined />,
-            label: 'Thống kê',
+            label: 'Thống kê doanh thu',
             roles: [3], 
         },
     ];
