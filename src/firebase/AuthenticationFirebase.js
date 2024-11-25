@@ -372,6 +372,42 @@ export const sendEmailVerificationAgain = async (password) => {
   }
 };
 
+export const sendEmailVerificationAgainForAdmin = async (password) => {
+  const randomVerifyToken = generateToken();
+  const actionCodeSettingss = {
+    url:
+      "http://localhost:3000/admin/account?type=security-password&step=2&verifyToken=" +
+      randomVerifyToken,
+    handleCodeInApp: true, // Có xử lý trong ứng dụng không
+  };
+  try {
+    const user = auth.currentUser;
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+    await sendEmailVerification(user, actionCodeSettingss);
+    localStorage.setItem("verifyToken", randomVerifyToken);
+    localStorage.setItem("tokenExpiration", Date.now() + 5 * 60 * 1000);
+  } catch (error) {
+    let errorMessage;
+    console.log(error);
+    switch (error.code) {
+      case "auth/requires-recent-login":
+        errorMessage = "Vui lòng đăng nhập lại trước khi thay đổi mật khẩu";
+        break;
+      case "auth/invalid-credential":
+        errorMessage = "Mật khẩu không chính xác";
+        break;
+      case "auth/too-many-requests":
+        errorMessage = "Quá nhiều yêu cầu. Vui lòng thử lại sau";
+        break;
+      default:
+        errorMessage = "An unknown error occurred";
+        break;
+    }
+    throw new Error(errorMessage);
+  }
+};
+
 const checkAndUnLinkProvider = async (newEmail) => {
   const user = auth.currentUser;
 
