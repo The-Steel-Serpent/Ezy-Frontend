@@ -283,7 +283,9 @@ function ProductCategory() {
 
     return (
         <div>
-            <h1 style={{ marginBottom: 16, fontSize: 20 }}>Quản lý danh mục sản phẩm</h1>
+            <div className="text-center">
+                <h3 className="text-3xl font-bold text-blue-600">Danh mục sản phẩm</h3>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <Input

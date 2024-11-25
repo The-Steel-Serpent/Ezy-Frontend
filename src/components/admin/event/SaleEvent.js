@@ -25,17 +25,17 @@ const SaleEvent = () => {
 
     useEffect(() => {
         fetchSaleEvents();
-    
+
         socket.on('saleEventStarted', (data) => {
             message.info(`Sale event ${data.saleEventId} has started.`);
-            fetchSaleEvents(); 
+            fetchSaleEvents();
         });
-    
+
         socket.on('saleEventEnded', (data) => {
             message.warning(`Sale event ${data.saleEventId} has ended.`);
             fetchSaleEvents();
         });
-    
+
         return () => {
             socket.off('saleEventStarted');
             socket.off('saleEventEnded');
@@ -73,16 +73,16 @@ const SaleEvent = () => {
 
     const applyFilters = (events, keyword, start, end) => {
         setLoading(true);
-    
+
         setTimeout(() => {
             let filtered = events;
-    
+
             if (keyword) {
                 filtered = filtered.filter(event =>
                     event.sale_events_name.toLowerCase().includes(keyword.toLowerCase())
                 );
             }
-    
+
             if (start && end) {
                 filtered = filtered.filter(event => {
                     const eventStart = new Date(event.started_at);
@@ -94,12 +94,12 @@ const SaleEvent = () => {
                     );
                 });
             }
-    
+
             setFilteredEvents(filtered);
             setLoading(false);
         }, 500);
     };
-    
+
 
     const handleDeleteEvent = (id) => {
         Modal.confirm({
@@ -187,16 +187,16 @@ const SaleEvent = () => {
                     >
                         Thiết lập
                     </Button>
-                    <Button 
-                        type="primary" 
+                    <Button
+                        type="primary"
                         onClick={() => handleOpenDetailModal(record.sale_events_id)}
                         style={{ marginLeft: '8px' }}
                     >
                         Chi tiết
                     </Button>
-                    <Button 
-                        type="primary" 
-                        onClick={() => handleOpenEditModal(record.sale_events_id)} 
+                    <Button
+                        type="primary"
+                        onClick={() => handleOpenEditModal(record.sale_events_id)}
                         style={{ marginLeft: '8px' }}
                         disabled={record.is_actived || new Date(record.ended_at) < new Date()}
                     >
@@ -210,7 +210,9 @@ const SaleEvent = () => {
 
     return (
         <div>
-            <h1>Sự kiện khuyến mãi</h1>
+            <div className="text-center">
+                <h3 className="text-3xl font-bold text-blue-600">Quản lý sự kiện khuyến mãi</h3>
+            </div>
             <Input
                 placeholder="Tìm kiếm sự kiện..."
                 value={searchKeyword}
@@ -227,9 +229,9 @@ const SaleEvent = () => {
                 onChange={handleEndDateChange}
                 style={{ marginBottom: '20px', marginLeft: '10px' }}
             />
-            <Button 
-                type="primary" 
-                icon={<PlusOutlined />} 
+            <Button
+                type="primary"
+                icon={<PlusOutlined />}
                 onClick={() => setIsAddModalVisible(true)}
                 style={{ float: 'right', marginBottom: '20px' }}
             >
