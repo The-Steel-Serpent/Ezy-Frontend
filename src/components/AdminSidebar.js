@@ -21,7 +21,7 @@ const AdminSidebar = ({ role_id }) => {
 
     const menuItems = [
         {
-            key: '/admin',
+            key: '/admin/dashboard',
             icon: <HomeOutlined />,
             label: 'Trang chủ',
             roles: [3],

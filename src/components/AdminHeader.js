@@ -5,22 +5,18 @@ import { MessageOutlined, NotificationOutlined, UserOutlined, DownOutlined } fro
 const AdminHeader = ({ onLogout, user }) => {
     const items = [
         {
-            key: '1',
-            label: 'Profile',
-        },
+            key: "1",
+            label: <a href="/admin/account?type=profile">Tài Khoản Của Tôi</a>,
+          },
         {
             key: '2',
-            label: 'Settings',
-        },
-        {
-            key: '3',
             label: 'Logout',
             onClick: onLogout,
         },
     ];
 
     const handleDropdownClick = (item) => {
-        if (item.key === '3') {
+        if (item.key === '2') {
             onLogout(); // Gọi hàm đăng xuất
         } else {
             console.log(`Clicked on ${item.label}`);
