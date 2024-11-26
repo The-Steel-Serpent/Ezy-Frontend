@@ -71,7 +71,8 @@ const RegisterModal = ({ visible, onClose }) => {
       }
     } catch (error) {
       console.error("Lỗi khi tạo tài khoản:", error);
-      message.error(error.response?.data?.message || "Có lỗi xảy ra khi tạo tài khoản.");
+      const messageText = error.response?.data?.message || error.message;
+      message.error(messageText || "Có lỗi xảy ra khi tạo tài khoản.");
     }
   };
 
@@ -121,9 +122,40 @@ const RegisterModal = ({ visible, onClose }) => {
             ))}
           </Select>
         </Form.Item>
-        <Form.Item label="Ngày Sinh" name="dob">
+        <Form.Item
+          label="Ngày Sinh"
+          name="dob"
+          rules={[
+            { required: true, message: "Ngày sinh không được để trống!" },
+            {
+              validator: (_, value) => {
+                if (!value) {
+                  return Promise.reject(new Error("Ngày sinh không được để trống!"));
+                }
+                const today = new Date();
+                const selectedDate = new Date(value);
+
+                // Kiểm tra nếu ngày sinh lớn hơn ngày hiện tại
+                if (selectedDate > today) {
+                  return Promise.reject(new Error("Ngày sinh không được lớn hơn ngày hiện tại!"));
+                }
+
+                // Tính toán tuổi
+                const age = today.getFullYear() - selectedDate.getFullYear();
+                const monthDiff = today.getMonth() - selectedDate.getMonth();
+
+                // Kiểm tra tuổi >= 16
+                if (age > 16 || (age === 16 && monthDiff >= 0)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("Người dùng phải trên 16 tuổi!"));
+              },
+            },
+          ]}
+        >
           <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
         </Form.Item>
+
         <Form.Item
           label="Mật khẩu"
           name="password"

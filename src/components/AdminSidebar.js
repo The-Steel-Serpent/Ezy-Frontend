@@ -15,7 +15,7 @@ import {
     WarningOutlined,
     SolutionOutlined
 } from '@ant-design/icons';
-
+//3: Admin. 4: Quản ly sự kiện. 5: Quản lý tài khoản người dùng, 6: Hổ trợ
 const AdminSidebar = ({ role_id }) => {
     const navigate = useNavigate();
 
@@ -24,7 +24,7 @@ const AdminSidebar = ({ role_id }) => {
             key: '/admin/dashboard',
             icon: <HomeOutlined />,
             label: 'Trang chủ',
-            roles: [3],
+            roles: [3, 4, 5, 6],
         },
         {
             key: '/admin/category-management/product-category/main-category',
@@ -53,53 +53,53 @@ const AdminSidebar = ({ role_id }) => {
             ],
         },
         {
-            key: '4',
+            key: '/admin/event-management/sale-event/event',
             icon: <GiftOutlined />,
             label: 'Quản lý sự kiện',
             roles: [3, 4],
-            children: [
-                { 
-                    key: '/admin/event-management/sale-event/event', 
-                    icon: <GiftOutlined />, 
-                    label: 'Sự kiện khuyến mãi', roles: [3, 4] 
-                },
-                {
-                    key: '/admin/event-management/sale-event/discount-voucher',
-                    icon: <TagOutlined />,
-                    label: 'Voucher',
-                    roles: [3, 4],
-                }
+            // children: [
+            //     { 
+            //         key: '/admin/event-management/sale-event/event', 
+            //         icon: <GiftOutlined />, 
+            //         label: 'Sự kiện khuyến mãi', roles: [3, 4] 
+            //     },
+            //     // {
+            //     //     key: '/admin/event-management/sale-event/discount-voucher',
+            //     //     icon: <TagOutlined />,
+            //     //     label: 'Voucher',
+            //     //     roles: [3, 4],
+            //     // }
                 
-            ],
+            // ],
         },
         {
             key: '/admin/flash-sale/all-flash-sale',
             icon: <ThunderboltOutlined />,
             label: 'Quản lý Flash Sale',
-            roles: [3,4],
+            roles: [3, 4],
         },
         {
             key: '6',
             icon: <UserOutlined />,
             label: 'Quản lý người dùng',
-            roles: [3], 
+            roles: [3, 5], 
             children: [
-                { key: '/admin/user-management/all-user', icon: <TeamOutlined />, label: 'Tất cả', roles: [3] },
-                { key: '/admin/user-management/roles', icon: <KeyOutlined />, label: 'Role', roles: [3] },
-                { key: '/admin/user-management/violation', icon:<WarningOutlined /> ,label: 'Xử lý vi phạm', roles: [3] },
+                { key: '/admin/user-management/all-user', icon: <TeamOutlined />, label: 'Tất cả', roles: [3, 5] },
+                { key: '/admin/user-management/roles', icon: <KeyOutlined />, label: 'Role', roles: [3, 5] },
+                { key: '/admin/user-management/violation', icon:<WarningOutlined /> ,label: 'Xử lý vi phạm', roles: [3, 5] },
             ],
         },
         {
             key: '/admin/support/all',
             icon: <SolutionOutlined />,
             label: 'Yêu cầu hổ trợ',
-            roles: [3, 4],
+            roles: [3, 6],
         },
         {
             key: '/admin/statistic/revenue',
             icon: <BarChartOutlined />,
             label: 'Thống kê doanh thu',
-            roles: [3], 
+            roles: [3, 4, 5, 6], 
         },
     ];
 

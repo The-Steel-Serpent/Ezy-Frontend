@@ -40,10 +40,10 @@ const ModalReview = (props) => {
         tempValidate[index] = errors;
       }
     });
-    console.log(tempValidate);
+    console.log("tempValidate", tempValidate);
     if (tempValidate.length > 0) {
       validateRef.current = tempValidate;
-      message.error("Vui lòng kiểm tra lại thông tin đánh giá");
+      message.warning(tempValidate[0]?.review);
       return;
     }
     validateRef.current = [];
