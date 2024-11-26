@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useReducer } from "react";
-import ModalOTP from "../user/ModalOTP";
+import ModalOTP from "../admin/ModalOTP";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Divider, Input, message, Modal } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
@@ -13,6 +13,7 @@ import { IoCheckmarkDoneCircle } from "react-icons/io5";
 
 const ChangePassword = (props) => {
   const user = useSelector((state) => state.user);
+  console.log(user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [state, setState] = useReducer(

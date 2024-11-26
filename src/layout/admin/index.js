@@ -90,7 +90,7 @@ const AdminAuthLayout = ({ children }) => {
           withCredentials: true,
         }
       );
-
+   
       const fetchedUser = res.data.user;
 
       if (ALLOWED_ROLES.includes(fetchedUser.role_id)) {
@@ -107,7 +107,8 @@ const AdminAuthLayout = ({ children }) => {
             role_id: fetchedUser.role_id,
             setup: fetchedUser.setup,
             isVerified: fetchedUser.isVerified,
-            // is_banned: user.is_banned,
+            security_password: fetchedUser.security_password,
+            is_banned: fetchedUser.is_banned,
           })
         );
         dispatch(setToken(token));
