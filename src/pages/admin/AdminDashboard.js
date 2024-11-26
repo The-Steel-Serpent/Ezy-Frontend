@@ -1,8 +1,10 @@
 import React from 'react'
-
+import Statistics from '../../components/admin/statistic/Statistics'
 const AdminDashboard = () => {
   return (
-    <div>Content</div>
+    <div>
+      <Statistics />
+    </div>
   )
 }
 
