@@ -313,7 +313,26 @@ const BuyerRegister = () => {
           value: "Tên đăng nhập không được để trống",
         },
       });
-    } else {
+    } 
+    else if (data.username.length < 6) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "username",
+          value: "Tên đăng nhập phải có ít nhất 6 ký tự",
+        },
+      });
+    }
+    else if (data.username.length > 30) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "username",
+          value: "Tên đăng nhập không được quá 30 ký tự",
+        },
+      });
+    }
+    else {
       dispatch({
         type: "SET_ERROR",
         payload: { name: "username", value: "" },
@@ -326,7 +345,26 @@ const BuyerRegister = () => {
         type: "SET_ERROR",
         payload: { name: "fullname", value: "Họ và tên không được để trống" },
       });
-    } else {
+    } 
+    else if (data.fullname.length > 30) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "fullname",
+          value: "Họ và tên không được quá 30 ký tự",
+        },
+      });
+    }
+    else if (data.fullname.length < 6) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "fullname",
+          value: "Họ và tên phải có ít nhất 6 ký tự",
+        },
+      });
+    }
+    else {
       dispatch({
         type: "SET_ERROR",
         payload: { name: "fullname", value: "" },
@@ -436,7 +474,17 @@ const BuyerRegister = () => {
           value: "Mật khẩu phải có ít nhất 6 ký tự",
         },
       });
-    } else {
+    } 
+    else if (data.password.length > 30) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "password",
+          value: "Mật khẩu không được quá 30 ký tự",
+        },
+      });
+    }
+    else {
       dispatch({
         type: "SET_ERROR",
         payload: { name: "password", value: "" },
