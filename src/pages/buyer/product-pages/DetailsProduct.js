@@ -86,7 +86,7 @@ const DetailsProduct = () => {
     const fetchProductDetails = async () => {
       try {
         const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/product-details/${id}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/product-details/${id}?user_id=${user?.user_id}`
         );
         console.log("Varient: ", res.data.product);
         const startTime = moment.tz(
