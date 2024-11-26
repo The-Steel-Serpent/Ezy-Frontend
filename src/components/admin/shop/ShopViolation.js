@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tabs, Button, Typography, Spin, message } from "antd";
+import { Table, Tabs, Button, Typography, Spin, message, Input } from "antd";
 import ShopViolationList from "./ShopViolationList";
 import ShopViolationHistoryModal from "./ShopViolationHistoryModal";
 import ShopWarningModal from "./ShopWarningModal";
 
 const { TabPane } = Tabs;
 const { Title } = Typography;
+const { Search } = Input;
 
 const ShopViolation = () => {
   const [shops, setShops] = useState([]);
+  const [filteredShops, setFilteredShops] = useState([]); // Dữ liệu sau khi lọc
   const [loading, setLoading] = useState(false);
   const [selectedShopForViolations, setSelectedShopForViolations] = useState(null);
   const [historyModalVisible, setHistoryModalVisible] = useState(false);
@@ -23,6 +25,7 @@ const ShopViolation = () => {
       .then((data) => {
         if (data.success) {
           setShops(data.data);
+          setFilteredShops(data.data); // Khởi tạo dữ liệu lọc
         } else {
           console.error("Failed to fetch shop violations.");
         }
@@ -31,9 +34,18 @@ const ShopViolation = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Filter shops based on is_banned
-  const activeShops = shops.filter((shop) => shop.is_banned === 0);
-  const lockedShops = shops.filter((shop) => shop.is_banned === 1);
+  // Xử lý tìm kiếm
+  const handleSearch = (value) => {
+    const keyword = value.toLowerCase();
+    const filtered = shops.filter(
+      (shop) =>
+        shop.shop_id.toString().toLowerCase().includes(keyword) ||
+        shop.shop_name.toLowerCase().includes(keyword) ||
+        shop.full_name.toLowerCase().includes(keyword) ||
+        shop.email.toLowerCase().includes(keyword)
+    );
+    setFilteredShops(filtered);
+  };
 
   const columns = [
     {
@@ -85,8 +97,6 @@ const ShopViolation = () => {
           >
             Cảnh báo vi phạm
           </Button>
-
-
         </div>
       ),
     },
@@ -97,6 +107,12 @@ const ShopViolation = () => {
       <Title level={3} style={{ textAlign: "center", marginBottom: "20px" }}>
         Danh sách cửa hàng vi phạm
       </Title>
+      <Search
+        placeholder="Tìm kiếm theo Mã, Tên cửa hàng, Chủ cửa hàng, hoặc Email"
+        onSearch={handleSearch}
+        enterButton
+        style={{ marginBottom: "20px" }}
+      />
       <Tabs defaultActiveKey="active">
         <TabPane tab="Cửa hàng đang hoạt động" key="active">
           {loading ? (
@@ -104,7 +120,7 @@ const ShopViolation = () => {
           ) : (
             <Table
               columns={columns}
-              dataSource={activeShops}
+              dataSource={filteredShops.filter((shop) => shop.is_banned === 0)} // Lọc cửa hàng đang hoạt động
               rowKey="user_id"
               pagination={{ pageSize: 10 }}
               bordered
@@ -117,7 +133,7 @@ const ShopViolation = () => {
           ) : (
             <Table
               columns={columns}
-              dataSource={lockedShops}
+              dataSource={filteredShops.filter((shop) => shop.is_banned === 1)} // Lọc cửa hàng đã khóa
               rowKey="user_id"
               pagination={{ pageSize: 10 }}
               bordered

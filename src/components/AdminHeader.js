@@ -51,7 +51,7 @@ const AdminHeader = ({ onLogout, user }) => {
                     alignItems: 'center'
                 }}
             >
-                <NotificationOutlined 
+                {/* <NotificationOutlined 
                     className='header-icon' 
                     style={{ 
                         fontSize: '20px', 
@@ -66,7 +66,7 @@ const AdminHeader = ({ onLogout, user }) => {
                         color: '#fff', 
                         cursor: 'pointer' 
                     }} 
-                />
+                /> */}
                 <Dropdown
                     menu={{
                         items,

@@ -93,13 +93,15 @@ const ViolationHistoryModal = ({ visible, onClose, userId }) => {
                 <p>
                   <b>Người cập nhật:</b> {history.updated_by_username}
                 </p>
-                <Button
-                  danger
-                  onClick={() => handleRevoke(history.violation_history_id)}
-                  style={{ marginTop: '8px' }}
-                >
-                  Thu hồi
-                </Button>
+                {history.status !== 'Đã thu hồi' && (
+                  <Button
+                    danger
+                    onClick={() => handleRevoke(history.violation_history_id)}
+                    style={{ marginTop: '8px' }}
+                  >
+                    Thu hồi
+                  </Button>
+                )}
               </Card>
             </List.Item>
           )}

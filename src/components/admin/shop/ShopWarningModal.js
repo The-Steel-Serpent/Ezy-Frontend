@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Select, Button, message } from "antd";
+import { Modal, Form, Input, Select, Button, message, Checkbox } from "antd";
 import { useSelector } from "react-redux";
 
 const { TextArea } = Input;
@@ -8,18 +8,46 @@ const { Option } = Select;
 const ShopWarningModal = ({ visible, onClose, shop }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [selectedNotes, setSelectedNotes] = useState([]);
+  const [isOtherChecked, setIsOtherChecked] = useState(false);
+  const [otherNote, setOtherNote] = useState('');
   const adminId = useSelector((state) => state.user.user_id);
+
+
+  const noteOptions = [
+    "Người bán có đăng sản phẩm cấm",
+    "Người bán có đăng sản phẩm giả/nhái",
+    "Hủy đơn hàng liên tục hoặc ngay khi người bán đã chuẩn bị hàng",
+    "Phát tán tin nhắn/hình ảnh/video có nội dung không lịch sự",
+    "Thực hiện giao dịch ngoài Ezy",
+    "Vi phạm quyền riêng tư",
+
+  ];
 
   const handleSubmit = async (values) => {
     setLoading(true);
+    if (selectedNotes.length === 0 && !isOtherChecked) {
+      message.error("Vui lòng chọn ít nhất một nội dung vi phạm.");
+      return;
+    }
+
+    let notesArray = [...selectedNotes];
+    if (isOtherChecked && otherNote.trim()) {
+      notesArray.push(otherNote.trim());
+    }
+
+    const notes = notesArray.length > 1 ? notesArray.join(', ') : notesArray.join('');
+
+    console.log('Chuỗi notes gửi lên:', notes);
+
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/add-violation-history`, { // Sửa endpoint
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/add-violation-history`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          violator_id: shop.user_id, 
+          violator_id: shop.user_id,
           action_type: values.action_type,
-          notes: values.notes,
+          notes: notes,
           currentAdminId: adminId,
         }),
       });
@@ -61,11 +89,60 @@ const ShopWarningModal = ({ visible, onClose, shop }) => {
           </Select>
         </Form.Item>
         <Form.Item
-          label="Ghi chú"
           name="notes"
-          rules={[{ required: true, message: "Vui lòng nhập ghi chú." }]}
+          label="Nội dung vi phạm"
+          rules={[{ required: true, message: 'Vui lòng chọn nội dung vi phạm.' }]}
         >
-          <TextArea rows={4} placeholder="Nhập ghi chú" />
+          <Checkbox.Group
+            value={selectedNotes}
+            onChange={(checkedValues) => {
+              setSelectedNotes(checkedValues);
+              form.setFieldsValue({ notes: checkedValues });
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: '10px',
+              }}
+            >
+              {noteOptions.map(option => (
+                <div key={option}>
+                  <Checkbox value={option}>{option}</Checkbox>
+                </div>
+              ))}
+            </div>
+          </Checkbox.Group>
+          <div style={{ marginTop: '10px' }}>
+            <Checkbox
+              checked={isOtherChecked}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsOtherChecked(checked);
+                if (!checked) {
+                  setOtherNote('');
+                  form.setFieldsValue({ notes: selectedNotes });
+                }
+              }}
+            >
+              Khác
+            </Checkbox>
+            {isOtherChecked && (
+              <TextArea
+                value={otherNote}
+                onChange={(e) => {
+                  setOtherNote(e.target.value);
+                  form.setFieldsValue({
+                    notes: [...selectedNotes, e.target.value].filter(Boolean),
+                  });
+                }}
+                placeholder="Nhập nội dung vi phạm khác"
+                autoSize={{ minRows: 2, maxRows: 4 }}
+                style={{ marginTop: '10px' }}
+              />
+            )}
+          </div>
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>

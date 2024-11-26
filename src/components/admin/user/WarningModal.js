@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, Select, Button, message } from 'antd';
+import { Modal, Form, Select, Button, message, Checkbox, Input } from 'antd';
 import { useSelector } from "react-redux";
 
 const { TextArea } = Input;
@@ -9,15 +9,43 @@ const WarningModal = ({ visible, onClose, user }) => {
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const adminId = useSelector((state) => state.user.user_id);
+    const [selectedNotes, setSelectedNotes] = useState([]); 
+    const [isOtherChecked, setIsOtherChecked] = useState(false); 
+    const [otherNote, setOtherNote] = useState('');
 
+    const noteOptions = [
+        "Có dấu hiệu lừa đảo",
+        "Đăng tải nội dung/hình ảnh thô tục, phản cảm...",
+        "Hủy đơn hàng liên tục hoặc ngay khi người bán đã chuẩn bị hàng",
+        "Không nhận hàng nhiều lần",
+        "Phát tán tin nhắn/hình ảnh/video có nội dung không lịch sự",
+        "Thực hiện giao dịch ngoài Ezy",
+        "Vi phạm quyền riêng tư",
+        "Người mua yêu cầu trả/hoàn tiền không hợp lý hoặc lạm dụng chính sách hoàn tiền",
+        "Người mua cố tình đưa ra đánh giá xấu, gây ảnh hưởng không công bằng đến uy tín người bán",
+        "Người mua cố ý quấy rối hoặc đe dọa người bán",
+        "Người mua cố ý quấy rối hoặc đe dọa người bán",
+        "Người mua gửi tin nhắn không lịch sự hoặc có ngôn từ xúc phạm",
+        "Người mua đưa ra thông tin không chính xác để lừa đảo hoặc chiếm đoạt hàng hóa"
 
+    ];
+
+    // Xử lý khi nhấn nút Gửi
     const handleSubmit = async (values) => {
-        console.log("Payload being sent:", {
-            violator_id: user.user_id,
-            action_type: values.action_type,
-            notes: values.notes,
-            currentAdminId: adminId,
-        });
+        if (selectedNotes.length === 0 && !isOtherChecked) {
+            message.error("Vui lòng chọn ít nhất một nội dung vi phạm.");
+            return;
+        }
+
+        // Hợp nhất các nội dung checkbox chính và "Khác"
+        let notesArray = [...selectedNotes];
+        if (isOtherChecked && otherNote.trim()) {
+            notesArray.push(otherNote.trim()); 
+        }
+
+        const notes = notesArray.length > 1 ? notesArray.join(', ') : notesArray.join('');
+
+        console.log('Chuỗi notes gửi lên:', notes);
 
         try {
             setLoading(true);
@@ -27,7 +55,7 @@ const WarningModal = ({ visible, onClose, user }) => {
                 body: JSON.stringify({
                     violator_id: user.user_id,
                     action_type: values.action_type,
-                    notes: values.notes,
+                    notes: notes, 
                     currentAdminId: adminId,
                 }),
             });
@@ -47,6 +75,7 @@ const WarningModal = ({ visible, onClose, user }) => {
             setLoading(false);
         }
     };
+
 
     return (
         <Modal
@@ -72,10 +101,61 @@ const WarningModal = ({ visible, onClose, user }) => {
                 <Form.Item
                     name="notes"
                     label="Nội dung vi phạm"
-                    rules={[{ required: true, message: 'Vui lòng nhập nội dung vi phạm.' }]}
+                    rules={[{ required: true, message: 'Vui lòng chọn nội dung vi phạm.' }]}
                 >
-                    <TextArea rows={4} placeholder="Nhập nội dung vi phạm" />
+                    <Checkbox.Group
+                        value={selectedNotes}
+                        onChange={(checkedValues) => {
+                            setSelectedNotes(checkedValues); 
+                            form.setFieldsValue({ notes: checkedValues });
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr', 
+                                gap: '10px', 
+                            }}
+                        >
+                            {noteOptions.map(option => (
+                                <div key={option}>
+                                    <Checkbox value={option}>{option}</Checkbox>
+                                </div>
+                            ))}
+                        </div>
+                    </Checkbox.Group>
+                    <div style={{ marginTop: '10px' }}>
+                        <Checkbox
+                            checked={isOtherChecked}
+                            onChange={(e) => {
+                                const checked = e.target.checked;
+                                setIsOtherChecked(checked);
+                                if (!checked) {
+                                    setOtherNote('');
+                                    form.setFieldsValue({ notes: selectedNotes }); 
+                                }
+                            }}
+                        >
+                            Khác
+                        </Checkbox>
+                        {isOtherChecked && (
+                            <TextArea
+                                value={otherNote}
+                                onChange={(e) => {
+                                    setOtherNote(e.target.value);
+                                    form.setFieldsValue({
+                                        notes: [...selectedNotes, e.target.value].filter(Boolean),
+                                    });
+                                }}
+                                placeholder="Nhập nội dung vi phạm khác"
+                                autoSize={{ minRows: 2, maxRows: 4 }}
+                                style={{ marginTop: '10px' }}
+                            />
+                        )}
+                    </div>
                 </Form.Item>
+
+
                 <Form.Item>
                     <Button type="primary" htmlType="submit" loading={loading}>
                         Gửi

@@ -166,7 +166,13 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
         }
         else {
             console.error("Confirm order error:", comfirmOrderResult);
-            message.error("Xác nhận đơn hàng thất bại");
+            if (comfirmOrderResult?.message === "Missing required fields: to_phone") {
+                message.error("Người mua chưa cung cấp số điên thoại, không thể xác nhận đơn hàng");
+
+            }
+            else {
+                message.error("Xác nhận đơn hàng thất bại");
+            }
         }
         setModalState({ type: "SET_CONFIRM_LOADING", payload: false });
 
