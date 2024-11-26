@@ -214,7 +214,7 @@ const UpdateOTP = () => {
               status="success"
               title="Câp nhật Mật Khẩu Cấp 2 Thành Công!"
               extra={
-                <Button onClick={() => navigate("/admin")}>Trở về trang chủ</Button>
+                <Button onClick={() => navigate("/admin/dashboard")}>Trở về trang chủ</Button>
               }
             />
           </div>

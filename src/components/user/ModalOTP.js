@@ -244,12 +244,7 @@ const ModalOTP = ({ user, onVerify, openOTPModal = null, handleCancelOTP }) => {
                   lòng ghi nhớ và không chia sẻ cho người khác)
                 </span>
                 <div className="w-full flex items-center justify-between">
-                  <Button
-                    className="border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
-                    onClick={handleNavigateToForgotSecurityPassword}
-                  >
-                    Quên Mật Khẩu
-                  </Button>
+                 
 
                   <div className="flex w-full items-center justify-end gap-2">
                     <Button
@@ -290,12 +285,7 @@ const ModalOTP = ({ user, onVerify, openOTPModal = null, handleCancelOTP }) => {
                     vui lòng ghi nhớ và không chia sẻ cho người khác)
                   </span>
                   <div className="w-full flex justify-between items-center">
-                    <Button
-                      className="border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
-                      onClick={handleNavigateToForgotSecurityPassword}
-                    >
-                      Quên Mật Khẩu
-                    </Button>
+              
                     <div className="flex w-full items-center justify-end gap-2">
                       <Button
                         className="border-secondary text-secondary hover:bg-secondary hover:text-white"
