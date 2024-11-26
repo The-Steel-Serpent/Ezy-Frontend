@@ -45,7 +45,7 @@ const ChangePassword = (props) => {
       },
     }
   );
-  const { isVerify, data, error, loading} = state;
+  const { isVerify, data, error, loading } = state;
   const onVerify = () => {
     setState({ type: "isVerify", payload: true });
   };
@@ -68,8 +68,6 @@ const ChangePassword = (props) => {
     };
     if (!data.oldPassword) {
       localErrors.oldPassword = "Mật khẩu cũ không được để trống";
-    } else if (data.oldPassword?.length < 6) {
-      localErrors.oldPassword = "Mật khẩu cũ phải có ít nhất 6 ký tự";
     }
     if (!data.newPassword) {
       localErrors.newPassword = "Mật khẩu mới không được để trống";
@@ -99,8 +97,6 @@ const ChangePassword = (props) => {
   };
   useEffect(() => {
     if (data.oldPassword !== "") {
-      setState({ type: "error", payload: { oldPassword: "" } });
-    } else if (data.oldPassword?.length > 6) {
       setState({ type: "error", payload: { oldPassword: "" } });
     }
 
