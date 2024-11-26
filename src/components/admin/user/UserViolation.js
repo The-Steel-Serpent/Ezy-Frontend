@@ -1,107 +1,173 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button } from "antd";
-import axios from "axios";
-import ViolationList from "./ViolationList";
+import { Table, Button, Tabs, Input } from "antd";
+import ResolveViolationModal from "./ViolationList";
 import ViolationHistoryModal from "./ViolationHistoryModal";
-import { useMessages } from "../../../providers/MessagesProvider";
+import WarningModal from "./WarningModal";
+
+const { TabPane } = Tabs;
+const { Search } = Input;
 
 const UserViolation = () => {
-  const [usersWithViolations, setUsersWithViolations] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isListModalVisible, setIsListModalVisible] = useState(false);
-  const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
-  const { handleUserSelected } = useMessages();
-
-  const fetchUsersWithViolations = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/violations/get-reported-customers`
-      );
-      if (response.data.success) {
-        const sortedData = response.data.data.sort((a, b) => {
-          // Ưu tiên user chưa bị ban (is_banned = 0)
-          if (a.is_banned !== b.is_banned) {
-            return a.is_banned - b.is_banned;
-          }
-          // Sắp xếp theo số vi phạm (giảm dần)
-          return b.total_violations - a.total_violations;
-        });
-        setUsersWithViolations(sortedData);
-      }
-    } catch (error) {
-      console.error("Error fetching users with violations:", error);
-    }
-  };
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]); // For storing search results
+  const [loading, setLoading] = useState(false);
+  const [selectedUserForReports, setSelectedUserForReports] = useState(null);
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
+  const [selectedUserIdForHistory, setSelectedUserIdForHistory] = useState(null);
+  const [warningModalVisible, setWarningModalVisible] = useState(false);
+  const [selectedUserForWarning, setSelectedUserForWarning] = useState(null);
 
   useEffect(() => {
-    fetchUsersWithViolations();
+    setLoading(true);
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/get-reported-customers`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setUsers(data.data);
+          setFilteredUsers(data.data); // Set initial filtered data
+        }
+      })
+      .finally(() => setLoading(false));
   }, []);
 
+  // Filter active and locked users
+  const activeUsers = filteredUsers.filter((user) => !user.is_banned);
+  const lockedUsers = filteredUsers.filter((user) => user.is_banned);
+
+  // Handle search
+  const handleSearch = (value) => {
+    const lowerValue = value.toLowerCase();
+    const filtered = users.filter(
+      (user) =>
+        user.user_id.toLowerCase().includes(lowerValue) ||
+        user.full_name.toLowerCase().includes(lowerValue) ||
+        user.email.toLowerCase().includes(lowerValue) ||
+        user.phone_number.includes(lowerValue)
+    );
+    setFilteredUsers(filtered);
+  };
+
   const columns = [
-    { title: "Tên người dùng", dataIndex: "full_name", key: "full_name" },
-    { title: "Email", dataIndex: "email", key: "email" },
-    { title: "Chờ xử lý", dataIndex: "pending_count", key: "pending_count" },
+    {
+      title: "Mã khách hàng",
+      dataIndex: "user_id",
+      key: "user_id",
+      align: "left",
+    },
+    {
+      title: "Họ tên",
+      dataIndex: "full_name",
+      key: "full_name",
+      align: "left",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      align: "left",
+    },
+    {
+      title: "Số điện thoại",
+      dataIndex: "phone_number",
+      key: "phone_number",
+      align: "center",
+    },
+    {
+      title: "Chờ xem",
+      dataIndex: "pending_count",
+      key: "pending_count",
+      align: "center",
+    },
     {
       title: "Thao tác",
       key: "actions",
+      align: "center",
       render: (_, record) => (
-        <>
+        <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
           <Button
-            type="primary"
-            style={{ marginRight: 8 }}
-            onClick={() => {
-              setSelectedUser(record);
-              setIsListModalVisible(true);
-            }}
-            disabled={record.is_banned === 1}
+            onClick={() => setSelectedUserForReports(record)}
+            style={{ backgroundColor: "#f0f0f0", borderColor: "#d9d9d9" }}
           >
             Xem báo cáo
           </Button>
           <Button
-            type="primary"
-            style={{ marginRight: 8 }}
             onClick={() => {
-              setSelectedUser(record);
-              setIsHistoryModalVisible(true);
+              setSelectedUserIdForHistory(record.user_id);
+              setHistoryModalVisible(true);
             }}
+            style={{ backgroundColor: "#f0f0f0", borderColor: "#d9d9d9" }}
           >
-            Lịch sử xử lý vi phạm
+            Lịch sử vi phạm
           </Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              handleUserSelected(record.user_id);
-            }}
-          >
-            Liên hệ người dùng
-          </Button>
-        </>
+          {!record.is_banned && (
+            <Button
+              type="primary"
+              onClick={() => {
+                setSelectedUserForWarning(record);
+                setWarningModalVisible(true);
+              }}
+            >
+              Cảnh báo vi phạm
+            </Button>
+          )}
+        </div>
       ),
     },
   ];
 
   return (
-    <div>
-      <h2 style={{ marginBottom: 20 }}>Danh sách người dùng bị báo cáo</h2>
-      <Table
-        columns={columns}
-        dataSource={usersWithViolations}
-        rowKey="user_id"
-        pagination={{ pageSize: 10 }}
-      />
-      {isListModalVisible && selectedUser && (
-        <ViolationList
-          user={selectedUser}
-          visible={isListModalVisible}
-          onClose={() => setIsListModalVisible(false)}
-          refreshUsers={fetchUsersWithViolations}
+    <div style={{ padding: "20px" }}>
+      <h1 style={{ marginBottom: "20px", textAlign: "center", fontSize: "24px" }}>
+        Danh sách khách hàng vi phạm
+      </h1>
+      <div style={{ marginBottom: "20px" }}>
+        <Search
+          placeholder="Tìm kiếm theo mã khách hàng, tên, email, số điện thoại"
+          onSearch={handleSearch}
+          enterButton
+          allowClear
+        />
+      </div>
+      <Tabs defaultActiveKey="active">
+        <TabPane tab="Tài khoản đang hoạt động" key="active">
+          <Table
+            columns={columns}
+            dataSource={activeUsers}
+            loading={loading}
+            rowKey="user_id"
+            bordered
+            pagination={{ pageSize: 10 }}
+          />
+        </TabPane>
+        <TabPane tab="Tài khoản đã khóa" key="locked">
+          <Table
+            columns={columns}
+            dataSource={lockedUsers}
+            loading={loading}
+            rowKey="user_id"
+            bordered
+            pagination={{ pageSize: 10 }}
+          />
+        </TabPane>
+      </Tabs>
+      {selectedUserForReports && (
+        <ResolveViolationModal
+          user={selectedUserForReports}
+          onClose={() => setSelectedUserForReports(null)}
         />
       )}
-      {isHistoryModalVisible && selectedUser && (
+      {historyModalVisible && (
         <ViolationHistoryModal
-          userId={selectedUser.user_id}
-          visible={isHistoryModalVisible}
-          onClose={() => setIsHistoryModalVisible(false)}
+          visible={historyModalVisible}
+          onClose={() => setHistoryModalVisible(false)}
+          userId={selectedUserIdForHistory}
+        />
+      )}
+      {warningModalVisible && (
+        <WarningModal
+          visible={warningModalVisible}
+          onClose={() => setWarningModalVisible(false)}
+          user={selectedUserForWarning}
         />
       )}
     </div>

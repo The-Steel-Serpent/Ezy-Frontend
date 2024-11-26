@@ -191,9 +191,9 @@ const RequestSupport = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 20, fontSize: 20 }}>
-        Danh sách yêu cầu hỗ trợ
-      </h2>
+      <div className="text-center">
+        <h3 className="text-3xl font-bold text-blue-600">Danh sách yêu cầu hổ trợ</h3>
+      </div>
       <div style={{ marginBottom: 20 }}>
         <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
           <Col>

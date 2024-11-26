@@ -96,6 +96,12 @@ const AllFlashSale = withSuspense(
 const AllRequest = withSuspense(
   lazy(() => import("../pages/admin/request_support/AllRequest"))
 );
+const RevenueStatistic = withSuspense(
+  lazy(() => import("../pages/admin/statistics/RevenueStatistic"))
+);
+const AdminAccountSetting = withSuspense(
+  lazy(() => import("../pages/admin/my-account/AdminAccountSetting"))
+);
 const SellerHome = withSuspense(
   lazy(() => import("../pages/seller/SellerHome"))
 );
@@ -525,12 +531,30 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "admin",
+        path: "admin/dashboard",
         element: (
           <AdminAuthLayout>
             <AdminDashboard />
           </AdminAuthLayout>
         ),
+      },
+      {
+        path: "admin",
+        element: (
+          <AdminAuthLayout>
+            <AdminAccountSetting />
+          </AdminAuthLayout>
+        ),
+        children: [
+          {
+            path: "account",
+            element: (
+              <AdminAuthLayout>
+                <AdminAccountSetting />
+              </AdminAuthLayout>
+            ),
+          },
+        ],
       },
       {
         path: "admin/category-management/product-category/main-category",
@@ -612,6 +636,23 @@ const router = createBrowserRouter([
           </AdminAuthLayout>
         ),
       },
+      {
+        path: "/admin/statistic/revenue",
+        element: (
+          <AdminAuthLayout>
+            <RevenueStatistic />
+          </AdminAuthLayout>
+        ),
+
+      },
+      {
+        path: "/admin/my-account",
+        element: (
+          <AdminAuthLayout>
+            <AdminAccountSetting />
+          </AdminAuthLayout>
+        ),
+      }
     ],
   },
 ]);

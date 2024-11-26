@@ -43,7 +43,7 @@ const FlashSale = () => {
       dataIndex: 'thumbnail',
       key: 'thumbnail',
       render: (thumbnail) => thumbnail ? <img src={thumbnail} alt="Thumbnail" style={{ width: 100 }} /> : 'Không có ảnh',
-    },    
+    },
     {
       title: 'Thời gian bắt đầu',
       dataIndex: 'started_at',
@@ -207,7 +207,9 @@ const FlashSale = () => {
 
   return (
     <div>
-      <h1 style={{ marginBottom: 16, fontSize: 20 }}>Quản lý Flash Sale</h1>
+      <div className="text-center">
+        <h3 className="text-3xl font-bold text-blue-600">Quản lý Flash Sale</h3>
+      </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           <DatePicker placeholder="Ngày bắt đầu" onChange={(date) => setStartDate(date ? dayjs(date) : null)} />

@@ -1,122 +1,78 @@
-import React, { useEffect, useState } from "react";
-import { Table, Tabs, Button, notification, Modal, Image } from "antd";
-import axios from "axios";
-import ResolveViolationModal from "../user/ResolveViolationModal";
+import React, { useState, useEffect } from "react";
+import { Modal, Table, Tabs, Button, message, Spin, Typography } from "antd";
 import dayjs from "dayjs";
-import { useSelector } from "react-redux";
+import ShopViolationDetail from "./ShopViolationDetail";
 
 const { TabPane } = Tabs;
+const { Title } = Typography;
 
-const ViolationList = ({ user, visible, onClose, refreshUsers }) => {
-  const [pendingReports, setPendingReports] = useState([]);
-  const [resolvedReports, setResolvedReports] = useState([]);
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const adminId = useSelector((state) => state.user.user_id);
+const ShopViolationList = ({ shop, onClose }) => {
+  const [violations, setViolations] = useState([]);
+  const [selectedViolation, setSelectedViolation] = useState(null);
+  const [activeTab, setActiveTab] = useState("Chờ xử lý");
+  const [loading, setLoading] = useState(false);
 
-  const fetchViolations = async () => {
-    if (!user || !user.owner_id) {
-      console.error("Owner ID is missing.");
-      return;
-    }
-  
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/violations/user/${user.owner_id}`
-      );
-      console.log("Violations API Response:", response.data.data);
-      if (response.data.success) {
-        const reports = response.data.data;
-        setPendingReports(reports.filter((r) => r.status === "Chưa xử lý"));
-        setResolvedReports(reports.filter((r) => r.status === "Đã xử lý"));
-      }
-    } catch (error) {
-      console.error("Error fetching user violations:", error);
-    }
+  // Fetch violations for the selected shop
+  const fetchViolations = () => {
+    setLoading(true);
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/user/${shop.user_id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setViolations(data.data);
+        } else {
+          message.error("Không thể tải danh sách vi phạm.");
+        }
+      })
+      .catch(() => message.error("Đã xảy ra lỗi khi tải danh sách vi phạm."))
+      .finally(() => setLoading(false));
   };
-  
 
   useEffect(() => {
-    if (visible) {
-      fetchViolations();
-    }
-  }, [visible]);
+    fetchViolations();
+  }, [activeTab]);
 
-  const viewReportDetail = (report) => {
-    setSelectedReport(report);
-    setIsModalVisible(true);
+  const renderViolations = (status) => {
+    if (status === "Chờ xử lý") {
+      return violations.filter((v) => v.status === "Chưa xử lý");
+    }
+    if (status === "Đã xem") {
+      return violations.filter((v) => v.status === "Đã xem");
+    }
+    return [];
   };
 
-  const approveReport = async (adminId) => {
-    try {
-      const response = await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/api/violations/update-status`,
-        {
-          reportId: selectedReport.violation_id,
-          updated_by_id: adminId,
-        }
-      );
-      if (response.data.success) {
-        notification.success({
-          message: "Duyệt báo cáo thành công!",
-          description: `Quyết định xử phạt: ${response.data.result.penalty}`,
-        });
-        setIsModalVisible(false);
-        setSelectedReport(null);
-        fetchViolations();
-        refreshUsers();
-      }
-      return response.data;
-    } catch (error) {
-      console.error("Error approving report:", error);
-      notification.error({ message: "Lỗi khi duyệt báo cáo!" });
-      throw error;
-    }
-  };
-
-  const columnsPending = [
+  // Table columns configuration
+  const columns = [
     {
-      title: "ID",
+      title: "Mã vi phạm",
       dataIndex: "violation_id",
       key: "violation_id",
+      align: "center",
     },
-    { title: "Loại vi phạm", dataIndex: "violation_type", key: "violation_type" },
-    { title: "Người gửi", dataIndex: "sender_id", key: "sender_id" },
+    {
+      title: "Loại vi phạm",
+      dataIndex: "violation_type",
+      key: "violation_type",
+      align: "left",
+    },
     {
       title: "Ngày báo cáo",
       dataIndex: "date_reported",
       key: "date_reported",
-      render: (date) => dayjs(date).format("DD/MM/YYYY HH:mm:ss"),
-    },
-    {
-      title: "Hình ảnh",
-      dataIndex: "imgs",
-      key: "imgs",
-      render: (imgs) => (
-        imgs && imgs.length > 0 ? (
-          <div>
-            {imgs.map((img, index) => (
-              <Image
-                key={index}
-                src={img}
-                alt={`Ảnh ${index + 1}`}
-                style={{ maxWidth: "80px", margin: "5px" }}
-              />
-            ))}
-          </div>
-        ) : (
-          <span>Không có</span>
-        )
-      ),
+      align: "center",
+      render: (text) =>
+        text ? dayjs(text).format("DD/MM/YYYY HH:mm:ss") : "N/A",
     },
     {
       title: "Thao tác",
       key: "actions",
+      align: "center",
       render: (_, record) => (
         <Button
           type="primary"
-          onClick={() => viewReportDetail(record)}
-          style={{ marginRight: 8 }}
+          onClick={() => setSelectedViolation(record)}
+          style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
         >
           Xem chi tiết
         </Button>
@@ -126,38 +82,56 @@ const ViolationList = ({ user, visible, onClose, refreshUsers }) => {
 
   return (
     <Modal
-      title={`Danh sách vi phạm của ${user.shop_name}`}
-      visible={visible}
+      visible
       onCancel={onClose}
+      title={
+        <Title level={4} style={{ textAlign: "center", margin: 0 }}>
+          Danh sách vi phạm - Cửa hàng: {shop.shop_name}
+        </Title>
+      }
       footer={null}
-      width={1000}
+      centered
+      width={800}
+      bodyStyle={{ padding: "20px" }}
     >
-      <Tabs defaultActiveKey="1">
-        <TabPane tab={`Chờ duyệt (${pendingReports.length})`} key="1">
-          <Table
-            columns={columnsPending}
-            dataSource={pendingReports}
-            rowKey="violation_id"
-          />
-        </TabPane>
-        <TabPane tab={`Đã duyệt (${resolvedReports.length})`} key="2">
-          <Table
-            columns={columnsPending}
-            dataSource={resolvedReports}
-            rowKey="violation_id"
-            pagination={{ pageSize: 5 }}
-          />
-        </TabPane>
-      </Tabs>
-
-      <ResolveViolationModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        report={selectedReport}
-        onApprove={approveReport}
-      />
+      <Spin spinning={loading}>
+        <Tabs
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key)}
+          centered
+          tabBarStyle={{ fontWeight: "bold" }}
+        >
+          <TabPane tab="Chờ xem" key="Chờ xử lý">
+            <Table
+              dataSource={renderViolations("Chờ xử lý")}
+              columns={columns}
+              rowKey="violation_id"
+              pagination={{ pageSize: 5 }}
+              bordered
+              style={{ marginTop: "16px" }}
+            />
+          </TabPane>
+          <TabPane tab="Đã xem" key="Đã xem">
+            <Table
+              dataSource={renderViolations("Đã xem")}
+              columns={columns}
+              rowKey="violation_id"
+              pagination={{ pageSize: 5 }}
+              bordered
+              style={{ marginTop: "16px" }}
+            />
+          </TabPane>
+        </Tabs>
+      </Spin>
+      {selectedViolation && (
+        <ShopViolationDetail
+          violation={selectedViolation}
+          isViewedTab={activeTab === "Đã xem"}
+          onClose={() => setSelectedViolation(null)}
+        />
+      )}
     </Modal>
   );
 };
 
-export default ViolationList;
+export default ShopViolationList;

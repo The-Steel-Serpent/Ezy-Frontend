@@ -21,7 +21,7 @@ const AdminSidebar = ({ role_id }) => {
 
     const menuItems = [
         {
-            key: '/admin',
+            key: '/admin/dashboard',
             icon: <HomeOutlined />,
             label: 'Trang chủ',
             roles: [3],
@@ -96,9 +96,9 @@ const AdminSidebar = ({ role_id }) => {
             roles: [3, 4],
         },
         {
-            key: '8',
+            key: '/admin/statistic/revenue',
             icon: <BarChartOutlined />,
-            label: 'Thống kê',
+            label: 'Thống kê doanh thu',
             roles: [3], 
         },
     ];

@@ -1,88 +1,153 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button } from "antd";
-import axios from "axios";
+import { Table, Tabs, Button, Typography, Spin, message } from "antd";
 import ShopViolationList from "./ShopViolationList";
-import ViolationHistoryModal from "../user/ViolationHistoryModal";
+import ShopViolationHistoryModal from "./ShopViolationHistoryModal";
+import ShopWarningModal from "./ShopWarningModal";
+
+const { TabPane } = Tabs;
+const { Title } = Typography;
 
 const ShopViolation = () => {
-  const [shopsWithViolations, setShopsWithViolations] = useState([]);
-  const [selectedShop, setSelectedShop] = useState(null);
-  const [isListModalVisible, setIsListModalVisible] = useState(false);
-  const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
+  const [shops, setShops] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedShopForViolations, setSelectedShopForViolations] = useState(null);
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
+  const [warningModalVisible, setWarningModalVisible] = useState(false);
+  const [warningShop, setWarningShop] = useState(null);
 
-  const fetchShopsWithViolations = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/violations/get-shops-with-violations`
-      );
-      if (response.data.success) {
-        setShopsWithViolations(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching shops with violations:", error);
-    }
-  };
-
+  // Fetch shops with violations
   useEffect(() => {
-    fetchShopsWithViolations();
+    setLoading(true);
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/get-shops-with-violations`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setShops(data.data);
+        } else {
+          console.error("Failed to fetch shop violations.");
+        }
+      })
+      .catch(() => console.error("Error fetching shops with violations."))
+      .finally(() => setLoading(false));
   }, []);
 
+  // Filter shops based on is_banned
+  const activeShops = shops.filter((shop) => shop.is_banned === 0);
+  const lockedShops = shops.filter((shop) => shop.is_banned === 1);
+
   const columns = [
-    { title: "Tên cửa hàng", dataIndex: "shop_name", key: "shop_name" },
-    { title: "Chủ sở hữu", dataIndex: "owner_name", key: "owner_name" },
-    { title: "Email", dataIndex: "email", key: "email" },
-    { title: "Chờ xử lý", dataIndex: "pending_count", key: "pending_count" },
+    {
+      title: "Mã cửa hàng",
+      dataIndex: "shop_id",
+      key: "shop_id",
+      align: "center",
+    },
+    {
+      title: "Tên cửa hàng",
+      dataIndex: "shop_name",
+      key: "shop_name",
+    },
+    {
+      title: "Chủ cửa hàng",
+      dataIndex: "full_name",
+      key: "full_name",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+    },
+    {
+      title: "Chờ xử lý",
+      dataIndex: "pending_count",
+      key: "pending_count",
+      align: "center",
+    },
     {
       title: "Thao tác",
       key: "actions",
+      align: "center",
       render: (_, record) => (
-        <>
-          <Button
-            type="primary"
-            style={{ marginRight: 8 }}
-            onClick={() => {
-              setSelectedShop(record);
-              setIsListModalVisible(true);
-            }}
-          >
-            Xem báo cáo
-          </Button>
+        <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
+          <Button onClick={() => setSelectedShopForViolations(record)}>Xem báo cáo</Button>
+          <Button onClick={() => setHistoryModalVisible(true)}>Lịch sử vi phạm</Button>
           <Button
             type="primary"
             onClick={() => {
-              setSelectedShop(record);
-              setIsHistoryModalVisible(true);
+              if (record) {
+                setWarningShop(record);
+                setWarningModalVisible(true);
+              } else {
+                console.error("Record is null or undefined");
+                message.error("Không thể mở modal. Dữ liệu cửa hàng không hợp lệ.");
+              }
             }}
           >
-            Lịch sử xử lý vi phạm
+            Cảnh báo vi phạm
           </Button>
-        </>
+
+
+        </div>
       ),
     },
   ];
 
   return (
-    <div>
-      <h2 style={{ marginBottom: 20 }}>Danh sách cửa hàng bị báo cáo</h2>
-      <Table
-        columns={columns}
-        dataSource={shopsWithViolations}
-        rowKey="shop_id"
-        pagination={{ pageSize: 10 }}
-      />
-      {isListModalVisible && selectedShop && (
+    <div style={{ padding: "20px" }}>
+      <Title level={3} style={{ textAlign: "center", marginBottom: "20px" }}>
+        Danh sách cửa hàng vi phạm
+      </Title>
+      <Tabs defaultActiveKey="active">
+        <TabPane tab="Cửa hàng đang hoạt động" key="active">
+          {loading ? (
+            <Spin tip="Đang tải dữ liệu..." style={{ width: "100%", marginTop: "20px" }} />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={activeShops}
+              rowKey="user_id"
+              pagination={{ pageSize: 10 }}
+              bordered
+            />
+          )}
+        </TabPane>
+        <TabPane tab="Cửa hàng đã khóa" key="locked">
+          {loading ? (
+            <Spin tip="Đang tải dữ liệu..." style={{ width: "100%", marginTop: "20px" }} />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={lockedShops}
+              rowKey="user_id"
+              pagination={{ pageSize: 10 }}
+              bordered
+            />
+          )}
+        </TabPane>
+      </Tabs>
+
+      {/* Modals */}
+      {selectedShopForViolations && (
         <ShopViolationList
-          user={selectedShop} 
-          visible={isListModalVisible}
-          onClose={() => setIsListModalVisible(false)}
-          refreshUsers={fetchShopsWithViolations}
+          shop={selectedShopForViolations}
+          onClose={() => setSelectedShopForViolations(null)}
         />
       )}
-      {isHistoryModalVisible && selectedShop && (
-        <ViolationHistoryModal
-          userId={selectedShop.owner_id}
-          visible={isHistoryModalVisible}
-          onClose={() => setIsHistoryModalVisible(false)}
+      {historyModalVisible && (
+        <ShopViolationHistoryModal
+          visible={historyModalVisible}
+          onClose={() => setHistoryModalVisible(false)}
+          shop={selectedShopForViolations}
+        />
+      )}
+      {warningModalVisible && warningShop && (
+        <ShopWarningModal
+          visible={warningModalVisible}
+          onClose={() => {
+            setWarningModalVisible(false);
+            setWarningShop(null); // Đặt lại giá trị sau khi đóng modal
+          }}
+          shop={warningShop}
         />
       )}
     </div>

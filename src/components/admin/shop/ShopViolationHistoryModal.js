@@ -1,45 +1,67 @@
 import React, { useEffect, useState } from "react";
-import { Modal, List } from "antd";
-import axios from "axios";
+import { Modal, List, Card, Button, message, Typography } from "antd";
+import dayjs from "dayjs";
 
-const ShopViolationHistoryModal = ({ shopId, visible, onClose }) => {
+const { Title, Text } = Typography;
+
+const ShopViolationHistoryModal = ({ visible, onClose, shopId }) => {
   const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/violations/history/${shopId}`
-        );
-        if (response.data.success) {
-          setHistory(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching history:", error);
-      }
-    };
-
     if (visible) {
-      fetchHistory();
+      setLoading(true);
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/history/${shopId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) setHistory(data.data);
+        })
+        .finally(() => setLoading(false));
     }
   }, [visible, shopId]);
 
+  const handleRevoke = async (historyId) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/revoke/${historyId}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        message.success("Đã thu hồi lịch sử xử lý.");
+        setHistory((prev) => prev.filter((item) => item.violation_history_id !== historyId));
+      } else {
+        message.error(result.message || "Thu hồi thất bại.");
+      }
+    } catch (error) {
+      message.error("Đã xảy ra lỗi khi thu hồi.");
+    }
+  };
+
   return (
     <Modal
-      title="Lịch sử vi phạm"
       visible={visible}
       onCancel={onClose}
+      title={<Title level={4}>Lịch sử xử lý vi phạm</Title>}
       footer={null}
+      centered
+      width={600}
     >
       <List
+        loading={loading}
         dataSource={history}
         renderItem={(item) => (
-          <List.Item>
-            <List.Item.Meta
-              title={`Ngày xử lý: ${item.updatedAt}`}
-              description={`Loại xử lý: ${item.action_type} | Ghi chú: ${item.notes}`}
-            />
-          </List.Item>
+          <Card>
+            <Text strong>Ngày xử lý:</Text>
+            <Text style={{ marginLeft: "8px" }}>
+              {dayjs(item.updatedAt).format("DD/MM/YYYY HH:mm:ss")}
+            </Text>
+            <Text strong>Ghi chú:</Text>
+            <Text style={{ marginLeft: "8px" }}>{item.notes || "Không có"}</Text>
+            <Button danger onClick={() => handleRevoke(item.violation_history_id)}>
+              Thu hồi
+            </Button>
+          </Card>
         )}
       />
     </Modal>
