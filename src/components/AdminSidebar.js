@@ -1,6 +1,6 @@
 import { Menu } from 'antd';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
     HomeOutlined, 
     ProductOutlined, 
@@ -114,8 +114,10 @@ const AdminSidebar = ({ role_id }) => {
         <Menu
             mode='inline'
             onClick={({ key }) => navigate(key)}
-            className='menu-bar'
+            className='menu-bar h-full'
             items={filteredItems}
+            
+
         />
     );
 };
