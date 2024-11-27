@@ -53,7 +53,7 @@ const UpdateOTP = () => {
 
     setLocalState({ type: "loading", payload: true });
     try {
-      await sendEmailVerificationAgain(localState.password);
+      await sendEmailVerificationAgain(localState.password, user?.role_id);
       setLocalState({
         type: "success",
         payload: "Vui lòng kiểm tra email để xác nhận",
@@ -110,7 +110,6 @@ const UpdateOTP = () => {
       setLocalState({ type: "loading", payload: false });
       return;
     }
-    console.log("Mật khẩu cấp 2 mới: ", localState.new_security_password);
     try {
       const res = await registerOTP(
         user.user_id,
@@ -119,7 +118,11 @@ const UpdateOTP = () => {
       if (res.success) {
         message.success("Cập Nhật Mật Khẩu Cấp 2 thành công");
         dispatch(setUser(res.data));
-        navigate("/user/account?type=security-password&step=3");
+        navigate(
+          `/${
+            user?.role_id === 1 ? "user" : "seller"
+          }/account?type=security-password&step=3`
+        );
       }
     } catch (error) {
       console.log("Cập Nhật Mật Khẩu Cấp 2 Thất Bại: ", error);
@@ -214,7 +217,13 @@ const UpdateOTP = () => {
               status="success"
               title="Câp nhật Mật Khẩu Cấp 2 Thành Công!"
               extra={
-                <Button onClick={() => navigate("/")}>Trở về trang chủ</Button>
+                <Button
+                  onClick={() =>
+                    navigate(user?.role_id === 1 ? "/" : "/seller")
+                  }
+                >
+                  Trở về trang chủ
+                </Button>
               }
             />
           </div>

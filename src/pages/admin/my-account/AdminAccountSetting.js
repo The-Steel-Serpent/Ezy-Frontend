@@ -1,7 +1,4 @@
-import {
-  DownOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { DownOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, Divider, Skeleton, Tree } from "antd";
 import React, { lazy, Suspense, useEffect, useReducer } from "react";
 import { ImPencil2 } from "react-icons/im";
@@ -10,7 +7,9 @@ import { useSelector } from "react-redux";
 import UpdateOTP from "../../../components/admin/UpdateOTP";
 
 const EditProfile = lazy(() => import("../../../components/admin/EditProfile"));
-const ChangePassword = lazy(() => import("../../../components/admin/changePassword"));
+const ChangePassword = lazy(() =>
+  import("../../../components/admin/changePassword")
+);
 
 const AdminAccountSetting = () => {
   const admin = useSelector((state) => state.user);
@@ -50,18 +49,21 @@ const AdminAccountSetting = () => {
           title: "Hồ Sơ",
           key: "profile",
           parenKey: "account",
-
         },
         {
           title: "Đổi Mật Khẩu",
           key: "password",
           parenKey: "account",
         },
-        {
-          title: "Mật Khẩu Cấp 2",
-          key: "security-password",
-          parenKey: "account",
-        },
+        ...(admin?.security_password
+          ? [
+              {
+                title: "Mật Khẩu Cấp 2",
+                key: "security-password",
+                parenKey: "account",
+              },
+            ]
+          : []),
       ],
     },
   ];
@@ -98,9 +100,7 @@ const AdminAccountSetting = () => {
         );
       case "security-password":
         return (
-          <Suspense
-            fallback={<Skeleton active />}
-          >
+          <Suspense fallback={<Skeleton active />}>
             <UpdateOTP />
           </Suspense>
         );

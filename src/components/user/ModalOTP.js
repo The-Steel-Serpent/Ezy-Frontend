@@ -167,7 +167,11 @@ const ModalOTP = ({ user, onVerify, openOTPModal = null, handleCancelOTP }) => {
   };
 
   const handleNavigateToForgotSecurityPassword = () => {
-    navigate("/user/account?type=security-password");
+    navigate(
+      `/${
+        user?.role_id === 1 ? "user" : "seller"
+      }/account?type=security-password`
+    );
   };
 
   return (
@@ -244,8 +248,6 @@ const ModalOTP = ({ user, onVerify, openOTPModal = null, handleCancelOTP }) => {
                   lòng ghi nhớ và không chia sẻ cho người khác)
                 </span>
                 <div className="w-full flex items-center justify-between">
-                 
-
                   <div className="flex w-full items-center justify-end gap-2">
                     <Button
                       className="border-secondary text-secondary hover:bg-secondary hover:text-white"
@@ -285,7 +287,6 @@ const ModalOTP = ({ user, onVerify, openOTPModal = null, handleCancelOTP }) => {
                     vui lòng ghi nhớ và không chia sẻ cho người khác)
                   </span>
                   <div className="w-full flex justify-between items-center">
-              
                     <div className="flex w-full items-center justify-end gap-2">
                       <Button
                         className="border-secondary text-secondary hover:bg-secondary hover:text-white"

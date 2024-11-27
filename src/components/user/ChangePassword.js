@@ -144,7 +144,13 @@ const ChangePassword = (props) => {
   return (
     <>
       <div className="w-full bg-white p-5">
-        <span className="text-xl font-garibato">Đổi Mật Khẩu</span>
+        <div className="flex flex-col gap-1">
+          <span className="text-xl font-garibato">Đổi Mật Khẩu</span>
+          <span className="text-sm">
+            Đối với lần đầu đăng nhập bằng Google, vui lòng chọn Quên mật khẩu
+            tại trang Đăng nhập/Đăng ký để cập nhật mật khẩu.
+          </span>
+        </div>
         <Divider className="my-3" />
         <div className="flex flex-col gap-2">
           <div className="grid grid-cols-12 items-center justify-center">

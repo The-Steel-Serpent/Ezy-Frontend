@@ -28,6 +28,10 @@ import generateToken from "../helpers/randomToken";
 
 const auth = getAuth();
 auth.useDeviceLanguage();
+const baseURL =
+  process.env.NODE_ENV === "production"
+    ? "https://ezyecommerce-6c90a.web.app"
+    : "http://localhost:3000";
 
 export const startTokenRefreshListener = () => {
   onIdTokenChanged(auth, async (user) => {
@@ -210,7 +214,7 @@ export const verifyNewEmailWithLink = async (href) => {
 };
 
 const actionCodeSettings = {
-  url: `http://localhost:3000/user/account?type=email&step=2`,
+  url: `${baseURL}/user/account?type=email&step=2`,
   handleCodeInApp: true,
 };
 
@@ -336,12 +340,13 @@ export const changePassword = async (oldPassword, newPassword) => {
   }
 };
 
-export const sendEmailVerificationAgain = async (password) => {
+export const sendEmailVerificationAgain = async (password, role_id) => {
   const randomVerifyToken = generateToken();
   const actionCodeSettingss = {
     url:
-      "http://localhost:3000/user/account?type=security-password&step=2&verifyToken=" +
-      randomVerifyToken,
+      `${baseURL}/${
+        role_id === 1 ? "user" : "seller"
+      }/account?type=security-password&step=2&verifyToken=` + randomVerifyToken,
     handleCodeInApp: true, // Có xử lý trong ứng dụng không
   };
   try {
@@ -376,7 +381,7 @@ export const sendEmailVerificationAgainForAdmin = async (password) => {
   const randomVerifyToken = generateToken();
   const actionCodeSettingss = {
     url:
-      "http://localhost:3000/admin/account?type=security-password&step=2&verifyToken=" +
+      `${baseURL}/admin/account?type=security-password&step=2&verifyToken=` +
       randomVerifyToken,
     handleCodeInApp: true, // Có xử lý trong ứng dụng không
   };

@@ -44,6 +44,7 @@ const ChangePassword = lazy(() =>
 );
 const AccountSetting = () => {
   const user = useSelector((state) => state.user);
+  console.log(user);
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
@@ -90,11 +91,15 @@ const AccountSetting = () => {
           key: "password",
           parenKey: "account",
         },
-        {
-          title: <span className="pl-2">Mật Khẩu Cấp 2</span>,
-          key: "security-password",
-          parenKey: "account",
-        },
+        ...(user?.security_password !== null
+          ? [
+              {
+                title: <span className="pl-2">Mật Khẩu Cấp 2</span>,
+                key: "security-password",
+                parenKey: "account",
+              },
+            ]
+          : []),
       ],
     },
     {
