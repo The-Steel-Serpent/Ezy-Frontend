@@ -253,6 +253,7 @@ const DetailsProduct = () => {
       }
       if (!user?.user_id) {
         navigate("/buyer/login");
+        return;
       }
       // console.log("Quantity: ", quantity);
       const res = await addToCart(
@@ -285,6 +286,7 @@ const DetailsProduct = () => {
       }
       if (!user?.user_id) {
         navigate("/buyer/login");
+        return;
       }
       // console.log("Quantity: ", quantity);
       const res = await addToCart(

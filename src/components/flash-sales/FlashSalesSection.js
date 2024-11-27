@@ -96,72 +96,76 @@ const FlashSalesSection = () => {
 
   return (
     <>
-      {flashSale && flashSalesItem && flashSalesItem.length > 0 && (
-        <div className="max-w-[1200px] bg-white m-auto h-fit mt-5 px-5">
-          {/**Countdown */}
+      {flashSale?.length > 0 &&
+        flashSalesItem &&
+        flashSalesItem?.length > 0 && (
+          <div className="max-w-[1200px] bg-white m-auto h-fit mt-5 px-5">
+            {/**Countdown */}
 
-          <div className="flex justify-between items-center">
-            <div className="flex justify-center items-center gap-2">
-              <img src={flashSaleIcon} className="size-[100px]" alt="" />
+            <div className="flex justify-between items-center">
+              <div className="flex justify-center items-center gap-2">
+                <img src={flashSaleIcon} className="size-[100px]" alt="" />
 
-              <FlipClockCountdown
-                to={time.endtime}
-                hideOnComplete={false}
-                labels={["HOURS", "MINUTES", "SECONDS"]}
-                labelStyle={{
-                  fontSize: 10,
-                  fontWeight: 500,
-                  textTransform: "uppercase",
-                }}
-                className="flip-clock mt-3"
-                digitBlockStyle={{ width: 20, height: 40, fontSize: 30 }}
-                dividerStyle={{ color: "white", height: 1 }}
-                separatorStyle={{ color: "red", size: "6px" }}
-                duration={0.5}
-                renderMap={[false, true, true, true]}
-              />
-              {time.status && (
-                <span className="text-lg font-semibold text-red-500">
-                  {time.status === "waiting" && "Sắp diễn ra"}
-                  {time.status === "active" && "Đang diễn ra"}
-                  {time.status === "ended" && "Đã kết thúc"}
-                </span>
-              )}
+                <FlipClockCountdown
+                  to={time.endtime}
+                  hideOnComplete={false}
+                  labels={["HOURS", "MINUTES", "SECONDS"]}
+                  labelStyle={{
+                    fontSize: 10,
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                  }}
+                  className="flip-clock mt-3"
+                  digitBlockStyle={{ width: 20, height: 40, fontSize: 30 }}
+                  dividerStyle={{ color: "white", height: 1 }}
+                  separatorStyle={{ color: "red", size: "6px" }}
+                  duration={0.5}
+                  renderMap={[false, true, true, true]}
+                />
+                {time.status && (
+                  <span className="text-lg font-semibold text-red-500">
+                    {time.status === "waiting" && "Sắp diễn ra"}
+                    {time.status === "active" && "Đang diễn ra"}
+                    {time.status === "ended" && "Đã kết thúc"}
+                  </span>
+                )}
+              </div>
+              <span
+                className="text-primary cursor-pointer flex items-center gap-1"
+                onClick={() =>
+                  navigate(
+                    `/flash-sale?flash_sale_time_frame_id=${flashSalesItem[0].flash_sale_time_frame_id}&page=1`
+                  )
+                }
+              >
+                Xem Tất Cả <RxCaretRight className="" />
+              </span>
             </div>
-            <span
-              className="text-primary cursor-pointer flex items-center gap-1"
-              onClick={() =>
-                navigate(
-                  `/flash-sale?flash_sale_time_frame_id=${flashSalesItem[0].flash_sale_time_frame_id}&page=1`
-                )
-              }
-            >
-              Xem Tất Cả <RxCaretRight className="" />
-            </span>
+            {/**Carousel */}
+            <div className="pb-3">
+              <Carousel
+                arrows
+                className={`animation-pulse category-carousel lg:max-w-[1200px] relative lg:overflow-visible overflow-hidden ${
+                  flashSalesItem[0]?.ShopRegisterFlashSales.length < 6 &&
+                  "not-enough-slide"
+                }`}
+                rows={1}
+                slidesToShow={6}
+                infinite={false}
+                dots={false}
+                centerMode={false}
+                focusOnSelect={true}
+              >
+                {flashSalesItem[0]?.ShopRegisterFlashSales?.map(
+                  (value, key) => (
+                    <FlashSaleItem item={value} status={time.status} />
+                  )
+                )}
+              </Carousel>
+            </div>
           </div>
-          {/**Carousel */}
-          <div className="pb-3">
-            <Carousel
-              arrows
-              className={`animation-pulse category-carousel lg:max-w-[1200px] relative lg:overflow-visible overflow-hidden ${
-                flashSalesItem[0]?.ShopRegisterFlashSales.length < 6 &&
-                "not-enough-slide"
-              }`}
-              rows={1}
-              slidesToShow={6}
-              infinite={false}
-              dots={false}
-              centerMode={false}
-              focusOnSelect={true}
-            >
-              {flashSalesItem[0]?.ShopRegisterFlashSales?.map((value, key) => (
-                <FlashSaleItem item={value} status={time.status} />
-              ))}
-            </Carousel>
-          </div>
-        </div>
-      )}
-      {flashSale && (
+        )}
+      {flashSale && flashSale?.thumbnail && (
         <SaleBanner
           thumbnail={flashSale?.thumbnail}
           status={flashSale?.status}
