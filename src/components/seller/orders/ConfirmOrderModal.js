@@ -138,7 +138,7 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
             // return_ward_code,
             // client_order_code,
             to_name: order.UserAccount.full_name, // required
-            to_phone: order.UserAccount.phone_number, // required
+            to_phone: order.user_address_order_phone_number, // required
             to_address: order.user_address_string, // required
             to_ward_code: to_ward_code, // required !!!!!!
             to_district_id: to_district_id, // required !!!!!!!!
