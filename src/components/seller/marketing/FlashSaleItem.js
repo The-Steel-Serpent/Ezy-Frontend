@@ -4,7 +4,7 @@ import React, { useEffect, useReducer } from 'react';
 import { getSuggestFlashSaleForShop } from '../../../services/flashSaleService';
 import FrameTimeFlashSale from './FrameTimeFlashSale';
 import { formatDate } from '../../../helpers/formatDate';
-
+import dayjs from 'dayjs';
 const FlashSaleItem = () => {
 
     const [localState, setLocalState] = useReducer(
@@ -88,8 +88,8 @@ const FlashSaleItem = () => {
             return {
                 key: index,
                 flash_sales_name: flash_sales.flash_sales_name,
-                started_at: formatDate(flash_sales.started_at),
-                ended_at: formatDate(flash_sales.ended_at),
+                started_at: dayjs(flash_sales.started_at).format('DD/MM/YYYY HH:mm:ss '),
+                ended_at: dayjs(flash_sales.ended_at).format('DD/MM/YYYY HH:mm:ss '),
                 description: flash_sales.description,
                 status: flash_sales.status,
                 FlashSaleTimeFrames: flash_sales.FlashSaleTimeFrames

@@ -3,6 +3,8 @@ import React, { useEffect, useReducer } from "react";
 import { TiArrowBack } from "react-icons/ti";
 import { formatDate } from "../../../helpers/formatDate";
 import ModalFlashSaleRegisterProduct from "./ModalFlashSaleRegisterProduct";
+import dayjs from "dayjs";
+import { da } from "date-fns/locale";
 
 const FrameTimeFlashSale = (props) => {
   const [localState, setLocalState] = useReducer(
@@ -27,7 +29,9 @@ const FrameTimeFlashSale = (props) => {
     props.setLocalState({ type: "SET_SELECTED_TIME_FRAMES", payload: [] });
   };
 
+  
   useEffect(() => {
+    
     console.log("frame", props.localState.selected_time_frames);
   }, [props.localState.selected_time_frames]);
 
@@ -74,19 +78,13 @@ const FrameTimeFlashSale = (props) => {
       return false;
     }
 
-    const now = new Date();
-    const startedAt = new Date(started_at);
+    const now = dayjs(new Date());
+    const startedAt = dayjs(started_at);
 
-    const year = startedAt.getUTCFullYear();
-    const month = ('0' + (startedAt.getUTCMonth() + 1)).slice(-2);
-    const day = ('0' + startedAt.getUTCDate()).slice(-2);
-    const hours = ('0' + startedAt.getUTCHours()).slice(-2);
-    const minutes = ('0' + startedAt.getUTCMinutes()).slice(-2);
-    const seconds = ('0' + startedAt.getUTCSeconds()).slice(-2);
-    const formattedStartedAt = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    const diff = Math.abs(now - new Date(formattedStartedAt));
+    const diff = Math.abs(now - new Date(startedAt));
     const minutesDiff = Math.floor((diff / 1000) / 60);
-
+    console.log("minutesDiff", minutesDiff);
+    console.log(now)
     if (minutesDiff < 30) {
       return false;
     }
@@ -131,14 +129,15 @@ const FrameTimeFlashSale = (props) => {
                 <span className="font-semibold text-gray-800">
                   Thời gian bắt đầu:
                 </span>{" "}
-                {formatDate(frame.started_at)}
+                {dayjs(frame?.started_at).format("DD/MM/YYYY HH:mm:ss")}
 
               </p>
               <p className="text-sm text-gray-600">
                 <span className="font-semibold text-gray-800">
                   Thời gian kết thúc:
                 </span>{" "}
-                {formatDate(frame.ended_at)}
+                {dayjs(frame?.ended_at).format("DD/MM/YYYY HH:mm:ss")}
+
               </p>
               <p
                 className={`text-sm font-semibold ${getStatusStyle(

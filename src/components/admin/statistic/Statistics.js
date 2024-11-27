@@ -1,12 +1,16 @@
 import React, { useEffect, useReducer } from 'react';
-import { Line, Bar } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { DatePicker } from 'antd';
+import {
+    getTopSaleCategories,
+    getTopProductVariientSales,
+    getTopSellerShops,
+} from '../../../services/statisticService';
+
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
     BarElement,
     Title,
     Tooltip,
@@ -17,8 +21,6 @@ import {
 ChartJS.register(
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
     BarElement,
     Title,
     Tooltip,
@@ -33,6 +35,10 @@ const Statistics = () => {
             switch (action.type) {
                 case 'SET_REVENUE_DATA':
                     return { ...prevState, revenueData: action.payload };
+                case 'SET_SALE_CATEGORIES':
+                    return { ...prevState, saleCategories: action.payload };
+                case 'SET_PRODUCT_VARIANTS':
+                    return { ...prevState, productVariants: action.payload };
                 case 'SET_START_DATE':
                     return { ...prevState, startDate: action.payload };
                 case 'SET_END_DATE':
@@ -42,125 +48,87 @@ const Statistics = () => {
             }
         },
         {
-            revenueData: null,
+            revenueData: [],
+            saleCategories: [],
+            productVariants: [],
             startDate: null,
             endDate: null,
         }
     );
 
-    const fetchRevenueData = async (startDate, endDate) => {
+    const fetchStatisticsData = async () => {
         try {
-            console.log('Fetching revenue data with params:', { startDate, endDate });
-            const response = await fetch(
-                `http://localhost:8080/api/statistical/get-top-shop-sales-revenue?start_date=${startDate}&end_date=${endDate}`
-            );
+            const { startDate, endDate } = state;
+            const revenueData = await getTopSellerShops(startDate, endDate);
+            const saleCategories = await getTopSaleCategories(startDate, endDate);
+            const productVariants = await getTopProductVariientSales(startDate, endDate);
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+            if (revenueData.success) {
+                dispatch({ type: 'SET_REVENUE_DATA', payload: revenueData.data.revenueByMonth });
             }
 
-            const result = await response.json();
-            if (result.success) {
-                const updatedData = {
-                    ...result.data,
-                    revenueByDay: result.data.revenueByDay.map((item) => ({
-                        ...item,
-                        platform_revenue: item.total_revenue,
-                    })),
-                    revenueByWeek: result.data.revenueByWeek.map((item) => ({
-                        ...item,
-                        platform_revenue: item.total_revenue,
-                    })),
-                    revenueByMonth: result.data.revenueByMonth.map((item) => ({
-                        ...item,
-                        platform_revenue: item.total_revenue,
-                    })),
-                    revenueByYear: result.data.revenueByYear.map((item) => ({
-                        ...item,
-                        platform_revenue: item.total_revenue,
-                    })),
-                };
-                dispatch({ type: 'SET_REVENUE_DATA', payload: updatedData });
-            } else {
-                console.error('Error from API:', result.message);
+            if (saleCategories.success) {
+                dispatch({ type: 'SET_SALE_CATEGORIES', payload: saleCategories.data });
+            }
+
+            if (productVariants.success) {
+                dispatch({ type: 'SET_PRODUCT_VARIANTS', payload: productVariants.data });
             }
         } catch (error) {
-            console.error('Error fetching revenue data:', error);
+            console.error('Error fetching statistics data:', error);
         }
     };
 
-    const onChangeDatePicker = (dates, dateStrings) => {
+    const onDateRangeChange = (dates, dateStrings) => {
         const [startDate, endDate] = dateStrings;
         dispatch({ type: 'SET_START_DATE', payload: startDate });
         dispatch({ type: 'SET_END_DATE', payload: endDate });
     };
 
     useEffect(() => {
-        if (!state.startDate || !state.endDate) {
-            const now = new Date();
-            const defaultEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Ngày cuối tháng hiện tại
-            const defaultStartDate = new Date(now.getFullYear(), now.getMonth() - 2, 1); // 3 tháng trước
-
-            dispatch({ type: 'SET_START_DATE', payload: defaultStartDate.toISOString().split('T')[0] });
-            dispatch({ type: 'SET_END_DATE', payload: defaultEndDate.toISOString().split('T')[0] });
-        } else {
-            fetchRevenueData(state.startDate, state.endDate);
+        if (state.startDate && state.endDate) {
+            fetchStatisticsData();
         }
     }, [state.startDate, state.endDate]);
 
-    const revenueByDay = state.revenueData?.revenueByDay || [];
-    const revenueByWeek = state.revenueData?.revenueByWeek || [];
-    const revenueByMonth = state.revenueData?.revenueByMonth || [];
-    const revenueByYear = state.revenueData?.revenueByYear || [];
-
-    const dailyData = {
-        labels: revenueByDay.map((data) => `${data.day}/${data.month}/${data.year}`),
+    // Data for Top Shop Revenue Bar Chart
+    const shopRevenueData = {
+        labels: state.revenueData.map((data) => data.shop_name),
         datasets: [
             {
-                label: 'Doanh thu sàn theo ngày (4%)',
-                data: revenueByDay.map((data) => data.platform_revenue),
+                label: 'Doanh thu (VND)',
+                data: state.revenueData.map((data) => data.total_revenue),
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
                 borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-//                tension: 0.4,
+                borderWidth: 1,
             },
         ],
     };
 
-    const weeklyData = {
-        labels: revenueByWeek.map((data) => `Tuần ${data.week}/${data.year}`),
+    // Data for Top Sale Categories Bar Chart
+    const saleCategoryData = {
+        labels: state.saleCategories.map((data) => data.category_name),
         datasets: [
             {
-                label: 'Doanh thu sàn theo tuần (4%)',
-                data: revenueByWeek.map((data) => data.platform_revenue),
+                label: 'Số lượng bán được',
+                data: state.saleCategories.map((data) => data.total_quantity_sold),
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
                 borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-//                tension: 0.4,
+                borderWidth: 1,
             },
         ],
     };
 
-    const monthlyData = {
-        labels: revenueByMonth.map((data) => `${data.month}/${data.year}`),
+    // Data for Top Product Variants Bar Chart
+    const productVariantData = {
+        labels: state.productVariants.map((data) => data.product_name),
         datasets: [
             {
-                label: 'Doanh thu sàn theo tháng (4%)',
-                data: revenueByMonth.map((data) => data.platform_revenue),
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-//                tension: 0.4,
-            },
-        ],
-    };
-
-    const yearlyData = {
-        labels: revenueByYear.map((data) => data.year),
-        datasets: [
-            {
-                label: 'Doanh thu sàn theo năm (4%)',
-                data: revenueByYear.map((data) => data.platform_revenue),
+                label: 'Số lượng bán được',
+                data: state.productVariants.map((data) => data.total_quantity_sold),
+                backgroundColor: 'rgba(153, 102, 255, 0.5)',
                 borderColor: 'rgba(153, 102, 255, 1)',
-                backgroundColor: 'rgba(153, 102, 255, 0.2)',
-//                tension: 0.4,
+                borderWidth: 1,
             },
         ],
     };
@@ -174,7 +142,21 @@ const Statistics = () => {
             },
             title: {
                 display: true,
-                text: 'Thống kê doanh thu sàn (4%)',
+                text: 'Thống kê',
+            },
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Danh mục / Cửa hàng / Sản phẩm',
+                },
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Giá trị',
+                },
             },
         },
     };
@@ -182,46 +164,35 @@ const Statistics = () => {
     return (
         <div className="p-8 bg-gray-100 rounded-lg shadow-md space-y-6">
             <div className="text-center">
-                <h3 className="text-3xl font-bold text-blue-600">Cửa hàng có doanh thu cao nhất</h3>
+                <h3 className="text-3xl font-bold text-blue-600">Thống kê doanh thu và sản phẩm</h3>
                 <div className="mt-4">
                     <RangePicker
                         format="YYYY-MM-DD"
-                        onChange={onChangeDatePicker}
+                        onChange={onDateRangeChange}
                         className="w-full max-w-lg mx-auto"
                     />
                 </div>
             </div>
-{/* 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow-md p-4">
-                    <h4 className="text-xl font-semibold text-center">Doanh thu theo ngày</h4>
-                    <div className="h-[400px]">
-                        <Line data={dailyData} options={chartOptions} />
-                    </div>
-                </div>
 
-                <div className="bg-white rounded-lg shadow-md p-4">
-                    <h4 className="text-xl font-semibold text-center">Doanh thu theo tuần</h4>
-                    <div className="h-[400px]">
-                        <Line data={weeklyData} options={chartOptions} />
-                    </div>
+            <div className="mt-6 bg-white rounded-lg shadow-md p-4">
+                <h4 className="text-xl font-semibold text-center">Top 5 Cửa hàng có doanh thu cao nhất</h4>
+                <div className="h-[500px]">
+                    <Bar data={shopRevenueData} options={chartOptions} />
                 </div>
-            </div> */}
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow-md p-4">
-                    <h4 className="text-xl font-semibold text-center">Doanh thu theo tháng</h4>
-                    <div className="h-[400px]">
-                        <Bar data={monthlyData} options={chartOptions} />
-                    </div>
+            <div className="mt-6 bg-white rounded-lg shadow-md p-4">
+                <h4 className="text-xl font-semibold text-center">Danh mục bán chạy nhất</h4>
+                <div className="h-[500px]">
+                    <Bar data={saleCategoryData} options={chartOptions} />
                 </div>
+            </div>
 
-                {/* <div className="bg-white rounded-lg shadow-md p-4">
-                    <h4 className="text-xl font-semibold text-center">Doanh thu theo năm</h4>
-                    <div className="h-[400px]">
-                        <Bar data={yearlyData} options={chartOptions} />
-                    </div>
-                </div> */}
+            <div className="mt-6 bg-white rounded-lg shadow-md p-4">
+                <h4 className="text-xl font-semibold text-center">Sản phẩm bán chạy nhất</h4>
+                <div className="h-[500px]">
+                    <Bar data={productVariantData} options={chartOptions} />
+                </div>
             </div>
         </div>
     );

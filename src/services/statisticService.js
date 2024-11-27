@@ -29,7 +29,7 @@ export const getBestSellerShop = async (shop_id) => {
         return { success: false, message: errorMessage, status: error.response?.status || 0 };
 
     }
-} 
+}
 
 export const getOrderStatistics = async (shop_id) => {
     try {
@@ -73,7 +73,7 @@ export const getSalesRevenue = async (shop_id, start_date, end_date) => {
         });
         return res.data;
     } catch (error) {
-        console.log("Error getting sales revenue: ", error);    
+        console.log("Error getting sales revenue: ", error);
         let errorMessage;
         if (error.response) {
             switch (error.response.status) {
@@ -89,11 +89,11 @@ export const getSalesRevenue = async (shop_id, start_date, end_date) => {
         } else {
             errorMessage = "Network error or server is unreachable.";
         }
-        return { success: false, message: errorMessage, status: error.response?.status || 0 };        
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
     }
 }
 
-export  const getTopSellerShops = async (start_date, end_date) => {
+export const getTopSellerShops = async (start_date, end_date) => {
     try {
         const response = await axios.get(`${URL}get-top-shop-sales-revenue`, {
             params: {
@@ -104,6 +104,66 @@ export  const getTopSellerShops = async (start_date, end_date) => {
         return response.data;
     } catch (error) {
         console.log("Error getting top seller shops: ", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = error.response.data.message;
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const getTopSaleCategories = async (start_date, end_date) => {
+    try {
+        const response = await axios.get(`${URL}get-top-sale-categories`, {
+            params: {
+                start_date,
+                end_date
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.log("Error getting top sale categories: ", error);
+        let errorMessage;
+        if (error.response) {
+            switch (error.response.status) {
+                case 400:
+                    errorMessage = error.response.data.message;
+                    break;
+                case 500:
+                    errorMessage = "Server error.";
+                    break;
+                default:
+                    errorMessage = error.response.data.message || "An unexpected error occurred.";
+            }
+        } else {
+            errorMessage = "Network error or server is unreachable.";
+        }
+        return { success: false, message: errorMessage, status: error.response?.status || 0 };
+    }
+}
+
+export const getTopProductVariientSales = async (start_date, end_date) => {
+    try {
+        const response = await axios.get(`${URL}get-top-product-varient-sales`, {
+            params: {
+                start_date,
+                end_date
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.log("Error getting top product variant sales: ", error);
         let errorMessage;
         if (error.response) {
             switch (error.response.status) {

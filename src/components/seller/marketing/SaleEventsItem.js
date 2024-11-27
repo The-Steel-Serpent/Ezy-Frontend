@@ -4,6 +4,7 @@ import { AiOutlineNotification } from "react-icons/ai";
 import { getSuggestSaleEventsForShop } from '../../../services/saleEventService';
 import { formatDate } from '../../../helpers/formatDate';
 import ModalSaleEventDetail from './ModalSaleEventDetail';
+import dayjs from 'dayjs';
 
 const SaleEventsItem = () => {
 
@@ -110,8 +111,8 @@ const SaleEventsItem = () => {
       key: index,
       sale_events_id: sale_event.sale_events_id,
       sale_events_name: sale_event.sale_events_name,
-      started_at: formatDate(sale_event.started_at),
-      ended_at: formatDate(sale_event.ended_at),
+      started_at: dayjs(sale_event.started_at).format('DD/MM/YYYY HH:mm:ss'),
+      ended_at: dayjs(sale_event.ended_at).format('DD/MM/YYYY HH:mm:ss'),
       thumbnail: sale_event.thumbnail,
       is_actived: sale_event.is_actived,
       DiscountVouchers: sale_event.DiscountVouchers,
