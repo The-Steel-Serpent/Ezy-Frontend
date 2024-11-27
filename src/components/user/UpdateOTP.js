@@ -139,7 +139,9 @@ const UpdateOTP = () => {
       <div className="flex flex-col border-b-[1px] pb-3">
         <span className="text-xl font-garibato">Mật Khẩu Cấp 2</span>
         <span className="text-sm">
-          Cập nhật mật khẩu cấp 2 để bảo vệ tài khoản của bạn
+          Cập nhật mật khẩu cấp 2 để bảo vệ tài khoản của bạn. Đối với lần đầu
+          đăng nhập bằng Google, vui lòng chọn Quên mật khẩu tại trang Đăng
+          nhập/Đăng ký để cập nhật mật khẩu.
         </span>
       </div>
       <div className="w-full">
