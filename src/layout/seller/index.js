@@ -94,6 +94,10 @@ const items = [
         key: "/seller/wallet/shop-wallet",
         label: "Ví Ezy",
       },
+      {
+        key: "/seller/account",
+        label: "Mật khẩu cấp 2",
+      }
     ],
   },
 ];

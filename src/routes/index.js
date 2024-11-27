@@ -167,6 +167,10 @@ const ShopWallet = withSuspense(
   lazy(() => import("../pages/seller/wallet/ShopWallet"))
 )
 
+const ShopUpdateOTP = withSuspense(
+  lazy(() => import("../pages/seller/wallet/ShopUpdateOTP"))
+)
+
 const ShopNotifications = withSuspense(
   lazy(() => import("../pages/seller/notification/ShopNotifications"))
 )
@@ -509,6 +513,14 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <ShopWallet />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/account",
+        element: (
+          <SellerAuthLayout>
+            <ShopUpdateOTP />
           </SellerAuthLayout>
         ),
       },

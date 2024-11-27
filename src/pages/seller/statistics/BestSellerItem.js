@@ -7,16 +7,13 @@ const BestSellerItem = (props) => {
     const { products, total_price_revenue } = props;
 
     return (
-        <div className="p-6 bg-gray-50">
-            {products && products.length > 0 &&
-                (
-                    <Title level={2} className="mb-6">
-                        Sản phẩm bán chạy
-                    </Title>
-                )}
-            <Row gutter={[24, 24]}>
-                {products && products.length > 0 ? (
-                    products.map((product, index) => (
+        products && products.length > 0 && (
+            <div className="p-6 bg-gray-50">
+                <Title level={2} className="mb-6">
+                    Sản phẩm bán chạy
+                </Title>
+                <Row gutter={[24, 24]}>
+                    {products.map((product, index) => (
                         <Col key={index} xs={24} sm={12} md={8} lg={6}>
                             <Card
                                 hoverable
@@ -61,12 +58,10 @@ const BestSellerItem = (props) => {
                                 </Space>
                             </Card>
                         </Col>
-                    ))
-                ) : (
-                    null
-                )}
-            </Row>
-        </div>
+                    ))}
+                </Row>
+            </div>
+        )
     );
 };
 
