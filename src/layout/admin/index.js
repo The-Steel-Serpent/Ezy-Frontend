@@ -32,7 +32,7 @@ import { io } from "socket.io-client";
 import { setSupportMessageState } from "../../redux/supportMessageSlice";
 import { connectSocket, disconnectSocket } from "../../socket/socketActions";
 import ChatBox from "../../components/chatbox/ChatBox";
-const ALLOWED_ROLES = [3, 4, 5]; // 3: Admin, 4: Event manager, 5: Shop manager
+const ALLOWED_ROLES = [3, 4, 5, 6]; // 3: Admin, 4: Event manager, 5: Shop manager
 const { Header, Sider, Content } = Layout;
 
 const AdminAuthLayout = ({ children }) => {
@@ -48,7 +48,7 @@ const AdminAuthLayout = ({ children }) => {
   const handleExpiredToken = () => {
     dispatch(logout());
     localStorage.clear();
-    message.error("Phiên đăng nhập đã hết hạn.");
+    //message.error("Phiên đăng nhập đã hết hạn.");
     navigate("/admin/login");
   };
 
@@ -71,7 +71,7 @@ const AdminAuthLayout = ({ children }) => {
       }
     } catch (error) {
       if (error.response.data.code === "auth/id-token-expired") {
-        message.error("Phiên Đăng nhập đã hết hạn");
+        //message.error("Phiên Đăng nhập đã hết hạn");
         dispatch(logout());
         localStorage.clear();
       }
@@ -128,7 +128,7 @@ const AdminAuthLayout = ({ children }) => {
         ) {
           handleExpiredToken();
         } else {
-          message.error("Lỗi hệ thống, vui lòng thử lại sau.");
+          message.error("Vui lòng đăng nhập để tiếp tục.");
         }
       } else {
         message.error("Lỗi hệ thống, vui lòng thử lại sau.");

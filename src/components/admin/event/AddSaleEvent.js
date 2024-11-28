@@ -47,14 +47,21 @@ const AddSaleEvent = ({ visible, onClose, onSuccess }) => {
 
     const handleThumbnailChange = (info) => {
         const fileList = info.fileList.slice(-1);
-        setThumbnail(fileList);
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            fileList[0].preview = e.target.result;
-            setThumbnail(fileList);
-        };
-        reader.readAsDataURL(info.file.originFileObj);
+        if (fileList.length > 0) {
+            const file = fileList[0]?.originFileObj;
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    fileList[0].preview = e.target.result;
+                    setThumbnail(fileList);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                message.error('Không thể đọc dữ liệu file. Vui lòng thử lại!');
+            }
+        } else {
+            setThumbnail([]);
+        }
     };
 
     const beforeUpload = (file) => {
@@ -99,8 +106,8 @@ const AddSaleEvent = ({ visible, onClose, onSuccess }) => {
                     {thumbnail.length > 0 && (
                         <div style={{ marginTop: 10 }}>
                             <img
-                                src={thumbnail[0].preview} 
-                                alt={`Thumbnail for ${thumbnail[0].name}`} 
+                                src={thumbnail[0].preview}
+                                alt={`Thumbnail for ${thumbnail[0].name}`}
                                 style={{ width: 100 }}
                             />
                         </div>

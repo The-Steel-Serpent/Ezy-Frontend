@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/userSlice";
-const ALLOWED_ROLES = [3, 4, 5];// 3: Admin, 4: Event manager, 5: Shop manager
+const ALLOWED_ROLES = [3, 4, 5, 6];// 3: Admin, 4: Event manager, 5: Shop manager
 
 const AdminLogin = () => {
   const [hidePassword, setHidePassword] = useState(false);
@@ -47,7 +47,7 @@ const AdminLogin = () => {
         });
         message.success("Đăng nhập thành công");
         setTimeout(() => {
-          navigate("/admin");
+          navigate("/admin/dashboard");
         }, 2000);
       } else {
         message.error("Tài khoản của bạn chưa xác thực. Vui lòng xác thực email trước khi đăng nhập");

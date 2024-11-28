@@ -183,7 +183,9 @@ const SaleEvent = () => {
                     <Button
                         type="primary"
                         onClick={() => handleOpenSettingModal(record.sale_events_id)}
-                        disabled={record.is_actived || new Date(record.ended_at) < new Date()}
+                        disabled={
+                            record.sale_events_id !== 1 && (record.is_actived || new Date(record.ended_at) < new Date())
+                        }
                     >
                         Thiết lập
                     </Button>
@@ -198,14 +200,24 @@ const SaleEvent = () => {
                         type="primary"
                         onClick={() => handleOpenEditModal(record.sale_events_id)}
                         style={{ marginLeft: '8px' }}
-                        disabled={record.is_actived || new Date(record.ended_at) < new Date()}
+                        disabled={
+                            record.sale_events_id !== 1 && (record.is_actived || new Date(record.ended_at) < new Date())
+                        }
                     >
                         Chỉnh sửa
                     </Button>
-                    <Button type="primary" danger onClick={() => handleDeleteEvent(record.sale_events_id)} style={{ marginLeft: '8px' }}>Xóa</Button>
+                    <Button
+                        type="primary"
+                        danger
+                        onClick={() => handleDeleteEvent(record.sale_events_id)}
+                        style={{ marginLeft: '8px' }}
+                    >
+                        Xóa
+                    </Button>
                 </>
             ),
         }
+
     ];
 
     return (

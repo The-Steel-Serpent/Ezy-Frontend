@@ -1,10 +1,11 @@
 import React, { useEffect, useReducer } from 'react';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Pie } from 'react-chartjs-2';
 import { DatePicker } from 'antd';
 import {
     getTopSaleCategories,
     getTopProductVariientSales,
     getTopSellerShops,
+    getTopProductSales,
 } from '../../../services/statisticService';
 
 import {
@@ -15,6 +16,7 @@ import {
     Title,
     Tooltip,
     Legend,
+    ArcElement,
 } from 'chart.js';
 
 // Register Chart.js components
@@ -24,7 +26,8 @@ ChartJS.register(
     BarElement,
     Title,
     Tooltip,
-    Legend
+    Legend,
+    ArcElement
 );
 
 const { RangePicker } = DatePicker;
@@ -39,6 +42,8 @@ const Statistics = () => {
                     return { ...prevState, saleCategories: action.payload };
                 case 'SET_PRODUCT_VARIANTS':
                     return { ...prevState, productVariants: action.payload };
+                case 'SET_PRODUCT_SALES':
+                    return { ...prevState, productSales: action.payload };
                 case 'SET_START_DATE':
                     return { ...prevState, startDate: action.payload };
                 case 'SET_END_DATE':
@@ -50,6 +55,7 @@ const Statistics = () => {
         {
             revenueData: [],
             saleCategories: [],
+            productSales: [],
             productVariants: [],
             startDate: null,
             endDate: null,
@@ -61,6 +67,7 @@ const Statistics = () => {
             const { startDate, endDate } = state;
             const revenueData = await getTopSellerShops(startDate, endDate);
             const saleCategories = await getTopSaleCategories(startDate, endDate);
+            const productSales = await getTopProductSales(startDate, endDate);
             const productVariants = await getTopProductVariientSales(startDate, endDate);
 
             if (revenueData.success) {
@@ -69,6 +76,10 @@ const Statistics = () => {
 
             if (saleCategories.success) {
                 dispatch({ type: 'SET_SALE_CATEGORIES', payload: saleCategories.data });
+            }
+
+            if (productSales.success) {
+                dispatch({ type: 'SET_PRODUCT_SALES', payload: productSales.data });
             }
 
             if (productVariants.success) {
@@ -86,18 +97,28 @@ const Statistics = () => {
     };
 
     useEffect(() => {
-        if (state.startDate && state.endDate) {
+        if (!state.startDate || !state.endDate) {
+            const now = new Date();
+            const defaultEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Ngày cuối tháng hiện tại
+            const defaultStartDate = new Date(now.getFullYear(), now.getMonth() - 2, 1); // 3 tháng trước
+
+            dispatch({ type: 'SET_START_DATE', payload: defaultStartDate.toISOString().split('T')[0] });
+            dispatch({ type: 'SET_END_DATE', payload: defaultEndDate.toISOString().split('T')[0] });
+        } else {
             fetchStatisticsData();
         }
     }, [state.startDate, state.endDate]);
 
+    // Sort revenue data by total revenue in descending order
+    const sortedRevenueData = [...state.revenueData].sort((a, b) => b.total_revenue - a.total_revenue);
+
     // Data for Top Shop Revenue Bar Chart
     const shopRevenueData = {
-        labels: state.revenueData.map((data) => data.shop_name),
+        labels: sortedRevenueData.map((data) => data.Shop.shop_name),
         datasets: [
             {
                 label: 'Doanh thu (VND)',
-                data: state.revenueData.map((data) => data.total_revenue),
+                data: sortedRevenueData.map((data) => data.total_revenue),
                 backgroundColor: 'rgba(54, 162, 235, 0.5)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1,
@@ -105,15 +126,53 @@ const Statistics = () => {
         ],
     };
 
-    // Data for Top Sale Categories Bar Chart
+    // Data for Top Sale Categories Pie Chart
     const saleCategoryData = {
         labels: state.saleCategories.map((data) => data.category_name),
         datasets: [
             {
                 label: 'Số lượng bán được',
                 data: state.saleCategories.map((data) => data.total_quantity_sold),
-                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(153, 102, 255, 0.5)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                ],
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    // Data for Top Product Sales Bar Chart
+    const productSalesData = {
+        labels: state.productSales.map((data) => data.product_name),
+        datasets: [
+            {
+                label: 'Số lượng bán được',
+                data: state.productSales.map((data) => data.total_quantity_sold),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(153, 102, 255, 0.5)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                ],
                 borderWidth: 1,
             },
         ],
@@ -121,13 +180,25 @@ const Statistics = () => {
 
     // Data for Top Product Variants Bar Chart
     const productVariantData = {
-        labels: state.productVariants.map((data) => data.product_name),
+        labels: state.productVariants.filter(data => data.type_name && data.product_classify_name).map((data) => `${data.product_name} (${data.type_name}: ${data.product_classify_name})`),
         datasets: [
             {
                 label: 'Số lượng bán được',
-                data: state.productVariants.map((data) => data.total_quantity_sold),
-                backgroundColor: 'rgba(153, 102, 255, 0.5)',
-                borderColor: 'rgba(153, 102, 255, 1)',
+                data: state.productVariants.filter(data => data.type_name && data.product_classify_name).map((data) => data.total_quantity_sold),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(153, 102, 255, 0.5)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                ],
                 borderWidth: 1,
             },
         ],
@@ -149,7 +220,22 @@ const Statistics = () => {
             x: {
                 title: {
                     display: true,
-                    text: 'Danh mục / Cửa hàng / Sản phẩm',
+                    text: (context) => {
+                        const chartId = context.chart.canvas.id;
+                        if (chartId === 'shopRevenueChart') {
+                            return 'Cửa hàng';
+                        } else if (chartId === 'saleCategoryChart') {
+                            return 'Danh mục';
+                        } else if (chartId === 'productChart') {
+                            return 'Sản phẩm';
+                        }
+                        else if (chartId === 'productVariantChart') {
+                            return 'Phân loại sản phẩm';
+
+                        } else {
+                            return 'Danh mục / Cửa hàng / Sản phẩm / Phân loại sản phẩm';
+                        }
+                    },
                 },
             },
             y: {
@@ -177,21 +263,28 @@ const Statistics = () => {
             <div className="mt-6 bg-white rounded-lg shadow-md p-4">
                 <h4 className="text-xl font-semibold text-center">Top 5 Cửa hàng có doanh thu cao nhất</h4>
                 <div className="h-[500px]">
-                    <Bar data={shopRevenueData} options={chartOptions} />
+                    <Bar id="shopRevenueChart" data={shopRevenueData} options={chartOptions} />
                 </div>
             </div>
 
             <div className="mt-6 bg-white rounded-lg shadow-md p-4">
                 <h4 className="text-xl font-semibold text-center">Danh mục bán chạy nhất</h4>
                 <div className="h-[500px]">
-                    <Bar data={saleCategoryData} options={chartOptions} />
+                    <Pie id="saleCategoryChart" data={saleCategoryData} options={chartOptions} />
                 </div>
             </div>
 
             <div className="mt-6 bg-white rounded-lg shadow-md p-4">
                 <h4 className="text-xl font-semibold text-center">Sản phẩm bán chạy nhất</h4>
                 <div className="h-[500px]">
-                    <Bar data={productVariantData} options={chartOptions} />
+                    <Pie id="productChart" data={productSalesData} options={chartOptions} />
+                </div>
+            </div>
+
+            <div className="mt-6 bg-white rounded-lg shadow-md p-4">
+                <h4 className="text-xl font-semibold text-center">Sản phẩm bán chạy nhất</h4>
+                <div className="h-[500px]">
+                    <Pie id="productVariantChart" data={productVariantData} options={chartOptions} />
                 </div>
             </div>
         </div>
