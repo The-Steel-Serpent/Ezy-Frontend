@@ -138,7 +138,7 @@ const EditSaleEvent = ({ visible, onClose, eventId, onSuccess }) => {
                     <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" />
                 </Form.Item>
                 <Button type="primary" onClick={handleSave} loading={loading}>
-                    Save
+                    Lưu
                 </Button>
             </Form>
         </Modal>

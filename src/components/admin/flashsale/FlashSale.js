@@ -71,33 +71,37 @@ const FlashSale = () => {
       key: 'action',
       render: (text, record) => (
         <>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => showEditFlashSaleModal(record)}
-            style={{ marginRight: 8 }}
-          >
-            Chỉnh sửa
-          </Button>
-          <Button onClick={() => showTimeFramesModal(record)} style={{ marginRight: 8 }}>
-            Quản lý khung giờ
-          </Button>
-          <Button onClick={() => showRegisteredProductsModal(record.flash_sales_id)} style={{ marginRight: 8 }}>
+          {record.status !== 'ended' && (
+            <>
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => showEditFlashSaleModal(record)}
+                style={{ marginRight: 8 }}
+              >
+                Chỉnh sửa
+              </Button>
+              <Button onClick={() => showTimeFramesModal(record)} style={{ marginRight: 8 }}>
+                Quản lý khung giờ
+              </Button>
+              <Popconfirm
+                title="Bạn có chắc chắn muốn xóa Flash Sale này?"
+                onConfirm={() => handleDeleteFlashSale(record.flash_sales_id)}
+                okText="Có"
+                cancelText="Không"
+              >
+                <Button
+                  icon={<DeleteOutlined />}
+                  style={{ backgroundColor: 'red', color: 'white', borderColor: 'red', marginTop: '8px' }}
+                  disabled={record.status === 'ended'}
+                >
+                  Xóa
+                </Button>
+              </Popconfirm>
+            </>
+          )}
+          <Button onClick={() => showRegisteredProductsModal(record.flash_sales_id)} style={{ marginRight: 8, marginTop: 5 }}>
             Sản phẩm đăng ký
           </Button>
-          <Popconfirm
-
-            title="Bạn có chắc chắn muốn xóa Flash Sale này?"
-            onConfirm={() => handleDeleteFlashSale(record.flash_sales_id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <Button
-              icon={<DeleteOutlined />}
-              style={{ backgroundColor: 'red', color: 'white', borderColor: 'red', marginTop: '8px' }}
-            >
-              Xóa
-            </Button>
-          </Popconfirm>
         </>
       ),
     },

@@ -14,6 +14,20 @@ const AddFlashSale = ({ visible, onClose, onAddSuccess }) => {
       const startedAt = values.started_at.toISOString();
       const endedAt = values.ended_at.toISOString();
 
+      const currentDate = new Date().toISOString();
+
+      if (startedAt <= currentDate) {
+        message.error('Ngày bắt đầu phải lớn hơn ngày hiện tại!');
+        setLoading(false);
+        return;
+      }
+
+      if (endedAt <= startedAt) {
+        message.error('Ngày kết thúc phải sau ngày bắt đầu!');
+        setLoading(false);
+        return;
+      }
+
       let thumbnailUrl = '';
       if (thumbnail.length > 0 && thumbnail[0]?.originFileObj) {
         try {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Select, Button, Typography, Input, DatePicker, message, Table } from 'antd';
+import { Modal, Form, Select, Button, Typography, Input, DatePicker, message, Table, Popconfirm } from 'antd';
 import axios from 'axios';
 import dayjs from 'dayjs';
 
@@ -37,7 +37,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/categories`);
             setCategories(res.data.categories || []);
         } catch (error) {
-            message.error('Failed to load categories. Please try again later.');
+            //message.error('Failed to load categories. Please try again later.');
             console.error('Error fetching categories:', error);
         } finally {
             setLoading(false);
@@ -56,7 +56,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     settingForm.setFieldsValue({ categories: [] });
                 }
             } catch (error) {
-                message.error('Failed to fetch event categories.');
+                //message.error('Failed to fetch event categories.');
                 console.error('Error fetching event categories:', error);
             } finally {
                 setLoading(false);
@@ -72,7 +72,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 setEventEnd(dayjs(res.data.data.ended_at));
             }
         } catch (error) {
-            message.error('Failed to load event dates. Please try again later.');
+            //message.error('Failed to load event dates. Please try again later.');
             console.error('Error fetching event dates:', error);
         }
     };
@@ -105,7 +105,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     setOriginalVouchers(JSON.parse(JSON.stringify(formattedVouchers)));
                 }
             } catch (error) {
-                message.error('Failed to load vouchers. Please try again later.');
+                //message.error('Failed to load vouchers. Please try again later.');
                 console.error('Error fetching event vouchers:', error);
             } finally {
                 setLoading(false);
@@ -315,9 +315,16 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             dataIndex: 'actions',
             width: 100,
             render: (_, record) => (
-                <Button type="primary" danger onClick={() => handleDeleteVoucher(record.key)}>
-                    Xóa
-                </Button>
+                <Popconfirm
+                    title="Bạn có chắc chắn muốn xóa?"
+                    onConfirm={() => handleDeleteVoucher(record.key)}
+                    okText="Đồng ý"
+                    cancelText="Hủy"
+                >
+                    <Button type="primary" danger>
+                        Xóa
+                    </Button>
+                </Popconfirm>
             ),
         },
     ];

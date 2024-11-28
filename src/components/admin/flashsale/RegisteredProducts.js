@@ -23,7 +23,7 @@ const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
                 message.error('Không thể tải dữ liệu sản phẩm đã đăng ký');
             }
         } catch (error) {
-            message.error('Lỗi khi tải dữ liệu sản phẩm đã đăng ký');
+            //message.error('Lỗi khi tải dữ liệu sản phẩm đã đăng ký');
             console.error("Error fetching registered products:", error);
         }
     };
