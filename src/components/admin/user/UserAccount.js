@@ -5,7 +5,7 @@ import { resetPassword } from '../../../firebase/AuthenticationFirebase';
 import dayjs from 'dayjs';
 import RegisterModal from './RegisterModal';
 import { PlusOutlined } from '@ant-design/icons';
-
+import { useSelector } from 'react-redux';
 const { Option } = Select;
 
 const UserAccount = () => {
@@ -15,6 +15,7 @@ const UserAccount = () => {
   const [selectedRole, setSelectedRole] = useState('');
   const [roles, setRoles] = useState([]);
   const [isRegisterVisible, setIsRegisterVisible] = useState(false);
+  const adminId = useSelector((state) => state.user.user_id);
 
   const formatDate = (dateString) => {
     if (!dateString) return null;
@@ -97,19 +98,25 @@ const UserAccount = () => {
       okText: 'Xác nhận',
       cancelText: 'Hủy',
       onOk: async () => {
-        const action = user.is_banned ? 'unlock-account' : 'lock-account';
+        const action = user.is_banned ? 'violations/unlock-user-account' : 'violations/lock-user-account';
+
         try {
           const response = await axios.post(
             `${process.env.REACT_APP_BACKEND_URL}/api/${action}`,
-            { user_id: user.user_id }
+            {
+              violator_id: user.user_id, 
+              currentAdminId: adminId   
+            }
           );
           if (response.data.success) {
-            message.success(`Tài khoản đã được ${user.is_banned ? 'mở khóa' : 'khóa'} thành công!`);
+            message.success(`Đã ${user.is_banned ? 'mở khóa' : 'khóa'} thành công!`);
             fetchData();
+          } else {
+            message.error(response.data.message || 'Có lỗi xảy ra!');
           }
         } catch (error) {
-          console.error(`Lỗi khi ${user.is_banned ? 'mở khóa' : 'khóa'} tài khoản:`, error.message);
-          message.error(`Không thể ${user.is_banned ? 'mở khóa' : 'khóa'} tài khoản.`);
+          console.error(`Lỗi khi ${user.is_banned ? 'mở khóa' : 'khóa'} tài khoản:`, error);
+          message.error(error.response?.data?.message || 'Không thể thực hiện hành động.');
         }
       },
     });
