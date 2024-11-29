@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Tabs, Table, Button } from 'antd';
-import dayjs from 'dayjs'; 
+import { Modal, Tabs, Table, Button, message } from 'antd';
+import dayjs from 'dayjs';
 import ViolationDetail from './ViolationDetail';
 
 const { TabPane } = Tabs;
@@ -16,6 +16,33 @@ const ViolationList = ({ user, onClose }) => {
       .then((data) => {
         if (data.success) setViolations(data.data);
       });
+  };
+  const handleMarkAsViewed = async (violationId) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/mark-as-viewed`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId: violationId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Cập nhật danh sách sau khi đánh dấu là đã xem
+        fetchViolations();
+      } else {
+        message.error(result.message || "Cập nhật trạng thái thất bại.");
+      }
+    } catch (error) {
+      message.error("Đã xảy ra lỗi khi cập nhật trạng thái.");
+    }
+  };
+
+  const handleViewDetail = (record) => {
+    // Cập nhật trạng thái vi phạm thành "Đã xem"
+    handleMarkAsViewed(record.violation_id);
+    // Hiển thị chi tiết
+    setSelectedViolation(record);
   };
 
   useEffect(() => {
@@ -39,7 +66,7 @@ const ViolationList = ({ user, onClose }) => {
       title: 'Thao tác',
       key: 'actions',
       render: (_, record) => (
-        <Button onClick={() => setSelectedViolation(record)}>Xem thông tin</Button>
+        <Button onClick={() => handleViewDetail(record)}>Xem thông tin</Button>
       ),
     },
   ];

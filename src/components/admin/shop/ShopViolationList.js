@@ -41,6 +41,32 @@ const ShopViolationList = ({ shop, onClose }) => {
     }
     return [];
   };
+  const handleMarkAsViewed = async (violationId) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/mark-as-viewed`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId: violationId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Cập nhật danh sách sau khi đánh dấu là đã xem
+        fetchViolations();
+      } else {
+        message.error(result.message || "Cập nhật trạng thái thất bại.");
+      }
+    } catch (error) {
+      message.error("Đã xảy ra lỗi khi cập nhật trạng thái.");
+    }
+  };
+  const handleViewDetail = (record) => {
+    // Cập nhật trạng thái vi phạm thành "Đã xem"
+    handleMarkAsViewed(record.violation_id);
+    // Hiển thị chi tiết
+    setSelectedViolation(record);
+  };
 
   // Table columns configuration
   const columns = [
@@ -71,7 +97,7 @@ const ShopViolationList = ({ shop, onClose }) => {
       render: (_, record) => (
         <Button
           type="primary"
-          onClick={() => setSelectedViolation(record)}
+          onClick={() => handleViewDetail(record)}
           style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
         >
           Xem chi tiết

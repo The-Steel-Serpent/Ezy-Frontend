@@ -87,7 +87,7 @@ const ViolationDetail = ({ violation, onClose, onViewed, isViewedTab }) => {
         </div>
         {!isViewedTab && (
           <div style={{ marginTop: "24px" }}>
-            <Checkbox onChange={(e) => setIsChecked(e.target.checked)} style={{ marginBottom: "16px" }}>
+            {/* <Checkbox onChange={(e) => setIsChecked(e.target.checked)} style={{ marginBottom: "16px" }}>
               <Text>Xác nhận đã xem báo cáo này</Text>
             </Checkbox>
             <Button
@@ -102,7 +102,7 @@ const ViolationDetail = ({ violation, onClose, onViewed, isViewedTab }) => {
               }}
             >
               Xác nhận
-            </Button>
+            </Button> */}
           </div>
         )}
       </div>

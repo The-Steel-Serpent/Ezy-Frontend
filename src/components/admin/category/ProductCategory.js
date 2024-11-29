@@ -5,6 +5,7 @@ import { RiImageAddFill } from "react-icons/ri";
 import uploadFile from '../../../helpers/uploadFile';
 import ModalProductSubCategory from './ModalProductSubCategory';
 import { PlusOutlined } from '@ant-design/icons';
+import { set } from 'lodash';
 
 function ProductCategory() {
     const [categories, setCategories] = useState([]);
@@ -31,7 +32,7 @@ function ProductCategory() {
                 <div>
                     <Button type="primary" onClick={() => handleEdit(record)}>Sửa</Button>
                     <Button type="primary" style={{ marginLeft: '8px' }} onClick={() => handleManageSubCategory(record.category_id)}>Danh mục con</Button>
-                    <Button type="primary" style={{ marginLeft: '8px' }} danger onClick={() => handleDelete(record.category_id)}>Xóa</Button>
+                    <Button type="primary" style={{ marginLeft: '8px' }} danger loading={loading} onClick={() => handleDelete(record.category_id)}>Xóa</Button>
                 </div>
             )
         }
@@ -140,11 +141,15 @@ function ProductCategory() {
     };
 
     const handleAddOk = async () => {
+        setLoading(true);
         try {
             const values = await form.validateFields();
             await handleAddCategory(values);
         } catch (error) {
             handleError(error);
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -169,8 +174,12 @@ function ProductCategory() {
     const deleteCategory = async (category_id) => {
         try {
             const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/delete-category/${category_id}`);
-            return response.data;
-        } catch (error) {
+            if (response.data.success) {
+
+                return response.data;
+            }
+        }
+        catch (error) {
             if (error.response && error.response.data) {
                 throw new Error(error.response.data.message || 'Có lỗi xảy ra trong quá trình xóa danh mục.');
             }
@@ -197,23 +206,23 @@ function ProductCategory() {
         setIsEditModalVisible(true);
     };
 
-    const confirmDelete = (category_id) => {
+    const confirmDelete = async (category_id) => {
         Modal.confirm({
             title: 'Bạn có chắc chắn muốn xóa danh mục này?',
             okText: 'Có',
             okType: 'danger',
             cancelText: 'Không',
             onOk: async () => {
+                setLoading(true);
                 try {
-                    message.loading('Đang xóa danh mục...', 0);
                     await deleteCategory(category_id);
-                    message.success('Xóa danh mục thành công!');
-                    fetchCategories();
+                    message.success('Xóa danh mục thành công!', 2); // Để thời gian hiện thông báo là 2 giây
+                    fetchCategories(); // Tải lại danh sách sau khi thông báo thành công
                 } catch (error) {
                     console.error('Error deleting category:', error);
                     message.error(error.response?.data?.message || 'Có lỗi xảy ra trong quá trình xóa danh mục.');
                 } finally {
-                    message.destroy();
+                    setLoading(false);
                 }
             },
             okButtonProps: {
@@ -222,6 +231,7 @@ function ProductCategory() {
                     borderColor: 'red',
                     color: 'white',
                 },
+                loading: loading,
             },
         });
     };
@@ -309,7 +319,7 @@ function ProductCategory() {
                 visible={isSubCategoryModalVisible}
                 onCancel={() => setIsSubCategoryModalVisible(false)}
             />
-            <Modal title="Thêm danh mục" visible={isAddModalVisible} onOk={handleAddOk} onCancel={handleAddCancel}>
+            <Modal title="Thêm danh mục" visible={isAddModalVisible} loading={loading} onOk={handleAddOk} onCancel={handleAddCancel}>
                 <Form form={form} layout="vertical">
                     <Form.Item name="category_name" label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục!' }]}>
                         <Input />

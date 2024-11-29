@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal, Button, Table, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import EditSubCategory from './EditSubCategory';
+import AddSubCategory from './AddSubCategory';
 
 function ModalProductSubCategory({ categoryId, visible, onCancel }) {
     const [subCategories, setSubCategories] = useState([]);
     const [loading, setLoading] = useState(false);
     const [editingSubCategory, setEditingSubCategory] = useState(null);
     const [currentPage, setCurrentPage] = useState(1); // Added state for pagination
+    const [addingSubCategory, setAddingSubCategory] = useState(false);
 
     useEffect(() => {
         if (visible && categoryId) {
@@ -29,7 +32,35 @@ function ModalProductSubCategory({ categoryId, visible, onCancel }) {
             setLoading(false);
         }
     };
-
+    const confirmDelete = async (sub_category_id) => {
+        Modal.confirm({
+            title: 'Bạn có chắc chắn muốn xóa danh mục con này?',
+            okText: 'Có',
+            okType: 'danger',
+            cancelText: 'Không',
+            onOk: async () => {
+                setLoading(true);
+                try {
+                    await handleDeleteSubCategory(sub_category_id);
+                    //message.success('Xóa danh mục thành công!', 2); // Để thời gian hiện thông báo là 2 giây
+                    //fetchCategories(); // Tải lại danh sách sau khi thông báo thành công
+                } catch (error) {
+                    console.error('Error deleting sub category:', error);
+                    message.error(error.response?.data?.message || 'Có lỗi xảy ra trong quá trình xóa danh mục con.');
+                } finally {
+                    setLoading(false);
+                }
+            },
+            okButtonProps: {
+                style: {
+                    backgroundColor: 'red',
+                    borderColor: 'red',
+                    color: 'white',
+                },
+                loading: loading,
+            },
+        });
+    };
     const handleDeleteSubCategory = async (sub_category_id) => {
         setLoading(true);
         try {
@@ -54,7 +85,7 @@ function ModalProductSubCategory({ categoryId, visible, onCancel }) {
                     <Button onClick={() => setEditingSubCategory(record)} style={{ marginRight: '8px' }}>
                         Cập nhật
                     </Button>
-                    <Button type="primary" danger onClick={() => handleDeleteSubCategory(record.sub_category_id)}>
+                    <Button type="primary" danger onClick={() => confirmDelete(record.sub_category_id)}>
                         Xóa
                     </Button>
                 </div>
@@ -69,27 +100,51 @@ function ModalProductSubCategory({ categoryId, visible, onCancel }) {
             onCancel={onCancel}
             footer={null}
         >
-            {editingSubCategory ? (
-                <EditSubCategory 
-                    subCategory={editingSubCategory} 
-                    onUpdate={fetchSubCategories} 
-                    onCancel={() => setEditingSubCategory(null)}
+            {addingSubCategory ? (
+                <AddSubCategory
+                    categoryId={categoryId}
+                    onAdd={fetchSubCategories}
+                    onCancel={() => setAddingSubCategory(false)}
                 />
             ) : (
-                <Table
-                    loading={loading}
-                    columns={columns}
-                    dataSource={subCategories}
-                    rowKey="sub_category_id"
-                    pagination={{
-                        current: currentPage,
-                        pageSize: 5,
-                        onChange: (page) => setCurrentPage(page), 
-                    }}
-                />
+                <>
+                    {/* Ẩn nút "Thêm danh mục con" khi đang chỉnh sửa danh mục con */}
+                    {!editingSubCategory && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button
+                                type="primary"
+                                style={{ marginBottom: '16px' }}
+                                icon={<PlusOutlined />}
+                                onClick={() => setAddingSubCategory(true)}
+                            >
+                                Thêm danh mục con
+                            </Button>
+                        </div>
+                    )}
+                    {editingSubCategory ? (
+                        <EditSubCategory
+                            subCategory={editingSubCategory}
+                            onUpdate={fetchSubCategories}
+                            onCancel={() => setEditingSubCategory(null)}
+                        />
+                    ) : (
+                        <Table
+                            loading={loading}
+                            columns={columns}
+                            dataSource={subCategories}
+                            rowKey="sub_category_id"
+                            pagination={{
+                                current: currentPage,
+                                pageSize: 5,
+                                onChange: (page) => setCurrentPage(page),
+                            }}
+                        />
+                    )}
+                </>
             )}
         </Modal>
     );
+
 }
 
 export default ModalProductSubCategory;

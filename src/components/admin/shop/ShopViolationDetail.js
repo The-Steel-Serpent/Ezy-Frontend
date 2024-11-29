@@ -94,7 +94,7 @@ const ShopViolationDetail = ({ violation, onClose, isViewedTab }) => {
         </div>
         {!isViewedTab && (
           <div style={{ marginTop: "24px", textAlign: "center" }}>
-            <Checkbox
+            {/* <Checkbox
               onChange={(e) => setIsChecked(e.target.checked)}
               style={{
                 marginBottom: "16px",
@@ -117,7 +117,7 @@ const ShopViolationDetail = ({ violation, onClose, isViewedTab }) => {
               }}
             >
               Xác nhận
-            </Button>
+            </Button> */}
           </div>
         )}
       </div>
