@@ -332,6 +332,15 @@ const BuyerRegister = () => {
         },
       });
     }
+    else if (!/^[a-zA-Z0-9_]*$/.test(data.username)) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          name: "username",
+          value: "Tên đăng nhập không được chứa ký tự đặc biệt",
+        },
+      });
+    }
     else {
       dispatch({
         type: "SET_ERROR",
