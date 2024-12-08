@@ -199,12 +199,12 @@ const ShopOrderItem = (props) => {
     useEffect(() => {
         if (order) {
             console.log("order neeee", order);
-            if(order.log != null) {
+            if (order.log != null) {
                 const count_delivery_fail = order.log.filter(log => log.status === "delivery_fail").length;
                 setLocalState({ type: "SET_COUNT_DELIVERY_FAIL", payload: count_delivery_fail });
                 console.log("count_delivery_fail", count_delivery_fail);
             }
-           
+
         }
         const fetchAndSetProvinces = async () => {
             if (order) {
@@ -515,6 +515,18 @@ const ShopOrderItem = (props) => {
                                     Liên Hệ Người Mua
                                 </Button>
                             </div>
+                        )}
+                        {order?.OrderStatus?.order_status_id === 7 && (
+                            <div className="w-[100%] flex gap-3 justify-end">
+                                <Button
+                                    className="bg-white text-primary hover:opacity-80"
+                                    size="large"
+                                    onClick={() => setLocalState({ type: "SET_VISIBLE_DETAIL_ORDER_MODAL", payload: true })}
+                                >
+                                    Chi Tiết Đơn Hàng
+                                </Button>
+                            </div>
+
                         )}
                     </div>
                 </div>
