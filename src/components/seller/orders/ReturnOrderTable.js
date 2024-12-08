@@ -297,6 +297,16 @@ const ReturnOrderTable = ({ return_type_id }) => {
                                 </Popconfirm>
 
                             </div>
+                            <div>
+                                <div>
+                                    <Button
+                                        className='bg-white text-primary w-28 hover:bg-primary hover:text-white'
+                                        onClick={() => handleDetail(record.user_order_id)}
+                                    >
+                                        Xem chi tiết
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     ) : (
                         <div className='max-w-36 mx-auto'>
