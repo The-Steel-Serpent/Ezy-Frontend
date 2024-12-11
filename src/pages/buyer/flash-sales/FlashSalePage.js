@@ -264,7 +264,7 @@ const FlashSalePage = () => {
               size="large"
               onClick={() => {
                 setLocalState({ type: "openModal", payload: false });
-                window.location.reload();
+                window.location.href = "/flash-sale";
               }}
             >
               {localState.time.status === "active" ? "Đóng" : "Mua Sắm Ngay"}
