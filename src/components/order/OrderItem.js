@@ -25,6 +25,7 @@ import { fetchWallet } from "../../redux/walletSlice";
 import withSuspenseNonFallback from "../../hooks/HOC/withSuspenseNonFallback";
 import { fetchMiniCartData } from "../../redux/cartSlice";
 import { useNavigate } from "react-router-dom";
+import moment from "moment-timezone";
 
 const ModalOTP = withSuspenseNonFallback(
   lazy(() => import("../user/ModalOTP"))
@@ -329,6 +330,11 @@ const OrderItem = (props) => {
     }
   };
 
+  const currentDate = moment.tz(new Date(), "Asia/Ho_Chi_Minh");
+  const returnDate = moment
+    .tz(order?.return_expiration_date, "UTC")
+    .tz("Asia/Ho_Chi_Minh");
+
   return (
     <>
       <div className="mb-5">
@@ -537,7 +543,7 @@ const OrderItem = (props) => {
                   Đã Nhận Hàng
                 </Button>
                 {order?.return_expiration_date &&
-                  order?.return_expiration_date !== new Date() && (
+                  currentDate.isBefore(returnDate) && (
                     <Button
                       size="large"
                       className={
@@ -550,7 +556,8 @@ const OrderItem = (props) => {
                       disabled={
                         order?.return_request_status === 1 ||
                         order?.return_request_status === 2 ||
-                        order?.return_request_status === 3
+                        order?.return_request_status === 3 ||
+                        !currentDate.isBefore(returnDate)
                       }
                     >
                       {order?.return_request_status === 0
@@ -591,7 +598,7 @@ const OrderItem = (props) => {
                 </Button>
 
                 {order?.return_expiration_date &&
-                  order?.return_expiration_date !== new Date() && (
+                  currentDate.isBefore(returnDate) && (
                     <Button
                       size="large"
                       className={
@@ -604,7 +611,8 @@ const OrderItem = (props) => {
                       disabled={
                         order?.return_request_status === 1 ||
                         order?.return_request_status === 2 ||
-                        order?.return_request_status === 3
+                        order?.return_request_status === 3 ||
+                        !currentDate.isBefore(returnDate)
                       }
                     >
                       {order?.return_request_status === 0

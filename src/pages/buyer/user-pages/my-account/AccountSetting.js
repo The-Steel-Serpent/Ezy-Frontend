@@ -44,7 +44,6 @@ const ChangePassword = lazy(() =>
 );
 const AccountSetting = () => {
   const user = useSelector((state) => state.user);
-  console.log(user);
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);

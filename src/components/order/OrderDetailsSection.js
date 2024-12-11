@@ -40,6 +40,7 @@ import ModalOTP from "../user/ModalOTP";
 
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import withSuspenseNonFallback from "../../hooks/HOC/withSuspenseNonFallback";
+import moment from "moment-timezone";
 const vnpay = require("../../assets/vnpay.png");
 const walletImg = require("../../assets/wallet.png");
 const statusDescriptions = {
@@ -326,11 +327,7 @@ const OrderDetailsSection = () => {
       fetchOrderDetails();
     }
   }, [order_id]);
-  useEffect(() => {
-    if (localState.orderDetails) {
-      console.log(localState.orderDetails);
-    }
-  }, [localState.orderDetails]);
+
   useEffect(() => {
     const checkout = async () => {
       if (localState.selectedPaymentMethod === 3) {
@@ -365,6 +362,17 @@ const OrderDetailsSection = () => {
   const visibleLogItem = localState.showAllLog
     ? logReverse
     : logReverse.slice(0, 3);
+
+  console.log(
+    moment.tz(
+      localState.orderDetails?.return_expiration_date,
+      "Asia/Ho_Chi_Minh"
+    )
+  );
+  const currentDate = moment.tz(new Date(), "Asia/Ho_Chi_Minh");
+  const returnDate = moment
+    .tz(localState.orderDetails?.return_expiration_date, "UTC")
+    .tz("Asia/Ho_Chi_Minh");
 
   return (
     <div className="w-full flex flex-col gap-1 mb-20">
@@ -641,8 +649,7 @@ const OrderDetailsSection = () => {
                         Đã Nhận Hàng
                       </Button>
                       {localState.orderDetails?.return_expiration_date &&
-                        localState.orderDetails?.return_expiration_date !==
-                          new Date() && (
+                        currentDate.isBefore(returnDate) && (
                           <Button
                             size="large"
                             className={
@@ -659,7 +666,8 @@ const OrderDetailsSection = () => {
                               localState.orderDetails?.return_request_status ===
                                 2 ||
                               localState.orderDetails?.return_request_status ===
-                                3
+                                3 ||
+                              !currentDate.isBefore(returnDate)
                             }
                           >
                             {localState.orderDetails?.return_request_status ===
@@ -708,8 +716,7 @@ const OrderDetailsSection = () => {
                       </Button>
 
                       {localState.orderDetails?.return_expiration_date &&
-                        localState.orderDetails?.return_expiration_date !==
-                          new Date() && (
+                        currentDate.isBefore(returnDate) && (
                           <Button
                             size="large"
                             className={
@@ -726,7 +733,8 @@ const OrderDetailsSection = () => {
                               localState.orderDetails?.return_request_status ===
                                 2 ||
                               localState.orderDetails?.return_request_status ===
-                                3
+                                3 ||
+                              !currentDate.isBefore(returnDate)
                             }
                           >
                             {localState.orderDetails?.return_request_status ===
