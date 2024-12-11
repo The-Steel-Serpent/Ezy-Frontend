@@ -93,9 +93,9 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                         minOrderValue: voucher.min_order_value,
                         discountMaxValue: voucher.discount_max_value,
                         discountType:
-                        voucher.discount_type === 'THEO PHẦN TRĂM' ? 'THEO PHẦN TRĂM' :
-                        voucher.discount_type === 'KHÔNG THEO PHẦN TRĂM' ? 'KHÔNG THEO PHẦN TRĂM' :
-                        voucher.discount_type === 'MIỄN PHÍ VẬN CHUYỂN' ? 'MIỄN PHÍ VẬN CHUYỂN' : 'unknown',
+                            voucher.discount_type === 'THEO PHẦN TRĂM' ? 'THEO PHẦN TRĂM' :
+                                voucher.discount_type === 'KHÔNG THEO PHẦN TRĂM' ? 'KHÔNG THEO PHẦN TRĂM' :
+                                    voucher.discount_type === 'MIỄN PHÍ VẬN CHUYỂN' ? 'MIỄN PHÍ VẬN CHUYỂN' : 'unknown',
                         quantity: voucher.quantity,
                         usage: voucher.usage,
                         startedAt: voucher.started_at ? dayjs(voucher.started_at) : null,
@@ -133,9 +133,9 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 prevVouchers.map(voucher =>
                     voucher.key === key
                         ? {
-                              ...voucher,
-                              discountType: value === "1" ? "MIỄN PHÍ VẬN CHUYỂN" : "THEO PHẦN TRĂM", // Default selection
-                          }
+                            ...voucher,
+                            discountType: value === "1" ? "MIỄN PHÍ VẬN CHUYỂN" : "THEO PHẦN TRĂM", // Default selection
+                        }
                         : voucher
                 )
             );
@@ -148,10 +148,10 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             code: '',
             name: '',
             description: '',
-            discountVoucherTypeId: '',
+            discountVoucherTypeId: null,
             discountValue: '',
             minOrderValue: '',
-            discountType: 'MIỄN PHÍ VẬN CHUYỂN',
+            discountType: null,
             quantity: '',
             usage: '',
             startedAt: null,
@@ -164,12 +164,19 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
     const handleSettingModalOk = async () => {
         try {
             await settingForm.validateFields();
+            for (const voucher of vouchers) {
+                if (!voucher.code || !voucher.name|| !voucher.discountVoucherTypeId || !voucher.discountType || !voucher.discountValue || !voucher.minOrderValue || !voucher.quantity || !voucher.usage || !voucher.startedAt || !voucher.endedAt) {
+                    message.warning('Vui lòng nhập đầy đủ thông tin.');
+                    return;
+                }
+                
+            }
             const selectedCategories = settingForm.getFieldValue('categories');
-    
+
             await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/sale-events/set-categories/${eventId}`, {
                 category_ids: selectedCategories,
             });
-    
+
             const newVouchers = vouchers.filter(voucher => voucher.isNew);
             const modifiedVouchers = vouchers.filter(voucher => {
                 const original = originalVouchers.find(orig => orig.key === voucher.key);
@@ -184,8 +191,8 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     discount_voucher_code: voucher.code || '',
                     discount_voucher_name: voucher.name || '',
                     description: voucher.description || '',
-                    discount_type: voucher.discountType,  
-                    min_order_value: voucher.minOrderValue || 0,
+                    discount_type: voucher.discountType,
+                    min_order_value: voucher.minOrderValue || 1,
                     discount_value: voucher.discountValue || 0,
                     discount_max_value: voucher.discountMaxValue || 0,
                     quantity: voucher.quantity || 1,
@@ -217,59 +224,139 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     updatedFields
                 );
             });
-            const deleteVoucherPromises = vouchersToDelete.map(voucherId => 
+            const deleteVoucherPromises = vouchersToDelete.map(voucherId =>
                 axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/voucher/delete-voucher/${voucherId}`)
             );
 
             await Promise.all([...newVoucherPromises, ...updateVoucherPromises, ...deleteVoucherPromises]);
-    
+
             message.success('Cài đặt thành công');
             onSetupComplete();
             onCancel();
-    
+
             fetchEventVouchers();
         } catch (error) {
             message.error('Lỗi khi cài đặt cho sự kiện.');
             console.error('Error saving vouchers or categories:', error.response ? error.response.data : error.message);
         }
 
-        
+
     };
 
     const handleDeleteVoucher = (voucherId) => {
         setVouchersToDelete(prev => [...prev, voucherId]);
-    
+
         setVouchers(prevVouchers => prevVouchers.filter(voucher => voucher.key !== voucherId));
     };
-    
+
     const columns = [
-        { title: 'Mã Voucher', dataIndex: 'code', width: 140, render: (text, record) => <Input value={text} onChange={e => handleVoucherChange(record.key, 'code', e.target.value)} /> },
-        { title: 'Tên Voucher', dataIndex: 'name', width: 160, render: (text, record) => <Input value={text} onChange={e => handleVoucherChange(record.key, 'name', e.target.value)} /> },
-        { title: 'Mô tả', dataIndex: 'description', width: 200, render: (text, record) => <Input value={text} onChange={e => handleVoucherChange(record.key, 'description', e.target.value)} /> },
         {
-            title: 'Loại Voucher', dataIndex: 'discountVoucherTypeId', width: 160,
+            title: 'Mã Voucher',
+            dataIndex: 'code',
+            width: 140,
+            render: (text, record) => (
+                <Input
+                    value={text}
+                    maxLength={20} // Giới hạn tối đa 20 ký tự
+                    onChange={e => {
+                        const value = e.target.value.toUpperCase(); // Chuyển sang chữ in hoa
+                        const regex = /^[A-Z]*$/; // Chỉ cho phép chữ cái in hoa
+                        if (regex.test(value)) {
+                            handleVoucherChange(record.key, 'code', value);
+                        } else {
+                            message.error('Mã voucher chỉ được chứa chữ in hoa.');
+                        }
+                    }}
+                    placeholder="Nhập mã voucher"
+                    required
+                />
+            )
+        },
+
+        {
+            title: 'Tên Voucher',
+            dataIndex: 'name',
+            width: 160,
+            render: (text, record) => (
+                <Input
+                    value={text}
+                    onChange={e => handleVoucherChange(record.key, 'name', e.target.value)}
+                    maxLength={50}
+                    required
+                    placeholder="Nhập tên voucher"
+                />
+            )
+
+
+        },
+        {
+            title: 'Mô tả',
+            dataIndex: 'description',
+            width: 200,
+            render: (text, record) => (
+                <Input
+                    value={text}
+                    onChange={e => handleVoucherChange(record.key, 'description', e.target.value)}
+                    maxLength={255}
+                    required
+                    placeholder="Nhập mô tả"
+                />
+            )
+        },
+        {
+            title: 'Loại Voucher',
+            dataIndex: 'discountVoucherTypeId',
+            width: 160,
             render: (value, record) => (
-                <Select value={value} onChange={val => handleVoucherChange(record.key, 'discountVoucherTypeId', val)} style={{ width: '100%' }}>
+                <Select
+                    value={value || undefined} // Giá trị mặc định là undefined (hiển thị trống)
+                    onChange={val => handleVoucherChange(record.key, 'discountVoucherTypeId', val)}
+                    style={{ width: '100%' }}
+                    required
+                    placeholder="Chọn loại voucher"
+                >
                     <Option value="1">Miễn phí vận chuyển</Option>
                     <Option value="2">Giảm giá đơn hàng</Option>
                 </Select>
             ),
         },
         {
-            title: 'Loại giảm giá', dataIndex: 'discountType', width: 160,
+            title: 'Loại giảm giá',
+            dataIndex: 'discountType',
+            width: 160,
             render: (value, record) => (
                 <Select
-                    value={value}
+                    value={value || undefined} // Giá trị mặc định là undefined (hiển thị trống)
                     onChange={val => handleVoucherChange(record.key, 'discountType', val)}
                     style={{ width: '100%' }}
+                    required
+                    placeholder="Chọn loại giảm giá"
                 >
-                    {record.discountVoucherTypeId === "1" && <Option value="MIỄN PHÍ VẬN CHUYỂN">Free Ship</Option>}
+                    {record.discountVoucherTypeId === "1" && (
+                        <Option value="MIỄN PHÍ VẬN CHUYỂN">Free Ship</Option>
+                    )}
                     <Option value="THEO PHẦN TRĂM">Giảm theo phần trăm</Option>
                     <Option value="KHÔNG THEO PHẦN TRĂM">Giảm theo số tiền</Option>
                 </Select>
             ),
         },
-        { title: 'Giá trị giảm', dataIndex: 'discountValue', width: 160, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'discountValue', e.target.value)} /> },
+
+        {
+            title: 'Giá trị giảm',
+            dataIndex: 'discountValue',
+            width: 160,
+            render: (text, record) => (
+                <Input
+                    type="number"
+                    value={text}
+                    min={0}
+                    onChange={e => handleVoucherChange(record.key, 'discountValue', Math.max(0, e.target.value))}
+                    placeholder="Nhập giá trị giảm"
+                    required
+                />
+            )
+
+        },
         { title: 'Giá trị đơn hàng tối thiểu', dataIndex: 'minOrderValue', width: 180, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'minOrderValue', e.target.value)} /> },
         {
             title: 'Giá trị giảm tối đa',
@@ -279,37 +366,85 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 <Input
                     type="number"
                     value={text}
+                    min={0}
                     onChange={e => handleVoucherChange(record.key, 'discountMaxValue', e.target.value)}
-                    disabled={record.discountType !== 'THEO PHẦN TRĂM'} // Khóa nếu không phải giảm "Theo Phần Trăm"
+                    disabled={record.discountType !== 'THEO PHẦN TRĂM'}
+                    placeholder="Nhập giá trị đơn hàng tối thiểu"
+                    required
                 />
             ),
         },
-        { title: 'Số lượng', dataIndex: 'quantity', width: 125, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'quantity', e.target.value)} /> },
-        { title: 'Số lần sử dụng', dataIndex: 'usage', width: 125, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'usage', e.target.value)} /> },
         {
-            title: 'Ngày bắt đầu', dataIndex: 'startedAt', width: 180,
+            title: 'Số lượng',
+            dataIndex: 'quantity',
+            width: 125,
+            render: (text, record) => (
+                <Input
+                    type="number"
+                    value={text}
+                    min={1}
+                    onChange={e => handleVoucherChange(record.key, 'quantity', Math.max(1, e.target.value))}
+                    placeholder="Nhập số lượng"
+                    required
+                />
+            ),
+        },
+        {
+            title: 'Số lần sử dụng',
+            dataIndex: 'usage',
+            width: 125,
+            render: (text, record) => (
+                <Input
+                    type="number"
+                    value={text}
+                    min={1}
+                    onChange={e => handleVoucherChange(record.key, 'usage', e.target.value)}
+                    required
+                />
+            ),
+        },
+        {
+            title: 'Ngày bắt đầu',
+            dataIndex: 'startedAt',
+            width: 180,
             render: (value, record) => (
                 <DatePicker
                     value={value}
                     onChange={date => handleVoucherChange(record.key, 'startedAt', date)}
-                    disabledDate={current => current && (current < eventStart || current > eventEnd)}
+                    disabledDate={current => current && (current < eventStart || current > eventEnd || (record.endedAt && current > record.endedAt))}
                     format="YYYY-MM-DD HH:mm"
                     showTime={{ format: 'HH:mm' }}
+                    placeholder="Chọn ngày bắt đầu"
+                    style={{ width: '100%' }}
+                    required
                 />
             ),
         },
         {
-            title: 'Ngày kết thúc', dataIndex: 'endedAt', width: 180,
+            title: 'Ngày kết thúc',
+            dataIndex: 'endedAt',
+            width: 180,
             render: (value, record) => (
                 <DatePicker
                     value={value}
                     onChange={date => handleVoucherChange(record.key, 'endedAt', date)}
-                    disabledDate={current => current && (current < eventStart || current > eventEnd)}
+                    disabledDate={current => {
+                        if (!record.startedAt || !current) return true; // Ngăn chọn nếu ngày bắt đầu chưa được chọn
+                        return (
+                            current < record.startedAt.add(2, 'hour') || // Ngăn chọn trước ngày bắt đầu + 2 tiếng
+                            current < eventStart || // Ngăn chọn trước ngày bắt đầu sự kiện
+                            current > eventEnd     // Ngăn chọn sau ngày kết thúc sự kiện
+                        );
+                    }}
                     format="YYYY-MM-DD HH:mm"
                     showTime={{ format: 'HH:mm' }}
+                    placeholder="Chọn ngày kết thúc"
+                    style={{ width: '100%' }}
+                    required
                 />
             ),
         },
+
         {
             title: 'Hành động',
             dataIndex: 'actions',
@@ -328,7 +463,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
             ),
         },
     ];
-    
+
 
     return (
         <Modal title="Thiết lập cho sự kiện" visible={visible} onCancel={onCancel} width={1400} footer={null} confirmLoading={loading}>

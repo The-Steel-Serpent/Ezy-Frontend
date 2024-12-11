@@ -3,12 +3,15 @@ import { Modal, Form, Input, Select, DatePicker, Button, message } from "antd";
 import axios from "axios";
 import { signUpWithEmailPassword } from "../../../firebase/AuthenticationFirebase";
 import { checkNumberPhone } from "../../../helpers/formatPhoneNumber";
+import { useSelector } from "react-redux";
 
 const { Option } = Select;
 
 const RegisterModal = ({ visible, onClose }) => {
   const [form] = Form.useForm();
   const [roleData, setRoleData] = useState([]);
+  const adminId = useSelector((state) => state.user.user_id);
+
 
   // Fetch danh sách vai trò
   const fetchRoles = async () => {
@@ -36,38 +39,35 @@ const RegisterModal = ({ visible, onClose }) => {
     try {
       // Kiểm tra số điện thoại
       if (values.phone_number && !checkNumberPhone(values.phone_number)) {
-        return message.error("Số điện thoại không hợp lệ!");
+        return message.error("Số điện thoại không hợp lệ hoặc đã được!");
       }
 
       // Định dạng dữ liệu
       const formattedValues = {
         ...values,
         dob: values.dob ? values.dob.format("YYYY-MM-DD") : null,
+
       };
 
-      // Tạo tài khoản trên Firebase
-      const firebaseUser = await signUpWithEmailPassword(
-        formattedValues.email,
-        formattedValues.password
+      // // Tạo tài khoản trên Firebase
+      // const firebaseUser = await signUpWithEmailPassword(
+      //   formattedValues.email,
+      //   formattedValues.password
+      // );
+
+      const apiResponse = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/api/create-user`,
+        {
+          ...formattedValues,
+        }
       );
 
-      if (firebaseUser) {
-        // Gửi dữ liệu lên backend
-        const apiResponse = await axios.post(
-          `${process.env.REACT_APP_BACKEND_URL}/api/create-user`,
-          {
-            ...formattedValues,
-            user_id: firebaseUser.uid, // Firebase UID
-          }
-        );
-
-        if (apiResponse.data.success) {
-          message.success("Tài khoản được tạo thành công! Email xác thực đã được gửi.");
-          form.resetFields();
-          onClose();
-        } else {
-          throw new Error(apiResponse.data.message || "Không thể tạo tài khoản.");
-        }
+      if (apiResponse.data.success) {
+        message.success("Tài khoản được tạo thành công! Email xác thực đã được gửi.");
+        form.resetFields();
+        onClose();
+      } else {
+        throw new Error(apiResponse.data.message || "Không thể tạo tài khoản.");
       }
     } catch (error) {
       console.error("Lỗi khi tạo tài khoản:", error);
@@ -103,7 +103,7 @@ const RegisterModal = ({ visible, onClose }) => {
         >
           <Input />
         </Form.Item>
-        <Form.Item
+        {/* <Form.Item
           label="Số Điện Thoại"
           name="phone_number"
           rules={[
@@ -112,14 +112,27 @@ const RegisterModal = ({ visible, onClose }) => {
           ]}
         >
           <Input />
-        </Form.Item>
+        </Form.Item> */}
         <Form.Item label="Vai trò" name="role_id" rules={[{ required: true, message: "Vai trò không được để trống!" }]}>
           <Select placeholder="Chọn vai trò">
-            {roleData.map((role) => (
-              <Option key={role.role_id} value={role.role_id}>
-                {role.role_name}
-              </Option>
-            ))}
+            {roleData
+              .filter((role) => {
+                // Loại bỏ role 1 và 2
+                if (role.role_id === 1 || role.role_id === 2) {
+                  return false;
+                }
+                // Chỉ hiển thị role 3 nếu admin hiện tại có role 3
+                if (role.role_id === 3) {
+                  return adminId.role_id === 3;
+                }
+                // Các role khác luôn hiển thị
+                return true;
+              })
+              .map((role) => (
+                <Option key={role.role_id} value={role.role_id}>
+                  {role.role_name}
+                </Option>
+              ))}
           </Select>
         </Form.Item>
         <Form.Item
@@ -130,7 +143,7 @@ const RegisterModal = ({ visible, onClose }) => {
             {
               validator: (_, value) => {
                 if (!value) {
-                  return Promise.reject(new Error("Ngày sinh không được để trống!"));
+                  //return Promise.reject(new Error("Ngày sinh không được để trống!"));
                 }
                 const today = new Date();
                 const selectedDate = new Date(value);

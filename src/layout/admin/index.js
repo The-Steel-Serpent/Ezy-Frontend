@@ -138,7 +138,9 @@ const AdminAuthLayout = ({ children }) => {
     }
   };
 
+
   useEffect(() => {
+    console.log("Token: ", token);
     fetchUserData();
   }, [token]);
 

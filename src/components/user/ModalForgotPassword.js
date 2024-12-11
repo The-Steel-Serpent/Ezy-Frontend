@@ -1,6 +1,7 @@
 import { Alert, Button, Input, message, Modal } from "antd";
 import React, { useReducer, useState } from "react";
 import { checkEmailFormat } from "../../helpers/formatEmail";
+import { checkEmailExists } from "../../services/userService";
 const { resetPassword } = require("../../firebase/AuthenticationFirebase");
 const ModalForgotPassword = (props) => {
   const [state, dispatch] = useReducer(
@@ -45,6 +46,11 @@ const ModalForgotPassword = (props) => {
       return;
     }
     try {
+      const checkEmail = await checkEmailExists(emailReset);
+      if (!checkEmail) {
+        message.error("Email không tồn tại");
+        return;
+      }
       await resetPassword(emailReset);
       dispatch({ type: "error", value: null });
       dispatch({

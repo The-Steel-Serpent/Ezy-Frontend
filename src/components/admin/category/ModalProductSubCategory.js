@@ -42,8 +42,6 @@ function ModalProductSubCategory({ categoryId, visible, onCancel }) {
                 setLoading(true);
                 try {
                     await handleDeleteSubCategory(sub_category_id);
-                    //message.success('Xóa danh mục thành công!', 2); // Để thời gian hiện thông báo là 2 giây
-                    //fetchCategories(); // Tải lại danh sách sau khi thông báo thành công
                 } catch (error) {
                     console.error('Error deleting sub category:', error);
                     message.error(error.response?.data?.message || 'Có lỗi xảy ra trong quá trình xóa danh mục con.');

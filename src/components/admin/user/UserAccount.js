@@ -26,10 +26,15 @@ const UserAccount = () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/all-user`);
       if (response.data.success) {
-        const formattedData = response.data.data.map((user) => ({
+        // Lọc dữ liệu để loại bỏ user có role_id = 3
+        const filteredUsers = response.data.data.filter((user) => user.role_id !== 3);
+
+        // Định dạng dữ liệu (nếu cần thiết)
+        const formattedData = filteredUsers.map((user) => ({
           ...user,
           dob: formatDate(user.dob),
         }));
+
         setUserData(formattedData);
         setFilteredData(formattedData);
       }
@@ -104,8 +109,8 @@ const UserAccount = () => {
           const response = await axios.post(
             `${process.env.REACT_APP_BACKEND_URL}/api/${action}`,
             {
-              violator_id: user.user_id, 
-              currentAdminId: adminId   
+              violator_id: user.user_id,
+              currentAdminId: adminId
             }
           );
           if (response.data.success) {
@@ -222,7 +227,7 @@ const UserAccount = () => {
           style={{ marginBottom: 16 }}
           icon={<PlusOutlined />}
         >
-          Tạo Người Dùng Mới
+          Tạo nhân viên mới
         </Button>
       </div>
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
