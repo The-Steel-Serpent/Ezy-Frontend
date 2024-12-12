@@ -1,4 +1,11 @@
-import React, { lazy, Suspense, useEffect, useReducer, useState } from "react";
+import React, {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 import logo from "../../assets/logo_ezy.png";
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { GoBook } from "react-icons/go";
@@ -37,12 +44,19 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { startTokenRefreshListener } from "../../firebase/AuthenticationFirebase";
+import {
+  checkSession,
+  startTokenRefreshListener,
+} from "../../firebase/AuthenticationFirebase";
 import { connectSocket, disconnectSocket } from "../../socket/socketActions";
 import { GrSystem } from "react-icons/gr";
 import SupportChatbox from "../../components/support-chatbox/SupportChatbox";
 import { setSupportMessageState } from "../../redux/supportMessageSlice";
 import NotificationPopover from "../../components/notifications/NotificationPopover";
+import { authFirebase, db } from "../../firebase/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import toast from "react-hot-toast";
+import { onAuthStateChanged } from "firebase/auth";
 const ChatBox = lazy(() => import("../../components/chatbox/ChatBox"));
 
 const { Header, Content, Sider } = Layout;
@@ -97,7 +111,7 @@ const items = [
       {
         key: "/seller/account",
         label: "Mật khẩu cấp 2",
-      }
+      },
     ],
   },
 ];
@@ -178,7 +192,7 @@ const SellerAuthLayout = ({ children }) => {
   const shop = useSelector((state) => state.shop);
   const token = localStorage.getItem("token");
   //
-  const logOut = async () => {
+  const logOut = useCallback(async () => {
     try {
       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
       const res = await axios.post(
@@ -202,7 +216,7 @@ const SellerAuthLayout = ({ children }) => {
         message.error("Phiên Đăng nhập đã hết hạn");
       }
     }
-  };
+  }, [dispatch]);
 
   const handleDropDownProfileClick = (e) => {
     console.log("key", e.key);
@@ -213,8 +227,7 @@ const SellerAuthLayout = ({ children }) => {
     } else if (e.key == "profile_shop") {
       navigate("/seller/seller-edit-profile");
       setUpNavigate();
-    }
-    else if (e.key == "decor_shop"){
+    } else if (e.key == "decor_shop") {
       navigate("/seller/customize-shop");
     }
   };
@@ -357,6 +370,62 @@ const SellerAuthLayout = ({ children }) => {
       };
     }
   }, [user, dispatch]);
+
+  useEffect(() => {
+    const handleCheckSession = async (userId) => {
+      const isSessionValid = await checkSession(userId);
+
+      if (isSessionValid) {
+        console.log("Phiên hợp lệ");
+        return true;
+      } else {
+        console.log("Phiên không hợp lệ, người dùng đã bị đăng xuất.");
+        authFirebase.signOut();
+        await logOut();
+        return false;
+      }
+    };
+    if (user.user_id !== "") {
+      handleCheckSession(user.user_id);
+    }
+  }, [logOut, user.user_id]);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(authFirebase, (user) => {
+      if (user) {
+        let firstCheck = true; // Cờ để bỏ qua kiểm tra đầu tiên
+        const unsubscribeSnapshot = onSnapshot(
+          doc(db, "users", user.uid),
+          async (docSnapshot) => {
+            const data = docSnapshot.data();
+            const localSessionToken = localStorage.getItem("sessionToken");
+
+            // Bỏ qua kiểm tra đầu tiên sau khi đăng nhập
+            if (firstCheck) {
+              firstCheck = false;
+              return;
+            }
+
+            // Kiểm tra nếu token không khớp, thực hiện đăng xuất
+            if (data?.sessionToken !== localSessionToken) {
+              toast.error(
+                "Phiên của bạn đã bị đăng xuất do đăng nhập từ thiết bị khác."
+              );
+              authFirebase.signOut();
+              await logOut();
+              localStorage.removeItem("sessionToken");
+              window.location.reload();
+            }
+          }
+        );
+
+        return () => unsubscribeSnapshot();
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
   const isSellerSetupPath = location.pathname === "/seller/seller-setup";
 
   return (

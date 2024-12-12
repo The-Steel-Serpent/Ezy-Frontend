@@ -1,4 +1,4 @@
-import React, { lazy, useEffect, useState } from "react";
+import React, { lazy, useCallback, useEffect, useState } from "react";
 import PrimaryHeader from "../components/PrimaryHeader";
 import { useLocation, useNavigate } from "react-router-dom";
 import { setUser, setToken, setSocketConnection } from "../redux/userSlice";
@@ -9,15 +9,22 @@ import { logout } from "../redux/userSlice";
 import { clearCart } from "../redux/cartSlice";
 import { logoutShop } from "../redux/shopSlice";
 import CartHeader from "../components/CartHeader";
-import { startTokenRefreshListener } from "../firebase/AuthenticationFirebase";
+import {
+  checkSession,
+  startTokenRefreshListener,
+} from "../firebase/AuthenticationFirebase";
 import { io } from "socket.io-client";
 import { is } from "date-fns/locale";
 import { SupportMessageProvider } from "../providers/SupportMessagesProvider";
 import { connectSocket, disconnectSocket } from "../socket/socketActions";
 import { getAuth, onAuthStateChanged, unlink } from "firebase/auth";
 import Footer from "../components/Footer";
+import { authFirebase } from "../firebase/firebase";
+import toast from "react-hot-toast";
+import { doc, getFirestore, onSnapshot } from "firebase/firestore";
 const AuthLayout = ({ children }) => {
   const dispatch = useDispatch();
+  const db = getFirestore();
   const navigate = useNavigate();
   const user = useSelector((state) => state.user);
   const shop = useSelector((state) => state.shop);
@@ -26,7 +33,7 @@ const AuthLayout = ({ children }) => {
   const location = useLocation();
   const useType = location.pathname.split("/")[1];
 
-  const logOut = async () => {
+  const logOut = useCallback(async () => {
     try {
       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
       const res = await axios.post(
@@ -52,7 +59,7 @@ const AuthLayout = ({ children }) => {
         message.error("Phiên Đăng nhập đã hết hạn");
       }
     }
-  };
+  }, [dispatch]);
   //side Effect
   useEffect(() => {
     const fetchUserData = async () => {
@@ -110,6 +117,7 @@ const AuthLayout = ({ children }) => {
         console.log("Lỗi khi Fetch dữ liệu người dùng: ", error);
       }
     };
+
     if (token && !user?.user_id) {
       fetchUserData();
     } else {
@@ -118,7 +126,58 @@ const AuthLayout = ({ children }) => {
   }, [token]);
 
   useEffect(() => {
-    startTokenRefreshListener();
+    const handleCheckSession = async (userId) => {
+      const isSessionValid = await checkSession(userId);
+
+      if (isSessionValid) {
+        console.log("Phiên hợp lệ");
+        return true;
+      } else {
+        console.log("Phiên không hợp lệ, người dùng đã bị đăng xuất.");
+        authFirebase.signOut();
+        await logOut();
+        return false;
+      }
+    };
+    if (user.user_id !== "") {
+      handleCheckSession(user.user_id);
+    }
+  }, [logOut, user.user_id]);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(authFirebase, (user) => {
+      if (user) {
+        let firstCheck = true; // Cờ để bỏ qua kiểm tra đầu tiên
+        const unsubscribeSnapshot = onSnapshot(
+          doc(db, "users", user.uid),
+          async (docSnapshot) => {
+            const data = docSnapshot.data();
+            const localSessionToken = localStorage.getItem("sessionToken");
+
+            // Bỏ qua kiểm tra đầu tiên sau khi đăng nhập
+            if (firstCheck) {
+              firstCheck = false;
+              return;
+            }
+
+            // Kiểm tra nếu token không khớp, thực hiện đăng xuất
+            if (data?.sessionToken !== localSessionToken) {
+              toast.error(
+                "Phiên của bạn đã bị đăng xuất do đăng nhập từ thiết bị khác."
+              );
+              authFirebase.signOut();
+              await logOut();
+              localStorage.removeItem("sessionToken");
+              window.location.reload();
+            }
+          }
+        );
+
+        return () => unsubscribeSnapshot();
+      }
+    });
+
+    return () => unsubscribeAuth();
   }, []);
 
   useEffect(() => {

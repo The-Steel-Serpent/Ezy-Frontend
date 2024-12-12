@@ -20,12 +20,16 @@ import {
   onIdTokenChanged,
   verifyBeforeUpdateEmail,
   unlink,
+  signOut,
 } from "firebase/auth";
 import { authFirebase } from "./firebase";
 import { TrophyFilled } from "@ant-design/icons";
 import { message } from "antd";
 import generateToken from "../helpers/randomToken";
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 
+const db = getFirestore();
 const auth = getAuth();
 auth.useDeviceLanguage();
 const baseURL =
@@ -82,6 +86,29 @@ export const signUpWithEmailPassword = async (email, password) => {
   }
 };
 
+export const checkSession = async (uid) => {
+  try {
+    const localSessionToken = localStorage.getItem("sessionToken");
+    const userDoc = await getDoc(doc(db, "users", uid));
+
+    if (userDoc.exists()) {
+      const serverSessionToken = userDoc.data().sessionToken;
+      if (localSessionToken === serverSessionToken) {
+        console.log("Phiên hợp lệ");
+        return true; // Phiên hợp lệ
+      }
+    }
+
+    // Nếu không trùng khớp hoặc không tìm thấy người dùng, đăng xuất
+    await signOut(authFirebase);
+    localStorage.removeItem("sessionToken");
+    return false;
+  } catch (error) {
+    console.error("Lỗi khi kiểm tra phiên:", error);
+    return false; // Lỗi xảy ra, coi như phiên không hợp lệ
+  }
+};
+
 export const signInWithEmailPassword = async (email, password) => {
   try {
     await setPersistence(authFirebase, browserLocalPersistence);
@@ -95,6 +122,10 @@ export const signInWithEmailPassword = async (email, password) => {
     if (!user.emailVerified) {
       throw new Error("unverified");
     }
+
+    const sessionToken = uuidv4();
+    await setDoc(doc(db, "users", user.uid), { sessionToken });
+    localStorage.setItem("sessionToken", sessionToken);
     return user;
   } catch (error) {
     let errorMessage = "";
@@ -148,7 +179,9 @@ export const signInWithGoogle = async () => {
   try {
     await setPersistence(auth, browserLocalPersistence);
     const result = await signInWithPopup(auth, provider);
-
+    const sessionToken = uuidv4();
+    await setDoc(doc(db, "users", result.user.uid), { sessionToken });
+    localStorage.setItem("sessionToken", sessionToken);
     return result.user;
   } catch (error) {
     let errorMessage;
