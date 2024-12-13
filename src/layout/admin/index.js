@@ -150,9 +150,9 @@ const AdminAuthLayout = ({ children }) => {
     fetchUserData();
   }, [token]);
 
-  useEffect(() => {
-    startTokenRefreshListener();
-  }, []);
+  // useEffect(() => {
+  //   startTokenRefreshListener();
+  // }, []);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(authFirebase, (user) => {
