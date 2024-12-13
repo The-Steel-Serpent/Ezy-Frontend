@@ -327,9 +327,9 @@ const SellerAuthLayout = ({ children }) => {
     }
   }, [token]);
 
-  useEffect(() => {
-    startTokenRefreshListener();
-  }, []);
+  // useEffect(() => {
+  //   startTokenRefreshListener();
+  // }, []);
 
   useEffect(() => {
     const fetchShopData = async () => {
