@@ -124,7 +124,11 @@ export const signInWithEmailPassword = async (email, password) => {
     }
 
     const sessionToken = uuidv4();
-    await setDoc(doc(db, "users", user.uid), { sessionToken });
+    await setDoc(
+      doc(db, "users", user.uid),
+      { sessionToken, isDisabled: false },
+      { merge: true }
+    );
     localStorage.setItem("sessionToken", sessionToken);
     return user;
   } catch (error) {
@@ -180,7 +184,11 @@ export const signInWithGoogle = async () => {
     await setPersistence(auth, browserLocalPersistence);
     const result = await signInWithPopup(auth, provider);
     const sessionToken = uuidv4();
-    await setDoc(doc(db, "users", result.user.uid), { sessionToken });
+    await setDoc(
+      doc(db, "users", result.user.uid),
+      { sessionToken, isDisabled: false },
+      { merge: true }
+    );
     localStorage.setItem("sessionToken", sessionToken);
     return result.user;
   } catch (error) {

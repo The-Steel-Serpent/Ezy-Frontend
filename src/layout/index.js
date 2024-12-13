@@ -170,6 +170,16 @@ const AuthLayout = ({ children }) => {
               localStorage.removeItem("sessionToken");
               window.location.reload();
             }
+
+            if (data?.isDisabled) {
+              toast.error(
+                "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ."
+              );
+              authFirebase.signOut();
+              await logOut();
+              localStorage.removeItem("sessionToken");
+              window.location.reload();
+            }
           }
         );
 
