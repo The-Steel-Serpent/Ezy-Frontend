@@ -6,6 +6,9 @@ import dayjs from 'dayjs';
 import RegisterModal from './RegisterModal';
 import { PlusOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
+import { db } from "../../../firebase/firebase";
+
 const { Option } = Select;
 
 const UserAccount = () => {
@@ -114,6 +117,12 @@ const UserAccount = () => {
             }
           );
           if (response.data.success) {
+            const isDisabled = !user.is_banned; 
+            await setDoc(
+              doc(db, 'users', user.user_id),
+              { isDisabled },
+              { merge: true }
+            );
             message.success(`Đã ${user.is_banned ? 'mở khóa' : 'khóa'} thành công!`);
             fetchData();
           } else {
