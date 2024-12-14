@@ -16,7 +16,7 @@ const SubCategoryItem = (props) => {
       <div className="w-full relative h-fit">
         <img
           src={item.thumbnail}
-          className="w-full rounded"
+          className="w-full h-[200px] rounded"
           alt={item.sub_category_name}
         />
         <img

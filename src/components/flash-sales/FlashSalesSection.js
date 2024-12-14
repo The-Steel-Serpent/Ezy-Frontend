@@ -33,6 +33,7 @@ const FlashSalesSection = () => {
       const res = await getFlashSalesActive();
       if (res.success) {
         const data = res.data;
+        console.log(res);
         setLocalState({
           type: "flashSale",
           payload: res.flashSales,
@@ -96,9 +97,8 @@ const FlashSalesSection = () => {
 
   return (
     <>
-      {flashSale?.length > 0 &&
-        flashSalesItem &&
-        flashSalesItem?.length > 0 && (
+      {flashSale &&
+        flashSalesItem[0]?.ShopRegisterFlashSales?.length > 0 && (
           <div className="max-w-[1200px] bg-white m-auto h-fit mt-5 px-5">
             {/**Countdown */}
 

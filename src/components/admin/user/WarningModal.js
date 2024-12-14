@@ -94,8 +94,9 @@ const WarningModal = ({ visible, onClose, user }) => {
                         <Option value="Cảnh cáo">Cảnh cáo</Option>
                         <Option value="Khóa 3 ngày">Khóa 3 ngày</Option>
                         <Option value="Khóa 7 ngày">Khóa 7 ngày</Option>
+                        <Option value="Khóa 14 ngày">Khóa 14 ngày</Option>
                         <Option value="Khóa 30 ngày">Khóa 30 ngày</Option>
-                        <Option value="Cấm vĩnh viễn">Cấm vĩnh viễn</Option>
+                        <Option value="Khóa vĩnh viễn">Khóa vĩnh viễn</Option>
                     </Select>
                 </Form.Item>
                 <Form.Item

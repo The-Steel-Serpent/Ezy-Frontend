@@ -114,7 +114,7 @@ const TopSellingSubCategoriesPage = () => {
         className="py-2"
       />
 
-      <div className="w-full grid-cols-12 grid mt-3">
+      <div className="w-full grid-cols-12 gap-4 grid mt-3">
         {localState.topProducts?.map((item, key) => (
           <TopProductItem item={item} key={key} top={key + 1} />
         ))}
