@@ -13,6 +13,7 @@ const ShopViolation = () => {
   const [filteredShops, setFilteredShops] = useState([]); // Dữ liệu sau khi lọc
   const [loading, setLoading] = useState(false);
   const [selectedShopForViolations, setSelectedShopForViolations] = useState(null);
+  const [selectedShopForHistory, setSelectedShopForHistory] = useState(null);
   const [historyModalVisible, setHistoryModalVisible] = useState(false);
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [warningShop, setWarningShop] = useState(null);
@@ -82,21 +83,29 @@ const ShopViolation = () => {
       render: (_, record) => (
         <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
           <Button onClick={() => setSelectedShopForViolations(record)}>Xem báo cáo</Button>
-          <Button onClick={() => setHistoryModalVisible(true)}>Lịch sử vi phạm</Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              if (record) {
-                setWarningShop(record);
-                setWarningModalVisible(true);
-              } else {
-                console.error("Record is null or undefined");
-                message.error("Không thể mở modal. Dữ liệu cửa hàng không hợp lệ.");
-              }
-            }}
-          >
-            Cảnh báo vi phạm
+          <Button onClick={() => {
+            console.log("Selected Shop:", record);
+            setSelectedShopForHistory(record);
+            setHistoryModalVisible(true);
+          }}>
+            Lịch sử vi phạm
           </Button>
+          {!record.is_banned && (
+            <Button
+              type="primary"
+              onClick={() => {
+                if (record) {
+                  setWarningShop(record);
+                  setWarningModalVisible(true);
+                } else {
+                  console.error("Record is null or undefined");
+                  message.error("Không thể mở modal. Dữ liệu cửa hàng không hợp lệ.");
+                }
+              }}
+            >
+              Cảnh báo vi phạm
+            </Button>
+          )}
         </div>
       ),
     },
@@ -153,7 +162,7 @@ const ShopViolation = () => {
         <ShopViolationHistoryModal
           visible={historyModalVisible}
           onClose={() => setHistoryModalVisible(false)}
-          shop={selectedShopForViolations}
+          ownerId={selectedShopForHistory?.user_id}
         />
       )}
       {warningModalVisible && warningShop && (

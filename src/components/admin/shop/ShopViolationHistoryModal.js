@@ -4,26 +4,27 @@ import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
-const ShopViolationHistoryModal = ({ visible, onClose, shopId }) => {
+const ShopViolationHistoryModal = ({ visible, onClose, ownerId }) => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setLoading(true);
-      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/history/${shopId}`)
+      console.log(ownerId);
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/history/${ownerId}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.success) setHistory(data.data);
         })
         .finally(() => setLoading(false));
     }
-  }, [visible, shopId]);
+  }, [visible, ownerId]);
 
   const handleRevoke = async (historyId) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/revoke/${historyId}`, {
-        method: "DELETE",
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/violations/revoke-account/${historyId}`, {
+        method: "put",
       });
 
       const result = await response.json();
@@ -47,20 +48,76 @@ const ShopViolationHistoryModal = ({ visible, onClose, shopId }) => {
       centered
       width={600}
     >
+      {/* {historyData.length > 0 ? (
+        <List
+          grid={{ gutter: 16, column: 1 }}
+          dataSource={historyData}
+          loading={loading}
+          renderItem={(history) => (
+            <List.Item key={history.violation_history_id}>
+              <Card>
+                <p>
+                  <b>Ngày cập nhật:</b>{' '}
+                  {dayjs(history.updatedAt).format('DD/MM/YYYY HH:mm')}
+                </p>
+                <p>
+                  <b>Loại xử lý:</b> {history.action_type}
+                </p>
+                <p>
+                  <b>Trạng thái:</b> {history.status}
+                </p>
+                <p>
+                  <b>Nội dung xử lý:</b> {history.notes || 'Không có'}
+                </p>
+                <p>
+                  <b>Người cập nhật:</b> {history.updated_by_username}
+                </p>
+                {history.status !== 'Đã thu hồi' && (
+                  <Button
+                    danger
+                    onClick={() => handleRevoke(history.violation_history_id)}
+                    style={{ marginTop: '8px' }}
+                  >
+                    Thu hồi
+                  </Button>
+                )}
+              </Card>
+            </List.Item>
+          )}
+        />
+      ) : (
+        <p>Không có lịch sử xử lý nào cho người dùng này.</p>
+      )} */}
       <List
         loading={loading}
         dataSource={history}
         renderItem={(item) => (
           <Card>
-            <Text strong>Ngày xử lý:</Text>
-            <Text style={{ marginLeft: "8px" }}>
-              {dayjs(item.updatedAt).format("DD/MM/YYYY HH:mm:ss")}
-            </Text>
-            <Text strong>Ghi chú:</Text>
-            <Text style={{ marginLeft: "8px" }}>{item.notes || "Không có"}</Text>
-            <Button danger onClick={() => handleRevoke(item.violation_history_id)}>
-              Thu hồi
-            </Button>
+            <p>
+              <b>Ngày cập nhật:</b>{' '}
+              {dayjs(item.updatedAt).format('DD/MM/YYYY HH:mm')}
+            </p>
+            <p>
+              <b>Loại xử lý:</b> {item.action_type}
+            </p>
+            <p>
+              <b>Trạng thái:</b> {item.status}
+            </p>
+            <p>
+              <b>Nội dung xử lý:</b> {item.notes || 'Không có'}
+            </p>
+            <p>
+              <b>Người cập nhật:</b> {item.updated_by_username}
+            </p>
+            {history.status !== 'Đã thu hồi' && (
+              <Button
+                danger
+                onClick={() => handleRevoke(item.violation_history_id)}
+                style={{ marginTop: '8px' }}
+              >
+                Thu hồi
+              </Button>
+            )}
           </Card>
         )}
       />
