@@ -16,6 +16,8 @@ import {
 } from 'chart.js';
 import BestSellerItem from './BestSellerItem';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 // Register Chart.js components
 ChartJS.register(
     CategoryScale,
@@ -79,7 +81,7 @@ const SalesRevenue = () => {
         setLocalState({ type: 'SET_START_DATE', payload: startDate });
         setLocalState({ type: 'SET_END_DATE', payload: endDate });
     };
-    const handleExportExcel = () => {
+    const handleExportExcel = async () => {
         const mapColumn = {
             day: 'Ngày',
             month: 'Tháng',
@@ -87,35 +89,73 @@ const SalesRevenue = () => {
             total_revenue: 'Doanh thu',
         };
         const data = localState.sales_revenue?.revenueByDay || [];
-        const formattedData = data.map(item => ([
-            item.day,
-            item.month,
-            item.year,
-            item.total_revenue,
-        ]));
 
-        // Thêm hàng tiêu đề và header
-        const title = [["Bảng thống kê doanh thu"]];
-        const header = [mapColumn.day, mapColumn.month, mapColumn.year, mapColumn.total_revenue];
-        const wsData = title.concat([header], formattedData);
+        // Tạo workbook và worksheet
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Thống kê doanh thu bán hàng');
 
-        // Convert dữ liệu thành worksheet
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        // Thêm tiêu đề
+        worksheet.mergeCells('A1:D1'); // Gộp cột A-D cho title
+        const titleCell = worksheet.getCell('A1');
+        titleCell.value = 'Bảng thống kê doanh thu';
+        titleCell.font = { size: 20, bold: true }; // Chỉnh size và in đậm
+        titleCell.alignment = { vertical: 'middle', horizontal: 'center' }; // Canh giữa
+        titleCell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' },
+        }; // Thêm viền cho tiêu đề
 
-        // Định nghĩa phạm vi dữ liệu (bao gồm cả title)
-        const totalRows = wsData.length;
-        ws['!ref'] = `A1:D${totalRows}`;
+        // Thêm khoảng cách cho title
+        worksheet.getRow(1).height = 30; // Tăng chiều cao của dòng title
 
-        // Chỉ định auto-filter cho phần header và dữ liệu (bỏ qua title)
-        ws['!autofilter'] = { ref: `A2:D${totalRows}` };
+        // Thêm header
+        worksheet.addRow([mapColumn.day, mapColumn.month, mapColumn.year, mapColumn.total_revenue]);
+        const headerRow = worksheet.getRow(2);
+        headerRow.font = { bold: true }; // Làm đậm header
+        headerRow.alignment = { horizontal: 'center', vertical: 'middle' }; // Canh giữa header
+        headerRow.eachCell(cell => {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' },
+            }; // Thêm viền cho header
+            cell.alignment = { horizontal: 'center', vertical: 'middle' }; // Căn giữa dữ liệu trong header
+        });
 
-        // Tạo workbook và xuất file
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Thống kê doanh thu bán hàng');
-        XLSX.writeFile(wb, 'doanh-thu-ban-hang.xlsx');
+        // Thêm dữ liệu
+        data.forEach(item => {
+            const row = worksheet.addRow([item.day, item.month, item.year, item.total_revenue]);
+            row.eachCell(cell => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' },
+                }; // Thêm viền cho từng ô dữ liệu
+                cell.alignment = { horizontal: 'center', vertical: 'middle' }; // Căn giữa dữ liệu trong các ô
+            });
+        });
+
+        // Auto-filter cho dữ liệu
+        const totalRows = data.length + 2; // Bao gồm title và header
+        worksheet.autoFilter = `A2:D${totalRows}`;
+
+        // Định dạng cột (width phù hợp)
+        worksheet.columns = [
+            { key: 'day', width: 15 },
+            { key: 'month', width: 15 },
+            { key: 'year', width: 15 },
+            { key: 'total_revenue', width: 20 },
+        ];
+
+        // Xuất file
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, 'doanh-thu-ban-hang.xlsx');
     };
-
-
 
     const dailyRevenue = localState.sales_revenue?.revenueByDay || [];
     const weeklyRevenue = (localState.sales_revenue?.revenueByWeek || []).filter((data) => data.week !== 0);
