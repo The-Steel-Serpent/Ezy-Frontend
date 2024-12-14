@@ -71,7 +71,7 @@ const Statistics = () => {
             const productVariants = await getTopProductVariientSales(startDate, endDate);
 
             if (revenueData.success) {
-                dispatch({ type: 'SET_REVENUE_DATA', payload: revenueData.data.revenueByMonth });
+                dispatch({ type: 'SET_REVENUE_DATA', payload: revenueData.data });
             }
 
             if (saleCategories.success) {
@@ -114,7 +114,7 @@ const Statistics = () => {
 
     // Data for Top Shop Revenue Bar Chart
     const shopRevenueData = {
-        labels: sortedRevenueData.map((data) => data.Shop.shop_name),
+        labels: sortedRevenueData.map((data) => data.shop_name),
         datasets: [
             {
                 label: 'Doanh thu (VND)',
