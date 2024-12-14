@@ -20,6 +20,8 @@ const SuggestProduct = () => {
           return { ...state, listSuggest: action.payload };
         case "SET_EXCLUDE_PRODUCT_IDS":
           return { ...state, excludeProductIds: action.payload };
+        case "SET_RANDOM_SUB_CATEGORIES":
+          return { ...state, randomSubCategories: action.payload };
         default:
           return state;
       }
@@ -30,36 +32,59 @@ const SuggestProduct = () => {
       currentPage: 1,
       totalPage: 0,
       excludeProductIds: [],
+      randomSubCategories: [],
+      isGetSubFirst: false,
     }
   );
-  const { listSuggest, currentPage, totalPage, excludeProductIds, loading } =
-    state;
+  const {
+    listSuggest,
+    currentPage,
+    totalPage,
+    excludeProductIds,
+    randomSubCategories,
+    loading,
+    isGetSubFirst,
+  } = state;
   useEffect(() => {
     const fetchSuggestList = async () => {
       dispatch({ type: "SET_LOADING", payload: true });
       try {
         const url = `${process.env.REACT_APP_BACKEND_URL}/api/suggest-products`;
         console.log("excludeProductIds: ", excludeProductIds);
+
         const res = await axios.get(url, {
           params: {
             user_id: user.user_id,
             excludeProductIds: excludeProductIds,
-            limit: 28,
+            randomSub: randomSubCategories,
+            limit: 18,
           },
         });
         if (res.status === 200) {
           const newProducts = res.data.data;
+          const randomSub = res.data.randomSubCats;
           console.log("totalPages: ", res.data.totalPages);
           const updatedListSuggest = [...listSuggest, ...newProducts];
           dispatch({ type: "SET_LIST_SUGGEST", payload: updatedListSuggest });
           const newProductIds = newProducts.map(
             (product) => product.product_id
           );
+          if (isGetSubFirst === false) {
+            const updatedRandomSubIds = [
+              ...new Set([...randomSubCategories, ...randomSub]),
+            ];
+            dispatch({
+              type: "SET_RANDOM_SUB_CATEGORIES",
+              payload: updatedRandomSubIds,
+            });
+            dispatch({ type: "SET_IS_GET_SUB_FIRST", payload: true });
+          }
 
           // Loại bỏ các product_id trùng lặp
           const updatedExcludeProductIds = [
             ...new Set([...excludeProductIds, ...newProductIds]), // Dùng Set để loại bỏ trùng lặp
           ];
+
           dispatch({
             type: "SET_EXCLUDE_PRODUCT_IDS",
             payload: updatedExcludeProductIds,
@@ -94,7 +119,8 @@ const SuggestProduct = () => {
         {!loading &&
           Array.isArray(listSuggest) &&
           listSuggest.length > 0 &&
-          totalPage > 1 && (
+          totalPage > 1 &&
+          listSuggest.length < 78 && (
             <div className="w-full flex justify-center items-center">
               <Button
                 size="large"

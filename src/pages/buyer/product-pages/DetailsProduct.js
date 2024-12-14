@@ -81,14 +81,12 @@ const DetailsProduct = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/product-details/${id}?user_id=${user?.user_id}`
         );
-        console.log("Varient: ", res.data.product);
         const startTime = moment.tz(
           res.data.product?.ShopRegisterFlashSales?.[0]?.FlashSaleTimeFrame
             ?.started_at,
@@ -99,12 +97,12 @@ const DetailsProduct = () => {
             ?.ended_at,
           "Asia/Ho_Chi_Minh"
         );
-        console.log("Start time: ", startTime.format("YYYY-MM-DD HH:mm:ss"));
-        console.log("End time: ", endedTime.format("YYYY-MM-DD HH:mm:ss"));
-        console.log(
-          "Current time: ",
-          moment.tz(new Date(), "Asia/Ho_Chi_Minh")
-        );
+        // console.log("Start time: ", startTime.format("YYYY-MM-DD HH:mm:ss"));
+        // console.log("End time: ", endedTime.format("YYYY-MM-DD HH:mm:ss"));
+        // console.log(
+        //   "Current time: ",
+        //   moment.tz(new Date(), "Asia/Ho_Chi_Minh")
+        // );
         const currentTime = moment.tz(new Date(), "Asia/Ho_Chi_Minh");
         if (currentTime.isBetween(startTime, endedTime)) {
           setTime({
@@ -146,7 +144,7 @@ const DetailsProduct = () => {
     if (id) {
       fetchProductDetails();
     }
-  }, [id]);
+  }, [id, user]);
   useEffect(() => {
     const fetchProductReviews = async () => {
       try {
