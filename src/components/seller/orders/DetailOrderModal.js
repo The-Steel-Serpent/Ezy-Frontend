@@ -2,6 +2,7 @@ import { Button, Col, message, Modal, Popconfirm, Row, Select, Table } from 'ant
 import React, { useEffect, useReducer } from 'react'
 import { getDistricts, getProvinces, getWards } from '../../../services/ghnService';
 import { FaCopy } from "react-icons/fa";
+import dayjs from 'dayjs';
 const { Option } = Select;
 const DetailOrderModal = ({ visible, onCancel, order }) => {
 
@@ -132,9 +133,18 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
                     <Row gutter={12}>
                         {
                             order.order_code !== null && (
-                                <Col span={12}className="flex gap-3 text-lg">
+                                <Col span={12} className="flex gap-3 text-lg">
                                     <span className='font-semibold'>Mã vận đơn</span>: {order.order_code}
-                                    <FaCopy onClick={handleCopy} size={20} className="cursor-pointer text-primary"  />
+                                    <FaCopy onClick={handleCopy} size={20} className="cursor-pointer text-primary" />
+                                </Col>
+                            )
+                        }
+                    </Row>
+                    <Row gutter={12}>
+                        {
+                            order.created_at !== null && (
+                                <Col span={12} className="flex gap-3 text-lg">
+                                    <span className='font-semibold'>Ngày tạo đơn</span>: {dayjs(order.created_at).format('DD/MM/YYYY')}
                                 </Col>
                             )
                         }
