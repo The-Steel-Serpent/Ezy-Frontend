@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react';
 import { Line, Bar } from 'react-chartjs-2';
-import { DatePicker } from 'antd';
+import { Button, DatePicker } from 'antd';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -12,6 +12,8 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 // Register Chart.js components
 ChartJS.register(
@@ -95,7 +97,89 @@ const RevenueStatistic = () => {
         dispatch({ type: 'SET_START_DATE', payload: startDate });
         dispatch({ type: 'SET_END_DATE', payload: endDate });
     };
+    const handleExportExcel = async () => {
+        const mapColumn = {
+            day: 'Ngày',
+            month: 'Tháng',
+            year: 'Năm',
+            total_revenue: 'Doanh thu',
+        };
 
+        // Check if revenue data is available
+        if (!state.revenueData || !state.revenueData.revenueByDay) {
+            console.error('No revenue data available to export.');
+            alert('Không có dữ liệu để xuất Excel.');
+            return;
+        }
+
+        const data = state.revenueData.revenueByDay.map(item => ({
+            ...item,
+            total_revenue: item.total_revenue * 0.04, // Doanh thu sàn 4%
+        }));
+
+        // Create workbook and worksheet
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Bảng thống kê doanh thu sàn');
+
+        // Add title
+        worksheet.mergeCells('A1:D1');
+        const titleCell = worksheet.getCell('A1');
+        titleCell.value = 'Bảng thống kê doanh thu sàn';
+        titleCell.font = { size: 20, bold: true };
+        titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+        titleCell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' },
+        };
+        worksheet.getRow(1).height = 30;
+
+        // Add header
+        worksheet.addRow([mapColumn.day, mapColumn.month, mapColumn.year, mapColumn.total_revenue]);
+        const headerRow = worksheet.getRow(2);
+        headerRow.font = { bold: true };
+        headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+        headerRow.eachCell(cell => {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' },
+            };
+        });
+
+        // Add data
+        data.forEach(item => {
+            const row = worksheet.addRow([item.day, item.month, item.year, item.total_revenue]);
+            row.eachCell(cell => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' },
+                };
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            });
+        });
+
+        // Add auto-filter
+        const totalRows = data.length + 2;
+        worksheet.autoFilter = `A2:D${totalRows}`;
+
+        // Set column widths
+        worksheet.columns = [
+            { key: 'day', width: 15 },
+            { key: 'month', width: 15 },
+            { key: 'year', width: 15 },
+            { key: 'total_revenue', width: 20 },
+        ];
+
+        // Export file
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, 'doanh-thu-san.xlsx');
+    };
     useEffect(() => {
         if (!state.startDate || !state.endDate) {
             const now = new Date();
@@ -122,7 +206,7 @@ const RevenueStatistic = () => {
                 data: revenueByDay.map((data) => data.platform_revenue),
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                tension: 0.4,
+                tension: 0.2,
             },
         ],
     };
@@ -135,7 +219,7 @@ const RevenueStatistic = () => {
                 data: revenueByWeek.map((data) => data.platform_revenue),
                 borderColor: 'rgba(75, 192, 192, 1)',
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.4,
+                tension: 0.2,
             },
         ],
     };
@@ -148,7 +232,7 @@ const RevenueStatistic = () => {
                 data: revenueByMonth.map((data) => data.platform_revenue),
                 borderColor: 'rgba(255, 99, 132, 1)',
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                tension: 0.4,
+                tension: 0.2,
             },
         ],
     };
@@ -161,7 +245,7 @@ const RevenueStatistic = () => {
                 data: revenueByYear.map((data) => data.platform_revenue),
                 borderColor: 'rgba(153, 102, 255, 1)',
                 backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                tension: 0.4,
+                tension: 0.2
             },
         ],
     };
@@ -184,14 +268,23 @@ const RevenueStatistic = () => {
         <div className="p-8 bg-gray-100 rounded-lg shadow-md space-y-6">
             <div className="text-center">
                 <h3 className="text-3xl font-bold text-blue-600">Thống kê doanh thu sàn</h3>
-                <div className="mt-4">
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                     <RangePicker
                         format="YYYY-MM-DD"
                         onChange={onChangeDatePicker}
-                        className="w-full max-w-lg mx-auto"
+                        placeholder={['Ngày bắt đầu', 'Ngày kết thúc']}
+                        className="w-full max-w-lg"
                     />
+                    <Button
+                        onClick={() => handleExportExcel()}
+                        disabled={!state.revenueData || !state.revenueData.revenueByDay}
+                        className="bg-blue-500 text-white hover:bg-blue-600 transition"
+                    >
+                        Xuất Excel
+                    </Button>
                 </div>
             </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white rounded-lg shadow-md p-4">

@@ -250,11 +250,12 @@ const Statistics = () => {
     return (
         <div className="p-8 bg-gray-100 rounded-lg shadow-md space-y-6">
             <div className="text-center">
-                <h3 className="text-3xl font-bold text-blue-600">Thống kê doanh thu và sản phẩm</h3>
+                <h3 className="text-3xl font-bold text-blue-600">Hiệu xuất những ngày gần đây</h3>
                 <div className="mt-4">
                     <RangePicker
                         format="YYYY-MM-DD"
                         onChange={onDateRangeChange}
+                        placeholder={['Ngày bắt đầu', 'Ngày kết thúc']}
                         className="w-full max-w-lg mx-auto"
                     />
                 </div>
@@ -282,7 +283,7 @@ const Statistics = () => {
             </div>
 
             <div className="mt-6 bg-white rounded-lg shadow-md p-4">
-                <h4 className="text-xl font-semibold text-center">Sản phẩm bán chạy nhất</h4>
+                <h4 className="text-xl font-semibold text-center">Phận loại sản phẩm bán chạy nhất</h4>
                 <div className="h-[500px]">
                     <Pie id="productVariantChart" data={productVariantData} options={chartOptions} />
                 </div>
