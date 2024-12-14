@@ -355,7 +355,28 @@ const RightChatBox = (props) => {
       }
     }
   };
-
+  const reportConversationForShop = (props) => {
+    <Menu
+      className="hover-dropdown"
+      style={{ padding: "16px", width: "215px" }}
+    >
+      <Menu.Item style={{ padding: "0px" }}>
+        <div className="flex justify-start items-center gap-3 cursor-default">
+          <img className="size-8 rounded-full" src={props.img} />
+          <span className="text-base">{props.name}</span>
+        </div>
+      </Menu.Item>
+      <Menu.Item style={{ padding: "8px 0px", marginTop: "4px" }}>
+        <div
+          className="w-full flex justify-between items-center"
+          onClick={handleOpenModalReport}
+        >
+          <span className="text-xs text-[#333]">Tố cáo người dùng</span>
+          <FaAngleRight className="text-[#999]" />
+        </div>
+      </Menu.Item>
+    </Menu>;
+  };
   const conversationDropdownItems = (props) => (
     <Menu
       className="hover-dropdown"
@@ -376,18 +397,22 @@ const RightChatBox = (props) => {
           <FaAngleRight className="text-[#999]" />
         </div>
       </Menu.Item>
-      <Menu.Item style={{ padding: "0px" }}>
-        <Divider className="mt-2 mb-0" />
-      </Menu.Item>
-      <Menu.Item style={{ padding: "8px 0px" }}>
-        <div
-          className="w-full flex justify-between items-center"
-          onClick={() => (window.location.href = `/shop/${props.username}`)}
-        >
-          <span className="text-xs text-[#333]">Xem thông tin cá nhân</span>
-          <FaAngleRight className="text-[#999]" />
-        </div>
-      </Menu.Item>
+      {user?.role_id === 1 && (
+        <>
+          <Menu.Item style={{ padding: "0px" }}>
+            <Divider className="mt-2 mb-0" />
+          </Menu.Item>
+          <Menu.Item style={{ padding: "8px 0px" }}>
+            <div
+              className="w-full flex justify-between items-center"
+              onClick={() => (window.location.href = `/shop/${props.username}`)}
+            >
+              <span className="text-xs text-[#333]">Xem thông tin cá nhân</span>
+              <FaAngleRight className="text-[#999]" />
+            </div>
+          </Menu.Item>
+        </>
+      )}
     </Menu>
   );
   return (
@@ -482,7 +507,8 @@ const RightChatBox = (props) => {
         {dataUser?.user_id && (
           <div className="conversation">
             <div className="flex justify-start items-center h-full pl-3">
-              {dataUser.role_id === 2 ? (
+              {dataUser.role_id === 2 ||
+              (dataUser.role_id === 1 && user?.role_id === 2) ? (
                 <>
                   <Dropdown
                     overlay={conversationDropdownItems({
