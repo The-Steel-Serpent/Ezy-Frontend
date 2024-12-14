@@ -2,7 +2,7 @@ import React, { useEffect, useReducer } from 'react';
 import { useSelector } from 'react-redux';
 import { getBestSellerShop, getSalesRevenue } from '../../../services/statisticService';
 import { Line, Bar } from 'react-chartjs-2';
-import { DatePicker } from 'antd';
+import { Button, DatePicker } from 'antd';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -15,7 +15,7 @@ import {
     Legend,
 } from 'chart.js';
 import BestSellerItem from './BestSellerItem';
-
+import * as XLSX from 'xlsx';
 // Register Chart.js components
 ChartJS.register(
     CategoryScale,
@@ -79,6 +79,43 @@ const SalesRevenue = () => {
         setLocalState({ type: 'SET_START_DATE', payload: startDate });
         setLocalState({ type: 'SET_END_DATE', payload: endDate });
     };
+    const handleExportExcel = () => {
+        const mapColumn = {
+            day: 'Ngày',
+            month: 'Tháng',
+            year: 'Năm',
+            total_revenue: 'Doanh thu',
+        };
+        const data = localState.sales_revenue?.revenueByDay || [];
+        const formattedData = data.map(item => ([
+            item.day,
+            item.month,
+            item.year,
+            item.total_revenue,
+        ]));
+
+        // Thêm hàng tiêu đề và header
+        const title = [["Bảng thống kê doanh thu"]];
+        const header = [mapColumn.day, mapColumn.month, mapColumn.year, mapColumn.total_revenue];
+        const wsData = title.concat([header], formattedData);
+
+        // Convert dữ liệu thành worksheet
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // Định nghĩa phạm vi dữ liệu (bao gồm cả title)
+        const totalRows = wsData.length;
+        ws['!ref'] = `A1:D${totalRows}`;
+
+        // Chỉ định auto-filter cho phần header và dữ liệu (bỏ qua title)
+        ws['!autofilter'] = { ref: `A2:D${totalRows}` };
+
+        // Tạo workbook và xuất file
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Thống kê doanh thu bán hàng');
+        XLSX.writeFile(wb, 'doanh-thu-ban-hang.xlsx');
+    };
+
+
 
     const dailyRevenue = localState.sales_revenue?.revenueByDay || [];
     const weeklyRevenue = (localState.sales_revenue?.revenueByWeek || []).filter((data) => data.week !== 0);
@@ -168,6 +205,7 @@ const SalesRevenue = () => {
                 let salesRevenue;
                 if (localState.start_date && localState.end_date) {
                     salesRevenue = await handleGetSalesRevenue(shop.shop_id, localState.start_date, localState.end_date);
+                    console.log('salesRevenue', salesRevenue);
                 } else {
                     salesRevenue = await handleGetSalesRevenue(shop.shop_id);
                 }
@@ -182,24 +220,32 @@ const SalesRevenue = () => {
         <div className="p-8 bg-gray-100 rounded-lg shadow-xl space-y-6">
             <div className="text-center">
                 <h3 className="text-3xl font-bold text-blue-600">Thống kê doanh thu bán hàng</h3>
-                <div className="mt-6">
+                <div className="mt-6 flex gap-2 justify-center">
                     <RangePicker
                         format={'YYYY-MM-DD'}
                         placeholder={['Ngày bắt đầu', 'Ngày kết thúc']}
                         onChange={onChangeDatePicker}
-                        className="w-full max-w-lg mx-auto"
+                        className="w-full max-w-lg"
                     />
+                    <Button
+                        onClick={() => handleExportExcel()}
+                    >
+                        Xuất Excel
+                    </Button>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Monthly Revenue */}
-                <div className="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-                    <h2 className="text-xl font-semibold text-gray-700 text-center py-4">Doanh thu tháng</h2>
+                <div className="flex flex-col bg-white rounded-lg shadow-md">
+                    <h2 className="text-xl font-semibold text-gray-700 text-center col-span-2 py-4">
+                        Doanh thu tháng
+                    </h2>
                     <div className="h-[400px] px-6 py-4 bg-gray-50">
                         <Line data={monthlyData} options={options} />
                     </div>
                 </div>
+
 
                 {/* Yearly Revenue */}
                 <div className="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
