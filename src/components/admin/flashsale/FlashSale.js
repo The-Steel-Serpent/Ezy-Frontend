@@ -71,7 +71,7 @@ const FlashSale = () => {
       key: 'action',
       render: (text, record) => (
         <>
-          {record.status !== 'ended' && (
+          {record.status !== 'ended' && record.status != 'active' && (
             <>
               <Button
                 icon={<EditOutlined />}
