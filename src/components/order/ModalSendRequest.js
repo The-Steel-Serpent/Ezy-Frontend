@@ -111,6 +111,7 @@ const ModalSendRequest = (props) => {
       note: localState.note,
       ghn_status: order.ghn_status,
     };
+    console.log("payload", payload);
     try {
       const res = await sendRequest(payload);
       if (res.success) {

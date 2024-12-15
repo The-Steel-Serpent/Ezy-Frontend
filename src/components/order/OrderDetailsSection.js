@@ -310,6 +310,7 @@ const OrderDetailsSection = () => {
     try {
       const response = await getOrderDetails(order_id);
       if (response.success) {
+        console.log("response", response);
         setLocalState({
           type: "SET_ORDER_DETAILS",
           payload: response.order,
@@ -597,8 +598,7 @@ const OrderDetailsSection = () => {
                         size="large"
                         className={
                           localState.orderDetails?.ghn_status !== "picked" &&
-                          localState.orderDetails?.return_request_status ===
-                            0 &&
+                          localState.orderDetails?.ReturnRequest === null &&
                           "bg-primary text-white hover:opacity-80"
                         }
                         onClick={() =>
@@ -606,18 +606,21 @@ const OrderDetailsSection = () => {
                         }
                         disabled={
                           localState.orderDetails?.ghn_status === "picked" ||
-                          localState.orderDetails?.return_request_status ===
+                          localState.orderDetails?.ReturnRequest?.status_id ===
                             1 ||
-                          localState.orderDetails?.return_request_status ===
+                          localState.orderDetails?.ReturnRequest?.status_id ===
                             2 ||
-                          localState.orderDetails?.return_request_status === 3
+                          localState.orderDetails?.ReturnRequest?.status_id ===
+                            3
                         }
                       >
-                        {localState.orderDetails?.return_request_status === 0
+                        {localState.orderDetails?.ReturnRequest === null
                           ? "Yêu Cầu Hủy Đơn"
-                          : localState.orderDetails?.return_request_status === 1
+                          : localState.orderDetails?.ReturnRequest
+                              ?.status_id === 1
                           ? "Đã Gửi Yêu Cầu"
-                          : localState.orderDetails?.return_request_status === 2
+                          : localState.orderDetails?.ReturnRequest
+                              ?.status_id === 2
                           ? "Chận Nhận Yêu Cầu"
                           : "Từ Chối Yêu Cầu"}
                       </Button>
@@ -653,31 +656,30 @@ const OrderDetailsSection = () => {
                           <Button
                             size="large"
                             className={
-                              localState.orderDetails?.return_request_status ===
-                                0 &&
+                              localState.orderDetails?.ReturnRequest === null &&
                               "bg-secondary border-secondary text-white hover:opacity-80"
                             }
                             onClick={() =>
                               handleOpenModalSendRequest("refund-request")
                             }
                             disabled={
-                              localState.orderDetails?.return_request_status ===
-                                1 ||
-                              localState.orderDetails?.return_request_status ===
-                                2 ||
-                              localState.orderDetails?.return_request_status ===
-                                3 ||
+                              localState.orderDetails?.ReturnRequest
+                                ?.status_id === 1 ||
+                              localState.orderDetails?.ReturnRequest
+                                ?.status_id === 2 ||
+                              localState.orderDetails?.ReturnRequest
+                                ?.status_id === 3 ||
                               !currentDate.isBefore(returnDate)
                             }
                           >
                             {localState.orderDetails?.return_request_status ===
                             0
                               ? "Yêu Cầu Trả Hàng"
-                              : localState.orderDetails
-                                  ?.return_request_status === 1
+                              : localState.orderDetails?.ReturnRequest
+                                  ?.status_id === 1
                               ? "Đã Gửi Yêu Cầu"
-                              : localState.orderDetails
-                                  ?.return_request_status === 2
+                              : localState.orderDetails?.ReturnRequest
+                                  ?.status_id === 2
                               ? "Chận Nhận Yêu Cầu"
                               : "Từ Chối Yêu Cầu"}
                           </Button>
@@ -720,31 +722,29 @@ const OrderDetailsSection = () => {
                           <Button
                             size="large"
                             className={
-                              localState.orderDetails?.return_request_status ===
-                                0 &&
+                              localState.orderDetails?.ReturnRequest === null &&
                               "bg-secondary border-secondary text-white hover:opacity-80"
                             }
                             onClick={() =>
                               handleOpenModalSendRequest("refund-request")
                             }
                             disabled={
-                              localState.orderDetails?.return_request_status ===
-                                1 ||
-                              localState.orderDetails?.return_request_status ===
-                                2 ||
-                              localState.orderDetails?.return_request_status ===
-                                3 ||
+                              localState.orderDetails?.ReturnRequest
+                                ?.status_id === 1 ||
+                              localState.orderDetails?.ReturnRequest
+                                ?.status_id === 2 ||
+                              localState.orderDetails?.ReturnRequest
+                                ?.status_id === 3 ||
                               !currentDate.isBefore(returnDate)
                             }
                           >
-                            {localState.orderDetails?.return_request_status ===
-                            0
+                            {localState.orderDetails?.ReturnRequest === null
                               ? "Yêu Cầu Trả Hàng"
-                              : localState.orderDetails
-                                  ?.return_request_status === 1
+                              : localState.orderDetails?.ReturnRequest
+                                  ?.status_id === 1
                               ? "Đã Gửi Yêu Cầu"
-                              : localState.orderDetails
-                                  ?.return_request_status === 2
+                              : localState.orderDetails?.ReturnRequest
+                                  ?.status_id === 2
                               ? "Chận Nhận Yêu Cầu"
                               : "Từ Chối Yêu Cầu"}
                           </Button>

@@ -499,22 +499,22 @@ const OrderItem = (props) => {
                   size="large"
                   className={
                     order?.ghn_status !== "picked" &&
-                    order?.return_request_status === 0 &&
+                    order?.ReturnRequest === null &&
                     "bg-primary text-white hover:opacity-80"
                   }
                   onClick={() => handleOpenModalSendRequest("cancel-request")}
                   disabled={
                     order?.ghn_status === "picked" ||
-                    order?.return_request_status === 1 ||
-                    order?.return_request_status === 2 ||
-                    order?.return_request_status === 3
+                    order?.ReturnRequest?.status_id === 1 ||
+                    order?.ReturnRequest?.status_id === 2 ||
+                    order?.ReturnRequest?.status_id === 3
                   }
                 >
-                  {order?.return_request_status === 0
+                  {order?.ReturnRequest === null
                     ? "Yêu Cầu Hủy Đơn"
-                    : order?.return_request_status === 1
+                    : order?.ReturnRequest?.status_id === 1
                     ? "Đã Gửi Yêu Cầu"
-                    : order?.return_request_status === 2
+                    : order?.ReturnRequest?.status_id === 2
                     ? "Chận Nhận Yêu Cầu"
                     : "Từ Chối Yêu Cầu"}
                 </Button>
@@ -547,24 +547,24 @@ const OrderItem = (props) => {
                     <Button
                       size="large"
                       className={
-                        order?.return_request_status === 0 &&
+                        order?.ReturnRequest === null &&
                         "bg-secondary border-secondary text-white hover:opacity-80"
                       }
                       onClick={() =>
                         handleOpenModalSendRequest("refund-request")
                       }
                       disabled={
-                        order?.return_request_status === 1 ||
-                        order?.return_request_status === 2 ||
-                        order?.return_request_status === 3 ||
+                        order?.ReturnRequest?.status_id === 1 ||
+                        order?.ReturnRequest?.status_id === 2 ||
+                        order?.ReturnRequest?.status_id === 3 ||
                         !currentDate.isBefore(returnDate)
                       }
                     >
-                      {order?.return_request_status === 0
+                      {order?.ReturnRequest === null
                         ? "Yêu Cầu Trả Hàng"
-                        : order?.return_request_status === 1
+                        : order?.ReturnRequest?.status_id === 1
                         ? "Đã Gửi Yêu Cầu"
-                        : order?.return_request_status === 2
+                        : order?.ReturnRequest?.status_id === 1
                         ? "Chận Nhận Yêu Cầu"
                         : "Từ Chối Yêu Cầu"}
                     </Button>
@@ -602,24 +602,24 @@ const OrderItem = (props) => {
                     <Button
                       size="large"
                       className={
-                        order?.return_request_status === 0 &&
+                        order?.ReturnRequest === null &&
                         "bg-secondary border-secondary text-white hover:opacity-80"
                       }
                       onClick={() =>
                         handleOpenModalSendRequest("refund-request")
                       }
                       disabled={
-                        order?.return_request_status === 1 ||
-                        order?.return_request_status === 2 ||
-                        order?.return_request_status === 3 ||
+                        order?.ReturnRequest?.status_id === 1 ||
+                        order?.ReturnRequest?.status_id === 2 ||
+                        order?.ReturnRequest?.status_id === 3 ||
                         !currentDate.isBefore(returnDate)
                       }
                     >
-                      {order?.return_request_status === 0
+                      {order?.ReturnRequest === null
                         ? "Yêu Cầu Trả Hàng"
-                        : order?.return_request_status === 1
+                        : order?.ReturnRequest?.status_id === 1
                         ? "Đã Gửi Yêu Cầu"
-                        : order?.return_request_status === 2
+                        : order?.ReturnRequest?.status_id === 2
                         ? "Chận Nhận Yêu Cầu"
                         : "Từ Chối Yêu Cầu"}
                     </Button>

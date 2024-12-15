@@ -57,6 +57,7 @@ const AuthLayout = ({ children }) => {
     } catch (error) {
       if (error.response.data.code === "auth/id-token-expired") {
         message.error("Phiên Đăng nhập đã hết hạn");
+        localStorage.removeItem("sessionToken");
       }
     }
   }, [dispatch]);
@@ -110,6 +111,7 @@ const AuthLayout = ({ children }) => {
         switch (error.response.status) {
           case 500:
             message.error("Phiên Đăng nhập đã hết hạn");
+            localStorage.removeItem("sessionToken");
             break;
           default:
             break;
@@ -127,6 +129,9 @@ const AuthLayout = ({ children }) => {
 
   useEffect(() => {
     const handleCheckSession = async (userId) => {
+      if (localStorage.getItem("sessionToken") === null) {
+        return true;
+      }
       const isSessionValid = await checkSession(userId);
 
       if (isSessionValid) {
