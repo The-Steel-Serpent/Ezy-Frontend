@@ -3,7 +3,7 @@ import { Modal, Table, message } from 'antd';
 import axios from 'axios';
 
 const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
-    const [products, setProducts] = useState([]);
+    const [timeFrames, setTimeFrames] = useState([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -17,10 +17,10 @@ const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/flash-sales/get-shop-registered-products/${id}`);
             if (response.data.success) {
-                setProducts(response.data.data);
+                setTimeFrames(response.data.data);
             } else {
                 message.error('Không thể tải dữ liệu sản phẩm đã đăng ký');
-                setProducts([]);
+                setTimeFrames([]);
             }
         } catch (error) {
             message.warning('Không có sản phẩm đăng ký nào');
@@ -31,11 +31,10 @@ const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
     };
 
     const handleModalClose = () => {
-        setProducts([]); // Reset danh sách sản phẩm để tránh hiển thị dữ liệu cũ
-        onClose(); // Đóng modal
+        setTimeFrames([]);
+        onClose();
     };
-
-    const columns = [
+    const productColumns = [
         {
             title: 'Mã sản phẩm',
             dataIndex: ['product', 'product_id'],
@@ -50,7 +49,7 @@ const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
             title: 'Ảnh sản phẩm',
             dataIndex: ['product', 'thumbnail'],
             key: 'thumbnail',
-            render: (text) => <img src={text} alt="Product Thumbnail" style={{ width: 50, height: 50 }} />,
+            render: (text) => text ? <img src={text} alt="Thumbnail" style={{ width: 50, height: 50 }} /> : 'N/A',
         },
         {
             title: 'Tên shop',
@@ -59,25 +58,60 @@ const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
         },
         {
             title: 'Giá gốc',
-            dataIndex: ['flash_sale_details', 'original_price'],
-            key: 'original_price',
-            render: (text) => `${text.toLocaleString()} VND`,
+            dataIndex: ['product', 'base_price'],
+            key: 'base_price',
+            render: (text) => (
+                <span className="no-wrap">{text ? `${text.toLocaleString()} VND` : 'N/A'}</span>
+            ),
         },
         {
             title: 'Giá sale',
-            dataIndex: ['flash_sale_details', 'flash_sale_price'],
+            dataIndex: 'product',
             key: 'flash_sale_price',
-            render: (text) => `${text.toLocaleString()} VND`,
+            render: (_, record) => (
+                <span className="no-wrap">
+                    {record.product.flash_sale_price 
+                        ? `${record.product.flash_sale_price.toLocaleString()} VND` 
+                        : 'N/A'}
+                </span>
+            ),
         },
         {
             title: 'Số lượng',
-            dataIndex: ['flash_sale_details', 'quantity'],
+            dataIndex: 'quantity',
             key: 'quantity',
         },
         {
             title: 'Đã bán',
-            dataIndex: ['flash_sale_details', 'sold'],
+            dataIndex: 'product',
             key: 'sold',
+            render: (_, record) => record.product.sold || 0,
+        },
+    ];
+
+    const expandedRowRender = (timeFrame) => {
+        return (
+            <Table
+                columns={productColumns}
+                dataSource={timeFrame.registered_products}
+                rowKey={(record) => `${record.product.product_id}-${record.shop.shop_id}`}
+                pagination={false}
+            />
+        );
+    };
+
+    const parentColumns = [
+        {
+            title: 'Khung giờ',
+            key: 'time_frame_id',
+            render: (record) => (
+                <div>
+                    <p><b>ID:</b> {record.time_frame_id}</p>
+                    <p><b>Bắt đầu:</b> {new Date(record.started_at).toLocaleString()}</p>
+                    <p><b>Kết thúc:</b> {new Date(record.ended_at).toLocaleString()}</p>
+                    <p><b>Trạng thái:</b> {record.status}</p>
+                </div>
+            ),
         },
     ];
 
@@ -87,14 +121,17 @@ const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
             visible={visible}
             onCancel={handleModalClose}
             footer={null}
-            width={1200}
+            width={1250}
         >
             <Table
-                columns={columns}
-                dataSource={products}
-                rowKey={(record) => `${record.product.product_id}-${record.shop.shop_id}`}
+                columns={parentColumns}
+                expandable={{
+                    expandedRowRender,
+                }}
+                dataSource={timeFrames}
+                rowKey={(record) => record.time_frame_id}
                 loading={loading}
-                pagination={{ pageSize: 5 }}
+                pagination={false}
             />
         </Modal>
     );

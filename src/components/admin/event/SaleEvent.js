@@ -179,7 +179,12 @@ const SaleEvent = () => {
             title: 'Hành động',
             key: 'action',
             render: (text, record) => (
-                <>
+                <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                    justifyContent: 'center',
+                }}>
                     <Button
                         type="primary"
                         onClick={() => handleOpenSettingModal(record.sale_events_id)}
@@ -192,14 +197,12 @@ const SaleEvent = () => {
                     <Button
                         type="primary"
                         onClick={() => handleOpenDetailModal(record.sale_events_id)}
-                        style={{ marginLeft: '8px' }}
                     >
                         Chi tiết
                     </Button>
                     <Button
                         type="primary"
                         onClick={() => handleOpenEditModal(record.sale_events_id)}
-                        style={{ marginLeft: '8px' }}
                         disabled={
                             record.sale_events_id !== 1 && (record.is_actived || new Date(record.ended_at) < new Date())
                         }
@@ -210,11 +213,13 @@ const SaleEvent = () => {
                         type="primary"
                         danger
                         onClick={() => handleDeleteEvent(record.sale_events_id)}
-                        style={{ marginLeft: '8px' }}
+                        disabled={
+                            record.sale_events_id == 1
+                        }
                     >
                         Xóa
                     </Button>
-                </>
+                </div>
             ),
         }
 

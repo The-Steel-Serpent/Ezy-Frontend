@@ -4,7 +4,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FieldTimeOutlined, ProductOutlined } from '@ant-design/icons';
 import AddFlashSale from './AddFlashSale';
 import EditFlashSale from './EditFlashSale';
 import ManageTimeFrames from './ManageTimeFrames';
@@ -70,17 +70,19 @@ const FlashSale = () => {
       title: 'Hành động',
       key: 'action',
       render: (text, record) => (
-        <>
-          {record.status !== 'ended' && record.status != 'active' && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+          {record.status !== 'ended' && record.status !== 'active' && (
             <>
               <Button
                 icon={<EditOutlined />}
                 onClick={() => showEditFlashSaleModal(record)}
-                style={{ marginRight: 8 }}
               >
                 Chỉnh sửa
               </Button>
-              <Button onClick={() => showTimeFramesModal(record)} style={{ marginRight: 8 }}>
+              <Button 
+                onClick={() => showTimeFramesModal(record)}
+                icon={<FieldTimeOutlined />}
+              >
                 Quản lý khung giờ
               </Button>
               <Popconfirm
@@ -91,20 +93,24 @@ const FlashSale = () => {
               >
                 <Button
                   icon={<DeleteOutlined />}
-                  style={{ backgroundColor: 'red', color: 'white', borderColor: 'red', marginTop: '8px' }}
-                  disabled={record.status === 'ended'}
+                  style={{ backgroundColor: 'red', color: 'white', borderColor: 'red' }}
                 >
                   Xóa
                 </Button>
               </Popconfirm>
             </>
           )}
-          <Button onClick={() => showRegisteredProductsModal(record.flash_sales_id)} style={{ marginRight: 8, marginTop: 5 }}>
+          <Button 
+            style={{ display: 'flex', alignItems: 'center' }}
+            onClick={() => showRegisteredProductsModal(record.flash_sales_id)}
+            icon={<ProductOutlined />}
+          >
             Sản phẩm đăng ký
           </Button>
-        </>
+        </div>
       ),
     },
+    
   ];
 
   const fetchData = async () => {
