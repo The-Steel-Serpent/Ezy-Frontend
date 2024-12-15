@@ -1,91 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Table, message } from 'antd';
 import axios from 'axios';
-import dayjs from 'dayjs';
 
 const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
     const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (visible && flashSaleId) {
-            fetchRegisteredProducts();
+            fetchRegisteredProducts(flashSaleId);
         }
     }, [visible, flashSaleId]);
 
-    const fetchRegisteredProducts = async () => {
+    const fetchRegisteredProducts = async (id) => {
+        setLoading(true);
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/flash-sales/get-shop-registered-products/${flashSaleId}`);
-            console.log("API response:", response.data); 
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/flash-sales/get-shop-registered-products/${id}`);
             if (response.data.success) {
                 setProducts(response.data.data);
-                console.log("Products set:", response.data.data);
             } else {
                 message.error('Không thể tải dữ liệu sản phẩm đã đăng ký');
+                setProducts([]);
             }
         } catch (error) {
-            //message.error('Lỗi khi tải dữ liệu sản phẩm đã đăng ký');
+            message.warning('Không có sản phẩm đăng ký nào');
             console.error("Error fetching registered products:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
-
-    useEffect(() => {
-        console.log("Products data in render:", products); 
-    }, [products]);
-
+    const handleModalClose = () => {
+        setProducts([]); // Reset danh sách sản phẩm để tránh hiển thị dữ liệu cũ
+        onClose(); // Đóng modal
+    };
 
     const columns = [
         {
             title: 'Mã sản phẩm',
-            dataIndex: ['Product', 'product_id'],
+            dataIndex: ['product', 'product_id'],
             key: 'product_id',
         },
         {
             title: 'Tên sản phẩm',
-            dataIndex: ['Product', 'product_name'],
+            dataIndex: ['product', 'product_name'],
             key: 'product_name',
         },
         {
             title: 'Ảnh sản phẩm',
-            dataIndex: ['Product', 'thumbnail'],
+            dataIndex: ['product', 'thumbnail'],
             key: 'thumbnail',
             render: (text) => <img src={text} alt="Product Thumbnail" style={{ width: 50, height: 50 }} />,
         },
         {
             title: 'Tên shop',
-            dataIndex: ['Shop', 'shop_name'],
+            dataIndex: ['shop', 'shop_name'],
             key: 'shop_name',
         },
         {
             title: 'Giá gốc',
-            dataIndex: 'original_price',
+            dataIndex: ['flash_sale_details', 'original_price'],
             key: 'original_price',
             render: (text) => `${text.toLocaleString()} VND`,
         },
         {
             title: 'Giá sale',
-            dataIndex: 'flash_sale_price',
+            dataIndex: ['flash_sale_details', 'flash_sale_price'],
             key: 'flash_sale_price',
             render: (text) => `${text.toLocaleString()} VND`,
         },
         {
             title: 'Số lượng',
-            dataIndex: 'quantity',
+            dataIndex: ['flash_sale_details', 'quantity'],
             key: 'quantity',
         },
         {
             title: 'Đã bán',
-            dataIndex: 'sold',
+            dataIndex: ['flash_sale_details', 'sold'],
             key: 'sold',
-        },
-        {
-            title: 'Khung giờ đăng ký',
-            key: 'time_frame',
-            render: (_, record) => {
-                const startTime = dayjs(record.FlashSaleTimeFrame.started_at).format('HH:mm DD/MM/YYYY');
-                const endTime = dayjs(record.FlashSaleTimeFrame.ended_at).format('HH:mm DD/MM/YYYY');
-                return `${startTime} -> ${endTime}`;
-            },
         },
     ];
 
@@ -93,14 +85,15 @@ const RegisteredProducts = ({ visible, onClose, flashSaleId }) => {
         <Modal
             title="Danh sách sản phẩm đã đăng ký vào Flash Sale"
             visible={visible}
-            onCancel={onClose}
+            onCancel={handleModalClose}
             footer={null}
             width={1200}
         >
             <Table
                 columns={columns}
                 dataSource={products}
-                rowKey={(record) => `${record.Product.product_id}-${record.FlashSaleTimeFrame.flash_sale_time_frame_id}`}
+                rowKey={(record) => `${record.product.product_id}-${record.shop.shop_id}`}
+                loading={loading}
                 pagination={{ pageSize: 5 }}
             />
         </Modal>
