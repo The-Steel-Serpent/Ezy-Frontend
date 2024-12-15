@@ -171,7 +171,7 @@ const ConfirmOrderModal = ({ visible, onCancel, order, handleReLoad }) => {
 
             }
             else {
-                message.error("Xác nhận đơn hàng thất bại");
+                message.error(comfirmOrderResult?.message || "Xác nhận đơn hàng thất bại");
             }
         }
         setModalState({ type: "SET_CONFIRM_LOADING", payload: false });

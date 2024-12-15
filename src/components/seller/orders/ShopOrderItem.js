@@ -83,16 +83,7 @@ const ShopOrderItem = (props) => {
 
     const statusEnableReturn = [
         "ready_to_pick",
-        "picking",
-        "money_collect_picking",
-        "picked",
-        "storing",
-        "transporting",
-        "sorting",
-        "delivering",
-        "transporting",
-        "transporting",
-        "delivery_fail",
+        "picking"
     ]
 
     const handleCancelOrder = async () => {
