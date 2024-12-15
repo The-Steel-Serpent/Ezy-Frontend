@@ -70,18 +70,20 @@ const FlashSale = () => {
       title: 'Hành động',
       key: 'action',
       render: (text, record) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
           {record.status !== 'ended' && record.status !== 'active' && (
             <>
               <Button
                 icon={<EditOutlined />}
+                style={{ width: '150px' }} 
                 onClick={() => showEditFlashSaleModal(record)}
               >
                 Chỉnh sửa
               </Button>
-              <Button 
-                onClick={() => showTimeFramesModal(record)}
+              <Button
                 icon={<FieldTimeOutlined />}
+                style={{ width: '150px' }} 
+                onClick={() => showTimeFramesModal(record)}
               >
                 Quản lý khung giờ
               </Button>
@@ -93,17 +95,17 @@ const FlashSale = () => {
               >
                 <Button
                   icon={<DeleteOutlined />}
-                  style={{ backgroundColor: 'red', color: 'white', borderColor: 'red' }}
+                  style={{ backgroundColor: 'red', color: 'white', borderColor: 'red', width: '150px' }} // Đặt chiều ngang cố định
                 >
                   Xóa
                 </Button>
               </Popconfirm>
             </>
           )}
-          <Button 
-            style={{ display: 'flex', alignItems: 'center' }}
-            onClick={() => showRegisteredProductsModal(record.flash_sales_id)}
+          <Button
             icon={<ProductOutlined />}
+            style={{ width: '150px' }} 
+            onClick={() => showRegisteredProductsModal(record.flash_sales_id)}
           >
             Sản phẩm đăng ký
           </Button>
