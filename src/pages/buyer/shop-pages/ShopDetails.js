@@ -17,11 +17,13 @@ import { TfiMenuAlt } from "react-icons/tfi";
 import { FaShopSlash } from "react-icons/fa6";
 import { useMessages } from "../../../providers/MessagesProvider";
 import ModalReport from "../../../components/report-user/ModalReport";
+import { useSelector } from "react-redux";
 
 const SortBar = lazy(() => import("../../../components/sorts/SortBar"));
 
 const ShopDetails = () => {
   const navigate = useNavigate();
+  const user = useSelector((state) => state.user);
   const { handleUserSelected } = useMessages();
   const query = new URLSearchParams(window.location.search);
   let sub_category_id = query.get("sub_category_id");
@@ -250,7 +252,11 @@ const ShopDetails = () => {
   );
 
   const handleOpenModalReport = () => {
-    dispatch({ type: "OPEN_MODAL_REPORT", payload: true });
+    if (!user?.user_id) {
+      navigate("/buyer/login");
+    } else {
+      dispatch({ type: "OPEN_MODAL_REPORT", payload: true });
+    }
   };
 
   const handleCloseModalReport = () => {
