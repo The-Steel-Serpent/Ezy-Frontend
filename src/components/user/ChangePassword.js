@@ -131,7 +131,13 @@ const ChangePassword = (props) => {
         if (logoutRes) {
           dispatch(logout());
           dispatch(clearCart());
-          navigate("/buyer/login");
+          if (user.role_id === 1)
+          {
+            navigate("/buyer/login");
+          }
+          else{
+            navigate("/seller/login");
+          }
           setState({ type: "loading", payload: false });
         }
       }
