@@ -1,4 +1,4 @@
-import { Button, message, notification, Popconfirm, Table } from 'antd'
+import { Button, Input, message, notification, Popconfirm, Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
 import { useSelector } from 'react-redux';
 import { acceptReturnRequest, getReturnOrder, getReturnRequest, rejectReturnRequest } from '../../../services/return_request_Service';
@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { createNotification } from '../../../services/notificationsService';
 import { set } from 'date-fns';
 import DetailOrderModal from './DetailOrderModal';
+import { CiSearch } from "react-icons/ci";
 
 const ReturnOrderTable = ({ return_type_id }) => {
     const shop = useSelector(state => state.shop);
@@ -30,6 +31,8 @@ const ReturnOrderTable = ({ return_type_id }) => {
                     return { ...state, page_size: action.payload };
                 case 'SET_TOTAL_ITEMS':
                     return { ...state, totalItems: action.payload };
+                case  'SET_SEARCH_TEXT':
+                    return { ...state, search_text: action.payload };
                 default:
                     return state;
             }
@@ -43,6 +46,7 @@ const ReturnOrderTable = ({ return_type_id }) => {
             current_page: 1,
             page_size: 8,
             totalItems: 0,
+            search_text: '',
         }
     )
 
@@ -355,12 +359,24 @@ const ReturnOrderTable = ({ return_type_id }) => {
     useEffect(() => {
         const fetchReturnRequest = async () => {
             if (shop) {
-                const payload = {
-                    shop_id: shop.shop_id,
-                    return_type_id: return_type_id,
-                    limit: localState.page_size,
-                    page: localState.current_page,
-                };
+                let payload;
+                if(localState.search_text === ''){
+                    payload = {
+                        shop_id: shop.shop_id,
+                        return_type_id: return_type_id,
+                        limit: localState.page_size,
+                        page: localState.current_page,
+                    };
+                }
+                else{
+                    payload = {
+                        shop_id: shop.shop_id,
+                        return_type_id: return_type_id,
+                        limit: localState.page_size,
+                        page: localState.current_page,
+                        user_order_id: localState.search_text,
+                    };
+                }
 
                 const return_request_result = await getReturnRequest(payload);
                 if (return_request_result.success) {
@@ -378,7 +394,8 @@ const ReturnOrderTable = ({ return_type_id }) => {
         shop,
         return_type_id,
         localState.page_size,
-        localState.current_page
+        localState.current_page,
+        localState.search_text
     ])
 
     const onChangePage = (page, pageSize) => {
@@ -386,9 +403,22 @@ const ReturnOrderTable = ({ return_type_id }) => {
         setLocalState({ type: "SET_PAGE_SIZE", payload: pageSize });
     }
 
+    const handleSearchChange = (e) => {
+        setLocalState({ type: "SET_SEARCH_TEXT", payload: e.target.value });
+    }
 
     return (
         <div className='rounded bg-white p-5'>
+            <div
+                className='mb-5 flex gap-3'>
+                <Input
+                    placeholder='Tìm kiếm bằng mã đơn hàng'
+                    value={localState.search_text}
+                    onChange={(e) => handleSearchChange(e)}
+                    prefix={<CiSearch />}
+                />
+            </div>
+
             <Table
                 columns={column}
                 dataSource={localState.data_source}
@@ -408,7 +438,7 @@ const ReturnOrderTable = ({ return_type_id }) => {
                     />
                 )
             }
-          
+
         </div>
     )
 }
