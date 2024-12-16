@@ -16,7 +16,6 @@ const EditFlashSale = ({ visible, onClose, onEditSuccess, flashSaleData }) => {
         description: flashSaleData.description,
         started_at: dayjs(flashSaleData.started_at),
         ended_at: dayjs(flashSaleData.ended_at),
-        status: flashSaleData.status,
       });
       if (flashSaleData.thumbnail) {
         setThumbnail([
@@ -62,7 +61,6 @@ const EditFlashSale = ({ visible, onClose, onEditSuccess, flashSaleData }) => {
         description: values.description,
         started_at: values.started_at.format('YYYY-MM-DD HH:mm:ss'),
         ended_at: values.ended_at.format('YYYY-MM-DD HH:mm:ss'),
-        status: values.status,
         thumbnail: thumbnailUrl,
       };
 
@@ -79,7 +77,7 @@ const EditFlashSale = ({ visible, onClose, onEditSuccess, flashSaleData }) => {
         message.error('Cập nhật Flash Sale thất bại');
       }
     } catch (error) {
-      message.error('Lỗi khi cập nhật Flash Sale');
+      message.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -129,14 +127,6 @@ const EditFlashSale = ({ visible, onClose, onEditSuccess, flashSaleData }) => {
           rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc' }]}
         >
           <DatePicker showTime format="HH:mm:ss DD/MM/YYYY" placeholder="Chọn thời gian kết thúc" />
-        </Form.Item>
-
-        <Form.Item
-          label="Trạng thái"
-          name="status"
-          rules={[{ required: true, message: 'Vui lòng nhập trạng thái' }]}
-        >
-          <Input placeholder="Nhập trạng thái" />
         </Form.Item>
 
         <Form.Item>

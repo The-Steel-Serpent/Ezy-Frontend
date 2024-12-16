@@ -39,7 +39,7 @@ const AddSaleEvent = ({ visible, onClose, onSuccess }) => {
             form.resetFields();
             setThumbnail([]);
         } catch (error) {
-            message.error('Lỗi khi tạo sự kiện.');
+            message.error(error.response.data.message);
         } finally {
             setLoading(false);
         }

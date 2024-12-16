@@ -76,11 +76,11 @@ const EditSaleEvent = ({ visible, onClose, eventId, onSuccess }) => {
                 ended_at: values.ended_at.toISOString(),
             });
 
-            message.success('Event updated successfully.');
+            message.success('Cập nhập sự kiện thành công.');
             onSuccess();
             onClose();
         } catch (error) {
-            message.error(error.response?.data?.message || 'Failed to update event.');
+            message.error(error.response?.data?.message || 'Lổi khi chỉnh sửa sự kiện.');
         } finally {
             setLoading(false);
         }

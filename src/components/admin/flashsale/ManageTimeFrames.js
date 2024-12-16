@@ -63,7 +63,7 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
                 setStatus('waiting'); // Reset to default
             }
         } catch (error) {
-            message.error('Lỗi khi thêm khung giờ');
+            message.error(error.response.data.message);
         }
     };
 
@@ -71,7 +71,6 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
         setEditingTimeFrame(timeFrame);
         setStartedAt(dayjs(timeFrame.started_at));
         setEndedAt(dayjs(timeFrame.ended_at));
-        setStatus(timeFrame.status);
     };
 
     const handleUpdateTimeFrame = async () => {
@@ -83,7 +82,6 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
             const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/flash-sales/update-time-frame/${editingTimeFrame.flash_sale_time_frame_id}`, {
                 started_at: startedAt.toISOString(),
                 ended_at: endedAt.toISOString(),
-                status,
             });
             if (response.data.success) {
                 message.success('Cập nhật khung giờ thành công');
@@ -91,10 +89,9 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
                 setEditingTimeFrame(null);
                 setStartedAt(null);
                 setEndedAt(null);
-                setStatus('waiting'); // Reset to default for next addition
             }
         } catch (error) {
-            message.error('Lỗi khi cập nhật khung giờ');
+            message.error(error.response.data.message);
         }
     };
 
@@ -158,15 +155,7 @@ const ManageTimeFrames = ({ visible, onClose, flashSaleId, flashSaleStart, flash
 
                 <DatePicker showTime placeholder="Chọn thời gian bắt đầu" value={startedAt} onChange={(value) => setStartedAt(value)} />
                 <DatePicker showTime placeholder="Chọn thời gian kết thúc" value={endedAt} onChange={(value) => setEndedAt(value)} />
-                {editingTimeFrame ? (
-                    <Select value={status} onChange={setStatus} placeholder="Chọn trạng thái" style={{ width: '150px' }}>
-                        <Option value="waiting">Waiting</Option>
-                        <Option value="active">Active</Option>
-                        <Option value="ended">Ended</Option>
-                    </Select>
-                ) : (
-                    <span style={{ width: '150px' }}></span> 
-                )}
+
                 {editingTimeFrame ? (
                     <Button type="primary" onClick={handleUpdateTimeFrame}>Cập nhật</Button>
                 ) : (

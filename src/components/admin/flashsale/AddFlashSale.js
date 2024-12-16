@@ -65,7 +65,7 @@ const AddFlashSale = ({ visible, onClose, onAddSuccess }) => {
       onAddSuccess();
       onClose();
     } catch (error) {
-      message.error('Lỗi khi thêm Flash Sale');
+      message.error(error.response.data.message || 'Có lỗi xảy ra. Vui lòng thử lại!');
       console.error('Lỗi chi tiết:', error);
     } finally {
       setLoading(false);
