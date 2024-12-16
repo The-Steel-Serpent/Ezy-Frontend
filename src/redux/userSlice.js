@@ -10,7 +10,7 @@ const initialState = {
   gender: "",
   dob: "",
   avt_url: "",
-  role_id: "",
+  role_id: "",  
   setup: 0,
   isVerified: false,
   token: "",

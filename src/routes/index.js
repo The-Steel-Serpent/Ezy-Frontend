@@ -175,6 +175,9 @@ const ShopNotifications = withSuspense(
   lazy(() => import("../pages/seller/notification/ShopNotifications"))
 )
 
+const ShopChangePassword = withSuspense(
+  lazy(() => import("../pages/seller/custom_shop/ShopChangePassword"))
+)
 const router = createBrowserRouter([
   {
     path: "/",
@@ -521,6 +524,14 @@ const router = createBrowserRouter([
         element: (
           <SellerAuthLayout>
             <ShopUpdateOTP />
+          </SellerAuthLayout>
+        ),
+      },
+      {
+        path: "seller/shop-change-password",
+        element: (
+          <SellerAuthLayout>
+            <ShopChangePassword />
           </SellerAuthLayout>
         ),
       },

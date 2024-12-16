@@ -41,6 +41,8 @@ import {
   DownOutlined,
   CustomerServiceOutlined,
 } from "@ant-design/icons";
+import { RiLockPasswordLine } from "react-icons/ri";
+
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -126,6 +128,11 @@ const items_info = [
     key: "decor_shop",
     label: "Trang trí Shop",
     icon: <CiShop size={20} className="mr-3" />,
+  },
+  {
+    key: "shop-change-password",
+    label: "Bảo mật ",
+    icon: <RiLockPasswordLine size={20} className="mr-3" />,
   },
   {
     key: "logout",
@@ -229,6 +236,9 @@ const SellerAuthLayout = ({ children }) => {
       setUpNavigate();
     } else if (e.key == "decor_shop") {
       navigate("/seller/customize-shop");
+    }
+    else if (e.key == "shop-change-password") {
+      navigate("/seller/shop-change-password");
     }
   };
 
