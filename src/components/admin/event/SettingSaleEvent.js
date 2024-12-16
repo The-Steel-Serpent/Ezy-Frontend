@@ -165,11 +165,11 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
         try {
             await settingForm.validateFields();
             for (const voucher of vouchers) {
-                if (!voucher.code || !voucher.name|| !voucher.discountVoucherTypeId || !voucher.discountType || !voucher.discountValue || !voucher.minOrderValue || !voucher.quantity || !voucher.usage || !voucher.startedAt || !voucher.endedAt) {
+                if (!voucher.code || !voucher.name || !voucher.discountVoucherTypeId || !voucher.discountType || !voucher.discountValue || !voucher.minOrderValue || !voucher.quantity || !voucher.usage || !voucher.startedAt || !voucher.endedAt) {
                     message.warning('Vui lòng nhập đầy đủ thông tin.');
                     return;
                 }
-                
+
             }
             const selectedCategories = settingForm.getFieldValue('categories');
 
@@ -236,7 +236,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
 
             fetchEventVouchers();
         } catch (error) {
-            message.error('Lỗi khi cài đặt cho sự kiện.');
+            message.error(error.response.data.message || 'Cài đặt thất bại. Vui lòng thử lại sau.');
             console.error('Error saving vouchers or categories:', error.response ? error.response.data : error.message);
         }
 
@@ -340,7 +340,6 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 </Select>
             ),
         },
-
         {
             title: 'Giá trị giảm',
             dataIndex: 'discountValue',
@@ -349,13 +348,23 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                 <Input
                     type="number"
                     value={text}
-                    min={0}
-                    onChange={e => handleVoucherChange(record.key, 'discountValue', Math.max(0, e.target.value))}
+                    min={record.discountType === 'THEO PHẦN TRĂM' ? 1 : 0} // Giá trị tối thiểu cho "THEO PHẦN TRĂM" là 1
+                    max={record.discountType === 'THEO PHẦN TRĂM' ? 100 : Infinity} // Giá trị tối đa cho "THEO PHẦN TRĂM" là 100
+                    onChange={e => {
+                        const value = parseInt(e.target.value, 10) || 0; // Chuyển giá trị sang số nguyên
+                        if (
+                            record.discountType === 'THEO PHẦN TRĂM' &&
+                            (value < 1 || value > 100)
+                        ) {
+                            message.error('Giá trị giảm theo phần trăm phải nằm trong khoảng 1-100.');
+                            return;
+                        }
+                        handleVoucherChange(record.key, 'discountValue', Math.max(0, value));
+                    }}
                     placeholder="Nhập giá trị giảm"
                     required
                 />
             )
-
         },
         { title: 'Giá trị đơn hàng tối thiểu', dataIndex: 'minOrderValue', width: 180, render: (text, record) => <Input type="number" value={text} onChange={e => handleVoucherChange(record.key, 'minOrderValue', e.target.value)} /> },
         {
