@@ -67,13 +67,13 @@ const WalletResult = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (token) {
-        dispatch(fetchWallet(token));
+        dispatch(fetchWallet(token)); // Dispatch action to fetch wallet data
+        setLocalState({ type: "loadingWallet", payload: true });
       }
     };
+
     if (token) {
-      fetchData().then(() => {
-        setLocalState({ type: "loadingWallet", payload: true });
-      });
+      fetchData();
     }
   }, [token, dispatch]);
   useEffect(() => {
@@ -126,7 +126,7 @@ const WalletResult = () => {
     if (wallet.user_wallet_id && localState.loadingWallet) {
       updateWallet();
     }
-  }, [localState.loadingWallet, wallet]);
+  }, [localState.loadingWallet, wallet.user_wallet_id]);
 
   return (
     <Result
