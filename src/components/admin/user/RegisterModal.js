@@ -10,6 +10,7 @@ const { Option } = Select;
 const RegisterModal = ({ visible, onClose }) => {
   const [form] = Form.useForm();
   const [roleData, setRoleData] = useState([]);
+  const [loading, setLoading] = useState(false);
   const adminId = useSelector((state) => state.user.user_id);
 
 
@@ -36,6 +37,7 @@ const RegisterModal = ({ visible, onClose }) => {
 
   // Xử lý đăng ký tài khoản
   const handleSubmit = async (values) => {
+    setLoading(true);
     try {
       // Kiểm tra số điện thoại
       if (values.phone_number && !checkNumberPhone(values.phone_number)) {
@@ -48,12 +50,6 @@ const RegisterModal = ({ visible, onClose }) => {
         dob: values.dob ? values.dob.format("YYYY-MM-DD") : null,
 
       };
-
-      // // Tạo tài khoản trên Firebase
-      // const firebaseUser = await signUpWithEmailPassword(
-      //   formattedValues.email,
-      //   formattedValues.password
-      // );
 
       const apiResponse = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/api/create-user`,
@@ -73,6 +69,10 @@ const RegisterModal = ({ visible, onClose }) => {
       console.error("Lỗi khi tạo tài khoản:", error);
       const messageText = error.response?.data?.message || error.message;
       message.error(messageText || "Có lỗi xảy ra khi tạo tài khoản.");
+    } finally {
+      setTimeout(() => {
+        setLoading(false); 
+      }, 1000);
     }
   };
 
@@ -103,16 +103,6 @@ const RegisterModal = ({ visible, onClose }) => {
         >
           <Input />
         </Form.Item>
-        {/* <Form.Item
-          label="Số Điện Thoại"
-          name="phone_number"
-          rules={[
-            { required: true, message: "Số điện thoại không được để trống!" },
-            { pattern: /^[0-9]{10,11}$/, message: "Số điện thoại phải từ 10-11 chữ số!" },
-          ]}
-        >
-          <Input />
-        </Form.Item> */}
         <Form.Item label="Vai trò" name="role_id" rules={[{ required: true, message: "Vai trò không được để trống!" }]}>
           <Select placeholder="Chọn vai trò">
             {roleData
@@ -198,7 +188,7 @@ const RegisterModal = ({ visible, onClose }) => {
           <Input.Password />
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" block>
+          <Button type="primary" htmlType="submit" block loading={loading}>
             Đăng Ký
           </Button>
         </Form.Item>
