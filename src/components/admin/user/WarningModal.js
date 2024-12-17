@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Form, Select, Button, message, Checkbox, Input } from 'antd';
 import { useSelector } from "react-redux";
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
+import { db } from "../../../firebase/firebase";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -9,8 +11,8 @@ const WarningModal = ({ visible, onClose, user }) => {
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const adminId = useSelector((state) => state.user.user_id);
-    const [selectedNotes, setSelectedNotes] = useState([]); 
-    const [isOtherChecked, setIsOtherChecked] = useState(false); 
+    const [selectedNotes, setSelectedNotes] = useState([]);
+    const [isOtherChecked, setIsOtherChecked] = useState(false);
     const [otherNote, setOtherNote] = useState('');
 
     const noteOptions = [
@@ -40,7 +42,7 @@ const WarningModal = ({ visible, onClose, user }) => {
         // Hợp nhất các nội dung checkbox chính và "Khác"
         let notesArray = [...selectedNotes];
         if (isOtherChecked && otherNote.trim()) {
-            notesArray.push(otherNote.trim()); 
+            notesArray.push(otherNote.trim());
         }
 
         const notes = notesArray.length > 1 ? notesArray.join(', ') : notesArray.join('');
@@ -55,7 +57,7 @@ const WarningModal = ({ visible, onClose, user }) => {
                 body: JSON.stringify({
                     violator_id: user.user_id,
                     action_type: values.action_type,
-                    notes: notes, 
+                    notes: notes,
                     currentAdminId: adminId,
                 }),
             });
@@ -64,6 +66,14 @@ const WarningModal = ({ visible, onClose, user }) => {
 
             if (result.success) {
                 message.success('Xử lý vi phạm thành công.');
+                if (values.action_type.includes("Khóa")) {
+                    const isDisabled = !user.is_banned; 
+                    await setDoc(
+                        doc(db, 'users', user.user_id),
+                        { isDisabled },
+                        { merge: true }
+                      );
+                }
                 onClose();
             } else {
                 message.error(result.message || 'Xử lý vi phạm thất bại.');
@@ -107,15 +117,15 @@ const WarningModal = ({ visible, onClose, user }) => {
                     <Checkbox.Group
                         value={selectedNotes}
                         onChange={(checkedValues) => {
-                            setSelectedNotes(checkedValues); 
+                            setSelectedNotes(checkedValues);
                             form.setFieldsValue({ notes: checkedValues });
                         }}
                     >
                         <div
                             style={{
                                 display: 'grid',
-                                gridTemplateColumns: '1fr', 
-                                gap: '10px', 
+                                gridTemplateColumns: '1fr',
+                                gap: '10px',
                             }}
                         >
                             {noteOptions.map(option => (
@@ -133,7 +143,7 @@ const WarningModal = ({ visible, onClose, user }) => {
                                 setIsOtherChecked(checked);
                                 if (!checked) {
                                     setOtherNote('');
-                                    form.setFieldsValue({ notes: selectedNotes }); 
+                                    form.setFieldsValue({ notes: selectedNotes });
                                 }
                             }}
                         >

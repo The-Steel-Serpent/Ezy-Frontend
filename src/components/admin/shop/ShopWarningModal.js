@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Modal, Form, Input, Select, Button, message, Checkbox } from "antd";
 import { useSelector } from "react-redux";
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
+import { db } from "../../../firebase/firebase";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -59,6 +61,14 @@ const ShopWarningModal = ({ visible, onClose, shop }) => {
       const result = await response.json();
       if (result.success) {
         message.success("Cảnh báo đã được gửi.");
+        if (values.action_type.includes("Khóa")) {
+          const isDisabled = true; 
+          await setDoc(
+              doc(db, 'users', shop.user_id),
+              { isDisabled },
+              { merge: true }
+            );
+      }
         onClose();
       } else {
         message.error(result.message || "Gửi cảnh báo thất bại.");
