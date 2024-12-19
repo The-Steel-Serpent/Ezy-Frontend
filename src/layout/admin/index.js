@@ -161,23 +161,23 @@ const AdminAuthLayout = ({ children }) => {
           doc(db, "users", user.uid),
           async (docSnapshot) => {
             const data = docSnapshot.data();
-            const localSessionToken = localStorage.getItem("sessionToken");
+            // const localSessionToken = localStorage.getItem("sessionToken");
 
-            // Bỏ qua kiểm tra đầu tiên sau khi đăng nhập
-            if (localSessionToken === null) {
-              return;
-            }
+            // // Bỏ qua kiểm tra đầu tiên sau khi đăng nhập
+            // if (localSessionToken === null) {
+            //   return;
+            // }
 
-            // Kiểm tra nếu token không khớp, thực hiện đăng xuất
-            if (data?.sessionToken !== localSessionToken) {
-              toast.error(
-                "Phiên của bạn đã bị đăng xuất do đăng nhập từ thiết bị khác."
-              );
-              authFirebase.signOut();
-              await logOut();
-              localStorage.removeItem("sessionToken");
-              window.location.reload();
-            }
+            // // Kiểm tra nếu token không khớp, thực hiện đăng xuất
+            // if (data?.sessionToken !== localSessionToken) {
+            //   toast.error(
+            //     "Phiên của bạn đã bị đăng xuất do đăng nhập từ thiết bị khác."
+            //   );
+            //   authFirebase.signOut();
+            //   await logOut();
+            //   localStorage.removeItem("sessionToken");
+            //   window.location.reload();
+            // }
             if (data?.isDisabled) {
               toast.error(
                 "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ."
@@ -186,6 +186,11 @@ const AdminAuthLayout = ({ children }) => {
               await logOut();
               localStorage.removeItem("sessionToken");
               window.location.reload();
+            }
+            if (data?.isLoggedOut) {
+              toast.error("Tài khoản của bạn đã bị đăng xuất.");
+              dispatch(logout());
+              localStorage.clear();
             }
           }
         );
@@ -197,32 +202,32 @@ const AdminAuthLayout = ({ children }) => {
     return () => unsubscribeAuth();
   }, []);
 
-  useEffect(() => {
-    const handleCheckSession = async (userId) => {
-      if (localStorage.getItem("skipSessionCheck") === "true") {
-        console.log("Bỏ qua kiểm tra phiên đăng nhập.");
-        return true;
-      }
-      if (localStorage.getItem("sessionToken") === null) {
-        return true;
-      }
+  // useEffect(() => {
+  //   const handleCheckSession = async (userId) => {
+  //     if (localStorage.getItem("skipSessionCheck") === "true") {
+  //       console.log("Bỏ qua kiểm tra phiên đăng nhập.");
+  //       return true;
+  //     }
+  //     if (localStorage.getItem("sessionToken") === null) {
+  //       return true;
+  //     }
 
-      const isSessionValid = await checkSession(userId);
+  //     const isSessionValid = await checkSession(userId);
 
-      if (isSessionValid) {
-        console.log("Phiên hợp lệ");
-        return true;
-      } else {
-        console.log("Phiên không hợp lệ, người dùng đã bị đăng xuất.");
-        authFirebase.signOut();
-        await logOut();
-        return false;
-      }
-    };
-    if (user.user_id !== "") {
-      handleCheckSession(user.user_id);
-    }
-  }, [logOut, user.user_id]);
+  //     if (isSessionValid) {
+  //       console.log("Phiên hợp lệ");
+  //       return true;
+  //     } else {
+  //       console.log("Phiên không hợp lệ, người dùng đã bị đăng xuất.");
+  //       authFirebase.signOut();
+  //       await logOut();
+  //       return false;
+  //     }
+  //   };
+  //   if (user.user_id !== "") {
+  //     handleCheckSession(user.user_id);
+  //   }
+  // }, [logOut, user.user_id]);
 
   useEffect(() => {
     if (user?.user_id) {

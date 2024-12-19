@@ -1,5 +1,7 @@
 import axios from "axios";
 import { th } from "date-fns/locale";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 export const updateProfile = async (userID, updateData) => {
   try {
@@ -130,7 +132,7 @@ export const updateEmail = async (userID, email) => {
   }
 };
 
-export const logOut = async () => {
+export const logOut = async (userId) => {
   try {
     const URL = `${process.env.REACT_APP_BACKEND_URL}/api/logout`;
     const res = await axios.post(

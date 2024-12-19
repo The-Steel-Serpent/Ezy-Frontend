@@ -13,6 +13,8 @@ import { logout, setUser } from "../../redux/userSlice";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { clearCart } from "../../redux/cartSlice";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase/firebase";
 
 const ChangeEmail = () => {
   const user = useSelector((state) => state.user);
@@ -164,7 +166,10 @@ const ChangeEmail = () => {
       console.log(updateEmailInBackend);
       if (updateEmailInBackend.success) {
         const newUser = updateEmailInBackend.data;
-        dispatch(setUser(newUser));
+        // dispatch(setUser(newUser));
+        await updateDoc(doc(db, "users", newUser?.user_id), {
+          isLoggedOut: true,
+        });
         // await checkAndUnLinkProvider(newUser.email);
         localStorage.removeItem("newEmail");
         message.success("Cập nhật Email thành công, Vui lòng đăng nhập lại");

@@ -127,15 +127,14 @@ const ChangePassword = (props) => {
       const res = await changePassword(data.oldPassword, data.newPassword);
       if (res) {
         message.success("Đổi mật khẩu thành công, vui lòng đăng nhập lại");
-        const logoutRes = await logOut();
+
+        const logoutRes = await logOut(user?.user_id);
         if (logoutRes) {
           dispatch(logout());
           dispatch(clearCart());
-          if (user.role_id === 1)
-          {
+          if (user.role_id === 1) {
             navigate("/buyer/login");
-          }
-          else{
+          } else {
             navigate("/seller/login");
           }
           setState({ type: "loading", payload: false });

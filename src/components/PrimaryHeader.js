@@ -305,6 +305,7 @@ const PrimaryHeader = () => {
                   name={user.username}
                   img={user.avt_url}
                   size={23}
+                  userId={user.user_id}
                 />
               )}
             </li>
