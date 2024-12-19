@@ -94,8 +94,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                         discountMaxValue: voucher.discount_max_value,
                         discountType:
                             voucher.discount_type === 'THEO PHẦN TRĂM' ? 'THEO PHẦN TRĂM' :
-                                voucher.discount_type === 'KHÔNG THEO PHẦN TRĂM' ? 'KHÔNG THEO PHẦN TRĂM' :
-                                    voucher.discount_type === 'MIỄN PHÍ VẬN CHUYỂN' ? 'MIỄN PHÍ VẬN CHUYỂN' : 'unknown',
+                                voucher.discount_type === 'KHÔNG THEO PHẦN TRĂM' ? 'KHÔNG THEO PHẦN TRĂM' : 'unknown',
                         quantity: voucher.quantity,
                         usage: voucher.usage,
                         startedAt: voucher.started_at ? dayjs(voucher.started_at) : null,
@@ -134,7 +133,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     voucher.key === key
                         ? {
                             ...voucher,
-                            discountType: value === "1" ? "MIỄN PHÍ VẬN CHUYỂN" : "THEO PHẦN TRĂM", // Default selection
+                            discountType: value === "1" ? "KHÔNG THEO PHẦN TRĂM" : "THEO PHẦN TRĂM", // Default selection
                         }
                         : voucher
                 )
@@ -315,8 +314,8 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     required
                     placeholder="Chọn loại voucher"
                 >
-                    <Option value="1">Miễn phí vận chuyển</Option>
-                    <Option value="2">Giảm giá đơn hàng</Option>
+                    <Option value="1">Giảm phí vận chuyển</Option>
+                    <Option value="2">Giảm phí đơn hàng</Option>
                 </Select>
             ),
         },
@@ -332,9 +331,7 @@ const SettingSaleEvent = ({ visible, onCancel, eventId, onSetupComplete }) => {
                     required
                     placeholder="Chọn loại giảm giá"
                 >
-                    {record.discountVoucherTypeId === "1" && (
-                        <Option value="MIỄN PHÍ VẬN CHUYỂN">Free Ship</Option>
-                    )}
+
                     <Option value="THEO PHẦN TRĂM">Giảm theo phần trăm</Option>
                     <Option value="KHÔNG THEO PHẦN TRĂM">Giảm theo số tiền</Option>
                 </Select>
