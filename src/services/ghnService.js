@@ -269,3 +269,23 @@ export const getOrderDetailGHN = async (orderCode) => {
     throw new Error(error.message);
   }
 };
+
+export const exportorderGHN = async (orderCode) => {
+  try {
+    const url = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/a5/gen-token";
+    const res = await axios({
+      method: "POST",
+      url: url,
+      headers: {
+        Token: `${process.env.REACT_APP_GHV_KEY_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      data: {
+        order_codes: orderCode,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
