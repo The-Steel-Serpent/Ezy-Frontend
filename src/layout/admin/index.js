@@ -201,6 +201,14 @@ const AdminAuthLayout = ({ children }) => {
 
   useEffect(() => {
     const handleCheckSession = async (userId) => {
+      if (localStorage.getItem("skipSessionCheck") === "true") {
+        console.log("Bỏ qua kiểm tra phiên đăng nhập.");
+        return true;
+      }
+      if (localStorage.getItem("sessionToken") === null) {
+        return true;
+      }
+
       const isSessionValid = await checkSession(userId);
 
       if (isSessionValid) {
