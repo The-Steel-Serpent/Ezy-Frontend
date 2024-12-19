@@ -236,8 +236,10 @@ const SellerAuthLayout = ({ children }) => {
       setUpNavigate();
     } else if (e.key == "decor_shop") {
       navigate("/seller/customize-shop");
+      setUpNavigate();
     } else if (e.key == "shop-change-password") {
       navigate("/seller/shop-change-password");
+      setUpNavigate();
     }
   };
 
