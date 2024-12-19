@@ -20,8 +20,6 @@ import {
 import ModalForgotPassword from "../../../components/user/ModalForgotPassword";
 import { getAuth, unlink } from "firebase/auth";
 const BuyerLogin = () => {
-  document.title = "Đăng nhập";
-
   const [data, setData] = useState(null);
   const [hidePassword, setHidePassword] = useState(false);
   const [error, setError] = useState({

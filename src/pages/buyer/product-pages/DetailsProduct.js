@@ -134,7 +134,8 @@ const DetailsProduct = () => {
           setSelectedClassify(firstClassify?.product_classify_id);
           setCurrentImageUrl(firstClassify?.thumbnail);
         }
-        setAvgRating(res.data.avgRating);
+        const ratingRes = Math.round(res.data.avgRating * 100) / 100;
+        setAvgRating(ratingRes);
         setTotalReviews(res.data.totalReviews);
       } catch (error) {
         console.log("Lỗi khi lấy dữ liệu sản phẩm: ", error);
