@@ -109,7 +109,7 @@ const ShopViolationHistoryModal = ({ visible, onClose, ownerId }) => {
             <p>
               <b>Người cập nhật:</b> {item.updated_by_username}
             </p>
-            {history.status !== 'Đã thu hồi' && (
+            {item.status !== 'Đã thu hồi' && (
               <Button
                 danger
                 onClick={() => handleRevoke(item.violation_history_id)}
