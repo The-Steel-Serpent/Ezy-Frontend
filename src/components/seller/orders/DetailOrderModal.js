@@ -1,6 +1,6 @@
 import { Button, Col, message, Modal, Popconfirm, Row, Select, Table } from 'antd'
 import React, { useEffect, useReducer } from 'react'
-import { getDistricts, getProvinces, getWards } from '../../../services/ghnService';
+import { exportorderGHN, getDistricts, getProvinces, getWards } from '../../../services/ghnService';
 import { FaCopy } from "react-icons/fa";
 import dayjs from 'dayjs';
 const { Option } = Select;
@@ -79,6 +79,18 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
         },
     ];
 
+    const handlePrintOrder = async () => {
+        try {
+            const res = await exportorderGHN([order.order_code]);
+            console.log(res?.data?.token);
+            if (res?.data?.token) {
+                window.open(`https://dev-online-gateway.ghn.vn/a5/public-api/printA5?token=${res?.data?.token}`);
+            }
+        } catch (error) {
+            console.error("Error printing order: ", error);
+        }
+    }
+
     useEffect(() => {
         const fetchAndSetProvinces = async () => {
             if (order) {
@@ -125,6 +137,13 @@ const DetailOrderModal = ({ visible, onCancel, order }) => {
                     <Button key="back" onClick={onCancel}>
                         Đóng
                     </Button>,
+                    order.order_code !== null && (
+                        <Button
+                            className='bg-primary text-white'
+                            onClick={() => handlePrintOrder()}
+                        >In đơn hàng</Button>
+                    )
+
                 ]}
                 // make width responsive
                 width={window.innerWidth > 768 ? "50%" : "100%"}
