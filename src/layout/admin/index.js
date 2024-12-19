@@ -157,7 +157,6 @@ const AdminAuthLayout = ({ children }) => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(authFirebase, (user) => {
       if (user) {
-        let firstCheck = true; // Cờ để bỏ qua kiểm tra đầu tiên
         const unsubscribeSnapshot = onSnapshot(
           doc(db, "users", user.uid),
           async (docSnapshot) => {
@@ -165,8 +164,7 @@ const AdminAuthLayout = ({ children }) => {
             const localSessionToken = localStorage.getItem("sessionToken");
 
             // Bỏ qua kiểm tra đầu tiên sau khi đăng nhập
-            if (firstCheck) {
-              firstCheck = false;
+            if (localSessionToken === null) {
               return;
             }
 

@@ -409,16 +409,14 @@ const SellerAuthLayout = ({ children }) => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(authFirebase, (user) => {
       if (user) {
-        let firstCheck = true; // Cờ để bỏ qua kiểm tra đầu tiên
         const unsubscribeSnapshot = onSnapshot(
           doc(db, "users", user.uid),
           async (docSnapshot) => {
             const data = docSnapshot.data();
             const localSessionToken = localStorage.getItem("sessionToken");
 
-            // Bỏ qua kiểm tra đầu tiên sau khi đăng nhập
-            if (firstCheck) {
-              firstCheck = false;
+            // Nếu không tồn tại localSessionToken thì bỏ qua
+            if (localSessionToken === null) {
               return;
             }
 
