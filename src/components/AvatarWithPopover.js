@@ -7,6 +7,8 @@ import { useDispatch } from "react-redux";
 import { logout } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 import { clearCart } from "../redux/cartSlice";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 const AvatarWithPopover = (props) => {
   const dispatch = useDispatch();
@@ -26,13 +28,16 @@ const AvatarWithPopover = (props) => {
       );
       toast.success("Đăng xuất thành công");
       if (res.data.success) {
+        await updateDoc(doc(db, "users", props.userId), {
+          isLoggedOut: true,
+        });
         dispatch(logout());
         dispatch(clearCart());
         navigate("/");
         localStorage.clear();
       }
     } catch (error) {
-      if (error.response.data.code === "auth/id-token-expired") {
+      if (error.response?.data?.code === "auth/id-token-expired") {
         toast.error("Phiên Đăng nhập đã hết hạn");
       }
     }

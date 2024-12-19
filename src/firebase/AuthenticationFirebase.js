@@ -26,7 +26,13 @@ import { authFirebase } from "./firebase";
 import { TrophyFilled } from "@ant-design/icons";
 import { message } from "antd";
 import generateToken from "../helpers/randomToken";
-import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  getFirestore,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 
 const db = getFirestore();
@@ -123,14 +129,12 @@ export const signInWithEmailPassword = async (email, password) => {
       throw new Error("unverified");
     }
 
-    const sessionToken = uuidv4();
     await setDoc(
       doc(db, "users", user.uid),
-      { sessionToken, isDisabled: false },
+      { isDisabled: false, isLoggedOut: false },
       { merge: true }
     );
-    localStorage.setItem("sessionToken", sessionToken);
-    localStorage.setItem("skipSessionCheck", "true");
+
     return user;
   } catch (error) {
     let errorMessage = "";
@@ -184,14 +188,12 @@ export const signInWithGoogle = async () => {
   try {
     await setPersistence(auth, browserLocalPersistence);
     const result = await signInWithPopup(auth, provider);
-    const sessionToken = uuidv4();
+
     await setDoc(
       doc(db, "users", result.user.uid),
-      { sessionToken, isDisabled: false },
+      { isDisabled: false, isLoggedOut: false },
       { merge: true }
     );
-    localStorage.setItem("sessionToken", sessionToken);
-    localStorage.setItem("skipSessionCheck", "true");
     return result.user;
   } catch (error) {
     let errorMessage;
@@ -358,6 +360,9 @@ export const changePassword = async (oldPassword, newPassword) => {
       throw new Error("Mật khẩu mới không được giống mật khẩu cũ");
     }
     await updatePassword(user, newPassword);
+    await updateDoc(doc(db, "users", user.uid), {
+      isLoggedOut: true,
+    });
     return true;
   } catch (error) {
     let errorMessage;

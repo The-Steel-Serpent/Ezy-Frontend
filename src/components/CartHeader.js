@@ -56,6 +56,7 @@ const CartHeader = () => {
               img={user?.avt_url}
               name={user.username}
               size={30}
+              userId={user.user_id}
             />
           )}
         </div>
