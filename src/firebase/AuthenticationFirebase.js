@@ -130,6 +130,7 @@ export const signInWithEmailPassword = async (email, password) => {
       { merge: true }
     );
     localStorage.setItem("sessionToken", sessionToken);
+    localStorage.setItem("skipSessionCheck", "true");
     return user;
   } catch (error) {
     let errorMessage = "";
@@ -190,6 +191,7 @@ export const signInWithGoogle = async () => {
       { merge: true }
     );
     localStorage.setItem("sessionToken", sessionToken);
+    localStorage.setItem("skipSessionCheck", "true");
     return result.user;
   } catch (error) {
     let errorMessage;
